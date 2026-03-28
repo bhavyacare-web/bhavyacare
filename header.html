@@ -18,9 +18,11 @@
 
         /* Navigation Actions */
         .nav-actions { display: flex; align-items: center; gap: 15px; }
-        .btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; }
+        .btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
         .login-btn { background-color: #0056b3; }
         .login-btn:hover { background-color: #004494; }
+        .admin-btn { background-color: #17a2b8; text-decoration: none; }
+        .admin-btn:hover { background-color: #138496; }
 
         /* Dropdown & User Menu */
         #user-menu-container { display: none; }
@@ -50,6 +52,8 @@
     <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
     
     <div class="nav-actions">
+        <a href="admin.html" class="btn admin-btn">🛡️ Admin</a>
+
         <button id="nav-login-btn" class="btn login-btn" onclick="openPatientLogin()">Login</button>
         
         <div class="dropdown">
@@ -61,8 +65,6 @@
                 <a href="#" id="menu-join" onclick="openPartnerLogin()">🤝 Join Us (Partner)</a>
                 <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;">📊 My Dashboard</a>
                 <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;">🚪 Logout</a>
-                
-                <a href="admin.html" id="menu-admin" style="color: #0056b3; border-top: 1px solid #eee;">🛡️ Admin Panel</a>
             </div>
         </div>
     </div>

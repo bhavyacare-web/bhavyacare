@@ -1,36 +1,50 @@
-<style>
-    /* Navbar & Logo Styles */
-    .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
-    .logo h2 { color: #0056b3; font-size: 26px; font-weight: 800; margin: 0; }
-    .logo span { color: #28a745; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhavyaCare - Login</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    /* Navigation Actions */
-    .nav-actions { display: flex; align-items: center; gap: 15px; }
-    .btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; }
-    .login-btn { background-color: #0056b3; }
-    .login-btn:hover { background-color: #004494; }
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; }
+        
+        /* Navbar & Logo Styles */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo h2 { color: #0056b3; font-size: 26px; font-weight: 800; margin: 0; }
+        .logo span { color: #28a745; }
 
-    /* Dropdown & User Menu */
-    #user-menu-container { display: none; }
-    .user-profile-btn { background: #f4f7f6; color: #0056b3; border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-    .user-profile-btn:hover { background: #e6f0fa; }
-    .dropdown { position: relative; display: inline-block; }
-    .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
-    .dropbtn:hover { color: #0056b3; }
-    .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
-    .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 500; }
-    .dropdown-content a:hover { background-color: #f9f9f9; color: #0056b3; }
-    .show-menu { display: block; }
+        /* Navigation Actions */
+        .nav-actions { display: flex; align-items: center; gap: 15px; }
+        .btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; }
+        .login-btn { background-color: #0056b3; }
+        .login-btn:hover { background-color: #004494; }
 
-    /* Login Popup Section */
-    #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: absolute; top: 70px; right: 40px; z-index: 999; }
-    #login-section h3 { color: #333; margin-bottom: 20px; }
-    .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s;}
-    .input-box:focus { border-color: #0056b3; box-shadow: 0 0 5px rgba(0,86,179,0.2); }
-    .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-    .action-btn:hover { background-color: #218838; }
-    .support-text { font-size: 12px; color: #888; margin-top: 15px; }
-</style>
+        /* Dropdown & User Menu */
+        #user-menu-container { display: none; }
+        .user-profile-btn { background: #f4f7f6; color: #0056b3; border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .user-profile-btn:hover { background: #e6f0fa; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
+        .dropbtn:hover { color: #0056b3; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 500; }
+        .dropdown-content a:hover { background-color: #f9f9f9; color: #0056b3; }
+        .show-menu { display: block; }
+
+        /* Login Popup Section */
+        #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: absolute; top: 70px; right: 40px; z-index: 999; }
+        #login-section h3 { color: #333; margin-bottom: 20px; }
+        .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
+        .input-box:focus { border-color: #0056b3; box-shadow: 0 0 5px rgba(0,86,179,0.2); }
+        .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .action-btn:hover { background-color: #218838; }
+        .support-text { font-size: 12px; color: #888; margin-top: 15px; }
+    </style>
+</head>
+<body>
 
 <header class="navbar">
     <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
@@ -57,7 +71,7 @@
     
     <div id="phone-section">
         <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
-            <p style="text-align: left; font-size: 14px; color: #666;">Select Partner Type:</p>
+            <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
             <select id="partnerRole" class="input-box">
                 <option value="doctor" selected>Doctor</option>
                 <option value="lab">Lab</option>
@@ -66,17 +80,26 @@
                 <option value="executive">Executive</option>
             </select>
         </div>
-        <p style="text-align: left; font-size: 14px; color: #666;">Mobile Number:</p>
+        
+        <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
+        <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
+
+        <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>
         <input type="tel" id="phoneNumber" class="input-box" placeholder="e.g. 8950112467" maxlength="10">
+        
         <div id="recaptcha-container" style="margin-top: 10px;"></div>
         <button id="send-otp-btn" class="action-btn" onclick="sendOTP()">Get OTP</button>
     </div>
 
     <div id="otp-section" style="display: none;">
-        <p style="text-align: left; font-size: 14px; color: #666;">Enter OTP:</p>
+        <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Enter OTP:</p>
         <input type="tel" id="otpCode" class="input-box" placeholder="6-digit OTP" maxlength="6">
         <button class="action-btn" style="background-color: #0056b3;" onclick="verifyOTP()">Verify Mobile</button>
         <p style="margin-top: 15px; font-size: 13px; color: #0056b3; cursor: pointer; text-decoration: underline;" onclick="closeLoginPopup()">Cancel</p>
     </div>
     <p class="support-text">Need help? Email us at bhavyacare1@gmail.com</p>
 </div>
+
+<script src="app.js"></script>
+</body>
+</html>

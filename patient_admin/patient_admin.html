@@ -1,1 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Patients</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h2 { color: #0056b3; margin: 0; }
+        .refresh-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .refresh-btn:hover { background-color: #218838; }
+        
+        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #0056b3; color: white; position: sticky; top: 0; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .status-active { background-color: #d4edda; color: #155724; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; }
+        
+        #loader { text-align: center; font-weight: bold; color: #0056b3; margin-top: 20px; }
+    </style>
+</head>
+<body>
 
+    <div class="header">
+        <h2>🏥 Patient Management Dashboard</h2>
+        <button class="refresh-btn" onclick="fetchPatientsData()">🔄 Refresh Data</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Role</th>
+                    <th>Referral Code</th>
+                    <th>Wallet (₹)</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="patientsTableBody">
+                </tbody>
+        </table>
+        <div id="loader">Fetching patients data... Please wait.</div>
+    </div>
+
+    <script src="patient_admin.js"></script>
+</body>
+</html>

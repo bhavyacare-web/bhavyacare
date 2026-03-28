@@ -19,11 +19,12 @@ try {
     console.error("Firebase init error:", e);
 }
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFB2qCIQUcJcT3S9Uu_mf0lwzVINSfO1ZZx-arR2Adq82DegSjqfTqOFCmpViePWxE/exec";
+// 🌟 TUMHARA NAYA GOOGLE SCRIPT URL YAHAN HAI 🌟
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJBqkkPwvrU9bGZQXfFMnXuWOlBwegueUhYZyf1QCrcbdaqFrZEcgBx4OC90lEc5wV8w/exec";
 let isPartnerMode = false;
 
 // ==========================================
-// 2. AUTH STATE OBSERVER
+// 2. AUTH STATE OBSERVER (Login Session Maintain)
 // ==========================================
 try {
     if (typeof firebase !== 'undefined') {

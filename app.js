@@ -212,7 +212,7 @@ function logoutUser() {
 function goToDashboard() {
     const role = localStorage.getItem("bhavya_role");
     if (role === "patient") {
-        window.location.href = "patient_dashborad/patient_dashborad.html"; // Make sure this page exists in your repo
+        window.location.href = "patient_dashboard/patient_dashboard.html"; // Make sure this page exists in your repo
     } else if (role) {
         alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Coming Soon)");
     } else {

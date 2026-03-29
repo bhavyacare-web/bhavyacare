@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - BhavyaCare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        
+        /* Header */
+        .dashboard-header { background-color: #0056b3; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dashboard-header h2 { margin: 0; font-size: 20px; font-weight: 800; }
+        .dashboard-header h2 span { color: #28a745; }
+        .logout-btn { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; }
 
+        /* Profile Card */
+        .container { padding: 20px; max-width: 800px; margin: auto; }
+        .profile-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; border-left: 5px solid #28a745; }
+        .user-info h3 { margin: 0 0 5px 0; color: #333; font-size: 22px; }
+        .user-info p { margin: 0; color: #666; font-size: 14px; }
+        
+        .wallet-box { background: #e6f0fa; padding: 15px 20px; border-radius: 10px; text-align: center; border: 1px solid #cce5ff; min-width: 120px; }
+        .wallet-box h4 { margin: 0; color: #0056b3; font-size: 14px; }
+        .wallet-box h2 { margin: 5px 0 0 0; color: #28a745; font-size: 24px; }
+
+        /* Grid Options */
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .action-card { background: white; padding: 20px 15px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-align: center; cursor: pointer; transition: 0.3s; border-bottom: 4px solid transparent; }
+        .action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .action-card i { font-size: 30px; margin-bottom: 10px; }
+        .action-card h4 { margin: 0; font-size: 15px; color: #333; }
+        
+        /* Card Colors */
+        .card-book:hover { border-color: #0056b3; } .card-book i { color: #0056b3; }
+        .card-reports:hover { border-color: #8e44ad; } .card-reports i { color: #8e44ad; }
+        .card-refer:hover { border-color: #e67e22; } .card-refer i { color: #e67e22; }
+        .card-plan:hover { border-color: #17a2b8; } .card-plan i { color: #17a2b8; }
+
+        #loader { text-align: center; font-weight: bold; color: #0056b3; padding: 50px; font-size: 18px;}
+        #dashboard-content { display: none; } /* Pehle hide rahega jab tak data na aaye */
+    </style>
+</head>
+<body>
+
+    <header class="dashboard-header">
+        <h2>Bhavya<span>Care</span></h2>
+        <a href="#" class="logout-btn" onclick="logoutPatient()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </header>
+
+    <div id="loader">Loading your profile... Please wait. <i class="fas fa-spinner fa-spin"></i></div>
+
+    <div class="container" id="dashboard-content">
+        <div class="profile-card">
+            <div class="user-info">
+                <h3 id="displayName">Welcome, Loading...</h3>
+                <p><strong>Mobile:</strong> <span id="displayMobile">---</span></p>
+                <p><strong>User ID:</strong> <span id="displayUserId">---</span></p>
+                <p style="margin-top: 5px;"><span style="background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;" id="displayPlan">Plan: Basic</span></p>
+            </div>
+            
+            <div class="wallet-box">
+                <h4>Wallet Balance</h4>
+                <h2 id="displayWallet">₹0</h2>
+            </div>
+        </div>
+
+        <h4 style="color: #333; margin-bottom: 10px;">Quick Actions</h4>
+        <div class="action-grid">
+            <div class="action-card card-book" onclick="alert('Booking feature coming soon!')">
+                <i class="fas fa-notes-medical"></i>
+                <h4>Book Lab Test</h4>
+            </div>
+            
+            <div class="action-card card-reports" onclick="alert('Reports feature coming soon!')">
+                <i class="fas fa-file-medical-alt"></i>
+                <h4>My Reports</h4>
+            </div>
+
+            <div class="action-card card-refer" onclick="copyReferral()">
+                <i class="fas fa-share-alt"></i>
+                <h4>Refer & Earn</h4>
+                <p style="font-size: 11px; color: #777; margin-top: 5px;">Code: <span id="displayReferral" style="font-weight: bold; color: #333;">---</span></p>
+            </div>
+
+            <div class="action-card card-plan" onclick="alert('Plan upgrade coming soon!')">
+                <i class="fas fa-crown"></i>
+                <h4>Upgrade Plan</h4>
+            </div>
+        </div>
+    </div>
+
+    <script src="patient_dashboard.js"></script>
+</body>
+</html>

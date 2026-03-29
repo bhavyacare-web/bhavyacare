@@ -1,20 +1,23 @@
-// 🌟 YAHAN APNA WAHI GOOGLE SCRIPT URL DAALO JO ABHI USE KAR RAHE HO 🌟
+// 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
 
-document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
+// ==========================================
+// 1. PAGE LOAD HOTE HI DATA FETCH KARNA
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    checkLoginAndFetchData();
+});
 
 async function checkLoginAndFetchData() {
-    // Check karo ki local storage me user ID hai ya nahi
     const userId = localStorage.getItem("bhavya_user_id");
     
+    // Agar user logged in nahi hai toh wapas home page par bhej do
     if (!userId) {
-        // Agar login nahi hai, toh main page par wapas bhej do
         alert("Please login first to access the dashboard.");
         window.location.href = "../index.html"; 
         return;
     }
 
-    // Backend se data mangwao
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -30,43 +33,124 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // HTML me data daalo
-            document.getElementById("displayName").innerText = "Welcome, " + patient.patient_name;
-            document.getElementById("displayMobile").innerText = patient.mobile_number;
-            document.getElementById("displayUserId").innerText = patient.user_id;
-            document.getElementById("displayReferral").innerText = patient.referral_code;
-            document.getElementById("displayWallet").innerText = "₹" + patient.wallet;
-            document.getElementById("displayPlan").innerText = "Plan: " + patient.plan.toUpperCase();
-
-            // Loader chupao aur dashboard dikhao
-            document.getElementById("loader").style.display = "none";
-            document.getElementById("dashboard-content").style.display = "block";
+            // HTML Elements me data daalna
+            document.getElementById("userNameDisplay").innerText = patient.patient_name;
+            document.getElementById("userIdDisplay").innerText = "ID: " + patient.user_id;
+            document.getElementById("walletBal").innerText = patient.wallet;
+            document.getElementById("refCode").innerText = patient.referral_code;
             
+            // VIP Status / Plan update karna
+            document.getElementById("vipStatus").innerText = patient.plan.toUpperCase();
+            
+            // VIP Modal me pehla member apne aap set karna
+            const vipMem1 = document.getElementById("vipMem1");
+            if(vipMem1) vipMem1.value = patient.patient_name;
+
         } else {
-            // Agar Admin ne block kar diya hai
-            document.getElementById("loader").innerHTML = "❌ " + result.message;
-            document.getElementById("loader").style.color = "red";
+            alert("Error: " + result.message);
             if(result.message === "Your account is blocked by Admin.") {
-                setTimeout(logoutPatient, 3000); // 3 second baad automatic logout
+                logoutDashboard();
             }
         }
     } catch (error) {
-        document.getElementById("loader").innerHTML = "❌ Network Error! Please try again later.";
-        document.getElementById("loader").style.color = "red";
+        console.error("Fetch Error:", error);
+        alert("Failed to load profile data. Check your internet connection.");
     }
 }
 
-// Referral code copy karne ka function
-function copyReferral() {
-    const code = document.getElementById("displayReferral").innerText;
-    if (code !== "---") {
+// ==========================================
+// 2. UI & NAVIGATION LOGIC (TABS & SIDEBAR)
+// ==========================================
+function switchTab(tabId) {
+    // Sabhi tabs ko hide karo
+    const contents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < contents.length; i++) {
+        contents[i].classList.remove("active");
+    }
+    
+    // Sabhi links se active class hatao
+    const links = document.querySelectorAll(".nav-links a");
+    links.forEach(link => link.classList.remove("active"));
+    
+    // Jo tab click kiya hai use show karo
+    document.getElementById(tabId).classList.add("active");
+    event.currentTarget.classList.add("active");
+
+    // Mobile me click karne ke baad sidebar band kar do
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("show")) {
+        sidebar.classList.remove("show");
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("show");
+}
+
+function logoutDashboard() {
+    localStorage.clear();
+    window.location.href = "../index.html";
+}
+
+// ==========================================
+// 3. REFERRAL & WALLET LOGIC
+// ==========================================
+function copyMyReferral() {
+    const code = document.getElementById("refCode").innerText;
+    if (code && code !== "-----") {
         navigator.clipboard.writeText(code);
-        alert("Referral Code '" + code + "' copied to clipboard!");
+        alert("Referral Code '" + code + "' copied! Share it with your friends.");
     }
 }
 
-// Logout karne ka function
-function logoutPatient() {
-    localStorage.clear(); // Saara data delete kar do
-    window.location.href = "../index.html"; // Main page par bhej do
+function requestWithdraw() {
+    alert("Add Money / Withdraw feature will be integrated soon!");
+}
+
+// ==========================================
+// 4. VIP MODAL LOGIC
+// ==========================================
+function openVIPModal() {
+    document.getElementById('vip-upgrade-modal').style.display = 'block';
+}
+
+function togglePaymentSection() {
+    const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
+    const onlineSection = document.getElementById('onlinePaymentSection');
+    
+    if (isOnline) {
+        onlineSection.style.display = 'block';
+    } else {
+        onlineSection.style.display = 'none';
+    }
+}
+
+function applyReferralDiscount() {
+    const refInput = document.getElementById('vipRefCode').value.trim();
+    const finalAmountSpan = document.getElementById('finalVipAmount');
+    const refMsg = document.getElementById('refMsg');
+    
+    if (refInput.length >= 5) { // Basic validation
+        finalAmountSpan.innerText = "2500"; // 500 discount
+        refMsg.style.display = "block";
+        refMsg.style.color = "green";
+        refMsg.innerText = "Discount Applied Successfully!";
+    } else {
+        refMsg.style.display = "block";
+        refMsg.style.color = "red";
+        refMsg.innerText = "Invalid Referral Code";
+        finalAmountSpan.innerText = "3000"; // Reset
+    }
+}
+
+function submitVIPForm() {
+    // Ye abhi dummy hai, future me ise Code.gs se connect karenge
+    const btn = document.getElementById('btn-submit-vip');
+    btn.innerText = "Processing...";
+    
+    setTimeout(() => {
+        alert("VIP Request Submitted! Admin will verify your payment and activate the plan.");
+        document.getElementById('vip-upgrade-modal').style.display = 'none';
+        btn.innerText = "Submit Request";
+    }, 1500);
 }

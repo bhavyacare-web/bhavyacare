@@ -19,7 +19,7 @@
         .hero-section h1 { color: #0056b3; font-size: 36px; margin-bottom: 10px; }
         .hero-section p { color: #555; font-size: 18px; max-width: 600px; margin: 0 auto; }
         
-        /* 🌟 NAYA: VIP Button Styling 🌟 */
+        /* VIP Button Styling */
         .vip-cta-btn {
             background-color: #ffc107;
             color: #333;
@@ -53,7 +53,7 @@
         <h1>Welcome to BhavyaCare</h1>
         <p>Aapki health, humari zimmedari. Book tests, consult doctors, and get medicines easily.</p>
         
-        <button class="vip-cta-btn" onclick="window.location.href='patient_dashboard/vip_member.html'">
+        <button class="vip-cta-btn" onclick="handleVipClick()">
             <i class="fas fa-crown"></i> Get VIP Family Plan
         </button>
     </div>
@@ -66,12 +66,32 @@
                 document.getElementById('header-container').innerHTML = data;
                 
                 // Step 2: Header load hone ke BAAD app.js load karna 
-                // (Agar pehle load kar diya, toh app.js ko login button nahi milega aur error aayega)
                 let script = document.createElement('script');
                 script.src = 'app.js';
                 document.body.appendChild(script);
             })
             .catch(error => console.error('Error loading header:', error));
+
+        // 🌟 NAYA LOGIC: Check Login Before Opening VIP Page 🌟
+        function handleVipClick() {
+            const userId = localStorage.getItem("bhavya_user_id");
+            
+            if (userId) {
+                // Agar user login hai, toh seedha VIP page par bhejo
+                window.location.href = 'patient_dashboard/vip_member.html';
+            } else {
+                // Agar login nahi hai, toh Login Form open karo
+                alert("Please login or create an account first to get the VIP Plan!");
+                
+                if (typeof openPatientLogin === "function") {
+                    openPatientLogin(); // Ye function tumhare app.js me already hai
+                } else {
+                    // Agar app.js thoda late load hua ho, toh directly button click karwa do
+                    const loginBtn = document.getElementById('nav-login-btn');
+                    if (loginBtn) loginBtn.click();
+                }
+            }
+        }
     </script>
 
 </body>

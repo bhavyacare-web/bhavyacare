@@ -24,7 +24,7 @@ async function fetchPatientsData() {
             loader.style.display = "none";
 
             if (patients.length === 0) {
-                tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No patients found in the system yet.</td></tr>";
+                tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No patients found in the system yet.</td></tr>";
                 return;
             }
 
@@ -39,13 +39,23 @@ async function fetchPatientsData() {
                 
                 const row = `
                     <tr>
-                        <td>${patient.timestamp.split(" ")[0]}</td>
-                        <td><strong>${patient.user_id}</strong></td>
-                        <td>${patient.patient_name}</td>
-                        <td>${patient.mobile_number}</td>
-                        <td>${patient.referral_code}</td>
+                        <td style="text-align: center;">
+                            <img src="${patient.image}" class="patient-img" alt="Pic">
+                        </td>
+                        
+                        <td><span style="font-size: 12px; color: #555;">${patient.timestamp.split(" ")[0]}</span></td>
+                        <td><strong>${patient.user_id}</strong><br><span style="font-size: 11px; color: #888;">Ref: ${patient.referral_code}</span></td>
+                        <td style="font-weight: bold; color: #333;">${patient.patient_name}</td>
+                        
+                        <td>
+                            <div style="font-weight: bold;">📞 ${patient.mobile_number}</div>
+                            <div style="font-size: 11px; color: #555;">📧 ${patient.email}</div>
+                        </td>
+                        
+                        <td style="max-width: 250px; font-size: 12px; line-height: 1.4;">${patient.address}</td>
+                        
                         <td style="font-weight: bold; color: #28a745;">₹${patient.wallet}</td>
-                        <td style="text-transform: capitalize;">${patient.plan}</td>
+                        <td style="text-transform: capitalize; font-weight: bold;">${patient.plan}</td>
                         
                         <td>
                             <button class="badge-btn ${withdrawClass}" onclick="toggleStatus('${patient.user_id}', 'withdraw', '${patient.withdraw}')">

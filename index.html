@@ -18,6 +18,31 @@
         .hero-section { text-align: center; padding: 80px 20px; background-color: #e6f0fa; }
         .hero-section h1 { color: #0056b3; font-size: 36px; margin-bottom: 10px; }
         .hero-section p { color: #555; font-size: 18px; max-width: 600px; margin: 0 auto; }
+        
+        /* 🌟 NAYA: VIP Button Styling 🌟 */
+        .vip-cta-btn {
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            padding: 14px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            display: inline-block;
+        }
+        .vip-cta-btn i {
+            margin-right: 8px;
+            color: #d35400;
+        }
+        .vip-cta-btn:hover {
+            background-color: #e0a800;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -27,6 +52,10 @@
     <div class="hero-section">
         <h1>Welcome to BhavyaCare</h1>
         <p>Aapki health, humari zimmedari. Book tests, consult doctors, and get medicines easily.</p>
+        
+        <button class="vip-cta-btn" onclick="window.location.href='patient_dashboard/vip_member.html'">
+            <i class="fas fa-crown"></i> Get VIP Family Plan
+        </button>
     </div>
 
     <script>

@@ -2,16 +2,13 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
 
 // ==========================================
-// 1. PAGE LOAD HOTE HI DATA FETCH KARNA
+// 1. DATA FETCH & BINDING
 // ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-    checkLoginAndFetchData();
-});
+document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
     
-    // Agar user logged in nahi hai toh wapas home page par bhej do
     if (!userId) {
         alert("Please login first to access the dashboard.");
         window.location.href = "../index.html"; 
@@ -22,10 +19,7 @@ async function checkLoginAndFetchData() {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ 
-                action: "getPatientProfile", 
-                user_id: userId 
-            }) 
+            body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) 
         });
 
         const result = await response.json();
@@ -33,74 +27,80 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // 🌟 YAHAN IDS FIX KI GAYI HAIN 🌟
+            // UI Update (Overview)
+            safeSetText("userNameMobile", patient.patient_name);
+            safeSetText("userNameDesktop", patient.patient_name);
+            safeSetText("userIdDisplay", "ID: " + patient.user_id);
+            safeSetText("walletBal", patient.wallet);
+            safeSetText("refCode", patient.referral_code);
+            safeSetText("vipStatus", patient.plan.toUpperCase());
             
-            // 1. Mobile me naam set karna
-            const mobileName = document.getElementById("userNameMobile");
-            if (mobileName) mobileName.innerText = patient.patient_name;
+            // Profile Info Update (Read Only)
+            safeSetText("infoName", patient.patient_name);
+            safeSetText("infoMobile", patient.mobile_number);
             
-            // 2. Desktop/Laptop me naam set karna
-            const desktopName = document.getElementById("userNameDesktop");
-            if (desktopName) desktopName.innerText = patient.patient_name;
-
-            // 3. User ID set karna
-            const userIdDisp = document.getElementById("userIdDisplay");
-            if (userIdDisp) userIdDisp.innerText = "ID: " + patient.user_id;
-
-            // 4. Wallet Balance set karna
-            const walletDisplay = document.getElementById("walletBal");
-            if (walletDisplay) walletDisplay.innerText = patient.wallet;
-
-            // 5. Referral Code set karna
-            const refDisplay = document.getElementById("refCode");
-            if (refDisplay) refDisplay.innerText = patient.referral_code;
-            
-            // 6. VIP/Plan Status set karna
-            const vipDisplay = document.getElementById("vipStatus");
-            if (vipDisplay) vipDisplay.innerText = patient.plan.toUpperCase();
-            
-            // 7. VIP Modal me pehla member (Self) apne aap set karna
+            // VIP Modal Data
             const vipMem1 = document.getElementById("vipMem1");
             if (vipMem1) vipMem1.value = patient.patient_name;
 
+            // Extra Details & Banner Logic
+            const banner = document.getElementById("profileBanner");
+            const profileImages = document.querySelectorAll(".profile-img");
+            const editPreview = document.getElementById("editProfilePreview");
+
+            if (patient.extra_details) {
+                if (banner) banner.style.display = "none";
+                
+                // Form Pre-fill
+                safeSetValue("infoEmail", patient.extra_details.email);
+                safeSetValue("infoAddress", patient.extra_details.address);
+                safeSetValue("infoCity", patient.extra_details.city);
+                safeSetValue("infoDistrict", patient.extra_details.district);
+                safeSetValue("infoState", patient.extra_details.state);
+                safeSetValue("infoPincode", patient.extra_details.pincode);
+                
+                if (patient.extra_details.image && patient.extra_details.image.length > 50) {
+                    profileImages.forEach(img => img.src = patient.extra_details.image);
+                    if(editPreview) editPreview.src = patient.extra_details.image;
+                    safeSetValue("infoImageBase64", patient.extra_details.image);
+                }
+            } else {
+                if (banner) banner.style.display = "block";
+            }
+
         } else {
             alert("Error: " + result.message);
-            if(result.message === "Your account is blocked by Admin.") {
-                logoutDashboard();
-            }
+            if(result.message === "Your account is blocked by Admin.") logoutDashboard();
         }
     } catch (error) {
-        console.error("Fetch Error:", error);
+        console.error(error);
         alert("Failed to load profile data. Check your internet connection.");
     }
 }
 
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if(el) el.innerText = text;
+}
+function safeSetValue(id, val) {
+    const el = document.getElementById(id);
+    if(el && val) el.value = val;
+}
+
 // ==========================================
-// 2. UI & NAVIGATION LOGIC (TABS & SIDEBAR)
+// 2. UI TABS & NAVIGATION
 // ==========================================
 function switchTab(tabId) {
-    // Sabhi tabs ko hide karo
     const contents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < contents.length; i++) {
-        contents[i].classList.remove("active");
-    }
+    for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
     
-    // Sabhi links se active class hatao (Bottom Nav aur Sidebar dono ke liye)
     const links = document.querySelectorAll(".nav-item, .nav-links a");
     links.forEach(link => link.classList.remove("active"));
     
-    // Jo tab click kiya hai use show karo
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.add("active");
     
-    if(event && event.currentTarget) {
-        event.currentTarget.classList.add("active");
-    }
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    if(sidebar) sidebar.classList.toggle("show");
+    if(event && event.currentTarget) event.currentTarget.classList.add("active");
 }
 
 function logoutDashboard() {
@@ -109,7 +109,7 @@ function logoutDashboard() {
 }
 
 // ==========================================
-// 3. REFERRAL & WALLET LOGIC
+// 3. REFERRAL & VIP MODAL
 // ==========================================
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
@@ -119,27 +119,9 @@ function copyMyReferral() {
     }
 }
 
-function requestWithdraw() {
-    alert("Add Money / Withdraw feature will be integrated soon!");
-}
-
-// ==========================================
-// 4. VIP MODAL LOGIC
-// ==========================================
 function openVIPModal() {
     const modal = document.getElementById('vip-upgrade-modal');
     if(modal) modal.style.display = 'block';
-}
-
-function togglePaymentSection() {
-    const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
-    const onlineSection = document.getElementById('onlinePaymentSection');
-    
-    if (isOnline) {
-        onlineSection.style.display = 'block';
-    } else {
-        onlineSection.style.display = 'none';
-    }
 }
 
 function applyReferralDiscount() {
@@ -147,28 +129,98 @@ function applyReferralDiscount() {
     const finalAmountSpan = document.getElementById('finalVipAmount');
     const refMsg = document.getElementById('refMsg');
     
-    if (refInput.length >= 5) { // Basic validation
-        finalAmountSpan.innerText = "2500"; // 500 discount
+    if (refInput.length >= 5) {
+        finalAmountSpan.innerText = "2500";
         refMsg.style.display = "block";
         refMsg.style.color = "green";
-        refMsg.innerText = "Discount Applied Successfully!";
+        refMsg.innerText = "Discount Applied!";
     } else {
         refMsg.style.display = "block";
         refMsg.style.color = "red";
-        refMsg.innerText = "Invalid Referral Code";
-        finalAmountSpan.innerText = "3000"; // Reset
+        refMsg.innerText = "Invalid Code";
+        finalAmountSpan.innerText = "3000";
     }
 }
 
 function submitVIPForm() {
     const btn = document.getElementById('btn-submit-vip');
     if(!btn) return;
-    
     btn.innerText = "Processing...";
-    
     setTimeout(() => {
-        alert("VIP Request Submitted! Admin will verify your payment and activate the plan.");
+        alert("VIP Request Submitted! Admin will verify your payment.");
         document.getElementById('vip-upgrade-modal').style.display = 'none';
         btn.innerText = "Pay & Upgrade Now";
     }, 1500);
+}
+
+// ==========================================
+// 4. IMAGE COMPRESSION & SAVE PROFILE
+// ==========================================
+const fileInput = document.getElementById("profileImageInput");
+if(fileInput) {
+    fileInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement("canvas");
+                const MAX_WIDTH = 200; 
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+                
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); 
+                
+                document.getElementById("editProfilePreview").src = compressedBase64;
+                document.getElementById("infoImageBase64").value = compressedBase64;
+            }
+        }
+    });
+}
+
+async function savePatientProfile() {
+    const btn = document.getElementById("btnSaveProfile");
+    btn.innerText = "Saving Please Wait...";
+    btn.disabled = true;
+    
+    const payload = {
+        action: "savePatientDetails",
+        user_id: localStorage.getItem("bhavya_user_id"),
+        email: document.getElementById("infoEmail").value,
+        address: document.getElementById("infoAddress").value,
+        city: document.getElementById("infoCity").value,
+        district: document.getElementById("infoDistrict").value,
+        state: document.getElementById("infoState").value,
+        pincode: document.getElementById("infoPincode").value,
+        image: document.getElementById("infoImageBase64").value
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Profile Details Saved Successfully!");
+            checkLoginAndFetchData(); // Data refresh karo taaki banner hatt jaye
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch (error) {
+        alert("Failed to save. Check your connection.");
+    } finally {
+        btn.innerText = "Save & Update Profile";
+        btn.disabled = false;
+    }
 }

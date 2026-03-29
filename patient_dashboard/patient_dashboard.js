@@ -38,10 +38,6 @@ async function checkLoginAndFetchData() {
             // Profile Info Update (Read Only)
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
-            
-            // VIP Modal Data
-            const vipMem1 = document.getElementById("vipMem1");
-            if (vipMem1) vipMem1.value = patient.patient_name;
 
             // Extra Details & Banner Logic
             const banner = document.getElementById("profileBanner");
@@ -66,6 +62,16 @@ async function checkLoginAndFetchData() {
                 }
             } else {
                 if (banner) banner.style.display = "block";
+            }
+
+            // 🌟 NAYA LOGIC: URL CHECK KARKE TAB OPEN KARNA 🌟
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'profile') {
+                setTimeout(() => {
+                    switchTab('profile');
+                    // URL ko clean kar do
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 300);
             }
 
         } else {
@@ -100,7 +106,13 @@ function switchTab(tabId) {
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.add("active");
     
-    if(event && event.currentTarget) event.currentTarget.classList.add("active");
+    // 🌟 SAFE AUTO-CLICK LOGIC 🌟
+    if(typeof event !== 'undefined' && event && event.currentTarget) {
+        event.currentTarget.classList.add("active");
+    } else {
+        const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+        if(activeNav) activeNav.classList.add("active");
+    }
 }
 
 function logoutDashboard() {
@@ -109,7 +121,7 @@ function logoutDashboard() {
 }
 
 // ==========================================
-// 3. REFERRAL & VIP MODAL
+// 3. REFERRAL 
 // ==========================================
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
@@ -117,40 +129,6 @@ function copyMyReferral() {
         navigator.clipboard.writeText(code);
         alert("Referral Code '" + code + "' copied! Share it with your friends.");
     }
-}
-
-function openVIPModal() {
-    const modal = document.getElementById('vip-upgrade-modal');
-    if(modal) modal.style.display = 'block';
-}
-
-function applyReferralDiscount() {
-    const refInput = document.getElementById('vipRefCode').value.trim();
-    const finalAmountSpan = document.getElementById('finalVipAmount');
-    const refMsg = document.getElementById('refMsg');
-    
-    if (refInput.length >= 5) {
-        finalAmountSpan.innerText = "2500";
-        refMsg.style.display = "block";
-        refMsg.style.color = "green";
-        refMsg.innerText = "Discount Applied!";
-    } else {
-        refMsg.style.display = "block";
-        refMsg.style.color = "red";
-        refMsg.innerText = "Invalid Code";
-        finalAmountSpan.innerText = "3000";
-    }
-}
-
-function submitVIPForm() {
-    const btn = document.getElementById('btn-submit-vip');
-    if(!btn) return;
-    btn.innerText = "Processing...";
-    setTimeout(() => {
-        alert("VIP Request Submitted! Admin will verify your payment.");
-        document.getElementById('vip-upgrade-modal').style.display = 'none';
-        btn.innerText = "Pay & Upgrade Now";
-    }, 1500);
 }
 
 // ==========================================
@@ -213,7 +191,7 @@ async function savePatientProfile() {
         const result = await response.json();
         if (result.status === "success") {
             alert("Profile Details Saved Successfully!");
-            checkLoginAndFetchData(); // Data refresh karo taaki banner hatt jaye
+            checkLoginAndFetchData(); // Refresh UI
         } else {
             alert("Error: " + result.message);
         }

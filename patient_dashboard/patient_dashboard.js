@@ -33,18 +33,35 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // HTML Elements me data daalna
-            document.getElementById("userNameDisplay").innerText = patient.patient_name;
-            document.getElementById("userIdDisplay").innerText = "ID: " + patient.user_id;
-            document.getElementById("walletBal").innerText = patient.wallet;
-            document.getElementById("refCode").innerText = patient.referral_code;
+            // 🌟 YAHAN IDS FIX KI GAYI HAIN 🌟
             
-            // VIP Status / Plan update karna
-            document.getElementById("vipStatus").innerText = patient.plan.toUpperCase();
+            // 1. Mobile me naam set karna
+            const mobileName = document.getElementById("userNameMobile");
+            if (mobileName) mobileName.innerText = patient.patient_name;
             
-            // VIP Modal me pehla member apne aap set karna
+            // 2. Desktop/Laptop me naam set karna
+            const desktopName = document.getElementById("userNameDesktop");
+            if (desktopName) desktopName.innerText = patient.patient_name;
+
+            // 3. User ID set karna
+            const userIdDisp = document.getElementById("userIdDisplay");
+            if (userIdDisp) userIdDisp.innerText = "ID: " + patient.user_id;
+
+            // 4. Wallet Balance set karna
+            const walletDisplay = document.getElementById("walletBal");
+            if (walletDisplay) walletDisplay.innerText = patient.wallet;
+
+            // 5. Referral Code set karna
+            const refDisplay = document.getElementById("refCode");
+            if (refDisplay) refDisplay.innerText = patient.referral_code;
+            
+            // 6. VIP/Plan Status set karna
+            const vipDisplay = document.getElementById("vipStatus");
+            if (vipDisplay) vipDisplay.innerText = patient.plan.toUpperCase();
+            
+            // 7. VIP Modal me pehla member (Self) apne aap set karna
             const vipMem1 = document.getElementById("vipMem1");
-            if(vipMem1) vipMem1.value = patient.patient_name;
+            if (vipMem1) vipMem1.value = patient.patient_name;
 
         } else {
             alert("Error: " + result.message);
@@ -68,23 +85,22 @@ function switchTab(tabId) {
         contents[i].classList.remove("active");
     }
     
-    // Sabhi links se active class hatao
-    const links = document.querySelectorAll(".nav-links a");
+    // Sabhi links se active class hatao (Bottom Nav aur Sidebar dono ke liye)
+    const links = document.querySelectorAll(".nav-item, .nav-links a");
     links.forEach(link => link.classList.remove("active"));
     
     // Jo tab click kiya hai use show karo
-    document.getElementById(tabId).classList.add("active");
-    event.currentTarget.classList.add("active");
-
-    // Mobile me click karne ke baad sidebar band kar do
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar.classList.contains("show")) {
-        sidebar.classList.remove("show");
+    const selectedTab = document.getElementById(tabId);
+    if(selectedTab) selectedTab.classList.add("active");
+    
+    if(event && event.currentTarget) {
+        event.currentTarget.classList.add("active");
     }
 }
 
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("show");
+    const sidebar = document.getElementById("sidebar");
+    if(sidebar) sidebar.classList.toggle("show");
 }
 
 function logoutDashboard() {
@@ -111,7 +127,8 @@ function requestWithdraw() {
 // 4. VIP MODAL LOGIC
 // ==========================================
 function openVIPModal() {
-    document.getElementById('vip-upgrade-modal').style.display = 'block';
+    const modal = document.getElementById('vip-upgrade-modal');
+    if(modal) modal.style.display = 'block';
 }
 
 function togglePaymentSection() {
@@ -144,13 +161,14 @@ function applyReferralDiscount() {
 }
 
 function submitVIPForm() {
-    // Ye abhi dummy hai, future me ise Code.gs se connect karenge
     const btn = document.getElementById('btn-submit-vip');
+    if(!btn) return;
+    
     btn.innerText = "Processing...";
     
     setTimeout(() => {
         alert("VIP Request Submitted! Admin will verify your payment and activate the plan.");
         document.getElementById('vip-upgrade-modal').style.display = 'none';
-        btn.innerText = "Submit Request";
+        btn.innerText = "Pay & Upgrade Now";
     }, 1500);
 }

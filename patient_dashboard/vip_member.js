@@ -20,9 +20,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         
         const result = await response.json();
+        
+        // 🌟 NAYA REDIRECT LOGIC 🌟
         if (result.status === "error" && result.message === "Profile Incomplete") {
-            alert("Please complete your profile details first to buy VIP plan.");
-            window.location.href = "patient_dashboard.html"; // Wapas bhej do
+            alert("Please complete your personal details first to activate the VIP Plan.");
+            window.location.href = "patient_dashboard.html?tab=profile"; // Seedha Profile tab pe bhejega
         } else if (result.status === "success") {
             document.getElementById("mem1Name").value = result.data.patient_name;
             basePrice = result.data.price;

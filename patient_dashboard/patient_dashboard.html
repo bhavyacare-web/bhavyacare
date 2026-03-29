@@ -38,7 +38,7 @@
         .brand h2 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; }
         .brand span { color: var(--success); }
         
-        .user-profile-mini { display: flex; align-items: center; gap: 10px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 10px; cursor: pointer;}
         .user-profile-mini .greeting { font-size: 13px; color: var(--text-light); text-align: right;}
         .user-profile-mini .name { font-size: 15px; font-weight: bold; color: var(--text-main); margin: 0; }
         .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e6f0fa; object-fit: cover;}
@@ -48,7 +48,7 @@
             flex-grow: 1;
             overflow-y: auto;
             padding: 20px;
-            padding-bottom: 90px; /* Space for bottom nav */
+            padding-bottom: 90px;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -66,7 +66,6 @@
             border: 1px solid #f0f0f0; transition: 0.2s;
         }
         
-        /* Specific Card Styles */
         .card-wallet { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: none; }
         .card-wallet .icon-bg { color: #2e7d32; opacity: 0.1; position: absolute; right: -10px; bottom: -10px; font-size: 70px; }
         
@@ -80,45 +79,40 @@
         .card-action-btn { background: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-top: 15px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 1; transition: 0.2s;}
         .card-action-btn:active { transform: scale(0.95); }
 
-        /* 🌟 Data Boxes (Lists/Tables) 🌟 */
+        /* 🌟 Data Boxes 🌟 */
         .data-box { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px;}
         .section-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
         .section-title a { font-size: 13px; color: var(--primary); text-decoration: none; font-weight: normal; }
 
-        /* Modern List Item instead of Table for Mobile */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
         .list-item:last-child { border-bottom: none; padding-bottom: 0; }
         .list-info h5 { margin: 0 0 5px 0; font-size: 15px; color: var(--text-main); }
         .list-info p { margin: 0; font-size: 12px; color: var(--text-light); }
-        .list-action { text-align: right; }
         
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
         .status-success { background: #e8f5e9; color: #2e7d32; }
 
-        /* 🌟 App-like Bottom Navigation (Mobile Only) 🌟 */
+        /* 🌟 Bottom Navigation 🌟 */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg);
             display: flex; justify-content: space-around; padding: 10px 5px 15px 5px;
             box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000;
         }
-
         .nav-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px;
             padding: 8px 12px; border-radius: 12px; transition: 0.3s;
         }
-
         .nav-item i { font-size: 20px; margin-bottom: 2px; transition: 0.3s;}
-        
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
 
-        /* 🌟 Modals (Kept from your design) 🌟 */
+        /* 🌟 Modals & Inputs 🌟 */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
         .input-box:focus { border-color: var(--primary); }
         .form-group { margin-top: 12px; }
-        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
 
         /* Desktop Adjustments */
         @media (min-width: 769px) {
@@ -128,7 +122,6 @@
             .nav-item { flex-direction: row; justify-content: flex-start; gap: 15px; font-size: 15px; padding: 15px 20px; margin-bottom: 5px; width: 100%; }
             .nav-item.active { background: #e6f0fa; }
             .main-content { padding: 40px; padding-bottom: 40px;}
-            /* Add desktop header inside main content */
             .desktop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         }
         @media (max-width: 768px) { .desktop-header { display: none; } }
@@ -143,14 +136,19 @@
         <a href="#" class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
         <a href="#" class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-calendar-check"></i> <span>Bookings</span></a>
         <a href="#" class="nav-item" onclick="switchTab('reports')"><i class="fas fa-file-medical-alt"></i> <span>Reports</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('wallet')"><i class="fas fa-wallet"></i> <span>Wallet</span></a>
+        <a href="#" class="nav-item" onclick="switchTab('profile')"><i class="fas fa-user"></i> <span>My Info</span></a>
         <a href="#" class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
     </nav>
 
     <div class="main-content">
+        <div id="profileBanner" style="display:none; background: #fff3cd; color: #856404; padding: 12px 20px; font-size: 13px; text-align: center; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba;">
+            ⚠️ <strong>Complete your profile!</strong> Helpful for home collection & delivery.
+            <button onclick="switchTab('profile')" style="background: #856404; color: white; border: none; padding: 5px 12px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: bold;">Fill Now</button>
+        </div>
+
         <div class="mobile-header">
             <div class="brand"><h2>Bhavya<span>Care</span></h2></div>
-            <div class="user-profile-mini">
+            <div class="user-profile-mini" onclick="switchTab('profile')">
                 <div class="greeting">
                     <p style="margin:0; font-size:11px;">Welcome,</p>
                     <p class="name" id="userNameMobile">Loading...</p>
@@ -164,7 +162,7 @@
                 <h3 style="margin: 0; font-size: 24px; color: var(--text-main);">Welcome back, <span id="userNameDesktop" style="color: var(--primary);">Patient</span>!</h3>
                 <p style="margin: 5px 0 0 0; color: var(--text-light);">Here is your health summary.</p>
             </div>
-            <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
                 <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
                 <span style="font-weight: bold; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
             </div>
@@ -173,11 +171,11 @@
         <div id="overview" class="tab-content active">
             
             <div class="dashboard-grid">
-                <div class="dash-card card-wallet">
+                <div class="dash-card card-wallet" onclick="switchTab('wallet')" style="cursor: pointer;">
                     <i class="fas fa-wallet icon-bg"></i>
                     <h4>Wallet Balance</h4>
                     <div class="value">₹<span id="walletBal">0</span></div>
-                    <button class="card-action-btn" style="color: var(--success);" onclick="alert('Add money feature coming soon!')">Top Up Wallet</button>
+                    <button class="card-action-btn" style="color: var(--success);" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up Wallet</button>
                 </div>
                 
                 <div class="dash-card card-vip">
@@ -213,62 +211,71 @@
                         <a href="#" style="font-size: 12px; color: var(--primary); text-decoration: none; font-weight: bold;">View Report</a>
                     </div>
                 </div>
-                </div>
-        </div>
-
-        <div id="bookings" class="tab-content">
-            <div class="data-box">
-                <div class="section-title">My Bookings</div>
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-light);">
-                    <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px; color: #ddd;"></i>
-                    <p>No active bookings found.</p>
-                </div>
             </div>
         </div>
 
-        <div id="reports" class="tab-content">
-            <div class="data-box">
-                <div class="section-title">Medical Records</div>
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-light);">
-                    <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px; color: #ddd;"></i>
-                    <p>Your test reports will appear here.</p>
-                </div>
-            </div>
-        </div>
+        <div id="bookings" class="tab-content"><div class="data-box"><div class="section-title">My Bookings</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div></div></div>
         
-        <div id="wallet" class="tab-content">
+        <div id="reports" class="tab-content"><div class="data-box"><div class="section-title">Medical Records</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Your test reports will appear here.</p></div></div></div>
+        
+        <div id="wallet" class="tab-content"><div class="data-box"><div class="section-title">Transaction History</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px;"></i><p>No recent transactions.</p></div></div></div>
+
+        <div id="profile" class="tab-content">
             <div class="data-box">
-                <div class="section-title">Transaction History</div>
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-light);">
-                    <i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px; color: #ddd;"></i>
-                    <p>No recent transactions.</p>
+                <div class="section-title">My Info</div>
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img id="editProfilePreview" src="https://via.placeholder.com/100" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;">
+                    <br>
+                    <input type="file" id="profileImageInput" accept="image/*" style="font-size: 12px; max-width: 200px;">
                 </div>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 10px 0; color: var(--primary);">Account Details (Non-Editable)</h5>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="font-size:11px; color:#888;">Full Name</label>
+                            <div style="font-weight:bold; font-size:14px;" id="infoName">Loading...</div>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="font-size:11px; color:#888;">Mobile Number</label>
+                            <div style="font-weight:bold; font-size:14px;" id="infoMobile">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 style="margin: 0 0 10px 0; color: var(--primary);">Personal Details</h5>
+                <div class="form-group"><input type="email" id="infoEmail" class="input-box" placeholder="Email Address"></div>
+                <div class="form-group"><input type="text" id="infoAddress" class="input-box" placeholder="Full Address (House, Street)"></div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;"><input type="text" id="infoCity" class="input-box" placeholder="City/Village"></div>
+                    <div class="form-group" style="flex: 1;"><input type="text" id="infoDistrict" class="input-box" placeholder="District"></div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;"><input type="text" id="infoState" class="input-box" placeholder="State"></div>
+                    <div class="form-group" style="flex: 1;"><input type="number" id="infoPincode" class="input-box" placeholder="Pincode"></div>
+                </div>
+
+                <input type="hidden" id="infoImageBase64" value="">
+
+                <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>
         </div>
+
     </div>
 
     <div id="vip-upgrade-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('vip-upgrade-modal').style.display='none'">✖</button>
-        
         <div style="text-align: center; margin-bottom: 20px;">
-            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
-                <i class="fas fa-crown" style="font-size: 30px; color: #f57c00;"></i>
-            </div>
+            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-crown" style="font-size: 30px; color: #f57c00;"></i></div>
             <h3 style="margin:0; color: var(--text-main);">VIP Family Plan</h3>
             <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Add up to 3 members • ₹3000/year</p>
         </div>
-
-        <div class="form-group">
-            <label style="font-size:12px; font-weight:600; color:var(--text-light);">Member 1 (Self)</label>
-            <input type="text" id="vipMem1" class="input-box" readonly style="background:#f9f9f9; color:#888;">
-        </div>
-        <div class="form-group">
-            <input type="text" id="vipMem2" class="input-box" placeholder="Family Member 2 Name (Optional)">
-        </div>
-        <div class="form-group">
-            <input type="text" id="vipMem3" class="input-box" placeholder="Family Member 3 Name (Optional)">
-        </div>
-
+        <div class="form-group"><label style="font-size:12px; font-weight:600; color:var(--text-light);">Member 1 (Self)</label><input type="text" id="vipMem1" class="input-box" readonly style="background:#f9f9f9; color:#888;"></div>
+        <div class="form-group"><input type="text" id="vipMem2" class="input-box" placeholder="Family Member 2 Name (Optional)"></div>
+        <div class="form-group"><input type="text" id="vipMem3" class="input-box" placeholder="Family Member 3 Name (Optional)"></div>
         <div class="form-group" style="background:#f9f9f9; padding:15px; border-radius:12px; margin-top: 20px;">
             <label style="font-size:12px; font-weight:600;">Referral Code (Save ₹500)</label>
             <div style="display:flex; gap:10px; margin-top:8px;">
@@ -277,16 +284,13 @@
             </div>
             <small id="refMsg" style="display:none; font-weight:bold; margin-top:8px;"></small>
         </div>
-
         <div style="background:#fff3e0; padding:15px; border-radius:12px; margin-top:20px; display:flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 14px; font-weight: 600;">Total Payable</span>
             <span style="font-size: 20px; font-weight:800; color:#e65100;">₹<span id="finalVipAmount">3000</span></span>
         </div>
-        
-        <button id="btn-submit-vip" style="background:var(--primary); width:100%; color:white; border:none; margin-top:20px; font-size: 15px; font-weight:bold; padding:15px; border-radius:12px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,86,179,0.3);" onclick="submitVIPForm()">Pay & Upgrade Now</button>
+        <button id="btn-submit-vip" style="background:var(--primary); width:100%; color:white; border:none; margin-top:20px; font-size: 15px; font-weight:bold; padding:15px; border-radius:12px; cursor:pointer;" onclick="submitVIPForm()">Pay & Upgrade Now</button>
     </div>
 
     <script src="patient_dashboard.js"></script>
-
 </body>
 </html>

@@ -36,38 +36,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "patient_dashboard.html";
     }
 
-    // 🌟 NAYA: Referral Code hamesha CAPITAL me type ho 🌟
-    const refCodeInput = document.getElementById("refCodeInput");
-    if(refCodeInput) {
-        refCodeInput.addEventListener("input", function(e) {
-            this.value = this.value.toUpperCase();
-        });
-    }
+    // Capitalize Ref Code on typing
+    document.getElementById("refCodeInput").addEventListener("input", function() {
+        this.value = this.value.toUpperCase();
+    });
 });
 
-// Image Compression for Screenshot
-const screenshotInput = document.getElementById("txnScreenshot");
-if(screenshotInput) {
-    screenshotInput.addEventListener("change", function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function(event) {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                const canvas = document.createElement("canvas");
-                const scaleSize = 400 / img.width;
-                canvas.width = 400;
-                canvas.height = img.height * scaleSize;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
-            }
+// Image Compression
+document.getElementById("txnScreenshot").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement("canvas");
+            const scaleSize = 400 / img.width;
+            canvas.width = 400;
+            canvas.height = img.height * scaleSize;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
         }
-    });
-}
+    }
+});
 
 function togglePayMode() {
     const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
@@ -75,7 +69,7 @@ function togglePayMode() {
 }
 
 async function applyRefCode() {
-    const refCode = document.getElementById("refCodeInput").value.trim();
+    const refCode = document.getElementById("refCodeInput").value.trim().toUpperCase();
     const msg = document.getElementById("refMsg");
     if (!refCode) return;
 
@@ -110,7 +104,6 @@ async function submitApplication() {
     const txnId = document.getElementById("txnId").value.trim();
     const screenshot = document.getElementById("screenshotBase64").value;
     
-    // Validation Rule
     if (isOnline && !txnId && !screenshot) {
         alert("Please enter Transaction ID or upload a screenshot for online payment.");
         return;
@@ -142,21 +135,20 @@ async function submitApplication() {
         const result = await response.json();
         
         if (result.status === "success") {
-            // 🌟 NAYA: ALERT KE JAGAH MODERN SUCCESS OVERLAY dikhao 🌟
+            // 🌟 NAYA: SUCCESS MSG DIKHAO AUR WAPAS BHEJO 🌟
             document.getElementById("successOverlay").style.display = "flex";
-            
-            // 🌟 NAYA: 2.5 seconds baad apne aap wapas dashboard bhej do 🌟
             setTimeout(() => {
                 window.location.href = "patient_dashboard.html";
-            }, 2500);
-            
+            }, 3000); // 3 seconds baad auto-redirect
         } else {
+            // Duplicate ya koi aur error ho toh yahan aayega
             alert(result.message);
             btn.innerText = "Submit Application";
             btn.disabled = false;
         }
     } catch (e) {
-        alert("Failed to submit. Check connection.");
+        console.error(e);
+        alert("Failed to submit. Error: " + e.message);
         btn.innerText = "Submit Application";
         btn.disabled = false;
     }

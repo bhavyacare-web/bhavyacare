@@ -1,5 +1,5 @@
 // 🌟 YAHAN APNA WAHI GOOGLE SCRIPT URL DAALO JO ABHI USE KAR RAHE HO 🌟
-const GOOGLE_SCRIPT_URL = "YAHAN_APNA_URL_PASTE_KARO";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 

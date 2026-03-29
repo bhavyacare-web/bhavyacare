@@ -21,10 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         const result = await response.json();
         
-        // 🌟 NAYA REDIRECT LOGIC 🌟
         if (result.status === "error" && result.message === "Profile Incomplete") {
             alert("Please complete your personal details first to activate the VIP Plan.");
-            window.location.href = "patient_dashboard.html?tab=profile"; // Seedha Profile tab pe bhejega
+            window.location.href = "patient_dashboard.html?tab=profile"; 
         } else if (result.status === "success") {
             document.getElementById("mem1Name").value = result.data.patient_name;
             basePrice = result.data.price;
@@ -36,28 +35,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Network Error. Redirecting to dashboard.");
         window.location.href = "patient_dashboard.html";
     }
+
+    // 🌟 NAYA: Referral Code hamesha CAPITAL me type ho 🌟
+    const refCodeInput = document.getElementById("refCodeInput");
+    if(refCodeInput) {
+        refCodeInput.addEventListener("input", function(e) {
+            this.value = this.value.toUpperCase();
+        });
+    }
 });
 
 // Image Compression for Screenshot
-document.getElementById("txnScreenshot").addEventListener("change", function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function(event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function() {
-            const canvas = document.createElement("canvas");
-            const scaleSize = 400 / img.width;
-            canvas.width = 400;
-            canvas.height = img.height * scaleSize;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
+const screenshotInput = document.getElementById("txnScreenshot");
+if(screenshotInput) {
+    screenshotInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement("canvas");
+                const scaleSize = 400 / img.width;
+                canvas.width = 400;
+                canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
+            }
         }
-    }
-});
+    });
+}
 
 function togglePayMode() {
     const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
@@ -132,8 +142,14 @@ async function submitApplication() {
         const result = await response.json();
         
         if (result.status === "success") {
-            alert("VIP Application Submitted! Admin will activate your plan after verification.");
-            window.location.href = "patient_dashboard.html";
+            // 🌟 NAYA: ALERT KE JAGAH MODERN SUCCESS OVERLAY dikhao 🌟
+            document.getElementById("successOverlay").style.display = "flex";
+            
+            // 🌟 NAYA: 2.5 seconds baad apne aap wapas dashboard bhej do 🌟
+            setTimeout(() => {
+                window.location.href = "patient_dashboard.html";
+            }, 2500);
+            
         } else {
             alert(result.message);
             btn.innerText = "Submit Application";

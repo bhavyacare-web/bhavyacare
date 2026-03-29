@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIP Family Plan - BhavyaCare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .back-btn { color: #0056b3; font-size: 20px; text-decoration: none; margin-right: 15px; }
+        .header h3 { margin: 0; color: #333; }
+        
+        .container { padding: 20px; max-width: 600px; margin: auto; padding-bottom: 50px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        
+        .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        .input-box:focus { border-color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 12px; font-weight: 600; color: #555; }
+        
+        .btn-primary { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 10px rgba(0,86,179,0.2); }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+        
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:999; display:flex; justify-content:center; align-items:center; flex-direction:column; color:#0056b3; font-weight:bold; }
+    </style>
+</head>
+<body>
 
+    <div id="loader">
+        <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom:10px;"></i>
+        <p>Checking Eligibility...</p>
+    </div>
+
+    <div class="header">
+        <a href="patient_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <h3>VIP Family Plan</h3>
+    </div>
+
+    <div class="container">
+        <div class="card" style="text-align: center; border-top: 5px solid #ffc107;">
+            <i class="fas fa-crown" style="font-size: 40px; color: #ffc107; margin-bottom: 10px;"></i>
+            <h2 style="margin: 0; color: #333;">VIP Membership</h2>
+            <p style="color: #666; font-size: 14px; margin-top: 5px;">Free Home Collection + Discount on tests for 3 Family Members</p>
+        </div>
+
+        <div class="card">
+            <h4 style="margin-top:0; color:#0056b3; border-bottom:1px solid #eee; padding-bottom:10px;">Family Details</h4>
+            <div class="form-group">
+                <label>Member 1 (Self) *</label>
+                <input type="text" id="mem1Name" class="input-box" readonly style="background:#f4f4f4;">
+            </div>
+            <div class="form-group">
+                <label>Member 2 Name</label>
+                <input type="text" id="mem2Name" class="input-box" placeholder="Enter Name">
+            </div>
+            <div class="form-group">
+                <label>Member 3 Name</label>
+                <input type="text" id="mem3Name" class="input-box" placeholder="Enter Name">
+            </div>
+        </div>
+
+        <div class="card" style="background:#f0f8ff;">
+            <label>Referral Code (Optional)</label>
+            <div style="display:flex; gap:10px; margin-top:5px;">
+                <input type="text" id="refCodeInput" class="input-box" placeholder="Enter Code for Discount" style="margin-top:0;">
+                <button type="button" onclick="applyRefCode()" style="background:#28a745; color:white; border:none; border-radius:8px; padding:0 15px; font-weight:bold; cursor:pointer;">Apply</button>
+            </div>
+            <small id="refMsg" style="display:none; font-weight:bold; margin-top:8px;"></small>
+        </div>
+
+        <div class="card">
+            <h4 style="margin-top:0; color:#0056b3;">Payment Mode</h4>
+            <div style="display:flex; gap:20px; margin-bottom: 15px;">
+                <label><input type="radio" name="payMode" value="Cash" checked onchange="togglePayMode()"> Pay via Cash (at Lab)</label>
+                <label><input type="radio" name="payMode" value="Online" onchange="togglePayMode()"> Online (UPI)</label>
+            </div>
+
+            <div id="onlinePaySection" style="display:none; background:#f9f9f9; padding:15px; border-radius:8px; border:1px dashed #ccc; text-align:center;">
+                <img src="../assets/upi_qr_code.jpeg" alt="QR Code" style="width:150px; border-radius:10px;">
+                <p style="font-weight:bold; margin:10px 0;">UPI ID: 8950112467@ptsbi</p>
+                
+                <div style="text-align:left; margin-top:15px;">
+                    <label>Transaction/UPI ID</label>
+                    <input type="text" id="txnId" class="input-box" placeholder="e.g. 1234567890">
+                    <p style="text-align:center; margin:10px 0; font-size:12px; font-weight:bold;">OR</p>
+                    <label>Upload Screenshot</label>
+                    <input type="file" id="txnScreenshot" accept="image/*" class="input-box" style="padding:8px;">
+                    <input type="hidden" id="screenshotBase64">
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; background:#fff3e0; border-left:4px solid #ffc107;">
+            <span style="font-weight:bold; color:#e65100;">Final Amount To Pay</span>
+            <span style="font-size:24px; font-weight:900; color:#333;">₹<span id="finalAmt">Loading...</span></span>
+        </div>
+
+        <button id="submitBtn" class="btn-primary" onclick="submitApplication()">Submit Application</button>
+    </div>
+
+    <script src="vip_member.js"></script>
+</body>
+</html>

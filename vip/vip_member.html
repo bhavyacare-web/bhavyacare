@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIP Membership - BhavyaCare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #0056b3; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #333333; --text-light: #777777; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+
+        .header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .back-btn { color: var(--text-main); font-size: 18px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold;}
+        
+        .main-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        
+        .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        .input-box:focus { border-color: var(--primary); }
+        .form-group { margin-bottom: 15px; }
+        
+        .radio-group { display: flex; gap: 15px; margin-top: 10px; }
+        .radio-btn { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-primary:disabled { background: #a0c4e8; cursor: not-allowed; }
+        
+        #incomplete-profile-warning { display: none; text-align: center; padding: 40px 20px; }
+        #vip-form-container { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="patient_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        <h3 style="margin: 0; color: var(--primary);">VIP <span>Family Plan</span></h3>
+    </div>
+
+    <div class="main-content">
+        <div id="incomplete-profile-warning">
+            <i class="fas fa-user-edit" style="font-size: 50px; color: var(--warning); margin-bottom: 15px;"></i>
+            <h3>Profile Incomplete</h3>
+            <p style="color: var(--text-light); font-size: 14px;">You must complete your profile details (address, email, etc.) before purchasing a VIP Membership.</p>
+            <button onclick="window.location.href='patient_dashboard.html'" class="btn-primary" style="margin-top: 20px;">Go to Profile</button>
+        </div>
+
+        <div id="vip-form-container">
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);">
+                <i class="fas fa-crown" style="font-size: 40px; color: #f57c00; margin-bottom: 10px;"></i>
+                <h3 style="margin: 0; color: #e65100;">BhavyaCare VIP</h3>
+                <p style="font-size: 13px; color: #d84315; margin-top: 5px;">Add up to 3 family members</p>
+            </div>
+
+            <div class="card">
+                <h4 style="margin: 0 0 15px 0;">Family Members</h4>
+                <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 1 (Self)</label><input type="text" id="mem1Name" class="input-box" readonly style="background:#f9f9f9; color:#666;"></div>
+                <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 2 (Optional)</label><input type="text" id="mem2Name" class="input-box" placeholder="Enter Full Name"></div>
+                <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 3 (Optional)</label><input type="text" id="mem3Name" class="input-box" placeholder="Enter Full Name"></div>
+            </div>
+
+            <div class="card" style="background:#f9f9f9;">
+                <label style="font-size:12px; font-weight:600;">Referral Code</label>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <input type="text" id="refCodeInput" class="input-box" placeholder="Enter Code" style="margin-top:0; text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+                    <button id="btn-apply-ref" type="button" onclick="verifyReferral()" style="background:var(--text-main); color:white; border:none; border-radius:8px; padding:0 15px; font-weight:bold; cursor:pointer;">Apply</button>
+                </div>
+                <small id="refMsg" style="display:none; font-weight:bold; margin-top:8px;"></small>
+            </div>
+
+            <div class="card">
+                <h4 style="margin: 0 0 15px 0;">Payment Method</h4>
+                <div class="radio-group">
+                    <label class="radio-btn"><input type="radio" name="payMode" value="cash" onchange="togglePaymentMode()" checked> Cash to Lab</label>
+                    <label class="radio-btn"><input type="radio" name="payMode" value="online" onchange="togglePaymentMode()"> Online UPI</label>
+                </div>
+
+                <div id="online-pay-section" style="display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">Scan to Pay</p>
+                        <img src="../image/upi_qr_code.jpeg" alt="UPI QR Code" style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
+                        <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">UPI ID: <strong>8950112467@ptsbi</strong></p>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px; font-weight:600;">Transaction UTR / Payment ID</label>
+                        <input type="text" id="payId" class="input-box" placeholder="e.g. 123456789012">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px; font-weight:600;">Upload Screenshot</label>
+                        <input type="file" id="payScreenshot" accept="image/*" class="input-box">
+                    </div>
+                    <input type="hidden" id="payScreenshotBase64" value="">
+                </div>
+            </div>
+
+            <div class="card" style="display:flex; justify-content: space-between; align-items: center; background:#e8f5e9;">
+                <span style="font-size: 15px; font-weight: 600;">Total Payable</span>
+                <span style="font-size: 22px; font-weight:800; color:#2e7d32;">₹<span id="finalPayable">0</span></span>
+            </div>
+
+            <button id="btn-submit" class="btn-primary" onclick="submitVIP()">Submit Application</button>
+        </div>
+    </div>
+
+    <script src="vip_member.js"></script>
+</body>
+</html>

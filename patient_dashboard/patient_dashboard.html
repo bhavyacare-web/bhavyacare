@@ -51,11 +51,9 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
 
-        .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
         .input-box:focus { border-color: var(--primary); }
         .form-group { margin-top: 12px; }
-        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
 
         @media (min-width: 769px) {
             body { flex-direction: row; }
@@ -92,7 +90,7 @@
             <div class="brand"><h2>Bhavya<span>Care</span></h2></div>
             <div class="user-profile-mini" onclick="switchTab('profile')">
                 <div class="greeting"><p style="margin:0; font-size:11px;">Welcome,</p><p class="name" id="userNameMobile">Loading...</p></div>
-                <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
+                <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img">
             </div>
         </div>
 
@@ -102,7 +100,7 @@
                 <p style="margin: 5px 0 0 0; color: var(--text-light);">Here is your health summary.</p>
             </div>
             <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
-                <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
+                <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img">
                 <span style="font-weight: bold; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
             </div>
         </div>
@@ -115,7 +113,7 @@
                     <div class="value">₹<span id="walletBal">0</span></div>
                     <button class="card-action-btn" style="color: var(--success);" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up Wallet</button>
                 </div>
-               <div class="dash-card card-vip">
+                <div class="dash-card card-vip">
                     <i class="fas fa-crown icon-bg"></i>
                     <h4>Current Plan</h4>
                     <div class="value" id="vipStatus" style="font-size: 22px;">Basic</div>
@@ -127,6 +125,7 @@
                         🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
                     </div>
                 </div>
+            </div>
 
             <div class="dash-card" style="background: linear-gradient(to right, #0056b3, #004494); color: white; flex-direction: row; justify-content: space-between; align-items: center; padding: 20px; margin-bottom: 25px;">
                 <div>
@@ -153,7 +152,7 @@
             <div class="data-box">
                 <div class="section-title">My Info</div>
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <img id="editProfilePreview" src="https://via.placeholder.com/100" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;"><br>
+                    <img id="editProfilePreview" src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;"><br>
                     <input type="file" id="profileImageInput" accept="image/*" style="font-size: 12px; max-width: 200px;">
                 </div>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -178,31 +177,6 @@
                 <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>
         </div>
-    </div>
-
-    <div id="vip-upgrade-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('vip-upgrade-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-crown" style="font-size: 30px; color: #f57c00;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">VIP Family Plan</h3>
-            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Add up to 3 members • ₹3000/year</p>
-        </div>
-        <div class="form-group"><label style="font-size:12px; font-weight:600; color:var(--text-light);">Member 1 (Self)</label><input type="text" id="vipMem1" class="input-box" readonly style="background:#f9f9f9; color:#888;"></div>
-        <div class="form-group"><input type="text" id="vipMem2" class="input-box" placeholder="Family Member 2 Name (Optional)"></div>
-        <div class="form-group"><input type="text" id="vipMem3" class="input-box" placeholder="Family Member 3 Name (Optional)"></div>
-        <div class="form-group" style="background:#f9f9f9; padding:15px; border-radius:12px; margin-top: 20px;">
-            <label style="font-size:12px; font-weight:600;">Referral Code (Save ₹500)</label>
-            <div style="display:flex; gap:10px; margin-top:8px;">
-                <input type="text" id="vipRefCode" class="input-box" placeholder="Enter Code" style="margin-top:0;">
-                <button type="button" onclick="applyReferralDiscount()" style="background:var(--text-main); color:white; border:none; border-radius:8px; padding:0 15px; font-weight:bold; cursor:pointer;">Apply</button>
-            </div>
-            <small id="refMsg" style="display:none; font-weight:bold; margin-top:8px;"></small>
-        </div>
-        <div style="background:#fff3e0; padding:15px; border-radius:12px; margin-top:20px; display:flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 14px; font-weight: 600;">Total Payable</span>
-            <span style="font-size: 20px; font-weight:800; color:#e65100;">₹<span id="finalVipAmount">3000</span></span>
-        </div>
-        <button id="btn-submit-vip" style="background:var(--primary); width:100%; color:white; border:none; margin-top:20px; font-size: 15px; font-weight:bold; padding:15px; border-radius:12px; cursor:pointer;" onclick="submitVIPForm()">Pay & Upgrade Now</button>
     </div>
 
     <script src="patient_dashboard.js"></script>

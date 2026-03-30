@@ -27,13 +27,31 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // UI Update (Overview)
-            safeSetText("userNameMobile", patient.patient_name);
-            safeSetText("userNameDesktop", patient.patient_name);
-            safeSetText("userIdDisplay", "ID: " + patient.user_id);
-            safeSetText("walletBal", patient.wallet);
-            safeSetText("refCode", patient.referral_code);
-            safeSetText("vipStatus", patient.plan.toUpperCase());
+            // Profile Info Update (Read Only)
+            safeSetText("infoName", patient.patient_name);
+            safeSetText("infoMobile", patient.mobile_number);
+            
+            // 🌟 NAYA: VIP UI & Package Pending Logic 🌟
+            const vipBtn = document.getElementById("btn-vip-action");
+            const vipSubText = document.getElementById("vipSubText");
+            const vipAlert = document.getElementById("vipPackageAlert");
+
+            if (patient.plan.toLowerCase() === "vip") {
+                if (vipBtn) vipBtn.style.display = "none"; // VIP hai toh upgrade button hata do
+                if (vipSubText) vipSubText.innerText = "Enjoying VIP Benefits ✨"; // Text change
+                
+                // Check karo agar package pending hai
+                if (patient.vip_package_status === "pending") {
+                    if (vipAlert) vipAlert.style.display = "block";
+                } else {
+                    if (vipAlert) vipAlert.style.display = "none";
+                }
+            } else {
+                if (vipBtn) vipBtn.style.display = "block";
+                if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
+                if (vipAlert) vipAlert.style.display = "none";
+            }
+            // 🌟 END NAYA LOGIC 🌟
             
             // Profile Info Update (Read Only)
             safeSetText("infoName", patient.patient_name);

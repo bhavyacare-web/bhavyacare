@@ -232,3 +232,50 @@ async function savePatientProfile() {
         btn.disabled = false;
     }
 }
+// ==========================================
+// 4. FETCH WALLET HISTORY
+// ==========================================
+async function fetchWalletHistory(userId) {
+    const container = document.getElementById("walletHistoryContainer");
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getWalletHistory", user_id: userId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            const history = result.data;
+            if (history.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px;"></i><p>No recent transactions.</p></div>`;
+                return;
+            }
+            
+            let html = "";
+            history.forEach(txn => {
+                const isCredit = txn.type.toLowerCase() === 'credit';
+                const color = isCredit ? '#2e7d32' : '#d32f2f'; // Green for incoming, Red for outgoing
+                const sign = isCredit ? '+' : '-';
+                
+                html += `
+                <div class="list-item" style="align-items: flex-start;">
+                    <div class="list-info">
+                        <h5 style="margin-bottom: 3px;">${txn.description}</h5>
+                        <p><i class="far fa-clock"></i> ${txn.date}</p>
+                    </div>
+                    <div style="font-weight: 800; color: ${color}; font-size: 16px; margin-top: 2px;">
+                        ${sign}₹${txn.amount}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `<p style="color:red; text-align:center;">Failed to load history.</p>`;
+        }
+    } catch(e) {
+        console.error("Wallet Fetch Error:", e);
+        container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`;
+    }
+}

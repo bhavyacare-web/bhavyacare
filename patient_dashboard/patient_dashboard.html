@@ -115,14 +115,18 @@
                     <div class="value">₹<span id="walletBal">0</span></div>
                     <button class="card-action-btn" style="color: var(--success);" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up Wallet</button>
                 </div>
-                <div class="dash-card card-vip">
+               <div class="dash-card card-vip">
                     <i class="fas fa-crown icon-bg"></i>
                     <h4>Current Plan</h4>
                     <div class="value" id="vipStatus" style="font-size: 22px;">Basic</div>
-                    <p class="sub-text">Upgrade for free home collection</p>
-                    <button class="card-action-btn" style="color: #f57c00;" onclick="window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
+                    <p class="sub-text" id="vipSubText">Upgrade for free home collection</p>
+                    
+                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00;" onclick="window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
+                    
+                    <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="alert('Booking system coming soon!')">
+                        🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
+                    </div>
                 </div>
-            </div>
 
             <div class="dash-card" style="background: linear-gradient(to right, #0056b3, #004494); color: white; flex-direction: row; justify-content: space-between; align-items: center; padding: 20px; margin-bottom: 25px;">
                 <div>

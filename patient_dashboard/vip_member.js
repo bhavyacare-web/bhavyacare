@@ -21,57 +21,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         const result = await response.json();
         
+        // 🌟 NAYA REDIRECT LOGIC 🌟
         if (result.status === "error" && result.message === "Profile Incomplete") {
             alert("Please complete your personal details first to activate the VIP Plan.");
-            window.location.href = "patient_dashboard.html?tab=profile"; 
+            window.location.href = "patient_dashboard.html?tab=profile"; // Seedha Profile tab pe bhejega
         } else if (result.status === "success") {
             document.getElementById("mem1Name").value = result.data.patient_name;
             basePrice = result.data.price;
             finalPrice = basePrice;
             document.getElementById("finalAmt").innerText = finalPrice;
             document.getElementById("loader").style.display = "none";
-        } else {
-            // 🌟 YEH BLOCK LOADER KO ATAKNE SE ROKEGA 🌟
-            alert("Backend Error: " + result.message);
-            window.location.href = "patient_dashboard.html";
         }
     } catch (e) {
         alert("Network Error. Redirecting to dashboard.");
         window.location.href = "patient_dashboard.html";
     }
-
-    // Capitalize Ref Code on typing
-    const refInput = document.getElementById("refCodeInput");
-    if(refInput) {
-        refInput.addEventListener("input", function() {
-            this.value = this.value.toUpperCase();
-        });
-    }
 });
 
-// Image Compression
-const screenshotInput = document.getElementById("txnScreenshot");
-if(screenshotInput) {
-    screenshotInput.addEventListener("change", function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function(event) {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                const canvas = document.createElement("canvas");
-                const scaleSize = 400 / img.width;
-                canvas.width = 400;
-                canvas.height = img.height * scaleSize;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
-            }
+// Image Compression for Screenshot
+document.getElementById("txnScreenshot").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement("canvas");
+            const scaleSize = 400 / img.width;
+            canvas.width = 400;
+            canvas.height = img.height * scaleSize;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
         }
-    });
-}
+    }
+});
 
 function togglePayMode() {
     const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
@@ -79,7 +65,7 @@ function togglePayMode() {
 }
 
 async function applyRefCode() {
-    const refCode = document.getElementById("refCodeInput").value.trim().toUpperCase();
+    const refCode = document.getElementById("refCodeInput").value.trim();
     const msg = document.getElementById("refMsg");
     if (!refCode) return;
 
@@ -87,30 +73,25 @@ async function applyRefCode() {
     msg.style.color = "#0056b3";
     msg.innerText = "Checking...";
 
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "validateReferral", user_id: localStorage.getItem("bhavya_user_id"), ref_code: refCode })
-        });
-        
-        const result = await response.json();
-        if (result.status === "success") {
-            msg.style.color = "green";
-            msg.innerText = "Code Applied! ₹" + result.data.discount + " Off.";
-            finalPrice = basePrice - result.data.discount;
-            appliedReferrerId = result.data.referrer_id;
-            document.getElementById("finalAmt").innerText = finalPrice;
-        } else {
-            msg.style.color = "red";
-            msg.innerText = result.message;
-            finalPrice = basePrice;
-            appliedReferrerId = "";
-            document.getElementById("finalAmt").innerText = finalPrice;
-        }
-    } catch(e) {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "validateReferral", user_id: localStorage.getItem("bhavya_user_id"), ref_code: refCode })
+    });
+    
+    const result = await response.json();
+    if (result.status === "success") {
+        msg.style.color = "green";
+        msg.innerText = "Code Applied! ₹" + result.data.discount + " Off.";
+        finalPrice = basePrice - result.data.discount;
+        appliedReferrerId = result.data.referrer_id;
+        document.getElementById("finalAmt").innerText = finalPrice;
+    } else {
         msg.style.color = "red";
-        msg.innerText = "Failed to check code. Try again.";
+        msg.innerText = result.message;
+        finalPrice = basePrice;
+        appliedReferrerId = "";
+        document.getElementById("finalAmt").innerText = finalPrice;
     }
 }
 
@@ -119,7 +100,7 @@ async function submitApplication() {
     const txnId = document.getElementById("txnId").value.trim();
     const screenshot = document.getElementById("screenshotBase64").value;
     
-    // Validation
+    // Validation Rule
     if (isOnline && !txnId && !screenshot) {
         alert("Please enter Transaction ID or upload a screenshot for online payment.");
         return;
@@ -151,20 +132,15 @@ async function submitApplication() {
         const result = await response.json();
         
         if (result.status === "success") {
-            // Success Overlay dikhao aur dashboard bhej do
-            document.getElementById("successOverlay").style.display = "flex";
-            setTimeout(() => {
-                window.location.href = "patient_dashboard.html";
-            }, 3000); 
+            alert("VIP Application Submitted! Admin will activate your plan after verification.");
+            window.location.href = "patient_dashboard.html";
         } else {
-            // Agar duplicate hai ya error hai
-            alert("Application Error: " + result.message);
+            alert(result.message);
             btn.innerText = "Submit Application";
             btn.disabled = false;
         }
     } catch (e) {
-        console.error(e);
-        alert("Failed to submit. Error: " + e.message);
+        alert("Failed to submit. Check connection.");
         btn.innerText = "Submit Application";
         btn.disabled = false;
     }

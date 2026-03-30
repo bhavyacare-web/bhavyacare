@@ -9,31 +9,56 @@ document.addEventListener("DOMContentLoaded", initVipPage);
 
 async function initVipPage() {
     const userId = localStorage.getItem("bhavya_user_id");
-    if (!userId) {
-        window.location.href = "../index.html";
-        return;
-    }
+    if (!userId) { window.location.href = "../index.html"; return; }
 
     try {
-        // 1. Fetch Patient Profile (Sirf naam pre-fill karne ke liye)
+        // 1. Check VIP Application Status First
+        const statusRes = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "checkVipStatus", user_id: userId })
+        });
+        const statusData = await statusRes.json();
+
+        if (statusData.status === "success") {
+            const appStatus = statusData.data.status;
+            
+            if (appStatus === "inactive" || appStatus === "pending") {
+                document.getElementById("vip-pending-container").style.display = "block";
+                return; // Execution yahin rok do, form load nahi karna
+            } 
+            else if (appStatus === "active") {
+                document.getElementById("vip-active-container").style.display = "block";
+                document.getElementById("activeStartDate").innerText = statusData.data.start_date || "N/A";
+                document.getElementById("activeEndDate").innerText = statusData.data.end_date || "N/A";
+                return; // Execution yahin rok do
+            } 
+            else if (appStatus === "rejected") {
+                document.getElementById("vip-rejected-container").style.display = "block";
+                document.getElementById("rejectedRemarks").innerText = statusData.data.remarks || "No reason provided by Admin.";
+                // Return nahi karenge, background me profile data load hone denge taaki re-apply kar sake
+            } 
+            else {
+                // appStatus is "none" (Naya user)
+                document.getElementById("vip-form-container").style.display = "block";
+            }
+        }
+
+        // 2. Fetch Patient Profile (Sirf naam pre-fill karne ke liye)
         const profileRes = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getPatientProfile", user_id: userId })
         });
         const profileData = await profileRes.json();
-
         if (profileData.status === "success") {
-            // Patient ka naam prefill kar do
             document.getElementById("mem1Name").value = profileData.data.patient_name;
         }
 
-        // 2. Fetch Pricing Rules (Ye hamesha chalega ab)
+        // 3. Fetch Pricing Rules
         const ruleRes = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getVipRulesAndReferral" })
         });
         const ruleData = await ruleRes.json();
-        
         if (ruleData.status === "success") {
             baseVipPrice = ruleData.data.price;
             vipDiscount = ruleData.data.discount;
@@ -45,17 +70,23 @@ async function initVipPage() {
     }
 }
 
+// Function to handle "Re-apply" button click
+function showVipForm() {
+    document.getElementById("vip-rejected-container").style.display = "none";
+    document.getElementById("vip-form-container").style.display = "block";
+}
+
 function updatePayableUI() {
     document.getElementById("finalPayable").innerText = finalAmount;
 }
 
-// 3. Toggle Online/Cash
+// Toggle Online/Cash
 function togglePaymentMode() {
     const isOnline = document.querySelector('input[name="payMode"]:checked').value === 'online';
     document.getElementById('online-pay-section').style.display = isOnline ? 'block' : 'none';
 }
 
-// 4. Validate Referral
+// Validate Referral
 async function verifyReferral() {
     const code = document.getElementById("refCodeInput").value.trim();
     const msg = document.getElementById("refMsg");
@@ -95,7 +126,7 @@ async function verifyReferral() {
     }
 }
 
-// 5. Image Compression
+// Image Compression
 const payScreenshotInput = document.getElementById("payScreenshot");
 if (payScreenshotInput) {
     payScreenshotInput.addEventListener("change", function(e) {
@@ -108,7 +139,7 @@ if (payScreenshotInput) {
             img.src = event.target.result;
             img.onload = function() {
                 const canvas = document.createElement("canvas");
-                const scaleSize = 600 / img.width; // Compress width to 600px
+                const scaleSize = 600 / img.width; 
                 canvas.width = 600; canvas.height = img.height * scaleSize;
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -118,13 +149,12 @@ if (payScreenshotInput) {
     });
 }
 
-// 6. Submit Application
+// Submit Application
 async function submitVIP() {
     const payMode = document.querySelector('input[name="payMode"]:checked').value;
     const payId = document.getElementById("payId").value.trim();
     const screenshot = document.getElementById("payScreenshotBase64").value;
 
-    // Validation Rules
     if (payMode === 'online' && !payId && !screenshot) {
         alert("For Online Payment, please provide either a Transaction ID or upload a Screenshot.");
         return;
@@ -156,7 +186,7 @@ async function submitVIP() {
 
         if (result.status === "success") {
             alert(result.message);
-            window.location.href = "../patient_dashboard/patient_dashboard.html"; // Go back to dashboard on success
+            window.location.reload(); // Page reload karne par apne aap 'Pending' screen aa jayegi
         } else {
             alert("Error: " + result.message);
         }

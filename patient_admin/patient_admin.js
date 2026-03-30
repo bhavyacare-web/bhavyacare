@@ -1,5 +1,5 @@
 // 🌟 APNA SAME GOOGLE SCRIPT URL YAHAN DAALO 🌟
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFX5MRGW1XRhVVO1ABuKS8wi2lcN7PCcyNddHfzv407eZ6TyeWOesIf-FIbbTKu882vg/exec";
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 

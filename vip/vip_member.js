@@ -15,23 +15,19 @@ async function initVipPage() {
     }
 
     try {
-        // 1. Fetch Patient Profile (Check incomplete status)
+        // 1. Fetch Patient Profile (Sirf naam pre-fill karne ke liye)
         const profileRes = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getPatientProfile", user_id: userId })
         });
         const profileData = await profileRes.json();
 
-        if (profileData.status === "success" && profileData.data.extra_details) {
-            document.getElementById("incomplete-profile-warning").style.display = "none";
-            document.getElementById("vip-form-container").style.display = "block";
+        if (profileData.status === "success") {
+            // Patient ka naam prefill kar do
             document.getElementById("mem1Name").value = profileData.data.patient_name;
-        } else {
-            document.getElementById("incomplete-profile-warning").style.display = "block";
-            return; // Stop execution, profile incomplete
         }
 
-        // 2. Fetch Pricing Rules
+        // 2. Fetch Pricing Rules (Ye hamesha chalega ab)
         const ruleRes = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getVipRulesAndReferral" })
@@ -45,7 +41,7 @@ async function initVipPage() {
             updatePayableUI();
         }
     } catch (err) {
-        alert("Failed to load page data. Check your connection.");
+        console.error("Failed to load page data:", err);
     }
 }
 
@@ -100,24 +96,27 @@ async function verifyReferral() {
 }
 
 // 5. Image Compression
-document.getElementById("payScreenshot").addEventListener("change", function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function(event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function() {
-            const canvas = document.createElement("canvas");
-            const scaleSize = 600 / img.width; // Compress width to 600px
-            canvas.width = 600; canvas.height = img.height * scaleSize;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            document.getElementById("payScreenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
+const payScreenshotInput = document.getElementById("payScreenshot");
+if (payScreenshotInput) {
+    payScreenshotInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement("canvas");
+                const scaleSize = 600 / img.width; // Compress width to 600px
+                canvas.width = 600; canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                document.getElementById("payScreenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
+            }
         }
-    }
-});
+    });
+}
 
 // 6. Submit Application
 async function submitVIP() {

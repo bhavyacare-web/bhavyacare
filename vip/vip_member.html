@@ -26,6 +26,9 @@
         
         .btn-primary { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-primary:disabled { background: #a0c4e8; cursor: not-allowed; }
+        
+        /* New Status Containers */
+        #vip-form-container, #vip-pending-container, #vip-active-container, #vip-rejected-container { display: none; }
     </style>
 </head>
 <body>
@@ -36,6 +39,39 @@
     </div>
 
     <div class="main-content">
+        
+        <div id="vip-pending-container" style="text-align: center; padding: 40px 10px;">
+            <i class="fas fa-hourglass-half" style="font-size: 60px; color: #f57c00; margin-bottom: 20px;"></i>
+            <h3 style="color: var(--text-main);">Application Under Review</h3>
+            <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Aapki VIP application Admin ke paas review ke liye chali gayi hai. Kripya activate hone ka wait karein.</p>
+            <button onclick="window.location.href='../patient_dashboard/patient_dashboard.html'" class="btn-primary" style="margin-top: 30px; background: #555;">Go to Dashboard</button>
+        </div>
+
+        <div id="vip-active-container" style="text-align: center;">
+            <div class="card" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #a5d6a7;">
+                <i class="fas fa-check-circle" style="font-size: 60px; color: #2e7d32; margin-bottom: 15px;"></i>
+                <h3 style="color: #1b5e20; margin: 0;">VIP Plan Active</h3>
+                <p style="color: #2e7d32; font-size: 14px; margin-top: 5px;">Aap aur aapki family ab VIP members hain!</p>
+                
+                <div style="background: white; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #555;"><strong>Start Date:</strong> <span id="activeStartDate" style="color:#333; float:right; font-weight:bold;">-</span></p>
+                    <p style="margin: 0; font-size: 14px; color: #555;"><strong>End Date:</strong> <span id="activeEndDate" style="color:#d32f2f; float:right; font-weight:bold;">-</span></p>
+                </div>
+            </div>
+            <button onclick="window.location.href='../patient_dashboard/patient_dashboard.html'" class="btn-primary" style="margin-top: 10px;">Go to Dashboard</button>
+        </div>
+
+        <div id="vip-rejected-container" style="text-align: center; padding: 20px 10px;">
+            <i class="fas fa-times-circle" style="font-size: 60px; color: var(--danger); margin-bottom: 15px;"></i>
+            <h3 style="color: var(--danger);">Application Rejected</h3>
+            <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Aapki pichli VIP application reject kar di gayi hai.</p>
+            
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-top: 20px; font-size: 13px; text-align: left; border: 1px solid #f5c6cb;">
+                <strong>Admin Remarks:</strong> <br><span id="rejectedRemarks" style="display:block; margin-top:5px;"></span>
+            </div>
+            <button onclick="showVipForm()" class="btn-primary" style="margin-top: 30px;">Re-Apply for VIP</button>
+        </div>
+
         <div id="vip-form-container">
             <div class="card" style="text-align: center; background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);">
                 <i class="fas fa-crown" style="font-size: 40px; color: #f57c00; margin-bottom: 10px;"></i>

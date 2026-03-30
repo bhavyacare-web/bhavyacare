@@ -37,7 +37,7 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // 🌟 VIP UI & Package Pending Logic (Safely handled) 🌟
+            // 🌟 VIP UI & Package Pending Logic 🌟
             const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
             safeSetText("vipStatus", patient.plan ? patient.plan.toUpperCase() : "BASIC");
             
@@ -60,10 +60,15 @@ async function checkLoginAndFetchData() {
                 if (vipAlert) vipAlert.style.display = "none";
             }
             
-            // Extra Details & Banner Logic
+            // =========================================
+            // Extra Details, Image & Banner Logic
+            // =========================================
             const banner = document.getElementById("profileBanner");
             const profileImages = document.querySelectorAll(".profile-img");
             const editPreview = document.getElementById("editProfilePreview");
+            
+            // Default Name Avatar
+            const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.patient_name)}&background=e6f0fa&color=0056b3&bold=true`;
 
             if (patient.extra_details) {
                 if (banner) banner.style.display = "none";
@@ -76,14 +81,19 @@ async function checkLoginAndFetchData() {
                 safeSetValue("infoState", patient.extra_details.state);
                 safeSetValue("infoPincode", patient.extra_details.pincode);
                 
-                // Load saved image if exists
-                if (patient.extra_details.image && patient.extra_details.image.length > 50) {
+                // 🌟 FIX: IMAGE LOGIC 🌟
+                if (patient.extra_details.image && patient.extra_details.image.startsWith("data:image")) {
                     profileImages.forEach(img => img.src = patient.extra_details.image);
                     if(editPreview) editPreview.src = patient.extra_details.image;
-                    safeSetValue("infoImageBase64", patient.extra_details.image);
+                    // Dont set value to infoImageBase64 yet, let backend handle existing image if this field is empty.
+                } else {
+                    profileImages.forEach(img => img.src = fallbackUrl);
+                    if(editPreview) editPreview.src = fallbackUrl;
                 }
             } else {
                 if (banner) banner.style.display = "block"; 
+                profileImages.forEach(img => img.src = fallbackUrl);
+                if(editPreview) editPreview.src = fallbackUrl;
             }
 
         } else {
@@ -193,6 +203,7 @@ async function savePatientProfile() {
         const result = await response.json();
         if (result.status === "success") {
             alert("Profile Details Saved Successfully!");
+            // Refresh data completely
             checkLoginAndFetchData(); 
             switchTab('overview'); 
         } else {

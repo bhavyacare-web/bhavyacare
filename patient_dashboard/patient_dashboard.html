@@ -151,7 +151,17 @@
 
         <div id="bookings" class="tab-content"><div class="data-box"><div class="section-title">My Bookings</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div></div></div>
         <div id="reports" class="tab-content"><div class="data-box"><div class="section-title">Medical Records</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Your test reports will appear here.</p></div></div></div>
-        <div id="wallet" class="tab-content"><div class="data-box"><div class="section-title">Transaction History</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px;"></i><p>No recent transactions.</p></div></div></div>
+        <div id="wallet" class="tab-content">
+            <div class="data-box">
+                <div class="section-title">Transaction History</div>
+                <div id="walletHistoryContainer">
+                    <div style="text-align: center; padding: 40px; color: #ddd;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 15px;"></i>
+                        <p>Loading transactions...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div id="profile" class="tab-content">
             <div class="data-box">

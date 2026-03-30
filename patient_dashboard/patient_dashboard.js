@@ -1,5 +1,5 @@
 // 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFX5MRGW1XRhVVO1ABuKS8wi2lcN7PCcyNddHfzv407eZ6TyeWOesIf-FIbbTKu882vg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2osa0dczU6rUpl2vkEcMaok3WcsuUsqfWlqCdM5bxq_hzLK5LRbeLrCcR0X2qGuL9/exec";
 
 // ==========================================
 // 1. DATA FETCH & BINDING

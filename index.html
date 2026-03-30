@@ -26,12 +26,13 @@
         <h1>Welcome to BhavyaCare</h1>
         <p>Aapki health, humari zimmedari. Book tests, consult doctors, and get medicines easily right at your doorstep.</p>
         
-        <a href="vip/vip_member.html" style="background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(245, 124, 0, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 6px 15px rgba(245, 124, 0, 0.4)';">
+        <a href="#" onclick="handleVipClick(event)" style="background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(245, 124, 0, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 6px 15px rgba(245, 124, 0, 0.4)';">
             <i class="fas fa-crown"></i> Upgrade to VIP Family Plan
         </a>
     </div>
 
     <script>
+        // 1. Header aur App.js load karne ka logic
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
@@ -41,6 +42,25 @@
                 document.body.appendChild(script);
             })
             .catch(error => console.error('Error loading header:', error));
+
+        // 2. VIP Button Logic: Login check karega
+        function handleVipClick(event) {
+            event.preventDefault(); // Page refresh rokne ke liye
+            
+            const userId = localStorage.getItem("bhavya_user_id");
+            
+            if (userId) {
+                // Agar user logged in hai, toh VIP page par bhejo
+                window.location.href = "vip/vip_member.html";
+            } else {
+                // Agar user logged in nahi hai, toh login popup open karo
+                if (typeof openPatientLogin === "function") {
+                    openPatientLogin();
+                } else {
+                    alert("Please wait a second for the app to load fully.");
+                }
+            }
+        }
     </script>
 </body>
 </html>

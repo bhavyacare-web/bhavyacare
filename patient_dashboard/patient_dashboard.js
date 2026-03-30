@@ -1,4 +1,5 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2osa0dczU6rUpl2vkEcMaok3WcsuUsqfWlqCdM5bxq_hzLK5LRbeLrCcR0X2qGuL9/exec";
+let isUserVip = false; // Global flag to check VIP status
 
 // ==========================================
 // 1. DATA FETCH & BINDING
@@ -26,54 +27,69 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // Standard UI Update
             safeSetText("userNameMobile", patient.patient_name);
             safeSetText("userNameDesktop", patient.patient_name);
             safeSetText("userIdDisplay", "ID: " + patient.user_id);
             safeSetText("walletBal", patient.wallet || "0");
             safeSetText("refCode", patient.referral_code || "-----");
-            
-            // Profile Read-Only Fields Update
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
             // 🌟 VIP UI & Package Pending Logic 🌟
             const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
+            isUserVip = (planName === "vip"); // Flag Update
             safeSetText("vipStatus", patient.plan ? patient.plan.toUpperCase() : "BASIC");
             
             const vipBtn = document.getElementById("btn-vip-action");
             const vipSubText = document.getElementById("vipSubText");
             const vipAlert = document.getElementById("vipPackageAlert");
 
-            if (planName === "vip") {
+            if (isUserVip) {
                 if (vipBtn) vipBtn.style.display = "none";
-                if (vipSubText) vipSubText.innerText = "Enjoying VIP Benefits ✨"; 
+                if (vipSubText) vipSubText.innerHTML = "Enjoying VIP Benefits ✨ <br><small style='color:#0056b3;'>Click card to view details</small>"; 
                 
                 if (patient.vip_package_status === "pending") {
                     if (vipAlert) vipAlert.style.display = "block";
                 } else {
                     if (vipAlert) vipAlert.style.display = "none";
                 }
+
+                // 🌟 Populate VIP Details Modal 🌟
+                if (patient.vip_details) {
+                    safeSetText("vd-start", patient.vip_details.start_date || "N/A");
+                    safeSetText("vd-end", patient.vip_details.end_date || "N/A");
+                    
+                    document.getElementById("vd-mem1").innerHTML = `<span><strong>${patient.vip_details.member1_name || 'N/A'}</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member1_id || '-'}</span>`;
+                    
+                    if (patient.vip_details.member2_name) {
+                        document.getElementById("vd-mem2").innerHTML = `<span><strong>${patient.vip_details.member2_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member2_id || '-'}</span>`;
+                        document.getElementById("vd-mem2").style.display = "flex";
+                    } else {
+                        document.getElementById("vd-mem2").style.display = "none";
+                    }
+
+                    if (patient.vip_details.member3_name) {
+                        document.getElementById("vd-mem3").innerHTML = `<span><strong>${patient.vip_details.member3_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member3_id || '-'}</span>`;
+                        document.getElementById("vd-mem3").style.display = "flex";
+                    } else {
+                        document.getElementById("vd-mem3").style.display = "none";
+                    }
+                }
+
             } else {
                 if (vipBtn) vipBtn.style.display = "block";
                 if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
                 if (vipAlert) vipAlert.style.display = "none";
             }
             
-            // =========================================
-            // Extra Details, Image & Banner Logic
-            // =========================================
+            // Extra Details & Image Fallback Logic
             const banner = document.getElementById("profileBanner");
             const profileImages = document.querySelectorAll(".profile-img");
             const editPreview = document.getElementById("editProfilePreview");
-            
-            // Default Name Avatar
             const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.patient_name)}&background=e6f0fa&color=0056b3&bold=true`;
 
             if (patient.extra_details) {
                 if (banner) banner.style.display = "none";
-                
-                // Form Pre-fill
                 safeSetValue("infoEmail", patient.extra_details.email);
                 safeSetValue("infoAddress", patient.extra_details.address);
                 safeSetValue("infoCity", patient.extra_details.city);
@@ -81,11 +97,9 @@ async function checkLoginAndFetchData() {
                 safeSetValue("infoState", patient.extra_details.state);
                 safeSetValue("infoPincode", patient.extra_details.pincode);
                 
-                // 🌟 FIX: IMAGE LOGIC 🌟
                 if (patient.extra_details.image && patient.extra_details.image.startsWith("data:image")) {
                     profileImages.forEach(img => img.src = patient.extra_details.image);
                     if(editPreview) editPreview.src = patient.extra_details.image;
-                    // Dont set value to infoImageBase64 yet, let backend handle existing image if this field is empty.
                 } else {
                     profileImages.forEach(img => img.src = fallbackUrl);
                     if(editPreview) editPreview.src = fallbackUrl;
@@ -102,7 +116,17 @@ async function checkLoginAndFetchData() {
         }
     } catch (error) {
         console.error("Fetch Error:", error);
-        alert("Failed to load profile data. Check your internet connection.");
+    }
+}
+
+// 🌟 NAYA: Handle VIP Card Click 🌟
+function handleVipCardClick() {
+    if (isUserVip) {
+        // Agar VIP hai toh History Modal Kholo
+        document.getElementById('vip-details-modal').style.display = 'block';
+    } else {
+        // Agar nahi hai toh Upgrade page par bhejo
+        window.location.href = '../vip/vip_member.html';
     }
 }
 
@@ -115,13 +139,10 @@ function safeSetValue(id, val) { const el = document.getElementById(id); if(el &
 function switchTab(tabId) {
     const contents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-    
     const links = document.querySelectorAll(".nav-item, .nav-links a");
     links.forEach(link => link.classList.remove("active"));
-    
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.add("active");
-    
     if(typeof event !== 'undefined' && event && event.currentTarget) {
         event.currentTarget.classList.add("active");
     } else {
@@ -151,7 +172,6 @@ if(fileInput) {
     fileInput.addEventListener("change", function(e) {
         const file = e.target.files[0];
         if(!file) return;
-
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function(event) {
@@ -163,12 +183,9 @@ if(fileInput) {
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
-                
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
                 const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); 
-                
                 document.getElementById("editProfilePreview").src = compressedBase64;
                 document.getElementById("infoImageBase64").value = compressedBase64;
             }
@@ -203,7 +220,6 @@ async function savePatientProfile() {
         const result = await response.json();
         if (result.status === "success") {
             alert("Profile Details Saved Successfully!");
-            // Refresh data completely
             checkLoginAndFetchData(); 
             switchTab('overview'); 
         } else {

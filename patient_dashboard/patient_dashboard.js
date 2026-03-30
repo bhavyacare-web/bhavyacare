@@ -1,4 +1,3 @@
-// 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2osa0dczU6rUpl2vkEcMaok3WcsuUsqfWlqCdM5bxq_hzLK5LRbeLrCcR0X2qGuL9/exec";
 
 // ==========================================
@@ -27,20 +26,29 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
-            // Profile Info Update (Read Only)
+            // Standard UI Update
+            safeSetText("userNameMobile", patient.patient_name);
+            safeSetText("userNameDesktop", patient.patient_name);
+            safeSetText("userIdDisplay", "ID: " + patient.user_id);
+            safeSetText("walletBal", patient.wallet || "0");
+            safeSetText("refCode", patient.referral_code || "-----");
+            
+            // Profile Read-Only Fields Update
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
+
+            // 🌟 VIP UI & Package Pending Logic (Safely handled) 🌟
+            const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
+            safeSetText("vipStatus", patient.plan ? patient.plan.toUpperCase() : "BASIC");
             
-            // 🌟 NAYA: VIP UI & Package Pending Logic 🌟
             const vipBtn = document.getElementById("btn-vip-action");
             const vipSubText = document.getElementById("vipSubText");
             const vipAlert = document.getElementById("vipPackageAlert");
 
-            if (patient.plan.toLowerCase() === "vip") {
-                if (vipBtn) vipBtn.style.display = "none"; // VIP hai toh upgrade button hata do
-                if (vipSubText) vipSubText.innerText = "Enjoying VIP Benefits ✨"; // Text change
+            if (planName === "vip") {
+                if (vipBtn) vipBtn.style.display = "none";
+                if (vipSubText) vipSubText.innerText = "Enjoying VIP Benefits ✨"; 
                 
-                // Check karo agar package pending hai
                 if (patient.vip_package_status === "pending") {
                     if (vipAlert) vipAlert.style.display = "block";
                 } else {
@@ -51,11 +59,6 @@ async function checkLoginAndFetchData() {
                 if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
                 if (vipAlert) vipAlert.style.display = "none";
             }
-            // 🌟 END NAYA LOGIC 🌟
-            
-            // Profile Info Update (Read Only)
-            safeSetText("infoName", patient.patient_name);
-            safeSetText("infoMobile", patient.mobile_number);
             
             // Extra Details & Banner Logic
             const banner = document.getElementById("profileBanner");
@@ -63,7 +66,7 @@ async function checkLoginAndFetchData() {
             const editPreview = document.getElementById("editProfilePreview");
 
             if (patient.extra_details) {
-                if (banner) banner.style.display = "none"; // Data hai toh banner hide karo
+                if (banner) banner.style.display = "none";
                 
                 // Form Pre-fill
                 safeSetValue("infoEmail", patient.extra_details.email);
@@ -73,13 +76,14 @@ async function checkLoginAndFetchData() {
                 safeSetValue("infoState", patient.extra_details.state);
                 safeSetValue("infoPincode", patient.extra_details.pincode);
                 
+                // Load saved image if exists
                 if (patient.extra_details.image && patient.extra_details.image.length > 50) {
                     profileImages.forEach(img => img.src = patient.extra_details.image);
                     if(editPreview) editPreview.src = patient.extra_details.image;
                     safeSetValue("infoImageBase64", patient.extra_details.image);
                 }
             } else {
-                if (banner) banner.style.display = "block"; // Data nahi hai toh banner show karo
+                if (banner) banner.style.display = "block"; 
             }
 
         } else {
@@ -87,7 +91,7 @@ async function checkLoginAndFetchData() {
             if(result.message === "Your account is blocked by Admin.") logoutDashboard();
         }
     } catch (error) {
-        console.error(error);
+        console.error("Fetch Error:", error);
         alert("Failed to load profile data. Check your internet connection.");
     }
 }
@@ -189,11 +193,8 @@ async function savePatientProfile() {
         const result = await response.json();
         if (result.status === "success") {
             alert("Profile Details Saved Successfully!");
-            checkLoginAndFetchData(); // Data refresh karo taaki naya photo aur naam header me aa jaye
-            
-            // 🌟 NAYA CHANGE: Save hote hi automatic Overview tab par bhej do 🌟
+            checkLoginAndFetchData(); 
             switchTab('overview'); 
-            
         } else {
             alert("Error: " + result.message);
         }

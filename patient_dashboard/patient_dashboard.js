@@ -104,6 +104,8 @@ async function checkLoginAndFetchData() {
                     profileImages.forEach(img => img.src = fallbackUrl);
                     if(editPreview) editPreview.src = fallbackUrl;
                 }
+                // Load Wallet History
+            fetchWalletHistory(userId);
             } else {
                 if (banner) banner.style.display = "block"; 
                 profileImages.forEach(img => img.src = fallbackUrl);

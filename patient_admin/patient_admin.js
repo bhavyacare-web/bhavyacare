@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFX5MRGW1XRhVVO1ABuKS8wi2lcN7PCcyNddHfzv407eZ6TyeWOesIf-FIbbTKu882vg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpcc7ayrvTeT5WvWSgvYOapSGvX3TdHRYm8Ly55mbPmB9engVd9JoHNzQdqFDRcJWGzA/exec";
 let currentTab = 'patients';
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);

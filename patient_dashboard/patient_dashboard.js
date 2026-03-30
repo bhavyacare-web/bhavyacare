@@ -274,7 +274,7 @@ async function fetchWalletHistory(userId) {
             });
             container.innerHTML = html;
         } else {
-            container.innerHTML = `<p style="color:red; text-align:center;">Failed to load history.</p>`;
+            container.innerHTML = `<p style="color:red; text-align:center;">Failed: ${result.message}</p>`;
         }
     } catch(e) {
         console.error("Wallet Fetch Error:", e);

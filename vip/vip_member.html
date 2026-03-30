@@ -26,9 +26,6 @@
         
         .btn-primary { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-primary:disabled { background: #a0c4e8; cursor: not-allowed; }
-        
-        #incomplete-profile-warning { display: none; text-align: center; padding: 40px 20px; }
-        #vip-form-container { display: none; }
     </style>
 </head>
 <body>
@@ -39,13 +36,6 @@
     </div>
 
     <div class="main-content">
-        <div id="incomplete-profile-warning">
-            <i class="fas fa-user-edit" style="font-size: 50px; color: var(--warning); margin-bottom: 15px;"></i>
-            <h3>Profile Incomplete</h3>
-            <p style="color: var(--text-light); font-size: 14px;">You must complete your profile details (address, email, etc.) before purchasing a VIP Membership.</p>
-            <button onclick="window.location.href='../patient_dashboard/patient_dashboard.html'" class="btn-primary" style="margin-top: 20px;">Go to Profile</button>
-        </div>
-
         <div id="vip-form-container">
             <div class="card" style="text-align: center; background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);">
                 <i class="fas fa-crown" style="font-size: 40px; color: #f57c00; margin-bottom: 10px;"></i>

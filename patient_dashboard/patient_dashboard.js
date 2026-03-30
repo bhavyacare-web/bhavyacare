@@ -1,5 +1,5 @@
 // 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFX5MRGW1XRhVVO1ABuKS8wi2lcN7PCcyNddHfzv407eZ6TyeWOesIf-FIbbTKu882vg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
 
 // ==========================================
 // 1. DATA FETCH & BINDING
@@ -39,17 +39,13 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
             
-            // VIP Modal Data (Dummy)
-            const vipMem1 = document.getElementById("vipMem1");
-            if (vipMem1) vipMem1.value = patient.patient_name;
-
             // Extra Details & Banner Logic
             const banner = document.getElementById("profileBanner");
             const profileImages = document.querySelectorAll(".profile-img");
             const editPreview = document.getElementById("editProfilePreview");
 
             if (patient.extra_details) {
-                if (banner) banner.style.display = "none";
+                if (banner) banner.style.display = "none"; // Data hai toh banner hide karo
                 
                 // Form Pre-fill
                 safeSetValue("infoEmail", patient.extra_details.email);
@@ -65,7 +61,7 @@ async function checkLoginAndFetchData() {
                     safeSetValue("infoImageBase64", patient.extra_details.image);
                 }
             } else {
-                if (banner) banner.style.display = "block";
+                if (banner) banner.style.display = "block"; // Data nahi hai toh banner show karo
             }
 
         } else {
@@ -107,9 +103,6 @@ function logoutDashboard() {
     window.location.href = "../index.html";
 }
 
-// ==========================================
-// 3. REFERRAL & OLD VIP MODAL
-// ==========================================
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
     if (code && code !== "-----") {
@@ -118,42 +111,8 @@ function copyMyReferral() {
     }
 }
 
-function openVIPModal() {
-    const modal = document.getElementById('vip-upgrade-modal');
-    if(modal) modal.style.display = 'block';
-}
-
-function applyReferralDiscount() {
-    const refInput = document.getElementById('vipRefCode').value.trim();
-    const finalAmountSpan = document.getElementById('finalVipAmount');
-    const refMsg = document.getElementById('refMsg');
-    
-    if (refInput.length >= 5) {
-        finalAmountSpan.innerText = "2500";
-        refMsg.style.display = "block";
-        refMsg.style.color = "green";
-        refMsg.innerText = "Discount Applied!";
-    } else {
-        refMsg.style.display = "block";
-        refMsg.style.color = "red";
-        refMsg.innerText = "Invalid Code";
-        finalAmountSpan.innerText = "3000";
-    }
-}
-
-function submitVIPForm() {
-    const btn = document.getElementById('btn-submit-vip');
-    if(!btn) return;
-    btn.innerText = "Processing...";
-    setTimeout(() => {
-        alert("VIP Request Feature will be fully functional soon.");
-        document.getElementById('vip-upgrade-modal').style.display = 'none';
-        btn.innerText = "Pay & Upgrade Now";
-    }, 1500);
-}
-
 // ==========================================
-// 4. IMAGE COMPRESSION & SAVE PROFILE
+// 3. IMAGE COMPRESSION & SAVE PROFILE
 // ==========================================
 const fileInput = document.getElementById("profileImageInput");
 if(fileInput) {
@@ -212,7 +171,11 @@ async function savePatientProfile() {
         const result = await response.json();
         if (result.status === "success") {
             alert("Profile Details Saved Successfully!");
-            checkLoginAndFetchData(); // Refresh UI
+            checkLoginAndFetchData(); // Data refresh karo taaki naya photo aur naam header me aa jaye
+            
+            // 🌟 NAYA CHANGE: Save hote hi automatic Overview tab par bhej do 🌟
+            switchTab('overview'); 
+            
         } else {
             alert("Error: " + result.message);
         }

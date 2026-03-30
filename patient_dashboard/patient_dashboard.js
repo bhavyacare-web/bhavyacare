@@ -1,5 +1,5 @@
 // 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFX5MRGW1XRhVVO1ABuKS8wi2lcN7PCcyNddHfzv407eZ6TyeWOesIf-FIbbTKu882vg/exec";
 
 // ==========================================
 // 1. DATA FETCH & BINDING
@@ -38,6 +38,10 @@ async function checkLoginAndFetchData() {
             // Profile Info Update (Read Only)
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
+            
+            // VIP Modal Data (Dummy)
+            const vipMem1 = document.getElementById("vipMem1");
+            if (vipMem1) vipMem1.value = patient.patient_name;
 
             // Extra Details & Banner Logic
             const banner = document.getElementById("profileBanner");
@@ -64,16 +68,6 @@ async function checkLoginAndFetchData() {
                 if (banner) banner.style.display = "block";
             }
 
-            // 🌟 NAYA LOGIC: URL CHECK KARKE TAB OPEN KARNA 🌟
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tab') === 'profile') {
-                setTimeout(() => {
-                    switchTab('profile');
-                    // URL ko clean kar do
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }, 300);
-            }
-
         } else {
             alert("Error: " + result.message);
             if(result.message === "Your account is blocked by Admin.") logoutDashboard();
@@ -84,14 +78,8 @@ async function checkLoginAndFetchData() {
     }
 }
 
-function safeSetText(id, text) {
-    const el = document.getElementById(id);
-    if(el) el.innerText = text;
-}
-function safeSetValue(id, val) {
-    const el = document.getElementById(id);
-    if(el && val) el.value = val;
-}
+function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
+function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
 
 // ==========================================
 // 2. UI TABS & NAVIGATION
@@ -106,7 +94,6 @@ function switchTab(tabId) {
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.add("active");
     
-    // 🌟 SAFE AUTO-CLICK LOGIC 🌟
     if(typeof event !== 'undefined' && event && event.currentTarget) {
         event.currentTarget.classList.add("active");
     } else {
@@ -121,14 +108,48 @@ function logoutDashboard() {
 }
 
 // ==========================================
-// 3. REFERRAL 
+// 3. REFERRAL & OLD VIP MODAL
 // ==========================================
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
     if (code && code !== "-----") {
         navigator.clipboard.writeText(code);
-        alert("Referral Code '" + code + "' copied! Share it with your friends.");
+        alert("Referral Code '" + code + "' copied!");
     }
+}
+
+function openVIPModal() {
+    const modal = document.getElementById('vip-upgrade-modal');
+    if(modal) modal.style.display = 'block';
+}
+
+function applyReferralDiscount() {
+    const refInput = document.getElementById('vipRefCode').value.trim();
+    const finalAmountSpan = document.getElementById('finalVipAmount');
+    const refMsg = document.getElementById('refMsg');
+    
+    if (refInput.length >= 5) {
+        finalAmountSpan.innerText = "2500";
+        refMsg.style.display = "block";
+        refMsg.style.color = "green";
+        refMsg.innerText = "Discount Applied!";
+    } else {
+        refMsg.style.display = "block";
+        refMsg.style.color = "red";
+        refMsg.innerText = "Invalid Code";
+        finalAmountSpan.innerText = "3000";
+    }
+}
+
+function submitVIPForm() {
+    const btn = document.getElementById('btn-submit-vip');
+    if(!btn) return;
+    btn.innerText = "Processing...";
+    setTimeout(() => {
+        alert("VIP Request Feature will be fully functional soon.");
+        document.getElementById('vip-upgrade-modal').style.display = 'none';
+        btn.innerText = "Pay & Upgrade Now";
+    }, 1500);
 }
 
 // ==========================================

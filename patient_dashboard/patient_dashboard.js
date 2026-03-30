@@ -1,17 +1,14 @@
-// 🌟 YAHAN APNA GOOGLE SCRIPT URL DAALO 🌟
+// 🌟 APNA SCRIPT URL DAALO 🌟
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8cnaQLCDP6OaZ2vOyl9Oy8HWICc9nigQChCSpMpAeUOwJ4xijq5L1iPX1CJhPAo4W0w/exec";
 
-// ==========================================
-// 1. DATA FETCH & BINDING
-// ==========================================
-document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
+let basePrice = 3000;
+let finalPrice = 3000;
+let appliedReferrerId = "";
 
-async function checkLoginAndFetchData() {
+document.addEventListener("DOMContentLoaded", async () => {
     const userId = localStorage.getItem("bhavya_user_id");
-    
     if (!userId) {
-        alert("Please login first to access the dashboard.");
-        window.location.href = "../index.html"; 
+        window.location.href = "../index.html";
         return;
     }
 
@@ -19,166 +16,109 @@ async function checkLoginAndFetchData() {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) 
+            body: JSON.stringify({ action: "checkVipEligibility", user_id: userId })
         });
-
+        
         const result = await response.json();
-
-        if (result.status === "success") {
-            const patient = result.data;
-            
-            // UI Update (Overview)
-            safeSetText("userNameMobile", patient.patient_name);
-            safeSetText("userNameDesktop", patient.patient_name);
-            safeSetText("userIdDisplay", "ID: " + patient.user_id);
-            safeSetText("walletBal", patient.wallet);
-            safeSetText("refCode", patient.referral_code);
-            safeSetText("vipStatus", patient.plan.toUpperCase());
-            
-            // Profile Info Update (Read Only)
-            safeSetText("infoName", patient.patient_name);
-            safeSetText("infoMobile", patient.mobile_number);
-
-            // Extra Details & Banner Logic
-            const banner = document.getElementById("profileBanner");
-            const profileImages = document.querySelectorAll(".profile-img");
-            const editPreview = document.getElementById("editProfilePreview");
-
-            if (patient.extra_details) {
-                if (banner) banner.style.display = "none";
-                
-                // Form Pre-fill
-                safeSetValue("infoEmail", patient.extra_details.email);
-                safeSetValue("infoAddress", patient.extra_details.address);
-                safeSetValue("infoCity", patient.extra_details.city);
-                safeSetValue("infoDistrict", patient.extra_details.district);
-                safeSetValue("infoState", patient.extra_details.state);
-                safeSetValue("infoPincode", patient.extra_details.pincode);
-                
-                if (patient.extra_details.image && patient.extra_details.image.length > 50) {
-                    profileImages.forEach(img => img.src = patient.extra_details.image);
-                    if(editPreview) editPreview.src = patient.extra_details.image;
-                    safeSetValue("infoImageBase64", patient.extra_details.image);
-                }
-            } else {
-                if (banner) banner.style.display = "block";
-            }
-
-            // 🌟 NAYA LOGIC: URL CHECK KARKE TAB OPEN KARNA 🌟
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tab') === 'profile') {
-                setTimeout(() => {
-                    switchTab('profile');
-                    // URL ko clean kar do
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }, 300);
-            }
-
-        } else {
-            alert("Error: " + result.message);
-            if(result.message === "Your account is blocked by Admin.") logoutDashboard();
+        if (result.status === "error" && result.message === "Profile Incomplete") {
+            alert("Please complete your profile details first to buy VIP plan.");
+            window.location.href = "patient_dashboard.html"; // Wapas bhej do
+        } else if (result.status === "success") {
+            document.getElementById("mem1Name").value = result.data.patient_name;
+            basePrice = result.data.price;
+            finalPrice = basePrice;
+            document.getElementById("finalAmt").innerText = finalPrice;
+            document.getElementById("loader").style.display = "none";
         }
-    } catch (error) {
-        console.error(error);
-        alert("Failed to load profile data. Check your internet connection.");
+    } catch (e) {
+        alert("Network Error. Redirecting to dashboard.");
+        window.location.href = "patient_dashboard.html";
     }
-}
+});
 
-function safeSetText(id, text) {
-    const el = document.getElementById(id);
-    if(el) el.innerText = text;
-}
-function safeSetValue(id, val) {
-    const el = document.getElementById(id);
-    if(el && val) el.value = val;
-}
-
-// ==========================================
-// 2. UI TABS & NAVIGATION
-// ==========================================
-function switchTab(tabId) {
-    const contents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-    
-    const links = document.querySelectorAll(".nav-item, .nav-links a");
-    links.forEach(link => link.classList.remove("active"));
-    
-    const selectedTab = document.getElementById(tabId);
-    if(selectedTab) selectedTab.classList.add("active");
-    
-    // 🌟 SAFE AUTO-CLICK LOGIC 🌟
-    if(typeof event !== 'undefined' && event && event.currentTarget) {
-        event.currentTarget.classList.add("active");
-    } else {
-        const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-        if(activeNav) activeNav.classList.add("active");
-    }
-}
-
-function logoutDashboard() {
-    localStorage.clear();
-    window.location.href = "../index.html";
-}
-
-// ==========================================
-// 3. REFERRAL 
-// ==========================================
-function copyMyReferral() {
-    const code = document.getElementById("refCode").innerText;
-    if (code && code !== "-----") {
-        navigator.clipboard.writeText(code);
-        alert("Referral Code '" + code + "' copied! Share it with your friends.");
-    }
-}
-
-// ==========================================
-// 4. IMAGE COMPRESSION & SAVE PROFILE
-// ==========================================
-const fileInput = document.getElementById("profileImageInput");
-if(fileInput) {
-    fileInput.addEventListener("change", function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function(event) {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                const canvas = document.createElement("canvas");
-                const MAX_WIDTH = 200; 
-                const scaleSize = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scaleSize;
-                
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); 
-                
-                document.getElementById("editProfilePreview").src = compressedBase64;
-                document.getElementById("infoImageBase64").value = compressedBase64;
-            }
+// Image Compression for Screenshot
+document.getElementById("txnScreenshot").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement("canvas");
+            const scaleSize = 400 / img.width;
+            canvas.width = 400;
+            canvas.height = img.height * scaleSize;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            document.getElementById("screenshotBase64").value = canvas.toDataURL("image/jpeg", 0.7);
         }
+    }
+});
+
+function togglePayMode() {
+    const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
+    document.getElementById("onlinePaySection").style.display = isOnline ? "block" : "none";
+}
+
+async function applyRefCode() {
+    const refCode = document.getElementById("refCodeInput").value.trim();
+    const msg = document.getElementById("refMsg");
+    if (!refCode) return;
+
+    msg.style.display = "block";
+    msg.style.color = "#0056b3";
+    msg.innerText = "Checking...";
+
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "validateReferral", user_id: localStorage.getItem("bhavya_user_id"), ref_code: refCode })
     });
+    
+    const result = await response.json();
+    if (result.status === "success") {
+        msg.style.color = "green";
+        msg.innerText = "Code Applied! ₹" + result.data.discount + " Off.";
+        finalPrice = basePrice - result.data.discount;
+        appliedReferrerId = result.data.referrer_id;
+        document.getElementById("finalAmt").innerText = finalPrice;
+    } else {
+        msg.style.color = "red";
+        msg.innerText = result.message;
+        finalPrice = basePrice;
+        appliedReferrerId = "";
+        document.getElementById("finalAmt").innerText = finalPrice;
+    }
 }
 
-async function savePatientProfile() {
-    const btn = document.getElementById("btnSaveProfile");
-    btn.innerText = "Saving Please Wait...";
-    btn.disabled = true;
+async function submitApplication() {
+    const isOnline = document.querySelector('input[name="payMode"][value="Online"]').checked;
+    const txnId = document.getElementById("txnId").value.trim();
+    const screenshot = document.getElementById("screenshotBase64").value;
     
+    // Validation Rule
+    if (isOnline && !txnId && !screenshot) {
+        alert("Please enter Transaction ID or upload a screenshot for online payment.");
+        return;
+    }
+
+    const btn = document.getElementById("submitBtn");
+    btn.innerText = "Submitting...";
+    btn.disabled = true;
+
     const payload = {
-        action: "savePatientDetails",
+        action: "submitVipApplication",
         user_id: localStorage.getItem("bhavya_user_id"),
-        email: document.getElementById("infoEmail").value,
-        address: document.getElementById("infoAddress").value,
-        city: document.getElementById("infoCity").value,
-        district: document.getElementById("infoDistrict").value,
-        state: document.getElementById("infoState").value,
-        pincode: document.getElementById("infoPincode").value,
-        image: document.getElementById("infoImageBase64").value
+        m1_name: document.getElementById("mem1Name").value,
+        m2_name: document.getElementById("mem2Name").value,
+        m3_name: document.getElementById("mem3Name").value,
+        referrer_id: appliedReferrerId,
+        payment_mode: isOnline ? "Online" : "Cash",
+        payment_id: txnId,
+        payment_screenshot: screenshot,
+        amount_paid: finalPrice
     };
 
     try {
@@ -187,18 +127,19 @@ async function savePatientProfile() {
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
+        
         if (result.status === "success") {
-            alert("Profile Details Saved Successfully!");
-            checkLoginAndFetchData(); // Refresh UI
+            alert("VIP Application Submitted! Admin will activate your plan after verification.");
+            window.location.href = "patient_dashboard.html";
         } else {
-            alert("Error: " + result.message);
+            alert(result.message);
+            btn.innerText = "Submit Application";
+            btn.disabled = false;
         }
-    } catch (error) {
-        alert("Failed to save. Check your connection.");
-    } finally {
-        btn.innerText = "Save & Update Profile";
+    } catch (e) {
+        alert("Failed to submit. Check connection.");
+        btn.innerText = "Submit Application";
         btn.disabled = false;
     }
 }

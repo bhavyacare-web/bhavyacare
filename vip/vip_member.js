@@ -157,7 +157,7 @@ async function submitVIP() {
 
         if (result.status === "success") {
             alert(result.message);
-            window.location.href = "vip_member.html"; // Go back to dashboard on success
+            window.location.href = "../patient_dashboard/patient_dashboard.html"; // Go back to dashboard on success
         } else {
             alert("Error: " + result.message);
         }

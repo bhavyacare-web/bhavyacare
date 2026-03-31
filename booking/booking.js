@@ -15,12 +15,11 @@ const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'e
 
 let allServices = [];
 let userPlanStatus = "basic"; 
-let currentCategory = 'profile'; // By default profile open karte hain as it's premium
-let currentSubCategory = 'all'; // For package sub-categories
+let currentCategory = 'profile'; 
+let currentSubCategory = 'all'; 
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let searchTimeout; 
 
-// AAPKA ASLI API URL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 window.onload = () => {
@@ -44,11 +43,11 @@ function fetchBookingData() {
             renderCategories();
             renderServices(); 
         } else {
-            alert("Error fetching services.");
+            alert("Error fetching services: " + response.message);
         }
     })
     .catch(error => {
-        document.getElementById("loading").innerHTML = "Failed to load data.";
+        document.getElementById("loading").innerHTML = "Failed to load data. Please check your connection.";
     });
 }
 
@@ -75,7 +74,7 @@ function renderCategories() {
 
 function selectCategory(categoryKey) {
     currentCategory = categoryKey;
-    currentSubCategory = 'all'; // reset sub category
+    currentSubCategory = 'all';
     document.getElementById("searchInput").value = ""; 
     renderCategories(); 
     renderServices();
@@ -99,7 +98,7 @@ function renderServices(searchQuery = "") {
     
     let filtered = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
 
-    // DYNAMIC SUB-CATEGORIES ONLY FOR PROFILES
+    // SUB-CATEGORIES FOR PROFILES
     if (currentCategory === 'profile' && !searchQuery) {
         let subCats = ['all', ...new Set(filtered.map(s => String(s.service_category || 'Other').trim().replace(/_/g, ' ')))];
         let subHtml = `<div class="sub-cat-nav">`;
@@ -114,10 +113,9 @@ function renderServices(searchQuery = "") {
             filtered = filtered.filter(s => String(s.service_category || 'Other').trim().replace(/_/g, ' ') === currentSubCategory);
         }
     } else {
-        subContainer.innerHTML = ""; // Clear if not profile or if searching
+        subContainer.innerHTML = ""; 
     }
 
-    // SEARCH LOGIC
     if (searchQuery) {
         filtered = allServices.filter(s => 
             String(s.service_name || '').toLowerCase().includes(searchQuery) || 
@@ -126,7 +124,7 @@ function renderServices(searchQuery = "") {
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#666;'>No services found.</p>";
+        container.innerHTML = "<div style='text-align:center; padding: 40px;'><i class='fas fa-search' style='font-size:30px; color:#cbd5e1; margin-bottom:15px;'></i><br><span style='color:var(--text-muted); font-weight:500;'>No tests found matching your criteria.</span></div>";
         return;
     }
 
@@ -138,50 +136,65 @@ function renderServices(searchQuery = "") {
         const inCart = cart.some(item => item.service_id === service.service_id);
         
         const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
-        const btnText = inCart ? 'ADDED ✔' : 'ADD +';
-        
-        const cleanDesc = String(service.description || '').replace(/'/g, "\\'").replace(/\n/g, "<br>");
+        const btnText = inCart ? 'ADDED ✔' : 'ADD';
 
-        // 🌟 THE 3-TIER PRICING LOGIC 🌟
+        // 🌟 3-TIER PRICING UI 🌟
         let pricingHtml = "";
         if (isVip) {
             pricingHtml = `
                 <div class="mrp-row">
                     <span>Total: <span class="mrp">₹${service.service_price}</span></span>
-                    <span>Basic: <span class="mrp">₹${service.basic_price}</span></span>
+                    <span style="margin-left:8px;">Basic: <span class="mrp">₹${service.basic_price}</span></span>
                 </div>
-                <div class="final-price">₹${service.vip_price} <i class="fas fa-crown" style="color:var(--warning); font-size:14px;"></i> VIP</div>
+                <div class="final-price">₹${service.vip_price} <i class="fas fa-crown" style="color:var(--warning); font-size:14px;" title="VIP Rate Applied"></i></div>
             `;
         } else {
             pricingHtml = `
-                <div class="mrp-row">
-                    <span>Total: <span class="mrp">₹${service.service_price}</span></span>
-                </div>
-                <div class="final-price">₹${service.basic_price} <span style="font-size:10px; font-weight:normal; background:var(--primary-light); padding:2px 5px; border-radius:4px;">Basic</span></div>
+                <div class="mrp-row"><span>Total: <span class="mrp">₹${service.service_price}</span></span></div>
+                <div class="final-price">₹${service.basic_price} <span style="font-size:10px; font-weight:700; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div>
                 <div class="locked-price" onclick="alert('Upgrade to VIP Family Plan to unlock this premium rate!')">
                     <i class="fas fa-lock"></i> VIP Rate: ₹${service.vip_price}
                 </div>
             `;
         }
 
-        // 🌟 PROFILE (PACKAGE) SPECIAL UI 🌟
+        // 🌟 PREMIUM PROFILE UI 🌟
         if (currentCategory === 'profile' && !searchQuery) {
+            
+            // Generate Description Preview
+            let descPreviewHtml = "";
+            let descRaw = String(service.description || '');
+            if (descRaw.trim() !== "") {
+                let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
+                if (items.length > 0) {
+                    let previewItems = items.slice(0, 3).map(i => i.trim().toUpperCase());
+                    let moreCount = items.length > 3 ? items.length - 3 : 0;
+                    
+                    descPreviewHtml = `<div class="desc-preview">
+                        <ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
+                        ${moreCount > 0 ? `<div class="view-more-btn" onclick="openModal('${service.service_id}')">+ ${moreCount} More Tests (View All)</div>` : ''}
+                    </div>`;
+                }
+            }
+
             htmlContent += `
                 <div class="profile-item">
                     <div class="profile-header">
                         <span class="profile-badge">${String(service.service_category).replace(/_/g, ' ')}</span>
-                        ${service.description ? `<div class="info-icon" onclick="openModal('${service.service_name}', '${cleanDesc}')"><i class="fas fa-info"></i></div>` : ''}
+                        ${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Parameters</span>` : ''}
                     </div>
+                    
                     <div class="service-info">
                         <h3>${service.service_name}</h3>
-                        ${service.number_of_test ? `<p>Includes <b>${service.number_of_test}</b> Tests/Parameters</p>` : ''}
+                        ${descPreviewHtml}
                     </div>
-                    <div class="price-box">
-                        ${pricingHtml}
+                    
+                    <div class="price-action-row">
+                        <div class="price-box">${pricingHtml}</div>
+                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                            ${btnText}
+                        </button>
                     </div>
-                    <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
-                        ${btnText}
-                    </button>
                 </div>
             `;
         } 
@@ -196,13 +209,13 @@ function renderServices(searchQuery = "") {
                 <div class="service-item">
                     <div class="service-img-box">${imageHtml}</div>
                     <div class="service-info" style="flex-grow:1;">
-                        <h3 style="font-size:14px;">${service.service_name}</h3>
-                        <div class="price-box" style="margin-top:5px; padding:5px;">
+                        <h3 style="font-size:15px; margin-bottom:8px;">${service.service_name}</h3>
+                        <div class="price-box">
                             ${pricingHtml}
                         </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; justify-content:flex-end;">
-                        <button class="${btnClass}" style="position:static; padding:6px 15px; border-radius:8px;" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                    <div style="display:flex; flex-direction:column; justify-content:center;">
+                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
                             ${btnText}
                         </button>
                     </div>
@@ -214,14 +227,18 @@ function renderServices(searchQuery = "") {
     container.innerHTML = htmlContent;
 }
 
-// 🌟 MODAL LOGIC 🌟
-function openModal(title, description) {
-    document.getElementById("modalTitle").innerText = title + " Details";
+// 🌟 SMART MODAL LOGIC (Using Service ID) 🌟
+function openModal(serviceId) {
+    const service = allServices.find(s => s.service_id === serviceId);
+    if (!service) return;
+
+    document.getElementById("modalTitle").innerText = service.service_name;
     
-    // Formatting descriptions into a clean list
-    let formattedDesc = description;
-    if(description.includes('<br>')) {
-        let items = description.split('<br>').filter(i => i.trim() !== '');
+    let descRaw = String(service.description || '');
+    let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
+    
+    if (descRaw.trim() !== "") {
+        let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
         formattedDesc = "<ul>" + items.map(i => `<li>${i.trim().toUpperCase()}</li>`).join('') + "</ul>";
     }
     
@@ -255,7 +272,7 @@ function updateCartUI() {
 
     if (cart.length > 0) {
         let total = cart.reduce((sum, item) => sum + item.price, 0);
-        cartText.innerText = `${cart.length} Item${cart.length > 1 ? 's' : ''} | ₹${total}`;
+        cartText.innerHTML = `${cart.length} Item${cart.length > 1 ? 's' : ''} <span style="color:#cbd5e1; margin:0 8px;">|</span> ₹${total}`;
         cartBar.classList.add("visible");
     } else {
         cartBar.classList.remove("visible");

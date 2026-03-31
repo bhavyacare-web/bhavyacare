@@ -28,7 +28,8 @@ window.onload = () => {
 };
 
 function fetchBookingData() {
-    const userId = localStorage.getItem("user_id"); 
+    // 🚀 FIX: Ab ye bhavya_user_id check karega jo login system set karta hai
+    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
     
     fetch(GAS_URL, {
         method: 'POST',
@@ -59,7 +60,6 @@ function renderCategories() {
     let mainHtml = "";
     let sliderHtml = "";
 
-    // TRIM ADD KIYA HAI - Taki sheet me space ki galti ho tab bhi sahi type bane
     const existingTypes = [...new Set(allServices.map(s => s.service_type.toLowerCase().trim()))];
 
     // Main Grid Categories
@@ -111,7 +111,6 @@ function filterServices() {
 function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
     
-    // YAHAN BHI TRIM ADD KIYA HAI - Taki package wali problem solve ho jaye
     let filtered = allServices.filter(s => s.service_type.toLowerCase().trim() === currentCategory);
 
     if (searchQuery) {
@@ -183,16 +182,13 @@ function toggleCart(id, name, price) {
     renderServices(document.getElementById("searchInput").value); 
 }
 
-// Naya Function: Jo ek sath Top Header aur Bottom dono carts ko update karta hai
 function updateCartUI() {
     const topCartBtn = document.getElementById("topCartBtn");
     const cartBar = document.getElementById("bottomCartBar");
     const cartText = document.getElementById("bottomCartText");
     
-    // Top button update
     topCartBtn.innerText = `🛒 Cart (${cart.length})`;
 
-    // Bottom floating bar update
     if (cart.length > 0) {
         let total = cart.reduce((sum, item) => sum + item.price, 0);
         cartText.innerText = `${cart.length} Item${cart.length > 1 ? 's' : ''} | ₹${total}`;

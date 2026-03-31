@@ -1,11 +1,11 @@
-// Map for Category Names and Premium Icons
+// Map for Category Names and Premium Icons (MRI changed to Brain 🧠)
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
     'profile':   { name: 'Package', icon: '🩺' }, 
     'usg':       { name: 'Ultrasound', icon: '🖥️' },
     'xray':      { name: 'X-Ray', icon: '🩻' },
     'ct':        { name: 'CT Scan', icon: '☢️' },
-    'mri':       { name: 'MRI', icon: '🧲' },
+    'mri':       { name: 'MRI', icon: '🧠' }, // New Premium Icon for MRI
     'ecg':       { name: 'ECG', icon: '❤️' },
     'echo':      { name: 'ECHO', icon: '💓' }
 };
@@ -27,6 +27,15 @@ window.onload = () => {
     fetchBookingData();
 };
 
+// 🌟 SMART TEXT FORMATTER (Title Case + Acronyms) 🌟
+function formatText(text) {
+    if (!text) return "";
+    let formatted = text.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    // Auto Capitalize Medical Short Forms
+    const acronyms = /\b(cbc|esr|usg|mri|ecg|echo|ct|lft|kft|hba1c|tsh|t3|t4|ana|psa|hiv|hcv|bun|aptt|sgpt|sgot|vdrl|rbc|wbc|bchg|aec|anc|amh|ada|hbsag|crp|abp|ncv|emg|ssep|dlco|eeg|pft)\b/gi;
+    return formatted.replace(acronyms, match => match.toUpperCase());
+}
+
 function fetchBookingData() {
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
     
@@ -43,7 +52,7 @@ function fetchBookingData() {
             renderCategories();
             renderServices(); 
         } else {
-            alert("Error fetching services: " + response.message);
+            alert("Error fetching services.");
         }
     })
     .catch(error => {
@@ -104,7 +113,7 @@ function renderServices(searchQuery = "") {
         let subHtml = `<div class="sub-cat-nav">`;
         subCats.forEach(sc => {
             let active = currentSubCategory === sc ? 'active' : '';
-            subHtml += `<button class="sub-cat-btn ${active}" onclick="selectSubCategory('${sc}')">${sc.toUpperCase()}</button>`;
+            subHtml += `<button class="sub-cat-btn ${active}" onclick="selectSubCategory('${sc}')">${formatText(sc)}</button>`;
         });
         subHtml += `</div>`;
         subContainer.innerHTML = subHtml;
@@ -116,10 +125,12 @@ function renderServices(searchQuery = "") {
         subContainer.innerHTML = ""; 
     }
 
+    // 🌟 DEEP SEARCH LOGIC (Description ke andar bhi dhundega) 🌟
     if (searchQuery) {
         filtered = allServices.filter(s => 
             String(s.service_name || '').toLowerCase().includes(searchQuery) || 
-            String(s.service_id || '').includes(searchQuery)
+            String(s.service_id || '').toLowerCase().includes(searchQuery) ||
+            String(s.description || '').toLowerCase().includes(searchQuery)
         );
     }
 
@@ -137,8 +148,11 @@ function renderServices(searchQuery = "") {
         
         const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
         const btnText = inCart ? 'ADDED ✔' : 'ADD';
+        
+        const cleanName = formatText(service.service_name);
+        const cleanCat = formatText(service.service_category).replace(/_/g, ' ');
 
-        // 🌟 3-TIER PRICING UI 🌟
+        // 🌟 3-TIER PRICING UI WITH NEW VIP PROMO CLICK 🌟
         let pricingHtml = "";
         if (isVip) {
             pricingHtml = `
@@ -151,8 +165,8 @@ function renderServices(searchQuery = "") {
         } else {
             pricingHtml = `
                 <div class="mrp-row"><span>Total: <span class="mrp">₹${service.service_price}</span></span></div>
-                <div class="final-price">₹${service.basic_price} <span style="font-size:10px; font-weight:700; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div>
-                <div class="locked-price" onclick="alert('Upgrade to VIP Family Plan to unlock this premium rate!')">
+                <div class="final-price">₹${service.basic_price} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div>
+                <div class="locked-price" onclick="openVipPromo()">
                     <i class="fas fa-lock"></i> VIP Rate: ₹${service.vip_price}
                 </div>
             `;
@@ -161,18 +175,24 @@ function renderServices(searchQuery = "") {
         // 🌟 PREMIUM PROFILE UI 🌟
         if (currentCategory === 'profile' && !searchQuery) {
             
-            // Generate Description Preview
             let descPreviewHtml = "";
             let descRaw = String(service.description || '');
             if (descRaw.trim() !== "") {
                 let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
                 if (items.length > 0) {
-                    let previewItems = items.slice(0, 3).map(i => i.trim().toUpperCase());
-                    let moreCount = items.length > 3 ? items.length - 3 : 0;
+                    // Preview first 3 items with Title Case & Acronyms
+                    let previewItems = items.slice(0, 3).map(i => formatText(i.trim()));
                     
+                    let moreText = "";
+                    if (service.number_of_test) {
+                        moreText = `+ ${service.number_of_test} Parameters (View All)`;
+                    } else if (items.length > 3) {
+                        moreText = `+ ${items.length - 3} More Tests (View All)`;
+                    }
+
                     descPreviewHtml = `<div class="desc-preview">
                         <ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
-                        ${moreCount > 0 ? `<div class="view-more-btn" onclick="openModal('${service.service_id}')">+ ${moreCount} More Tests (View All)</div>` : ''}
+                        ${moreText ? `<div class="view-more-btn" onclick="openModal('${service.service_id}')">${moreText}</div>` : ''}
                     </div>`;
                 }
             }
@@ -180,18 +200,18 @@ function renderServices(searchQuery = "") {
             htmlContent += `
                 <div class="profile-item">
                     <div class="profile-header">
-                        <span class="profile-badge">${String(service.service_category).replace(/_/g, ' ')}</span>
+                        <span class="profile-badge">${cleanCat}</span>
                         ${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Parameters</span>` : ''}
                     </div>
                     
                     <div class="service-info">
-                        <h3>${service.service_name}</h3>
+                        <h3>${cleanName}</h3>
                         ${descPreviewHtml}
                     </div>
                     
                     <div class="price-action-row">
                         <div class="price-box">${pricingHtml}</div>
-                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${cleanName}', ${applicablePrice})">
                             ${btnText}
                         </button>
                     </div>
@@ -209,13 +229,13 @@ function renderServices(searchQuery = "") {
                 <div class="service-item">
                     <div class="service-img-box">${imageHtml}</div>
                     <div class="service-info" style="flex-grow:1;">
-                        <h3 style="font-size:15px; margin-bottom:8px;">${service.service_name}</h3>
+                        <h3 style="font-size:15px; margin-bottom:8px;">${cleanName}</h3>
                         <div class="price-box">
                             ${pricingHtml}
                         </div>
                     </div>
                     <div style="display:flex; flex-direction:column; justify-content:center;">
-                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                        <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${cleanName}', ${applicablePrice})">
                             ${btnText}
                         </button>
                     </div>
@@ -227,27 +247,35 @@ function renderServices(searchQuery = "") {
     container.innerHTML = htmlContent;
 }
 
-// 🌟 SMART MODAL LOGIC (Using Service ID) 🌟
+// 🌟 DETAILS MODAL 🌟
 function openModal(serviceId) {
     const service = allServices.find(s => s.service_id === serviceId);
     if (!service) return;
 
-    document.getElementById("modalTitle").innerText = service.service_name;
+    document.getElementById("modalTitle").innerText = formatText(service.service_name);
     
     let descRaw = String(service.description || '');
     let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
     
     if (descRaw.trim() !== "") {
         let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
-        formattedDesc = "<ul>" + items.map(i => `<li>${i.trim().toUpperCase()}</li>`).join('') + "</ul>";
+        // Apply Title Case & Acronyms to each item in the Modal
+        formattedDesc = "<ul>" + items.map(i => `<li>${formatText(i.trim())}</li>`).join('') + "</ul>";
     }
     
     document.getElementById("modalBody").innerHTML = formattedDesc;
     document.getElementById("infoModal").classList.add("active");
 }
-
 function closeModal() {
     document.getElementById("infoModal").classList.remove("active");
+}
+
+// 🌟 VIP PROMO MODAL 🌟
+function openVipPromo() {
+    document.getElementById("vipPromoModal").classList.add("active");
+}
+function closeVipPromo() {
+    document.getElementById("vipPromoModal").classList.remove("active");
 }
 
 // CART LOGIC

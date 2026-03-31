@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "// ==========================================
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 // patient.gs - Patient Dashboard Logic
 // ==========================================
 

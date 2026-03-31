@@ -1,28 +1,29 @@
-// Map for the specific names you requested
-const typeNameMap = {
-    'pathology': 'Test',
-    'package': 'Health Package',
-    'usg': 'Ultrasound',
-    'xray': 'X-Ray',
-    'ct': 'CT Scan',
-    'mri': 'MRI',
-    'ecg': 'ECG',
-    'echo': 'ECHO'
+// Map for Category Names and Premium Icons
+const categoryConfig = {
+    'pathology': { name: 'Test', icon: '🩸' },
+    'package':   { name: 'Package', icon: '🩺' },
+    'usg':       { name: 'Ultrasound', icon: '🖥️' },
+    'xray':      { name: 'X-Ray', icon: '🩻' },
+    'ct':        { name: 'CT Scan', icon: '☢️' },
+    'mri':       { name: 'MRI', icon: '🧲' },
+    'ecg':       { name: 'ECG', icon: '❤️' },
+    'echo':      { name: 'ECHO', icon: '💓' }
 };
 
+const defaultIcon = '🧪';
 const mainCategoryKeys = ['pathology', 'package', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 
 let allServices = [];
 let userPlanStatus = "basic"; 
 let currentCategory = 'pathology'; 
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
-let searchTimeout; // Debounce timer ke liye
+let searchTimeout; 
 
-// GOOGLE APPS SCRIPT WEB APP URL YAHAN DALEIN
+// AAPKA ASLI API URL ADD KAR DIYA HAI
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 window.onload = () => {
-    updateCartBadge();
+    updateBottomCartBar(); // FIX: Naya bottom cart function call hoga
     fetchBookingData();
 };
 
@@ -40,13 +41,13 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             renderCategories();
-            renderServices(); // Initial render
+            renderServices(); 
         } else {
             alert("Error fetching services: " + response.message);
         }
     })
     .catch(error => {
-        document.getElementById("loading").innerHTML = "Failed to load data.";
+        document.getElementById("loading").innerHTML = "Failed to load data. Please check your connection.";
         console.error("Error:", error);
     });
 }
@@ -55,28 +56,31 @@ function renderCategories() {
     const mainContainer = document.getElementById("mainCategories");
     const sliderContainer = document.getElementById("sliderCategories");
     
-    // String builder for performance (No innerHTML inside loops!)
     let mainHtml = "";
     let sliderHtml = "";
 
     const existingTypes = [...new Set(allServices.map(s => s.service_type.toLowerCase()))];
 
+    // Main Grid Categories
     mainCategoryKeys.forEach(key => {
-        let displayName = typeNameMap[key] || key.toUpperCase();
+        let config = categoryConfig[key] || { name: key.toUpperCase(), icon: defaultIcon };
         let isPresent = existingTypes.includes(key);
         let isSelected = currentCategory === key ? 'selected' : '';
         
         if(isPresent) {
             mainHtml += `<div class="cat-card ${isSelected}" onclick="selectCategory('${key}')">
-                            <strong>${displayName}</strong>
+                            <div class="cat-icon">${config.icon}</div>
+                            <span class="cat-name">${config.name}</span>
                          </div>`;
         } else {
-            mainHtml += `<div class="cat-card" onclick="alert('${displayName} is currently unavailable.')">
-                            <strong>${displayName}</strong><br><span class="coming-soon">Coming Soon</span>
+            mainHtml += `<div class="cat-card" style="opacity: 0.5;" onclick="alert('${config.name} is currently unavailable.')">
+                            <div class="cat-icon">${config.icon}</div>
+                            <span class="cat-name">${config.name}</span>
                          </div>`;
         }
     });
 
+    // Slider Categories
     existingTypes.forEach(key => {
         if (!mainCategoryKeys.includes(key)) {
             let isSelected = currentCategory === key ? 'selected' : '';
@@ -84,7 +88,6 @@ function renderCategories() {
         }
     });
 
-    // Update DOM strictly ONCE
     mainContainer.innerHTML = mainHtml;
     sliderContainer.innerHTML = sliderHtml;
 }
@@ -96,16 +99,14 @@ function selectCategory(categoryKey) {
     renderServices();
 }
 
-// 🚀 FIXED: Search with Debounce (Prevents hanging while typing)
 function filterServices() {
-    clearTimeout(searchTimeout); // Purana timer cancel karo
+    clearTimeout(searchTimeout); 
     searchTimeout = setTimeout(() => {
         const query = document.getElementById("searchInput").value.toLowerCase();
         renderServices(query);
-    }, 300); // 300ms ka delay typing ke baad
+    }, 300); 
 }
 
-// 🚀 FIXED: Render optimization
 function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
     
@@ -119,41 +120,50 @@ function renderServices(searchQuery = "") {
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#666;'>No services found.</p>";
+        container.innerHTML = "<div style='text-align:center; padding: 40px 20px;'><span style='font-size:40px;'>🔍</span><br><br><p style='color:var(--text-muted);'>No services found matching your search.</p></div>";
         return;
     }
 
-    // String Builder: Sab kuch memory me banayenge, fir ek sath print karenge
     let htmlContent = "";
 
     filtered.forEach(service => {
         const applicablePrice = (userPlanStatus === "vip") ? service.vip_price : service.basic_price;
         const inCart = cart.some(item => item.service_id === service.service_id);
-        const btnBg = inCart ? 'background:var(--success);' : '';
-        const btnText = inCart ? 'Added ✔' : 'Add +';
+        
+        const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
+        const btnText = inCart ? 'ADDED' : 'ADD';
+
+        let imageHtml = "";
+        let catIcon = categoryConfig[service.service_type.toLowerCase()]?.icon || defaultIcon;
+        
+        if (service.service_image && service.service_image.trim() !== "") {
+            imageHtml = `<img src="${service.service_image}" alt="Test" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">`;
+        } else {
+            imageHtml = catIcon;
+        }
 
         htmlContent += `
             <div class="service-item">
+                <div class="service-img-box">
+                    ${imageHtml}
+                </div>
                 <div class="service-info">
-                    <h3>${service.service_name} <span style="font-size:10px; color:#999;">(${service.service_id})</span></h3>
-                    <p>Type: ${service.service_category}</p>
-                    ${service.number_of_test ? `<p>Includes: ${service.number_of_test} Parameters</p>` : ''}
+                    <h3>${service.service_name}</h3>
+                    <p>${service.service_category} ${service.number_of_test ? `• ${service.number_of_test} Parameters` : ''}</p>
                     <div class="price-box">
-                        <span class="mrp">₹${service.service_price}</span>
                         <span class="final-price">₹${applicablePrice}</span>
-                        <span style="font-size:10px; background:var(--warning); padding:2px 5px; border-radius:3px; margin-left:5px;">${userPlanStatus.toUpperCase()} Price</span>
+                        <span class="mrp">₹${service.service_price}</span>
+                        <span class="plan-tag">${userPlanStatus.toUpperCase()} PRICE</span>
                     </div>
                 </div>
-                <button class="add-to-cart-btn" 
-                        onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})"
-                        style="${btnBg}">
+                <button class="${btnClass}" 
+                        onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
                     ${btnText}
                 </button>
             </div>
         `;
     });
 
-    // Update the DOM exactly ONCE per render
     container.innerHTML = htmlContent;
 }
 
@@ -166,17 +176,23 @@ function toggleCart(id, name, price) {
     }
     
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    updateCartBadge();
-    
-    // Sirf buttons update karne chahiye ideally, but for now re-render is safe
+    updateBottomCartBar();
     renderServices(document.getElementById("searchInput").value); 
 }
 
-function updateCartBadge() {
-    document.getElementById("cartBtn").innerText = `🛒 Cart (${cart.length})`;
+function updateBottomCartBar() {
+    const cartBar = document.getElementById("bottomCartBar");
+    const cartText = document.getElementById("bottomCartText");
+    
+    if (cart.length > 0) {
+        let total = cart.reduce((sum, item) => sum + item.price, 0);
+        cartText.innerText = `${cart.length} Item${cart.length > 1 ? 's' : ''} | ₹${total}`;
+        cartBar.classList.add("visible");
+    } else {
+        cartBar.classList.remove("visible");
+    }
 }
 
 function openCart() {
-    alert("Navigating to Cart Page... Items: " + cart.length);
-    // window.location.href = "cart.html"; // Hum baad me ye enable karenge
+    window.location.href = "cart.html"; 
 }

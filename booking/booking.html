@@ -6,6 +6,7 @@
   <title>BhavyaCare - Book Premium Services</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    /* ... (Purana saara CSS same rahega) ... */
     :root {
       --primary: #0056b3;
       --primary-light: #e6f0fa;
@@ -25,6 +26,10 @@
     .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);}
     .nav-btn:hover { background: white; color: var(--primary); }
     
+    /* 🌟 WARNING BANNER CSS 🌟 */
+    .warning-banner { background-color: #fffbeb; border-bottom: 1px solid #fde68a; color: #b45309; padding: 10px 15px; font-size: 12px; font-weight: 600; text-align: center; display: none; line-height: 1.4; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .warning-banner i { color: #f59e0b; margin-right: 5px; font-size: 14px; }
+
     .search-container { padding: 15px 20px 5px; position: relative; }
     .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; box-sizing: border-box; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; font-weight: 500;}
     .search-container input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
@@ -76,7 +81,6 @@
     .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
     .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 10px;}
 
-    /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; padding: 20px; position: relative; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
@@ -85,6 +89,10 @@
     .modal-body { overflow-y: auto; font-size: 13px; color: #475569; line-height: 1.5; }
     .modal-body ul { padding-left: 20px; margin: 0; }
     .modal-body li { margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px dashed #e2e8f0; font-weight: 600;}
+
+    /* Form Inputs */
+    .form-input { width: 100%; padding: 12px 14px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; font-family: inherit; transition: 0.2s;}
+    .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 
     #loading { text-align: center; padding: 40px 20px; color: var(--primary); font-size: 15px; font-weight: 600;}
   </style>
@@ -95,6 +103,11 @@
     <button class="nav-btn" onclick="window.location.href='../patient_dashboard/patient_dashboard.html'">🏠 Home</button>
     <h2>Book Services</h2>
     <button class="nav-btn" id="topCartBtn" onclick="openCart()">🛒 Cart (0)</button>
+  </div>
+
+  <div class="warning-banner" id="pendingWarningBanner">
+    <i class="fas fa-exclamation-triangle"></i> 
+    <b>Verification Pending:</b> Your VIP Plan is under review. You can book at VIP rates now, but if any discrepancy is found, your plan will be reverted to Basic.
   </div>
 
   <div class="search-container">
@@ -132,14 +145,39 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="vipFormModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeVipFormModal()">&times;</span>
+      <h3 class="modal-title" style="color:var(--warning);"><i class="fas fa-crown"></i> Activate VIP Plan</h3>
+      <div class="modal-body">
+        <p style="margin-top:0; color:var(--text-main); font-weight:600;">Step 1: Make Payment</p>
+        <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:15px; text-align:center;">
+          <p style="margin:0; font-size:12px; color:var(--text-muted);">Please pay the VIP subscription fee via UPI.</p>
+          <strong style="font-size:16px; color:var(--text-main);">UPI ID: bhavya.care@ybl</strong>
+        </div>
+
+        <p style="margin-top:0; color:var(--text-main); font-weight:600;">Step 2: Submit Details</p>
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:block;">Transaction ID / UTR No. <span style="color:red;">*</span></label>
+        <input type="text" id="vipTxnId" class="form-input" placeholder="e.g. 123456789012">
+        
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:block;">Referral Code (Optional)</label>
+        <input type="text" id="vipRefCode" class="form-input" placeholder="Enter code if any">
+
+        <button id="submitVipBtn" onclick="submitVipApplicationForm()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 4px 10px rgba(22,163,74,0.2); transition:0.2s;">
+          Submit Application
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="login-section" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:10000; backdrop-filter: blur(3px);">
     <div style="background:white; padding:25px; border-radius:20px; width:90%; max-width:400px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); text-align:center;">
       <span onclick="closeLoginPopup()" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#94a3b8; font-weight:bold;">&times;</span>
       <h3 id="form-title" style="font-size:18px; font-weight:800; color:#1e293b; margin-top:0; margin-bottom:20px;">Patient Login</h3>
       
       <div id="phone-section">
-        <input type="text" id="userName" placeholder="Full Name" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
-        <input type="number" id="phoneNumber" placeholder="Mobile Number" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
+        <input type="text" id="userName" placeholder="Full Name" class="form-input">
+        <input type="number" id="phoneNumber" placeholder="Mobile Number" class="form-input">
         <div id="partner-role-container" style="display:none;">
            <input type="hidden" id="partnerRole" value="patient">
         </div>
@@ -148,7 +186,7 @@
       </div>
 
       <div id="otp-section" style="display:none;">
-        <input type="number" id="otpCode" placeholder="Enter 6-digit OTP" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
+        <input type="number" id="otpCode" placeholder="Enter 6-digit OTP" class="form-input">
         <button onclick="verifyOTP()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 4px 10px rgba(22,163,74,0.2);">Verify & Login</button>
       </div>
     </div>
@@ -157,6 +195,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script>
-  <script src="booking.js?v=14"></script>
+  <script src="booking.js?v=15"></script>
 </body>
 </html>

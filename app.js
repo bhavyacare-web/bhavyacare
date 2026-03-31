@@ -183,6 +183,18 @@ async function verifyOTP() {
         
         checkLoginState();
 
+        // 🌟 THE MAGIC VIP REDIRECT LOGIC 🌟
+        if (localStorage.getItem("pending_vip_redirect") === "true") {
+            localStorage.removeItem("pending_vip_redirect");
+            
+            // Smart Path Finder: Agar URL me 'booking' hai toh '../vip' varna seedha 'vip'
+            if (window.location.pathname.includes("booking")) {
+                window.location.href = '../vip/vip_member.html';
+            } else {
+                window.location.href = 'vip/vip_member.html';
+            }
+        }
+
     } catch (error) { 
         console.error("OTP Error Details:", error);
         if(error.code) { 

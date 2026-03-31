@@ -1,9 +1,6 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOwmqj6u5eg0gr6P54fBpHhJxIT5nZmkwcE_zhXGsVfE2fg1VkCIBvHlRrQ81e7YHQwA/exec"; // <-- YAHAN APNA URL UPDATE KAREIN
+const GOOGLE_SCRIPT_URL = "YOUR_NEW_WEB_APP_URL_HERE"; // <-- YAHAN APNA URL UPDATE KAREIN
 let isUserVip = false;
 
-// ==========================================
-// 1. DATA FETCH & BINDING
-// ==========================================
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
 async function checkLoginAndFetchData() {
@@ -28,6 +25,13 @@ async function checkLoginAndFetchData() {
             safeSetText("refCode", patient.referral_code || "-----");
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
+
+            // 🌟 FIX: Withdraw Button Visibility 🌟
+            if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
+                document.getElementById('btn-withdraw').style.display = 'block';
+            } else {
+                document.getElementById('btn-withdraw').style.display = 'none';
+            }
 
             const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
             isUserVip = (planName === "vip"); 
@@ -95,7 +99,6 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
-            // 👇 Fetch Wallet History (Safely placed outside conditions)
             fetchWalletHistory(userId);
 
         } else {
@@ -114,9 +117,6 @@ function handleVipCardClick() {
 function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
 function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
 
-// ==========================================
-// 2. UI TABS & NAVIGATION
-// ==========================================
 function switchTab(tabId) {
     const contents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
@@ -135,9 +135,6 @@ function copyMyReferral() {
     if (code && code !== "-----") { navigator.clipboard.writeText(code); alert("Referral Code '" + code + "' copied!"); }
 }
 
-// ==========================================
-// 3. IMAGE COMPRESSION & SAVE PROFILE
-// ==========================================
 const fileInput = document.getElementById("profileImageInput");
 if(fileInput) {
     fileInput.addEventListener("change", function(e) {
@@ -183,9 +180,6 @@ async function savePatientProfile() {
     finally { btn.innerText = "Save & Update Profile"; btn.disabled = false; }
 }
 
-// ==========================================
-// 4. FETCH WALLET HISTORY
-// ==========================================
 async function fetchWalletHistory(userId) {
     const container = document.getElementById("walletHistoryContainer");
     try {

@@ -19,11 +19,11 @@ let currentCategory = 'pathology';
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let searchTimeout; 
 
-// AAPKA ASLI API URL ADD KAR DIYA HAI
+// AAPKA ASLI API URL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 window.onload = () => {
-    updateBottomCartBar(); // FIX: Naya bottom cart function call hoga
+    updateCartUI(); 
     fetchBookingData();
 };
 
@@ -59,7 +59,8 @@ function renderCategories() {
     let mainHtml = "";
     let sliderHtml = "";
 
-    const existingTypes = [...new Set(allServices.map(s => s.service_type.toLowerCase()))];
+    // TRIM ADD KIYA HAI - Taki sheet me space ki galti ho tab bhi sahi type bane
+    const existingTypes = [...new Set(allServices.map(s => s.service_type.toLowerCase().trim()))];
 
     // Main Grid Categories
     mainCategoryKeys.forEach(key => {
@@ -110,7 +111,8 @@ function filterServices() {
 function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
     
-    let filtered = allServices.filter(s => s.service_type.toLowerCase() === currentCategory);
+    // YAHAN BHI TRIM ADD KIYA HAI - Taki package wali problem solve ho jaye
+    let filtered = allServices.filter(s => s.service_type.toLowerCase().trim() === currentCategory);
 
     if (searchQuery) {
         filtered = allServices.filter(s => 
@@ -131,10 +133,11 @@ function renderServices(searchQuery = "") {
         const inCart = cart.some(item => item.service_id === service.service_id);
         
         const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
-        const btnText = inCart ? 'ADDED' : 'ADD';
+        const btnText = inCart ? 'ADDED' : 'ADD +';
 
         let imageHtml = "";
-        let catIcon = categoryConfig[service.service_type.toLowerCase()]?.icon || defaultIcon;
+        let catType = service.service_type.toLowerCase().trim();
+        let catIcon = categoryConfig[catType]?.icon || defaultIcon;
         
         if (service.service_image && service.service_image.trim() !== "") {
             imageHtml = `<img src="${service.service_image}" alt="Test" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">`;
@@ -176,14 +179,20 @@ function toggleCart(id, name, price) {
     }
     
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    updateBottomCartBar();
+    updateCartUI();
     renderServices(document.getElementById("searchInput").value); 
 }
 
-function updateBottomCartBar() {
+// Naya Function: Jo ek sath Top Header aur Bottom dono carts ko update karta hai
+function updateCartUI() {
+    const topCartBtn = document.getElementById("topCartBtn");
     const cartBar = document.getElementById("bottomCartBar");
     const cartText = document.getElementById("bottomCartText");
     
+    // Top button update
+    topCartBtn.innerText = `🛒 Cart (${cart.length})`;
+
+    // Bottom floating bar update
     if (cart.length > 0) {
         let total = cart.reduce((sum, item) => sum + item.price, 0);
         cartText.innerText = `${cart.length} Item${cart.length > 1 ? 's' : ''} | ₹${total}`;

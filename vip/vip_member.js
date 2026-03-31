@@ -1,4 +1,158 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoFueFsKc2fZNCILbWFpErObvA37AIRzpfK76xSKvJMWdq2bW2ejoyFdXwcqAWW0DBGg/exec";
+const GOOGLE_SCRIPT_URL = "// ==========================================
+// patient.gs - Patient Dashboard Logic
+// ==========================================
+
+function getPatientProfile(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("patients");
+  var detailSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("patient_details");
+  var vipSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("vip_member"); 
+  
+  var targetUserId = data.user_id;
+  var lastRow = sheet.getLastRow();
+  var patientData = null;
+
+  // Main Data nikalo
+  if (lastRow > 1) {
+    var sheetData = sheet.getRange(2, 1, lastRow - 1, 11).getDisplayValues();
+    for (var i = 0; i < sheetData.length; i++) {
+      if (sheetData[i][1] === targetUserId) { 
+        patientData = {
+          timestamp: sheetData[i][0], user_id: sheetData[i][1],
+          patient_name: sheetData[i][3], mobile_number: sheetData[i][4],
+          referral_code: sheetData[i][6], wallet: sheetData[i][7],
+          withdraw: sheetData[i][8], plan: sheetData[i][9], status: sheetData[i][10],
+          extra_details: null,
+          vip_package_status: "none",
+          vip_details: null
+        };
+        break;
+      }
+    }
+  }
+
+  // Extra Details nikalo
+  if (patientData && detailSheet) {
+    var detailLastRow = detailSheet.getLastRow();
+    if (detailLastRow > 1) {
+      var dData = detailSheet.getRange(2, 1, detailLastRow - 1, 9).getValues();
+      for (var j = 0; j < dData.length; j++) {
+        if (dData[j][0] === targetUserId) {
+          patientData.extra_details = {
+            email: dData[j][1], address: dData[j][2], city: dData[j][3],
+            district: dData[j][4], state: dData[j][5], pincode: dData[j][6],
+            image: dData[j][7]
+          };
+          break;
+        }
+      }
+    }
+  }
+
+  // VIP Package ka status aur VIP HISTORY nikalo
+  if (patientData && patientData.plan.toLowerCase() === "vip" && vipSheet) {
+    var vipLastRow = vipSheet.getLastRow();
+    if (vipLastRow > 1) {
+      var vData = vipSheet.getRange(2, 1, vipLastRow - 1, 17).getValues();
+      for (var k = vData.length - 1; k >= 0; k--) {
+        if (vData[k][0] === targetUserId && vData[k][16] === "active") {
+          patientData.vip_package_status = vData[k][15] ? vData[k][15].toLowerCase() : "pending";
+          patientData.vip_details = {
+            start_date: vData[k][1], end_date: vData[k][2],
+            member1_name: vData[k][3], member1_id: vData[k][4],
+            member2_name: vData[k][5], member2_id: vData[k][6],
+            member3_name: vData[k][7], member3_id: vData[k][8]
+          };
+          break;
+        }
+      }
+    }
+  }
+
+  if (patientData) {
+    if (patientData.status.toLowerCase() !== "active") return sendResponse("error", "Your account is blocked by Admin.");
+    return sendResponse("success", patientData);
+  } else {
+    return sendResponse("error", "User not found!");
+  }
+}
+
+function savePatientDetails(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("patient_details");
+  var userId = data.user_id;
+  var lastRow = sheet.getLastRow();
+  var found = false;
+  var rowIndex = -1;
+  var existingImage = "";
+
+  if (lastRow > 1) {
+    var sheetData = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    for (var i = 0; i < sheetData.length; i++) {
+      if (sheetData[i][0] === userId) {
+        found = true; rowIndex = i + 2; existingImage = sheetData[i][7]; break;
+      }
+    }
+  }
+
+  var finalImage = existingImage; 
+  if (data.image && data.image.length > 50) finalImage = data.image; 
+
+  if (found) {
+    sheet.getRange(rowIndex, 2, 1, 8).setValues([[ data.email, data.address, data.city, data.district, data.state, data.pincode, finalImage, "updated" ]]);
+  } else {
+    sheet.appendRow([ userId, data.email, data.address, data.city, data.district, data.state, data.pincode, finalImage, "active" ]);
+  }
+
+  try {
+    if (data.email && data.email.trim() !== "") {
+      MailApp.sendEmail(data.email, "Profile Successfully Updated - BhavyaCare", "Dear Patient,\n\nYour profile details have been successfully saved.\n\nTeam BhavyaCare");
+    }
+  } catch(e) {}
+
+  return sendResponse("success", "Profile saved successfully!");
+}
+
+// ==========================================
+// Fetch Wallet History (Safe Version)
+// ==========================================
+function getWalletHistory(data) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("wallet_transactions");
+    if (!sheet) return sendResponse("error", "Transactions sheet missing!");
+    
+    var targetUserId = data.user_id;
+    var lastRow = sheet.getLastRow();
+    var history = [];
+    
+    if (lastRow > 1) {
+      var sheetData = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+      for (var i = sheetData.length - 1; i >= 0; i--) { 
+        if (sheetData[i][1] === targetUserId) {
+          
+          var rawDate = sheetData[i][0];
+          var formattedDate = "N/A";
+          if (rawDate) {
+            try {
+              formattedDate = Utilities.formatDate(new Date(rawDate), Session.getScriptTimeZone(), "dd MMM yyyy, hh:mm a");
+            } catch(e) {
+              formattedDate = rawDate.toString(); 
+            }
+          }
+
+          history.push({
+            date: formattedDate,
+            type: sheetData[i][2] ? sheetData[i][2].toString() : "credit",
+            amount: sheetData[i][3] ? sheetData[i][3].toString() : "0",
+            description: sheetData[i][4] ? sheetData[i][4].toString() : "-",
+            reference: sheetData[i][5] ? sheetData[i][5].toString() : ""
+          });
+        }
+      }
+    }
+    return sendResponse("success", history);
+  } catch (mainErr) {
+    return sendResponse("error", "Backend crash: " + mainErr.message);
+  }
+}";
 
 let baseVipPrice = 3000;
 let vipDiscount = 500;

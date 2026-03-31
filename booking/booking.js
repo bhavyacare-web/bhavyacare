@@ -28,7 +28,6 @@ window.onload = () => {
     updateCartUI(); 
     fetchBookingData();
 
-    // 🌟 AUTO-OPEN VIP FORM AFTER LOGIN 🌟
     const pendingFlag = localStorage.getItem("pending_vip_redirect");
     const userId = localStorage.getItem("bhavya_user_id");
     if (pendingFlag === "true" && userId) {
@@ -64,7 +63,6 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            // 🌟 WARNING BANNER CHECK 🌟
             if (userPlanStatus === "pending") {
                 document.getElementById("pendingWarningBanner").style.display = "block";
             }
@@ -158,7 +156,6 @@ function renderServices(searchQuery = "") {
     let htmlContent = "";
 
     filtered.forEach(service => {
-        // 🌟 IF PENDING OR VIP, GIVE DISCOUNT 🌟
         const isVip = (userPlanStatus === "vip" || userPlanStatus === "pending");
         
         const totalMrp = formatPrice(service.service_price);
@@ -311,14 +308,12 @@ function openModal(serviceId) {
 function closeModal() {
     document.getElementById("infoModal").classList.remove("active");
 }
-
 function openVipPromo() {
     document.getElementById("vipPromoModal").classList.add("active");
 }
 function closeVipPromo() {
     document.getElementById("vipPromoModal").classList.remove("active");
 }
-
 function openVipFormModal() {
     document.getElementById("vipFormModal").classList.add("active");
 }
@@ -326,12 +321,11 @@ function closeVipFormModal() {
     document.getElementById("vipFormModal").classList.remove("active");
 }
 
-// 🌟 SMART VIP AUTO-OPEN FORM LOGIC 🌟
 function handleVipPromoClick() {
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
     if (userId) {
         closeVipPromo();
-        openVipFormModal(); // Seedha form kholo same screen par
+        openVipFormModal(); 
     } else {
         localStorage.setItem("pending_vip_redirect", "true");
         closeVipPromo();
@@ -343,50 +337,103 @@ function handleVipPromoClick() {
     }
 }
 
-// 🌟 SUBMIT VIP APPLICATION VIA AJAX 🌟
+// 🌟 NAYA: FILE NAME UPDATER FOR UI 🌟
+function updateFileName() {
+    const fileInput = document.getElementById('vipScreenshot');
+    const btnText = document.getElementById('fileUploadBtnText');
+    if (fileInput.files.length > 0) {
+        btnText.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> ${fileInput.files[0].name}`;
+        btnText.style.borderColor = "var(--success)";
+        btnText.style.background = "#f0fdf4";
+    }
+}
+
+// 🌟 SMART REFERRAL & UPI DEEP LINK LOGIC 🌟
+let currentVipAmount = 3000; 
+
+function applyVipPromo() {
+    const codeInput = document.getElementById('vipRefCode').value.trim().toUpperCase();
+    const finalAmountSpan = document.getElementById('vipFinalAmount');
+    const upiBtn = document.getElementById('upiPaymentBtn');
+    
+    if (codeInput === "BHAVYA500") {
+        currentVipAmount = 2500; 
+        alert("Referral Code Applied! ₹500 Discount added.");
+    } 
+    else if (codeInput === "") {
+        currentVipAmount = 3000; 
+    }
+    else {
+        alert("Invalid Referral Code!");
+        currentVipAmount = 3000;
+        document.getElementById('vipRefCode').value = "";
+    }
+
+    finalAmountSpan.innerText = `₹${currentVipAmount}`;
+    const newUpiLink = `upi://pay?pa=bhavya.care@ybl&pn=BhavyaCare&am=${currentVipAmount}&cu=INR&tn=VIP%20Subscription`;
+    upiBtn.href = newUpiLink;
+}
+
+// 🌟 NAYA: SUBMIT VIP APPLICATION WITH BASE64 IMAGE 🌟
 function submitVipApplicationForm() {
     const txnId = document.getElementById('vipTxnId').value.trim();
     const refCode = document.getElementById('vipRefCode').value.trim();
+    const fileInput = document.getElementById('vipScreenshot');
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
 
     if(!txnId) {
-        alert("Please enter the Transaction ID.");
+        alert("Please complete the payment and enter the 12-digit UTR No.");
+        return;
+    }
+    if (fileInput.files.length === 0) {
+        alert("Please upload the payment screenshot.");
         return;
     }
 
+    const file = fileInput.files[0];
     const btn = document.getElementById('submitVipBtn');
-    btn.innerText = "Submitting...";
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading & Submitting...`;
     btn.disabled = true;
 
-    // Call actual GAS endpoint for submission
-    fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: "submitVipApplication",
-            user_id: userId,
-            transaction_id: txnId,
-            referral_code: refCode
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Sirf base64 string nikal rahe hain
+        const base64Data = e.target.result.split(',')[1]; 
+
+        fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "submitVipApplication",
+                user_id: userId,
+                transaction_id: txnId,
+                referral_code: refCode,
+                amount_paid: currentVipAmount,
+                screenshot_base64: base64Data, // Bheja image ka data
+                screenshot_name: file.name,
+                screenshot_mime: file.type
+            })
         })
-    })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === "success") {
-            alert("VIP Application Submitted! Please proceed with your booking.");
-            userPlanStatus = "pending"; // Backend abhi isko pending manega
-            closeVipFormModal();
-            document.getElementById("pendingWarningBanner").style.display = "block";
-            renderServices(); // Automatically VIP prices dikh jayenge
-        } else {
-            alert("Error: " + res.message);
-        }
-    })
-    .catch(error => {
-        alert("Network error. Please try again.");
-    })
-    .finally(() => {
-        btn.innerText = "Submit Application";
-        btn.disabled = false;
-    });
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === "success") {
+                alert("VIP Application Submitted! Please proceed with your booking.");
+                userPlanStatus = "pending"; 
+                closeVipFormModal();
+                document.getElementById("pendingWarningBanner").style.display = "block";
+                renderServices(); 
+            } else {
+                alert("Error: " + res.message);
+            }
+        })
+        .catch(error => {
+            alert("Network error. Please try again.");
+        })
+        .finally(() => {
+            btn.innerText = "Submit Application";
+            btn.disabled = false;
+        });
+    };
+    reader.readAsDataURL(file); // File ko Base64 me convert karna shuru
 }
 
 function openCart() {

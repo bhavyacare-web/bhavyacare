@@ -20,7 +20,7 @@ try {
 }
 
 // 🌟 TUMHARA NAYA GOOGLE SCRIPT URL YAHAN HAI 🌟
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOwmqj6u5eg0gr6P54fBpHhJxIT5nZmkwcE_zhXGsVfE2fg1VkCIBvHlRrQ81e7YHQwA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 let isPartnerMode = false;
 
 // ==========================================

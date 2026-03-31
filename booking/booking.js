@@ -27,9 +27,16 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM
 window.onload = () => {
     updateCartUI(); 
     fetchBookingData();
+
+    // 🌟 AUTO-OPEN VIP FORM AFTER LOGIN 🌟
+    const pendingFlag = localStorage.getItem("pending_vip_redirect");
+    const userId = localStorage.getItem("bhavya_user_id");
+    if (pendingFlag === "true" && userId) {
+        localStorage.removeItem("pending_vip_redirect");
+        openVipFormModal();
+    }
 };
 
-// 🌟 SMART TEXT FORMATTER (_ HATANA, TITLE CASE, ACRONYMS) 🌟
 function formatText(text) {
     if (!text) return "";
     let cleanText = String(text).replace(/_/g, ' '); 
@@ -38,7 +45,6 @@ function formatText(text) {
     return formatted.replace(acronyms, match => match.toUpperCase());
 }
 
-// 🌟 CLEAN PRICE FORMATTER (12.6666 -> 12.67) 🌟
 function formatPrice(price) {
     if (!price || isNaN(price)) return 0;
     return parseFloat(Number(price).toFixed(2));
@@ -57,6 +63,12 @@ function fetchBookingData() {
         if(response.status === "success") {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
+            
+            // 🌟 WARNING BANNER CHECK 🌟
+            if (userPlanStatus === "pending") {
+                document.getElementById("pendingWarningBanner").style.display = "block";
+            }
+
             renderCategories();
             renderServices(); 
         } else {
@@ -146,7 +158,9 @@ function renderServices(searchQuery = "") {
     let htmlContent = "";
 
     filtered.forEach(service => {
-        const isVip = userPlanStatus === "vip";
+        // 🌟 IF PENDING OR VIP, GIVE DISCOUNT 🌟
+        const isVip = (userPlanStatus === "vip" || userPlanStatus === "pending");
+        
         const totalMrp = formatPrice(service.service_price);
         const basicPrice = formatPrice(service.basic_price);
         const vipPrice = formatPrice(service.vip_price);
@@ -280,6 +294,7 @@ function updateCartUI() {
     }
 }
 
+// MODAL HANDLERS
 function openModal(serviceId) {
     const service = allServices.find(s => s.service_id === serviceId);
     if (!service) return;
@@ -296,6 +311,7 @@ function openModal(serviceId) {
 function closeModal() {
     document.getElementById("infoModal").classList.remove("active");
 }
+
 function openVipPromo() {
     document.getElementById("vipPromoModal").classList.add("active");
 }
@@ -303,11 +319,19 @@ function closeVipPromo() {
     document.getElementById("vipPromoModal").classList.remove("active");
 }
 
-// 🌟 SMART VIP AUTO-REDIRECT LOGIC 🌟
+function openVipFormModal() {
+    document.getElementById("vipFormModal").classList.add("active");
+}
+function closeVipFormModal() {
+    document.getElementById("vipFormModal").classList.remove("active");
+}
+
+// 🌟 SMART VIP AUTO-OPEN FORM LOGIC 🌟
 function handleVipPromoClick() {
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
     if (userId) {
-        window.location.href = '../vip/vip_member.html';
+        closeVipPromo();
+        openVipFormModal(); // Seedha form kholo same screen par
     } else {
         localStorage.setItem("pending_vip_redirect", "true");
         closeVipPromo();
@@ -317,6 +341,52 @@ function handleVipPromoClick() {
             alert("Login system is loading, please try again.");
         }
     }
+}
+
+// 🌟 SUBMIT VIP APPLICATION VIA AJAX 🌟
+function submitVipApplicationForm() {
+    const txnId = document.getElementById('vipTxnId').value.trim();
+    const refCode = document.getElementById('vipRefCode').value.trim();
+    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
+
+    if(!txnId) {
+        alert("Please enter the Transaction ID.");
+        return;
+    }
+
+    const btn = document.getElementById('submitVipBtn');
+    btn.innerText = "Submitting...";
+    btn.disabled = true;
+
+    // Call actual GAS endpoint for submission
+    fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: "submitVipApplication",
+            user_id: userId,
+            transaction_id: txnId,
+            referral_code: refCode
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === "success") {
+            alert("VIP Application Submitted! Please proceed with your booking.");
+            userPlanStatus = "pending"; // Backend abhi isko pending manega
+            closeVipFormModal();
+            document.getElementById("pendingWarningBanner").style.display = "block";
+            renderServices(); // Automatically VIP prices dikh jayenge
+        } else {
+            alert("Error: " + res.message);
+        }
+    })
+    .catch(error => {
+        alert("Network error. Please try again.");
+    })
+    .finally(() => {
+        btn.innerText = "Submit Application";
+        btn.disabled = false;
+    });
 }
 
 function openCart() {

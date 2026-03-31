@@ -66,7 +66,6 @@
     .add-to-cart-btn { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 0 20px; border-radius: 8px; font-weight: 800; font-size: 13px; height: 100%; cursor: pointer; transition: 0.2s;}
     .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--success); color: white; border-radius: 8px; height: 100%; min-width: 90px; font-weight: bold; overflow: hidden; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);}
     .qty-control button { background: transparent; border: none; color: white; width: 30px; height: 100%; cursor: pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition: 0.2s;}
-    .qty-control button:active { background: rgba(0,0,0,0.1); }
     .qty-text { flex-grow: 1; text-align: center; font-size: 14px; }
     
     .service-item { background: var(--card-bg); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: row; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center;}
@@ -77,6 +76,7 @@
     .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
     .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 10px;}
 
+    /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; padding: 20px; position: relative; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
@@ -132,20 +132,31 @@
     </div>
   </div>
 
+  <div id="login-section" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:10000; backdrop-filter: blur(3px);">
+    <div style="background:white; padding:25px; border-radius:20px; width:90%; max-width:400px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); text-align:center;">
+      <span onclick="closeLoginPopup()" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#94a3b8; font-weight:bold;">&times;</span>
+      <h3 id="form-title" style="font-size:18px; font-weight:800; color:#1e293b; margin-top:0; margin-bottom:20px;">Patient Login</h3>
+      
+      <div id="phone-section">
+        <input type="text" id="userName" placeholder="Full Name" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
+        <input type="number" id="phoneNumber" placeholder="Mobile Number" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
+        <div id="partner-role-container" style="display:none;">
+           <input type="hidden" id="partnerRole" value="patient">
+        </div>
+        <div id="recaptcha-container" style="margin-bottom:15px; display:flex; justify-content:center;"></div>
+        <button onclick="sendOTP()" style="background:var(--primary); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 4px 10px rgba(0,86,179,0.2);">Send OTP</button>
+      </div>
+
+      <div id="otp-section" style="display:none;">
+        <input type="number" id="otpCode" placeholder="Enter 6-digit OTP" style="width:100%; padding:14px; margin-bottom:15px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; box-sizing: border-box; font-family:inherit;">
+        <button onclick="verifyOTP()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 4px 10px rgba(22,163,74,0.2);">Verify & Login</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <div id="header-container" style="display:none;"></div>
-  <script>
-    fetch('../header.html')
-      .then(response => response.text())
-      .then(data => {
-          document.getElementById('header-container').innerHTML = data;
-          let script = document.createElement('script');
-          script.src = '../app.js';
-          document.body.appendChild(script);
-      }).catch(err => console.log('Header load error', err));
-  </script>
-
-  <script src="booking.js?v=13"></script>
+  <script src="../app.js"></script>
+  <script src="booking.js?v=14"></script>
 </body>
 </html>

@@ -18,7 +18,6 @@ let userPlanStatus = "basic";
 let currentCategory = 'profile'; 
 let currentSubCategory = 'all'; 
 
-// 🌟 FIX: Purane cart data ko nayi quantity format me migrate kiya
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 cart = cart.map(item => ({...item, qty: item.qty || 1})); 
 
@@ -33,7 +32,7 @@ window.onload = () => {
 // 🌟 SMART TEXT FORMATTER (_ HATANA, TITLE CASE, ACRONYMS) 🌟
 function formatText(text) {
     if (!text) return "";
-    let cleanText = String(text).replace(/_/g, ' '); // Pura underscore hata diya
+    let cleanText = String(text).replace(/_/g, ' '); 
     let formatted = cleanText.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     const acronyms = /\b(cbc|esr|usg|mri|ecg|echo|ct|lft|kft|hba1c|tsh|t3|t4|ana|psa|hiv|hcv|bun|aptt|sgpt|sgot|vdrl|rbc|wbc|bchg|aec|anc|amh|ada|hbsag|crp|abp|ncv|emg|ssep|dlco|eeg|pft)\b/gi;
     return formatted.replace(acronyms, match => match.toUpperCase());
@@ -72,14 +71,12 @@ function fetchBookingData() {
 function renderCategories() {
     const mainContainer = document.getElementById("mainCategories");
     let mainHtml = "";
-    
     const existingTypes = [...new Set(allServices.map(s => String(s.service_type || '').toLowerCase().trim()))];
 
     mainCategoryKeys.forEach(key => {
         let config = categoryConfig[key] || { name: key.toUpperCase(), icon: defaultIcon };
         let isPresent = existingTypes.includes(key);
         let isSelected = currentCategory === key ? 'selected' : '';
-        
         if(isPresent) {
             mainHtml += `<div class="cat-card ${isSelected}" onclick="selectCategory('${key}')">
                             <div class="cat-icon">${config.icon}</div>
@@ -155,7 +152,6 @@ function renderServices(searchQuery = "") {
         const vipPrice = formatPrice(service.vip_price);
         const applicablePrice = isVip ? vipPrice : basicPrice;
         
-        // 🌟 CHECK CART QUANTITY 🌟
         const cartItem = cart.find(item => item.service_id === service.service_id);
         const inCart = !!cartItem;
         const currentQty = cartItem ? cartItem.qty : 0;
@@ -163,7 +159,6 @@ function renderServices(searchQuery = "") {
         const cleanName = formatText(service.service_name).replace(/'/g, "\\'");
         const cleanCat = formatText(service.service_category);
 
-        // 🌟 GREEN QUANTITY CONTROLLER UI 🌟
         let actionBtnHtml = "";
         if (inCart) {
             actionBtnHtml = `
@@ -201,16 +196,13 @@ function renderServices(searchQuery = "") {
             if (descRaw.trim() !== "") {
                 let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
                 if (items.length > 0) {
-                    // Maximum 2 items dikhayenge taki card compact rahe
                     let previewItems = items.slice(0, 2).map(i => formatText(i.trim()));
-                    
                     let moreText = "";
                     if (service.number_of_test) {
                         moreText = `+ ${service.number_of_test} Parameters (View All)`;
                     } else if (items.length > 2) {
                         moreText = `View All Details <i class="fas fa-arrow-right" style="font-size:10px;"></i>`;
                     }
-
                     descPreviewHtml = `<div class="desc-preview">
                         <ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
                         ${moreText ? `<div class="view-more-btn" onclick="openModal('${service.service_id}')">${moreText}</div>` : ''}
@@ -257,19 +249,14 @@ function renderServices(searchQuery = "") {
     container.innerHTML = htmlContent;
 }
 
-// 🌟 SMART CART UPDATER (Handles Quantity) 🌟
 function updateQty(id, change, price, name) {
     let index = cart.findIndex(item => item.service_id === id);
-    
     if (index > -1) {
         cart[index].qty += change;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1); // Remove if qty is 0
-        }
+        if (cart[index].qty <= 0) cart.splice(index, 1); 
     } else if (change > 0) {
         cart.push({ service_id: id, service_name: name, price: price, qty: 1 });
     }
-    
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI();
     renderServices(document.getElementById("searchInput").value); 
@@ -280,9 +267,7 @@ function updateCartUI() {
     const cartBar = document.getElementById("bottomCartBar");
     const cartText = document.getElementById("bottomCartText");
     
-    // Total Items count (Total members booked)
     let totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-    // Total Price based on Qty
     let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     
     topCartBtn.innerText = `🛒 Cart (${totalItems})`;
@@ -298,29 +283,40 @@ function updateCartUI() {
 function openModal(serviceId) {
     const service = allServices.find(s => s.service_id === serviceId);
     if (!service) return;
-
     document.getElementById("modalTitle").innerText = formatText(service.service_name);
-    
     let descRaw = String(service.description || '');
     let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
-    
     if (descRaw.trim() !== "") {
         let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
         formattedDesc = "<ul>" + items.map(i => `<li>${formatText(i.trim())}</li>`).join('') + "</ul>";
     }
-    
     document.getElementById("modalBody").innerHTML = formattedDesc;
     document.getElementById("infoModal").classList.add("active");
 }
 function closeModal() {
     document.getElementById("infoModal").classList.remove("active");
 }
-
 function openVipPromo() {
     document.getElementById("vipPromoModal").classList.add("active");
 }
 function closeVipPromo() {
     document.getElementById("vipPromoModal").classList.remove("active");
+}
+
+// 🌟 SMART VIP AUTO-REDIRECT LOGIC 🌟
+function handleVipPromoClick() {
+    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
+    if (userId) {
+        window.location.href = '../vip/vip_member.html';
+    } else {
+        localStorage.setItem("pending_vip_redirect", "true");
+        closeVipPromo();
+        if (typeof openPatientLogin === "function") {
+            openPatientLogin();
+        } else {
+            alert("Login system is loading, please try again.");
+        }
+    }
 }
 
 function openCart() {

@@ -1,5 +1,5 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoFueFsKc2fZNCILbWFpErObvA37AIRzpfK76xSKvJMWdq2bW2ejoyFdXwcqAWW0DBGg/exec";
-let isUserVip = false; // Global flag to check VIP status
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOwmqj6u5eg0gr6P54fBpHhJxIT5nZmkwcE_zhXGsVfE2fg1VkCIBvHlRrQ81e7YHQwA/exec"; // <-- YAHAN APNA URL UPDATE KAREIN
+let isUserVip = false;
 
 // ==========================================
 // 1. DATA FETCH & BINDING
@@ -8,17 +8,11 @@ document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
-    
-    if (!userId) {
-        alert("Please login first to access the dashboard.");
-        window.location.href = "../index.html"; 
-        return;
-    }
+    if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) 
         });
 
@@ -35,9 +29,8 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // 🌟 VIP UI & Package Pending Logic 🌟
             const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
-            isUserVip = (planName === "vip"); // Flag Update
+            isUserVip = (planName === "vip"); 
             safeSetText("vipStatus", patient.plan ? patient.plan.toUpperCase() : "BASIC");
             
             const vipBtn = document.getElementById("btn-vip-action");
@@ -54,35 +47,27 @@ async function checkLoginAndFetchData() {
                     if (vipAlert) vipAlert.style.display = "none";
                 }
 
-                // 🌟 Populate VIP Details Modal 🌟
                 if (patient.vip_details) {
                     safeSetText("vd-start", patient.vip_details.start_date || "N/A");
                     safeSetText("vd-end", patient.vip_details.end_date || "N/A");
-                    
                     document.getElementById("vd-mem1").innerHTML = `<span><strong>${patient.vip_details.member1_name || 'N/A'}</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member1_id || '-'}</span>`;
                     
                     if (patient.vip_details.member2_name) {
                         document.getElementById("vd-mem2").innerHTML = `<span><strong>${patient.vip_details.member2_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member2_id || '-'}</span>`;
                         document.getElementById("vd-mem2").style.display = "flex";
-                    } else {
-                        document.getElementById("vd-mem2").style.display = "none";
-                    }
+                    } else { document.getElementById("vd-mem2").style.display = "none"; }
 
                     if (patient.vip_details.member3_name) {
                         document.getElementById("vd-mem3").innerHTML = `<span><strong>${patient.vip_details.member3_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member3_id || '-'}</span>`;
                         document.getElementById("vd-mem3").style.display = "flex";
-                    } else {
-                        document.getElementById("vd-mem3").style.display = "none";
-                    }
+                    } else { document.getElementById("vd-mem3").style.display = "none"; }
                 }
-
             } else {
                 if (vipBtn) vipBtn.style.display = "block";
                 if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
                 if (vipAlert) vipAlert.style.display = "none";
             }
             
-            // Extra Details & Image Fallback Logic
             const banner = document.getElementById("profileBanner");
             const profileImages = document.querySelectorAll(".profile-img");
             const editPreview = document.getElementById("editProfilePreview");
@@ -104,13 +89,14 @@ async function checkLoginAndFetchData() {
                     profileImages.forEach(img => img.src = fallbackUrl);
                     if(editPreview) editPreview.src = fallbackUrl;
                 }
-                // Load Wallet History
-            fetchWalletHistory(userId);
             } else {
                 if (banner) banner.style.display = "block"; 
                 profileImages.forEach(img => img.src = fallbackUrl);
                 if(editPreview) editPreview.src = fallbackUrl;
             }
+
+            // 👇 Fetch Wallet History (Safely placed outside conditions)
+            fetchWalletHistory(userId);
 
         } else {
             alert("Error: " + result.message);
@@ -121,15 +107,8 @@ async function checkLoginAndFetchData() {
     }
 }
 
-// 🌟 NAYA: Handle VIP Card Click 🌟
 function handleVipCardClick() {
-    if (isUserVip) {
-        // Agar VIP hai toh History Modal Kholo
-        document.getElementById('vip-details-modal').style.display = 'block';
-    } else {
-        // Agar nahi hai toh Upgrade page par bhejo
-        window.location.href = '../vip/vip_member.html';
-    }
+    if (isUserVip) { document.getElementById('vip-details-modal').style.display = 'block'; } else { window.location.href = '../vip/vip_member.html'; }
 }
 
 function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
@@ -145,25 +124,15 @@ function switchTab(tabId) {
     links.forEach(link => link.classList.remove("active"));
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.add("active");
-    if(typeof event !== 'undefined' && event && event.currentTarget) {
-        event.currentTarget.classList.add("active");
-    } else {
-        const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-        if(activeNav) activeNav.classList.add("active");
-    }
+    if(typeof event !== 'undefined' && event && event.currentTarget) { event.currentTarget.classList.add("active"); } 
+    else { const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`); if(activeNav) activeNav.classList.add("active"); }
 }
 
-function logoutDashboard() {
-    localStorage.clear();
-    window.location.href = "../index.html";
-}
+function logoutDashboard() { localStorage.clear(); window.location.href = "../index.html"; }
 
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
-    if (code && code !== "-----") {
-        navigator.clipboard.writeText(code);
-        alert("Referral Code '" + code + "' copied!");
-    }
+    if (code && code !== "-----") { navigator.clipboard.writeText(code); alert("Referral Code '" + code + "' copied!"); }
 }
 
 // ==========================================
@@ -181,10 +150,8 @@ if(fileInput) {
             img.src = event.target.result;
             img.onload = function() {
                 const canvas = document.createElement("canvas");
-                const MAX_WIDTH = 200; 
-                const scaleSize = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scaleSize;
+                const scaleSize = 200 / img.width;
+                canvas.width = 200; canvas.height = img.height * scaleSize;
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); 
@@ -197,43 +164,25 @@ if(fileInput) {
 
 async function savePatientProfile() {
     const btn = document.getElementById("btnSaveProfile");
-    btn.innerText = "Saving Please Wait...";
-    btn.disabled = true;
+    btn.innerText = "Saving Please Wait..."; btn.disabled = true;
     
     const payload = {
-        action: "savePatientDetails",
-        user_id: localStorage.getItem("bhavya_user_id"),
-        email: document.getElementById("infoEmail").value,
-        address: document.getElementById("infoAddress").value,
-        city: document.getElementById("infoCity").value,
-        district: document.getElementById("infoDistrict").value,
-        state: document.getElementById("infoState").value,
-        pincode: document.getElementById("infoPincode").value,
+        action: "savePatientDetails", user_id: localStorage.getItem("bhavya_user_id"),
+        email: document.getElementById("infoEmail").value, address: document.getElementById("infoAddress").value,
+        city: document.getElementById("infoCity").value, district: document.getElementById("infoDistrict").value,
+        state: document.getElementById("infoState").value, pincode: document.getElementById("infoPincode").value,
         image: document.getElementById("infoImageBase64").value
     };
 
     try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
-        if (result.status === "success") {
-            alert("Profile Details Saved Successfully!");
-            checkLoginAndFetchData(); 
-            switchTab('overview'); 
-        } else {
-            alert("Error: " + result.message);
-        }
-    } catch (error) {
-        alert("Failed to save. Check your connection.");
-    } finally {
-        btn.innerText = "Save & Update Profile";
-        btn.disabled = false;
-    }
+        if (result.status === "success") { alert("Profile Details Saved Successfully!"); checkLoginAndFetchData(); switchTab('overview'); } 
+        else { alert("Error: " + result.message); }
+    } catch (error) { alert("Failed to save. Check your connection."); } 
+    finally { btn.innerText = "Save & Update Profile"; btn.disabled = false; }
 }
+
 // ==========================================
 // 4. FETCH WALLET HISTORY
 // ==========================================
@@ -241,11 +190,9 @@ async function fetchWalletHistory(userId) {
     const container = document.getElementById("walletHistoryContainer");
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getWalletHistory", user_id: userId })
         });
-        
         const result = await response.json();
         
         if (result.status === "success") {
@@ -254,13 +201,11 @@ async function fetchWalletHistory(userId) {
                 container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px;"></i><p>No recent transactions.</p></div>`;
                 return;
             }
-            
             let html = "";
             history.forEach(txn => {
                 const isCredit = txn.type.toLowerCase() === 'credit';
-                const color = isCredit ? '#2e7d32' : '#d32f2f'; // Green for incoming, Red for outgoing
+                const color = isCredit ? '#2e7d32' : '#d32f2f';
                 const sign = isCredit ? '+' : '-';
-                
                 html += `
                 <div class="list-item" style="align-items: flex-start;">
                     <div class="list-info">

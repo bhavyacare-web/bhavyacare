@@ -136,7 +136,6 @@ function setupRecaptcha() {
 function sendOTP() {
     if (typeof firebase === 'undefined') { alert("System loading, please wait a moment."); return; }
     
-    // Naam check karne ka logic
     const userName = document.getElementById('userName').value.trim();
     if(!userName) { alert("Please enter your full name!"); return; }
 
@@ -183,10 +182,10 @@ async function verifyOTP() {
         
         checkLoginState();
 
-       // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
+        // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
         if (localStorage.getItem("pending_vip_redirect") === "true") {
             // Hum flag delete nahi karenge, booking.js ise khud delete karega
-            window.location.reload(); // Bas same page ko refresh kar do
+            window.location.reload(); // Bas same page ko refresh kar do taaki form khul jaye
         } else {
             window.location.reload(); 
         }

@@ -183,16 +183,12 @@ async function verifyOTP() {
         
         checkLoginState();
 
-        // 🌟 THE MAGIC VIP REDIRECT LOGIC 🌟
+       // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
         if (localStorage.getItem("pending_vip_redirect") === "true") {
-            localStorage.removeItem("pending_vip_redirect");
-            
-            // Smart Path Finder: Agar URL me 'booking' hai toh '../vip' varna seedha 'vip'
-            if (window.location.pathname.includes("booking")) {
-                window.location.href = '../vip/vip_member.html';
-            } else {
-                window.location.href = 'vip/vip_member.html';
-            }
+            // Hum flag delete nahi karenge, booking.js ise khud delete karega
+            window.location.reload(); // Bas same page ko refresh kar do
+        } else {
+            window.location.reload(); 
         }
 
     } catch (error) { 

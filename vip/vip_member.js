@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = https://script.google.com/macros/s/AKfycbyoFueFsKc2fZNCILbWFpErObvA37AIRzpfK76xSKvJMWdq2bW2ejoyFdXwcqAWW0DBGg/exec;
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoFueFsKc2fZNCILbWFpErObvA37AIRzpfK76xSKvJMWdq2bW2ejoyFdXwcqAWW0DBGg/exec";
 
 let baseVipPrice = 3000;
 let vipDiscount = 500;

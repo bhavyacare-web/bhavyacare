@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; // Update URL here if needed
 
 let currentTab = 'patients';
 
@@ -132,8 +132,16 @@ async function fetchVipData() {
                     actionBtn = `<span style="font-size:12px; color:red; font-weight:bold;">Rejected</span>`;
                 }
 
+                // 🌟 FIX: Show Package Status Badge 🌟
+                let pkgBadge = '';
+                if (vip.vip_package && vip.vip_package.toLowerCase() === 'pending') {
+                    pkgBadge = `<br><span style="font-size:10px; background:#ffeeba; color:#856404; padding:3px 6px; border-radius:4px; margin-top:5px; display:inline-block; font-weight:bold;">🎁 Pkg Pending</span>`;
+                } else if (vip.vip_package) {
+                    pkgBadge = `<br><span style="font-size:10px; background:#d4edda; color:#155724; padding:3px 6px; border-radius:4px; margin-top:5px; display:inline-block; font-weight:bold;">🎁 Pkg Done</span>`;
+                }
+
                 let ssLink = vip.payment_screenshot ? `<a href="${vip.payment_screenshot}" target="_blank" style="color:#0056b3; font-weight:bold; font-size:12px;">View SS</a>` : 'N/A';
-                let dates = vip.start_date ? `${vip.start_date} <br>to<br> ${vip.end_date}` : 'Not Started';
+                let dates = vip.start_date !== 'Not Started' ? `${vip.start_date} <br>to<br> ${vip.end_date}` : 'Not Started';
 
                 const row = `
                     <tr>
@@ -143,7 +151,7 @@ async function fetchVipData() {
                         <td style="text-transform: capitalize;">${vip.payment_mode}</td>
                         <td>ID: ${vip.payment_id || 'N/A'}<br>${ssLink}</td>
                         <td style="font-weight: bold; color: #28a745;">₹${vip.amount}</td>
-                        <td>${statusBadge}</td>
+                        <td style="text-align: center;">${statusBadge} ${pkgBadge}</td>
                         <td style="font-size: 11px; color:#555;">${dates}</td>
                         <td style="font-size: 12px; color:#777;">${vip.remarks || '-'}</td>
                         <td>${actionBtn}</td>

@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BhavyaCare - Book Services</title>
+  <style>
+    :root {
+      --primary: #0056b3;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-main: #333;
+      --text-muted: #666;
+    }
 
+    body { font-family: Arial, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; }
+    
+    /* Header & Navigation */
+    .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100;}
+    .header button { background: white; color: var(--primary); border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    
+    /* Main Module Tabs (Future Scope) */
+    .modules-nav { display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; background: var(--card-bg); white-space: nowrap; }
+    .module-btn { padding: 10px 20px; border: 1px solid var(--primary); background: white; color: var(--primary); border-radius: 20px; cursor: pointer; }
+    .module-btn.active { background: var(--primary); color: white; }
+    .coming-soon { font-size: 0.7em; background: var(--warning); color: #000; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+
+    /* Search Bar */
+    .search-container { padding: 15px 20px; }
+    .search-container input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+
+    /* Main Category Grid */
+    .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px 15px; }
+    .cat-card { background: var(--card-bg); border-radius: 8px; padding: 15px 5px; text-align: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 14px; border: 2px solid transparent; }
+    .cat-card.selected { border-color: var(--primary); background: #e6f0fa; }
+
+    /* Slider Categories */
+    .slider-categories { display: flex; gap: 10px; padding: 0 20px 15px; overflow-x: auto; white-space: nowrap; }
+    .slider-btn { padding: 8px 15px; background: var(--card-bg); border: 1px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 14px; }
+    .slider-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Services List */
+    .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 15px; }
+    .service-item { background: var(--card-bg); border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .service-info h3 { margin: 0 0 5px; font-size: 16px; color: var(--text-main); }
+    .service-info p { margin: 0 0 5px; font-size: 12px; color: var(--text-muted); }
+    .price-box { margin-top: 10px; }
+    .mrp { text-decoration: line-through; color: var(--danger); font-size: 12px; margin-right: 10px;}
+    .final-price { color: var(--success); font-weight: bold; font-size: 18px; }
+    
+    .add-to-cart-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* Hide scrollbar for sliders */
+    .modules-nav::-webkit-scrollbar, .slider-categories::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <button onclick="window.location.href='patient_dashboard.html'">🏠 Dashboard</button>
+    <b>Book Services</b>
+    <button id="cartBtn" onclick="openCart()">🛒 Cart (0)</button>
+  </div>
+
+  <div class="modules-nav">
+    <button class="module-btn active">Lab Tests & Scans</button>
+    <button class="module-btn" onclick="alert('Medicine delivery is coming soon!')">Medicine <span class="coming-soon">Soon</span></button>
+    <button class="module-btn" onclick="alert('Doctor consultations are coming soon!')">Consult Doctor <span class="coming-soon">Soon</span></button>
+    <button class="module-btn" onclick="alert('Hospital Booking is coming soon!')">Hospital <span class="coming-soon">Soon</span></button>
+  </div>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search by Test Name or ID..." onkeyup="filterServices()">
+  </div>
+
+  <div class="category-grid" id="mainCategories">
+    </div>
+
+  <div class="slider-categories" id="sliderCategories">
+    </div>
+
+  <div id="loading" style="text-align: center; padding: 20px; color: var(--primary);">Fetching Services & Plan...</div>
+
+  <div class="services-container" id="servicesList">
+    </div>
+
+  <script src="booking.js"></script>
+</body>
+</html>

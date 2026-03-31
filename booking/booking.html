@@ -10,9 +10,9 @@
       --primary: #0056b3;
       --primary-light: #e6f0fa;
       --success: #28a745;
-      --warning: #f59e0b; /* Thoda premium amber */
+      --warning: #f59e0b; 
       --danger: #dc3545;
-      --bg-color: #f0f4f8; /* Soft premium background */
+      --bg-color: #f0f4f8; 
       --card-bg: #ffffff;
       --text-main: #1e293b;
       --text-muted: #64748b;
@@ -20,26 +20,22 @@
 
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 90px; }
     
-    /* Header */
     .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,86,179,0.15);}
     .header h2 { margin: 0; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.5px;}
     .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);}
     .nav-btn:hover { background: white; color: var(--primary); }
     
-    /* Search Bar */
     .search-container { padding: 15px 20px 5px; position: relative; }
     .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; box-sizing: border-box; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; font-weight: 500;}
     .search-container input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
     .search-icon { position: absolute; left: 35px; top: 29px; color: #94a3b8; font-size: 18px; }
 
-    /* Main Grid */
     .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 15px 20px; }
     .cat-card { background: var(--card-bg); border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 2px solid transparent; transition: all 0.2s ease;}
     .cat-card.selected { border-color: var(--primary); background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,86,179,0.1);}
     .cat-icon { font-size: 26px; margin-bottom: 6px; }
     .cat-name { font-size: 12px; font-weight: 700; color: var(--text-main); }
 
-    /* Sub Categories */
     .sub-cat-nav { display: flex; gap: 10px; padding: 0 20px 15px; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth;}
     .sub-cat-nav::-webkit-scrollbar { display: none; }
     .sub-cat-btn { padding: 8px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 13px; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.3s;}
@@ -47,20 +43,18 @@
 
     .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 16px; }
     
-    /* PREMIUM PROFILE/PACKAGE CARD (Compact & Sleek) */
-    .profile-item { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: transform 0.2s; position: relative;}
-    
+    /* PROFILE CARD */
+    .profile-item { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; position: relative;}
     .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     .param-badge { background: #fef3c7; color: #d97706; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
     
     .service-info h3 { margin: 0 0 6px; font-size: 16px; color: var(--text-main); font-weight: 800; line-height: 1.3; }
     
-    /* NEW: Description Preview inside Card */
     .desc-preview { background: #f8fafc; border-radius: 10px; padding: 10px 12px; border: 1px solid #f1f5f9;}
-    .desc-preview ul { margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5; font-weight: 500;}
+    .desc-preview ul { margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5; font-weight: 600;}
     .desc-preview li { margin-bottom: 3px; }
-    .view-more-btn { font-size: 11px; color: var(--primary); margin-top: 6px; font-weight: 700; cursor: pointer; display: inline-block; padding: 4px 8px; background: var(--primary-light); border-radius: 6px; transition: 0.2s;}
+    .view-more-btn { font-size: 12px; color: var(--primary); margin-top: 8px; font-weight: 800; cursor: pointer; display: inline-block; padding: 5px 10px; background: var(--primary-light); border-radius: 8px; transition: 0.2s;}
     
     /* 3-TIER PRICING UI */
     .price-action-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px;}
@@ -68,9 +62,9 @@
     .mrp-row { font-size: 12px; color: #94a3b8; font-weight: 500;}
     .mrp { text-decoration: line-through; }
     .final-price { color: var(--text-main); font-weight: 800; font-size: 20px; display: flex; align-items: center; gap: 6px;}
-    .locked-price { color: #64748b; font-size: 12px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1;}
+    .locked-price { color: #64748b; font-size: 12px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1; cursor: pointer; transition: 0.2s;}
+    .locked-price:hover { background: #e2e8f0; color: var(--text-main); }
     
-    /* Standardized Add Button */
     .add-to-cart-btn { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 24px; border-radius: 12px; font-weight: 800; font-size: 13px; transition: all 0.2s ease; cursor: pointer; box-shadow: 0 2px 6px rgba(0,86,179,0.1);}
     .add-to-cart-btn.added { background: var(--success); color: white; border-color: var(--success); box-shadow: 0 2px 6px rgba(40,167,69,0.2);}
     
@@ -84,7 +78,7 @@
     .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
     .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 12px;}
 
-    /* POPUP MODAL */
+    /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 20px; padding: 24px; position: relative; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
@@ -93,7 +87,7 @@
     .modal-title { font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 0; margin-bottom: 15px; padding-right: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;}
     .modal-body { overflow-y: auto; font-size: 14px; color: #475569; line-height: 1.6; }
     .modal-body ul { padding-left: 20px; margin: 0; }
-    .modal-body li { margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dashed #e2e8f0; font-weight: 500;}
+    .modal-body li { margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dashed #e2e8f0; font-weight: 600;}
 
     #loading { text-align: center; padding: 40px 20px; color: var(--primary); font-size: 15px; font-weight: 600;}
   </style>
@@ -112,11 +106,8 @@
   </div>
 
   <div class="category-grid" id="mainCategories"></div>
-
   <div id="loading"><i class="fas fa-spinner fa-spin"></i> Fetching premium prices...</div>
-
   <div id="subCategoryContainer"></div>
-
   <div class="services-container" id="servicesList"></div>
 
   <div id="bottomCartBar" class="bottom-cart-bar" onclick="openCart()">
@@ -132,6 +123,18 @@
     </div>
   </div>
 
-  <script src="booking.js?v=8"></script>
+  <div class="modal-overlay" id="vipPromoModal">
+    <div class="modal-content" style="text-align:center; padding: 25px 20px;">
+      <span class="close-modal" onclick="closeVipPromo()">&times;</span>
+      <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onerror="this.src='https://via.placeholder.com/400x200?text=VIP+Family+Plan'">
+      <h3 style="color:var(--text-main); font-size:18px; margin-bottom:10px; font-weight:800;">Do you want to buy the VIP Family Plan now?</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">Unlock premium discounted rates and save big on every test and package!</p>
+      <button onclick="window.location.href='../vip/vip_member.html'" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:25px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 6px 15px rgba(217, 119, 6, 0.3); transition:0.3s;">
+        <i class="fas fa-crown"></i> Book Now
+      </button>
+    </div>
+  </div>
+
+  <script src="booking.js?v=10"></script>
 </body>
 </html>

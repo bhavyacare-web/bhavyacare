@@ -1,7 +1,7 @@
 // Map for Category Names and Premium Icons
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
-    'package':   { name: 'Package', icon: '🩺' },
+    'profile':   { name: 'Package', icon: '🩺' }, // 🔥 Dhyan dein: Yahan ab 'profile' use ho raha hai!
     'usg':       { name: 'Ultrasound', icon: '🖥️' },
     'xray':      { name: 'X-Ray', icon: '🩻' },
     'ct':        { name: 'CT Scan', icon: '☢️' },
@@ -11,7 +11,8 @@ const categoryConfig = {
 };
 
 const defaultIcon = '🧪';
-const mainCategoryKeys = ['pathology', 'package', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
+// Yahan bhi list update ki gayi hai
+const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 
 let allServices = [];
 let userPlanStatus = "basic"; 
@@ -28,7 +29,6 @@ window.onload = () => {
 };
 
 function fetchBookingData() {
-    // 🚀 FIX: Ab ye bhavya_user_id check karega jo login system set karta hai
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
     
     fetch(GAS_URL, {

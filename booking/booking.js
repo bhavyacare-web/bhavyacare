@@ -15,7 +15,8 @@ const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'e
 
 let allServices = [];
 let userPlanStatus = "basic"; 
-let currentCategory = 'pathology'; 
+let currentCategory = 'profile'; // By default profile open karte hain as it's premium
+let currentSubCategory = 'all'; // For package sub-categories
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let searchTimeout; 
 
@@ -40,32 +41,23 @@ function fetchBookingData() {
         if(response.status === "success") {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
-            
-            console.log("Total Services Loaded: ", allServices.length);
-            
             renderCategories();
             renderServices(); 
         } else {
-            alert("Error fetching services: " + response.message);
+            alert("Error fetching services.");
         }
     })
     .catch(error => {
-        document.getElementById("loading").innerHTML = "Failed to load data. Please check your connection.";
-        console.error("Error:", error);
+        document.getElementById("loading").innerHTML = "Failed to load data.";
     });
 }
 
 function renderCategories() {
     const mainContainer = document.getElementById("mainCategories");
-    const sliderContainer = document.getElementById("sliderCategories");
-    
     let mainHtml = "";
-    let sliderHtml = "";
-
-    // 🔥 FIX: String() added for safety against blank/number values
+    
     const existingTypes = [...new Set(allServices.map(s => String(s.service_type || '').toLowerCase().trim()))];
 
-    // Main Grid Categories
     mainCategoryKeys.forEach(key => {
         let config = categoryConfig[key] || { name: key.toUpperCase(), icon: defaultIcon };
         let isPresent = existingTypes.includes(key);
@@ -76,47 +68,56 @@ function renderCategories() {
                             <div class="cat-icon">${config.icon}</div>
                             <span class="cat-name">${config.name}</span>
                          </div>`;
-        } else {
-            mainHtml += `<div class="cat-card" style="opacity: 0.5;" onclick="alert('${config.name} is currently unavailable.')">
-                            <div class="cat-icon">${config.icon}</div>
-                            <span class="cat-name">${config.name}</span>
-                         </div>`;
         }
     });
-
-    // Slider Categories
-    existingTypes.forEach(key => {
-        if (!mainCategoryKeys.includes(key)) {
-            let isSelected = currentCategory === key ? 'selected' : '';
-            sliderHtml += `<button class="slider-btn ${isSelected}" onclick="selectCategory('${key}')">${key.toUpperCase()}</button>`;
-        }
-    });
-
     mainContainer.innerHTML = mainHtml;
-    sliderContainer.innerHTML = sliderHtml;
 }
 
 function selectCategory(categoryKey) {
     currentCategory = categoryKey;
+    currentSubCategory = 'all'; // reset sub category
     document.getElementById("searchInput").value = ""; 
     renderCategories(); 
+    renderServices();
+}
+
+function selectSubCategory(subCat) {
+    currentSubCategory = subCat;
     renderServices();
 }
 
 function filterServices() {
     clearTimeout(searchTimeout); 
     searchTimeout = setTimeout(() => {
-        const query = document.getElementById("searchInput").value.toLowerCase();
-        renderServices(query);
+        renderServices(document.getElementById("searchInput").value.toLowerCase());
     }, 300); 
 }
 
 function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
+    const subContainer = document.getElementById("subCategoryContainer");
     
-    // 🔥 FIX: String() added for safety
     let filtered = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
 
+    // DYNAMIC SUB-CATEGORIES ONLY FOR PROFILES
+    if (currentCategory === 'profile' && !searchQuery) {
+        let subCats = ['all', ...new Set(filtered.map(s => String(s.service_category || 'Other').trim().replace(/_/g, ' ')))];
+        let subHtml = `<div class="sub-cat-nav">`;
+        subCats.forEach(sc => {
+            let active = currentSubCategory === sc ? 'active' : '';
+            subHtml += `<button class="sub-cat-btn ${active}" onclick="selectSubCategory('${sc}')">${sc.toUpperCase()}</button>`;
+        });
+        subHtml += `</div>`;
+        subContainer.innerHTML = subHtml;
+
+        if (currentSubCategory !== 'all') {
+            filtered = filtered.filter(s => String(s.service_category || 'Other').trim().replace(/_/g, ' ') === currentSubCategory);
+        }
+    } else {
+        subContainer.innerHTML = ""; // Clear if not profile or if searching
+    }
+
+    // SEARCH LOGIC
     if (searchQuery) {
         filtered = allServices.filter(s => 
             String(s.service_name || '').toLowerCase().includes(searchQuery) || 
@@ -125,56 +126,114 @@ function renderServices(searchQuery = "") {
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = "<div style='text-align:center; padding: 40px 20px;'><span style='font-size:40px;'>🔍</span><br><br><p style='color:var(--text-muted);'>No services found matching your search.</p></div>";
+        container.innerHTML = "<p style='text-align:center; color:#666;'>No services found.</p>";
         return;
     }
 
     let htmlContent = "";
 
     filtered.forEach(service => {
-        const applicablePrice = (userPlanStatus === "vip") ? service.vip_price : service.basic_price;
+        const isVip = userPlanStatus === "vip";
+        const applicablePrice = isVip ? service.vip_price : service.basic_price;
         const inCart = cart.some(item => item.service_id === service.service_id);
         
         const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
-        const btnText = inCart ? 'ADDED' : 'ADD +';
-
-        // 🔥 FIX: The main error was here. Using String() before .trim()
-        let imgStr = service.service_image ? String(service.service_image).trim() : "";
-        let catType = String(service.service_type || '').toLowerCase().trim();
-        let catIcon = categoryConfig[catType]?.icon || defaultIcon;
+        const btnText = inCart ? 'ADDED ✔' : 'ADD +';
         
-        let imageHtml = "";
-        if (imgStr !== "") {
-            imageHtml = `<img src="${imgStr}" alt="Test" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">`;
+        const cleanDesc = String(service.description || '').replace(/'/g, "\\'").replace(/\n/g, "<br>");
+
+        // 🌟 THE 3-TIER PRICING LOGIC 🌟
+        let pricingHtml = "";
+        if (isVip) {
+            pricingHtml = `
+                <div class="mrp-row">
+                    <span>Total: <span class="mrp">₹${service.service_price}</span></span>
+                    <span>Basic: <span class="mrp">₹${service.basic_price}</span></span>
+                </div>
+                <div class="final-price">₹${service.vip_price} <i class="fas fa-crown" style="color:var(--warning); font-size:14px;"></i> VIP</div>
+            `;
         } else {
-            imageHtml = catIcon;
+            pricingHtml = `
+                <div class="mrp-row">
+                    <span>Total: <span class="mrp">₹${service.service_price}</span></span>
+                </div>
+                <div class="final-price">₹${service.basic_price} <span style="font-size:10px; font-weight:normal; background:var(--primary-light); padding:2px 5px; border-radius:4px;">Basic</span></div>
+                <div class="locked-price" onclick="alert('Upgrade to VIP Family Plan to unlock this premium rate!')">
+                    <i class="fas fa-lock"></i> VIP Rate: ₹${service.vip_price}
+                </div>
+            `;
         }
 
-        htmlContent += `
-            <div class="service-item">
-                <div class="service-img-box">
-                    ${imageHtml}
-                </div>
-                <div class="service-info">
-                    <h3>${service.service_name}</h3>
-                    <p>${service.service_category} ${service.number_of_test ? `• ${service.number_of_test} Parameters` : ''}</p>
+        // 🌟 PROFILE (PACKAGE) SPECIAL UI 🌟
+        if (currentCategory === 'profile' && !searchQuery) {
+            htmlContent += `
+                <div class="profile-item">
+                    <div class="profile-header">
+                        <span class="profile-badge">${String(service.service_category).replace(/_/g, ' ')}</span>
+                        ${service.description ? `<div class="info-icon" onclick="openModal('${service.service_name}', '${cleanDesc}')"><i class="fas fa-info"></i></div>` : ''}
+                    </div>
+                    <div class="service-info">
+                        <h3>${service.service_name}</h3>
+                        ${service.number_of_test ? `<p>Includes <b>${service.number_of_test}</b> Tests/Parameters</p>` : ''}
+                    </div>
                     <div class="price-box">
-                        <span class="final-price">₹${applicablePrice}</span>
-                        <span class="mrp">₹${service.service_price}</span>
-                        <span class="plan-tag">${userPlanStatus.toUpperCase()} PRICE</span>
+                        ${pricingHtml}
+                    </div>
+                    <button class="${btnClass}" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                        ${btnText}
+                    </button>
+                </div>
+            `;
+        } 
+        // 🌟 NORMAL TEST UI 🌟
+        else {
+            let catType = String(service.service_type || '').toLowerCase().trim();
+            let catIcon = categoryConfig[catType]?.icon || defaultIcon;
+            let imgStr = service.service_image ? String(service.service_image).trim() : "";
+            let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
+
+            htmlContent += `
+                <div class="service-item">
+                    <div class="service-img-box">${imageHtml}</div>
+                    <div class="service-info" style="flex-grow:1;">
+                        <h3 style="font-size:14px;">${service.service_name}</h3>
+                        <div class="price-box" style="margin-top:5px; padding:5px;">
+                            ${pricingHtml}
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; justify-content:flex-end;">
+                        <button class="${btnClass}" style="position:static; padding:6px 15px; border-radius:8px;" onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
+                            ${btnText}
+                        </button>
                     </div>
                 </div>
-                <button class="${btnClass}" 
-                        onclick="toggleCart('${service.service_id}', '${service.service_name}', ${applicablePrice})">
-                    ${btnText}
-                </button>
-            </div>
-        `;
+            `;
+        }
     });
 
     container.innerHTML = htmlContent;
 }
 
+// 🌟 MODAL LOGIC 🌟
+function openModal(title, description) {
+    document.getElementById("modalTitle").innerText = title + " Details";
+    
+    // Formatting descriptions into a clean list
+    let formattedDesc = description;
+    if(description.includes('<br>')) {
+        let items = description.split('<br>').filter(i => i.trim() !== '');
+        formattedDesc = "<ul>" + items.map(i => `<li>${i.trim().toUpperCase()}</li>`).join('') + "</ul>";
+    }
+    
+    document.getElementById("modalBody").innerHTML = formattedDesc;
+    document.getElementById("infoModal").classList.add("active");
+}
+
+function closeModal() {
+    document.getElementById("infoModal").classList.remove("active");
+}
+
+// CART LOGIC
 function toggleCart(id, name, price) {
     const index = cart.findIndex(item => item.service_id === id);
     if (index > -1) {
@@ -182,7 +241,6 @@ function toggleCart(id, name, price) {
     } else {
         cart.push({ service_id: id, service_name: name, price: price });
     }
-    
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI();
     renderServices(document.getElementById("searchInput").value); 

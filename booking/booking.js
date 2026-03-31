@@ -1,7 +1,7 @@
 // Map for Category Names and Premium Icons
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
-    'profile':   { name: 'Package', icon: '🩺' }, // 🔥 Dhyan dein: Yahan ab 'profile' use ho raha hai!
+    'profile':   { name: 'Package', icon: '🩺' }, 
     'usg':       { name: 'Ultrasound', icon: '🖥️' },
     'xray':      { name: 'X-Ray', icon: '🩻' },
     'ct':        { name: 'CT Scan', icon: '☢️' },
@@ -11,7 +11,6 @@ const categoryConfig = {
 };
 
 const defaultIcon = '🧪';
-// Yahan bhi list update ki gayi hai
 const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 
 let allServices = [];
@@ -41,6 +40,11 @@ function fetchBookingData() {
         if(response.status === "success") {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
+            
+            // Console me data dekhne ke liye (debugging)
+            console.log("Total Services Loaded: ", allServices.length);
+            console.log("All Services Data: ", allServices);
+            
             renderCategories();
             renderServices(); 
         } else {

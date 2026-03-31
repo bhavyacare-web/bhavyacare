@@ -41,9 +41,7 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            // Console me data dekhne ke liye (debugging)
             console.log("Total Services Loaded: ", allServices.length);
-            console.log("All Services Data: ", allServices);
             
             renderCategories();
             renderServices(); 
@@ -64,7 +62,8 @@ function renderCategories() {
     let mainHtml = "";
     let sliderHtml = "";
 
-    const existingTypes = [...new Set(allServices.map(s => s.service_type.toLowerCase().trim()))];
+    // 🔥 FIX: String() added for safety against blank/number values
+    const existingTypes = [...new Set(allServices.map(s => String(s.service_type || '').toLowerCase().trim()))];
 
     // Main Grid Categories
     mainCategoryKeys.forEach(key => {
@@ -115,12 +114,13 @@ function filterServices() {
 function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
     
-    let filtered = allServices.filter(s => s.service_type.toLowerCase().trim() === currentCategory);
+    // 🔥 FIX: String() added for safety
+    let filtered = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
 
     if (searchQuery) {
         filtered = allServices.filter(s => 
-            s.service_name.toLowerCase().includes(searchQuery) || 
-            s.service_id.toString().includes(searchQuery)
+            String(s.service_name || '').toLowerCase().includes(searchQuery) || 
+            String(s.service_id || '').includes(searchQuery)
         );
     }
 
@@ -138,12 +138,14 @@ function renderServices(searchQuery = "") {
         const btnClass = inCart ? 'add-to-cart-btn added' : 'add-to-cart-btn';
         const btnText = inCart ? 'ADDED' : 'ADD +';
 
-        let imageHtml = "";
-        let catType = service.service_type.toLowerCase().trim();
+        // 🔥 FIX: The main error was here. Using String() before .trim()
+        let imgStr = service.service_image ? String(service.service_image).trim() : "";
+        let catType = String(service.service_type || '').toLowerCase().trim();
         let catIcon = categoryConfig[catType]?.icon || defaultIcon;
         
-        if (service.service_image && service.service_image.trim() !== "") {
-            imageHtml = `<img src="${service.service_image}" alt="Test" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">`;
+        let imageHtml = "";
+        if (imgStr !== "") {
+            imageHtml = `<img src="${imgStr}" alt="Test" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">`;
         } else {
             imageHtml = catIcon;
         }

@@ -9,7 +9,7 @@
     :root {
       --primary: #0056b3;
       --primary-light: #e6f0fa;
-      --success: #16a34a; /* Modern Green */
+      --success: #16a34a; 
       --warning: #f59e0b; 
       --danger: #dc3545;
       --bg-color: #f0f4f8; 
@@ -43,7 +43,6 @@
 
     .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; }
     
-    /* COMPACT PROFILE CARD */
     .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; position: relative;}
     .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -56,7 +55,6 @@
     .desc-preview li { margin-bottom: 2px; }
     .view-more-btn { font-size: 11px; color: var(--primary); margin-top: 5px; font-weight: 800; cursor: pointer; display: inline-block; padding: 4px 8px; background: var(--primary-light); border-radius: 6px; transition: 0.2s;}
     
-    /* PRICING UI */
     .price-action-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 2px;}
     .price-box { display: flex; flex-direction: column; gap: 2px; }
     .mrp-row { font-size: 11px; color: #94a3b8; font-weight: 500;}
@@ -64,26 +62,21 @@
     .final-price { color: var(--text-main); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 6px;}
     .locked-price { color: #64748b; font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1; cursor: pointer; transition: 0.2s;}
     
-    /* 🌟 NEW: QUANTITY ADD/REMOVE BUTTONS 🌟 */
     .action-container { height: 34px; display: flex; align-items: center; justify-content: flex-end;}
     .add-to-cart-btn { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 0 20px; border-radius: 8px; font-weight: 800; font-size: 13px; height: 100%; cursor: pointer; transition: 0.2s;}
-    
     .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--success); color: white; border-radius: 8px; height: 100%; min-width: 90px; font-weight: bold; overflow: hidden; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);}
     .qty-control button { background: transparent; border: none; color: white; width: 30px; height: 100%; cursor: pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition: 0.2s;}
     .qty-control button:active { background: rgba(0,0,0,0.1); }
     .qty-text { flex-grow: 1; text-align: center; font-size: 14px; }
     
-    /* NORMAL TEST UI */
     .service-item { background: var(--card-bg); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: row; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center;}
     .service-img-box { width: 55px; height: 55px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; }
 
-    /* FLOATING CART */
     .bottom-cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--text-main); color: white; padding: 18px 25px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 100; cursor: pointer; box-shadow: 0 -8px 20px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-top-left-radius: 20px; border-top-right-radius: 20px;}
     .bottom-cart-bar.visible { transform: translateY(0); }
     .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
     .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 10px;}
 
-    /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; padding: 20px; position: relative; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
@@ -133,12 +126,26 @@
       <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onerror="this.src='https://via.placeholder.com/400x200?text=VIP+Family+Plan'">
       <h3 style="color:var(--text-main); font-size:18px; margin-bottom:10px; font-weight:800;">Do you want to buy the VIP Family Plan now?</h3>
       <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Unlock premium discounted rates and save big on every test and package!</p>
-      <button onclick="window.location.href='../vip/vip_member.html'" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 6px 15px rgba(217, 119, 6, 0.3);">
+      <button onclick="handleVipPromoClick()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%; box-shadow:0 6px 15px rgba(217, 119, 6, 0.3);">
         <i class="fas fa-crown"></i> Book Now
       </button>
     </div>
   </div>
 
-  <script src="booking.js?v=11"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <div id="header-container" style="display:none;"></div>
+  <script>
+    fetch('../header.html')
+      .then(response => response.text())
+      .then(data => {
+          document.getElementById('header-container').innerHTML = data;
+          let script = document.createElement('script');
+          script.src = '../app.js';
+          document.body.appendChild(script);
+      }).catch(err => console.log('Header load error', err));
+  </script>
+
+  <script src="booking.js?v=13"></script>
 </body>
 </html>

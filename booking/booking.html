@@ -21,12 +21,16 @@
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 90px; }
     * { box-sizing: border-box; }
     
-    .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,86,179,0.15);}
+    /* 🌟 STICKY TOP WRAPPER (Header + Banner dono fix rahenge) 🌟 */
+    .sticky-top-wrapper { position: sticky; top: 0; z-index: 1000; width: 100%; display: flex; flex-direction: column; }
+    
+    .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 12px rgba(0,86,179,0.15);}
     .header h2 { margin: 0; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.5px;}
     .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);}
     .nav-btn:hover { background: white; color: var(--primary); }
     
-    .warning-banner { background-color: #fffbeb; border-bottom: 1px solid #fde68a; color: #b45309; padding: 10px 15px; font-size: 12px; font-weight: 600; text-align: center; display: none; line-height: 1.4; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .warning-banner { background-color: #fffbeb; border-bottom: 1px solid #fde68a; color: #b45309; padding: 12px 15px; font-size: 12px; font-weight: 600; text-align: center; display: none; line-height: 1.5; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+    .warning-banner i { color: #f59e0b; margin-right: 5px; font-size: 14px; }
     
     .search-container { padding: 15px 20px 5px; position: relative; max-width: 800px; margin: 0 auto; }
     .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; font-weight: 500;}
@@ -77,12 +81,10 @@
     .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
     .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 10px;}
 
-    /* MODALS - WITH PC RESPONSIVENESS */
+    /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 15px; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    
     .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; max-height: 90vh;}
-    
     .close-modal { font-size: 24px; cursor: pointer; color: #94a3b8; font-weight: bold; transition: 0.2s;}
 
     .modal-header-sticky { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; z-index: 10; position: sticky; top: 0;}
@@ -99,33 +101,26 @@
 
     #loading { text-align: center; padding: 40px 20px; color: var(--primary); font-size: 15px; font-weight: 600;}
 
-    /* 🌟 PC MEDIA QUERY (DESKTOP MODE FIXES) 🌟 */
     @media (min-width: 768px) {
-        .services-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 columns for PC */
-        }
-        .modal-content {
-            max-width: 600px; /* Wider modal on PC */
-        }
-        .promo-img-responsive {
-            max-height: 40vh; /* Prevents image stretching vertically on PC */
-            object-fit: contain;
-        }
+        .services-container { display: grid; grid-template-columns: repeat(2, 1fr); }
+        .modal-content { max-width: 600px; }
+        .promo-img-responsive { max-height: 40vh; object-fit: contain; }
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <button class="nav-btn" onclick="window.location.href='../patient_dashboard/patient_dashboard.html'">🏠 Home</button>
-    <h2>Book Services</h2>
-    <button class="nav-btn" id="topCartBtn" onclick="openCart()">🛒 Cart (0)</button>
-  </div>
+  <div class="sticky-top-wrapper">
+    <div class="header">
+      <button class="nav-btn" onclick="window.location.href='../patient_dashboard/patient_dashboard.html'">🏠 Home</button>
+      <h2>Book Services</h2>
+      <button class="nav-btn" id="topCartBtn" onclick="openCart()">🛒 Cart (0)</button>
+    </div>
 
-  <div class="warning-banner" id="pendingWarningBanner">
-    <i class="fas fa-exclamation-triangle"></i> 
-    <b>Verification Pending:</b> Your VIP Plan is under review. You can book at VIP rates now!
+    <div class="warning-banner" id="pendingWarningBanner">
+      <i class="fas fa-exclamation-triangle"></i> 
+      <b>Verification Pending:</b> Your VIP Plan is under review. You can book at VIP rates now, but if any discrepancy is found, your plan will be reverted to the Basic Plan.
+    </div>
   </div>
 
   <div class="search-container">
@@ -177,10 +172,8 @@
             <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-main);"><i class="fas fa-users" style="color:var(--primary); margin-right:5px;"></i> Family Members</h4>
             <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 1 (Self)</label>
             <input type="text" id="vipMem1" class="form-input" readonly>
-            
             <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 2 (Optional)</label>
             <input type="text" id="vipMem2" class="form-input" placeholder="Enter Full Name">
-            
             <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 3 (Optional)</label>
             <input type="text" id="vipMem3" class="form-input" placeholder="Enter Full Name" style="margin-bottom:0;">
         </div>
@@ -201,11 +194,12 @@
                 <a id="upiPaymentBtn" href="#" style="display:flex; justify-content:center; align-items:center; gap:8px; background:#1e293b; color:white; padding:14px; border-radius:10px; text-decoration:none; font-weight:800; font-size:14px; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                     <i class="fas fa-mobile-alt"></i> Pay via UPI App (GPay, PhonePe)
                 </a>
-                <p style="font-size:10px; color:var(--text-muted); text-align:center; margin:0 0 15px;">UPI ID: <b>bhavya.care@ybl</b></p>
+                <p style="font-size:10px; color:var(--text-muted); text-align:center; margin:0 0 15px;">UPI ID: <b>8950112467@ptsbi</b></p>
                 
-                <input type="text" id="vipTxnId" class="form-input" placeholder="12-digit UTR / Ref No." style="margin-bottom:10px;">
+                <input type="text" id="vipTxnId" class="form-input" placeholder="12-digit UTR / Ref No. (Optional)" style="margin-bottom:10px;">
+                
                 <div class="file-input-wrapper">
-                    <div class="file-input-btn" id="fileUploadBtnText"><i class="fas fa-image"></i> Upload Screenshot</div>
+                    <div class="file-input-btn" id="fileUploadBtnText"><i class="fas fa-image"></i> Upload Screenshot (Mandatory)</div>
                     <input type="file" id="vipScreenshot" accept="image/*" onchange="updateFileName()">
                 </div>
                 <input type="hidden" id="vipScreenshotBase64">
@@ -245,6 +239,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script>
-  <script src="booking.js?v=18"></script>
+  <script src="booking.js?v=20"></script>
 </body>
 </html>

@@ -1,13 +1,6 @@
-// ==========================================
-// cart.js - Smart Aggregator Cart Logic
-// ==========================================
-
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
-// Active Pincodes for Home Collection (Aap inhe change kar sakte hain)
 const serviceablePincodes = ["124507", "124508", "110043"]; 
-
-// Categories eligible for Home Collection
 const homeServiceCategories = ['pathology', 'profile', 'ecg', 'holter', 'pft'];
 
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
@@ -20,7 +13,6 @@ window.onload = () => {
         document.getElementById('cartItemsContainer').innerHTML = "<p style='text-align:center; color:var(--text-muted); font-weight:600;'>Your cart is empty!</p>";
         return;
     }
-    // Set default service type for each cart item
     cart.forEach(item => {
         let type = (item.service_type || "").toLowerCase();
         if(!item.fulfillment) {
@@ -30,7 +22,6 @@ window.onload = () => {
     renderCartItems();
     calculateTotal();
     
-    // Set min date to today
     let today = new Date().toISOString().split('T')[0];
     document.getElementById("bookingDate").setAttribute('min', today);
 };
@@ -54,8 +45,7 @@ function renderCartItems() {
                 </div>
             `;
         } else {
-            // For MRI, CT, X-RAY, USG etc.
-            item.fulfillment = "center"; // Force Center
+            item.fulfillment = "center"; 
             toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required for Scans</div>`;
         }
 
@@ -82,7 +72,6 @@ function calculateTotal() {
     document.getElementById("cartTotalAmt").innerText = total;
 }
 
-// 🌟 SMART PINCODE VALIDATION 🌟
 function verifyLocation() {
     const pincode = document.getElementById("userPincode").value.trim();
     if (pincode.length < 6) {
@@ -90,15 +79,12 @@ function verifyLocation() {
         return;
     }
 
-    // Check if any item requests Home Collection
     const needsHomeCollection = cart.some(item => item.fulfillment === "home");
 
     if (needsHomeCollection && !serviceablePincodes.includes(pincode)) {
-        // Pincode is invalid for Home Collection -> Show Warning Modal
         document.getElementById("alertPincode").innerText = pincode;
         document.getElementById("pincodeWarningModal").classList.add("active");
     } else {
-        // All good, fetch Labs
         fetchLabs(pincode);
     }
 }
@@ -108,18 +94,15 @@ function closePincodeModal() {
 }
 
 function switchAllToCenter() {
-    // Switch all home eligible items to center
     cart.forEach(item => {
         if (item.fulfillment === "home") item.fulfillment = "center";
     });
     renderCartItems();
     closePincodeModal();
-    // Continue fetching labs
     const pincode = document.getElementById("userPincode").value.trim();
     fetchLabs(pincode);
 }
 
-// 🌟 FETCH MATCHING LABS FROM BACKEND 🌟
 function fetchLabs(pincode) {
     document.getElementById("labSelectionSection").style.display = "block";
     document.getElementById("loadingLabs").style.display = "block";
@@ -164,26 +147,18 @@ function renderLabs() {
 
 function selectLab(labId, openTime, closeTime) {
     selectedLabId = labId;
-    renderLabs(); // re-render to show selection highlight
+    renderLabs(); 
     
-    // Show Date & Time section
     document.getElementById("dateTimeSection").style.display = "block";
-    
-    // Set data attributes for time slot generation
     document.getElementById("timeSlotContainer").setAttribute("data-open", openTime);
     document.getElementById("timeSlotContainer").setAttribute("data-close", closeTime);
 }
 
-// 🌟 DYNAMIC TIME SLOT GENERATOR 🌟
 function generateTimeSlots() {
     const dateStr = document.getElementById("bookingDate").value;
     if(!dateStr) return;
 
     const container = document.getElementById("timeSlotContainer");
-    const openTime = container.getAttribute("data-open") || "09:00 AM";
-    const closeTime = container.getAttribute("data-close") || "08:00 PM";
-    
-    // Basic static slot generation for demo (In real app, we parse AM/PM math)
     const slots = ["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "02:00 PM", "04:00 PM"];
     
     let html = "";
@@ -194,9 +169,7 @@ function generateTimeSlots() {
 }
 
 function selectTimeSlot(btnElement, slotTime) {
-    // Remove active class from all
     document.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
-    // Add to clicked
     btnElement.classList.add('selected');
     selectedTimeSlot = slotTime;
 }
@@ -210,6 +183,5 @@ function proceedToPayment() {
     if (!date) return alert("Please select a Date.");
     if (!selectedTimeSlot) return alert("Please select a Time Slot.");
 
-    alert("Awesome! Connecting to Payment Gateway (Razorpay/UPI)...\n\nSelected Lab: " + selectedLabId + "\nSlot: " + date + " " + selectedTimeSlot);
-    // Yahan Razorpay ka logic khulega, aur phir GAS par final order jayega!
+    alert("Connecting to Payment Gateway (Razorpay/UPI)...\n\nSelected Lab: " + selectedLabId + "\nSlot: " + date + " " + selectedTimeSlot);
 }

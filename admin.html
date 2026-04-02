@@ -3,194 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - BhavyaCare</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <title>Admin Dashboard - Patients</title>
     <style>
-        /* Base Styles */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* 🌟 Mobile-Friendly Header 🌟 */
-        .admin-header {
-            background-color: #0056b3;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .admin-header h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 800;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h2 { color: #0056b3; margin: 0; }
+        .refresh-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        .admin-header h2 span {
-            color: #28a745; /* Green color for Care */
-        }
+        .tabs { margin-bottom: 15px; display: flex; gap: 10px; }
+        .tab-btn { padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: #ddd; color: #333; transition: 0.3s; }
+        .tab-btn.active { background: #0056b3; color: white; }
 
-        .logout-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: 0.3s;
-        }
-
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
-
-        /* 🌟 Dashboard Container 🌟 */
-        .dashboard-container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .welcome-text {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-
-        /* 🌟 Mobile-First Grid System 🌟 */
-        .dashboard-grid {
-            display: grid;
-            /* Mobile par 2 box ek line me aayenge, badi screen par jyada */
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-        }
-
-        /* 🌟 Dashboard Cards 🌟 */
-        .card {
-            background: white;
-            padding: 25px 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            border-bottom: 4px solid transparent;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
-
-        /* Alag-alag cards ke colors */
-        .card-patient:hover { border-bottom-color: #28a745; }
-        .card-doctor:hover { border-bottom-color: #0056b3; }
-        .card-hospital:hover { border-bottom-color: #17a2b8; }
-        .card-lab:hover { border-bottom-color: #8e44ad; }
-        .card-pharmacy:hover { border-bottom-color: #d35400; }
-        .card-executive:hover { border-bottom-color: #e67e22; }
-
-        .card i {
-            font-size: 35px;
-            margin-bottom: 12px;
-        }
-
-        /* Icon Colors */
-        .card-patient i { color: #28a745; }
-        .card-doctor i { color: #0056b3; }
-        .card-hospital i { color: #17a2b8; }
-        .card-lab i { color: #8e44ad; }
-        .card-pharmacy i { color: #d35400; }
-        .card-executive i { color: #e67e22; }
-
-        .card h3 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: bold;
-        }
-
-        .card p {
-            margin: 5px 0 0 0;
-            font-size: 12px;
-            color: #777;
-        }
+        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
+        th { background-color: #0056b3; color: white; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .badge-btn { padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
+        .status-active { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        
+        .patient-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
+        #loader { text-align: center; font-weight: bold; color: #0056b3; margin-top: 20px; }
+        
+        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.3); z-index:1000; width:90%; max-width:400px; }
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; }
+        .action-btn { flex:1; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color:white; }
     </style>
 </head>
 <body>
 
-    <header class="admin-header">
-        <h2>Bhavya<span>Admin</span></h2>
-        <a href="../index.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Exit</a>
-    </header>
-
-    <div class="dashboard-container">
-        <div class="welcome-text">
-            <h3>Hi, Admin 👋</h3>
-            <p style="font-size: 14px; color: #666; margin-top: -10px;">What would you like to manage today?</p>
-        </div>
-
-        <div class="dashboard-grid">
-            
-            <a href="patient_admin/patient_admin.html" class="card card-patient">
-                <i class="fas fa-user-injured"></i>
-                <h3>Manage Patients</h3>
-                <p>View & Edit</p>
-            </a>
-
-            <a href="#" class="card card-doctor" onclick="alert('Doctor Panel Coming Soon!')">
-                <i class="fas fa-user-md"></i>
-                <h3>Manage Doctors</h3>
-                <p>Approvals & List</p>
-            </a>
-
-            <a href="#" class="card card-hospital" onclick="alert('Hospital Panel Coming Soon!')">
-                <i class="fas fa-hospital"></i>
-                <h3>Manage Hospitals</h3>
-                <p>Facilities & Beds</p>
-            </a>
-
-            <a href="#" class="card card-lab" onclick="alert('Lab Panel Coming Soon!')">
-                <i class="fas fa-flask"></i>
-                <h3>Manage Labs</h3>
-                <p>Tests & Bookings</p>
-            </a>
-
-            <a href="#" class="card card-pharmacy" onclick="alert('Pharmacy Panel Coming Soon!')">
-                <i class="fas fa-pills"></i>
-                <h3>Pharmacies</h3>
-                <p>Orders & Stock</p>
-            </a>
-
-            <a href="#" class="card card-executive" onclick="alert('Executive Panel Coming Soon!')">
-                <i class="fas fa-motorcycle"></i>
-                <h3>Executives</h3>
-                <p>Delivery & Tasks</p>
-            </a>
-
+    <div class="header">
+        <h2>🏥 Manage Dashboard</h2>
+        <div>
+            <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back</a>
+            <button class="refresh-btn" onclick="fetchCurrentTabData()">🔄 Refresh Data</button>
         </div>
     </div>
 
+    <div class="tabs">
+        <button id="tab-patients" class="tab-btn active" onclick="switchAdminTab('patients')">Patients List</button>
+        <button id="tab-vips" class="tab-btn" onclick="switchAdminTab('vips')">VIP Applications</button>
+    </div>
+
+    <div id="patients-section" class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Photo</th><th>Date & Time</th><th>User ID</th><th>Name</th>
+                    <th>Contact Info</th><th>Full Address</th><th>Wallet (₹)</th>
+                    <th>Plan</th><th>Withdraw Action</th><th>Account Status</th>
+                </tr>
+            </thead>
+            <tbody id="patientsTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="vips-section" class="table-container" style="display:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th><th>Self Member</th><th>Ref Code</th><th>Payment Mode</th>
+                    <th>Pay Details / SS</th><th>Amount</th><th>Status</th>
+                    <th>Dates (Start - End)</th><th>Admin Remarks</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="vipsTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="loader">Fetching data... Please wait.</div>
+
+    <div class="overlay" id="modalOverlay"></div>
+    <div class="modal" id="vipActionModal">
+        <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
+        <p style="font-size:13px; color:#555;">Reviewing User: <strong id="modalUserId"></strong></p>
+        <label style="font-size:12px; font-weight:bold;">Admin Remarks (Reason/Notes):</label>
+        <textarea id="modalRemarks" rows="3" style="width:100%; margin-top:5px; padding:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
+            <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
+        </div>
+        <button onclick="closeVipModal()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
+        <input type="hidden" id="modalRowIndex">
+    </div>
+
+    <script src="patient_admin.js"></script>
 </body>
 </html>

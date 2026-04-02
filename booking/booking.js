@@ -21,7 +21,7 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 cart = cart.map(item => ({...item, qty: item.qty || 1})); 
 
 let searchTimeout; 
-let pollingInterval; // Background Auto-Refresh ke liye timer
+let pollingInterval; 
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
@@ -47,11 +47,9 @@ function formatText(text) {
 
 function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
 
-// 🌟 FAST CACHE & BACKGROUND FETCH LOGIC 🌟
 function fetchBookingData() {
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
     
-    // Step 1: Load instantly from Cache if available
     const cachedServices = localStorage.getItem("bhavya_services_cache");
     const cachedPlan = localStorage.getItem("bhavya_plan_cache");
     
@@ -64,7 +62,6 @@ function fetchBookingData() {
         renderServices();
     }
 
-    // Step 2: Fetch fresh data silently in background
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: userId }) })
     .then(res => res.json())
     .then(response => {
@@ -72,7 +69,6 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            // Save fresh data to cache
             localStorage.setItem("bhavya_services_cache", JSON.stringify(allServices));
             localStorage.setItem("bhavya_plan_cache", userPlanStatus);
             
@@ -86,12 +82,11 @@ function fetchBookingData() {
     });
 }
 
-// 🌟 BACKGROUND POLLING FOR AUTO BANNER REMOVAL 🌟
 function handleBannerDisplay() {
     const banner = document.getElementById("pendingWarningBanner");
     if (userPlanStatus === "pending") {
         banner.style.display = "block";
-        startVipPolling(); // Start checking backend
+        startVipPolling(); 
     } else {
         banner.style.display = "none";
         if(pollingInterval) clearInterval(pollingInterval);
@@ -110,10 +105,10 @@ function startVipPolling() {
             if (data.status === "success") {
                 const status = data.data.status;
                 if (status === "active") {
-                    userPlanStatus = "vip"; // Switch UI to VIP
+                    userPlanStatus = "vip"; 
                     localStorage.setItem("bhavya_plan_cache", "vip");
-                    handleBannerDisplay(); // This hides the banner
-                    renderServices(); // Re-render prices automatically
+                    handleBannerDisplay(); 
+                    renderServices(); 
                     clearInterval(pollingInterval);
                 } else if (status === "rejected") {
                     userPlanStatus = "basic"; 
@@ -123,8 +118,8 @@ function startVipPolling() {
                     clearInterval(pollingInterval);
                 }
             }
-        }).catch(err => console.log("Polling error ignored."));
-    }, 15000); // Har 15 second me check karega
+        }).catch(err => {});
+    }, 15000); 
 }
 
 function renderCategories() {
@@ -201,11 +196,13 @@ function renderServices(searchQuery = "") {
         const inCart = !!cartItem;
         const currentQty = cartItem ? cartItem.qty : 0;
         
+        // 🌟 NAYA: Safe Clean Name for Universal Buttons 🌟
         const cleanName = formatText(service.service_name).replace(/'/g, "\\'");
         const cleanCat = formatText(service.service_category);
 
         let actionBtnHtml = "";
         if (inCart) {
+            // Har button properly action container me fit hoga
             actionBtnHtml = `<div class="qty-control"><button onclick="updateQty('${service.service_id}', -1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-plus"></i></button></div>`;
         } else {
             actionBtnHtml = `<button class="add-to-cart-btn" onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}')">ADD +</button>`;
@@ -237,7 +234,7 @@ function renderServices(searchQuery = "") {
             let imgStr = service.service_image ? String(service.service_image).trim() : "";
             let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
 
-            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info" style="flex-grow:1;"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
+            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
         }
     });
     container.innerHTML = htmlContent;
@@ -308,7 +305,7 @@ function handleVipPromoClick() {
 
 function updateVipPayableUI() {
     document.getElementById('vipFinalAmount').innerText = currentVipAmount;
-    // 🌟 UPI ID CHANGED TO 8950112467@ptsbi 🌟
+    // 🌟 NEW UPI ID 🌟
     const upiUrl = `upi://pay?pa=8950112467@ptsbi&pn=BhavyaCare&am=${currentVipAmount}&cu=INR&tn=VIP%20Subscription`;
     document.getElementById("upiPaymentBtn").href = upiUrl;
 }
@@ -367,7 +364,7 @@ function submitVipApplicationForm() {
     const txnId = document.getElementById('vipTxnId').value.trim();
     const screenshot = document.getElementById('vipScreenshotBase64').value;
     
-    // 🌟 UTR Optional but Screenshot Mandatory 🌟
+    // UTR Optional, Screenshot Mandatory
     if(!screenshot) { alert("Please upload the payment screenshot. It is mandatory."); return; }
 
     const btn = document.getElementById('submitVipBtn');
@@ -381,7 +378,7 @@ function submitVipApplicationForm() {
         member3_name: document.getElementById("vipMem3").value.trim(),
         referrer_user_id: validReferrerId,
         payment_mode: "online", 
-        payment_id: txnId, // UTR can be empty now
+        payment_id: txnId,
         payment_screenshot: screenshot,
         amount_paid: currentVipAmount
     };
@@ -392,10 +389,10 @@ function submitVipApplicationForm() {
         if(res.status === "success") {
             alert("VIP Application Submitted! Your plan is under review.");
             userPlanStatus = "pending"; 
-            localStorage.setItem("bhavya_plan_cache", "pending"); // Save to cache
+            localStorage.setItem("bhavya_plan_cache", "pending"); 
             closeVipFormModal();
-            handleBannerDisplay(); // Show banner & start auto-polling
-            renderServices(); // Show VIP prices instantly
+            handleBannerDisplay(); 
+            renderServices(); 
         } else { alert("Error: " + res.message); }
     }).catch(error => { alert("Network error."); })
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });

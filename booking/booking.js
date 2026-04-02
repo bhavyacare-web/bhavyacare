@@ -196,16 +196,14 @@ function renderServices(searchQuery = "") {
         const inCart = !!cartItem;
         const currentQty = cartItem ? cartItem.qty : 0;
         
-        // 🌟 NAYA: Safe Clean Name for Universal Buttons 🌟
         const cleanName = formatText(service.service_name).replace(/'/g, "\\'");
         const cleanCat = formatText(service.service_category);
 
         let actionBtnHtml = "";
         if (inCart) {
-            // Har button properly action container me fit hoga
-            actionBtnHtml = `<div class="qty-control"><button onclick="updateQty('${service.service_id}', -1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-plus"></i></button></div>`;
+            actionBtnHtml = `<div class="qty-control"><button onclick="updateQty('${service.service_id}', -1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}', '${service.service_type}')"><i class="fas fa-plus"></i></button></div>`;
         } else {
-            actionBtnHtml = `<button class="add-to-cart-btn" onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}')">ADD +</button>`;
+            actionBtnHtml = `<button class="add-to-cart-btn" onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}', '${service.service_type}')">ADD +</button>`;
         }
 
         let pricingHtml = "";
@@ -240,12 +238,14 @@ function renderServices(searchQuery = "") {
     container.innerHTML = htmlContent;
 }
 
-function updateQty(id, change, price, name) {
+function updateQty(id, change, price, name, type) {
     let index = cart.findIndex(item => item.service_id === id);
     if (index > -1) {
         cart[index].qty += change;
         if (cart[index].qty <= 0) cart.splice(index, 1); 
-    } else if (change > 0) { cart.push({ service_id: id, service_name: name, price: price, qty: 1 }); }
+    } else if (change > 0) { 
+        cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
+    }
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI(); renderServices(document.getElementById("searchInput").value); 
 }
@@ -276,14 +276,6 @@ function closeModal() { document.getElementById("infoModal").classList.remove("a
 function openVipPromo() { document.getElementById("vipPromoModal").classList.add("active"); }
 function closeVipPromo() { document.getElementById("vipPromoModal").classList.remove("active"); }
 
-// ==========================================
-// 🌟 VIP FORM LOGIC 🌟
-// ==========================================
-let currentVipAmount = 3000;
-let baseVipPrice = 3000;
-let vipDiscount = 500;
-let validReferrerId = "";
-
 function openVipFormModal() {
     document.getElementById("vipFormModal").classList.add("active");
     const savedName = localStorage.getItem("bhavya_name") || "Self";
@@ -305,7 +297,6 @@ function handleVipPromoClick() {
 
 function updateVipPayableUI() {
     document.getElementById('vipFinalAmount').innerText = currentVipAmount;
-    // 🌟 NEW UPI ID 🌟
     const upiUrl = `upi://pay?pa=8950112467@ptsbi&pn=BhavyaCare&am=${currentVipAmount}&cu=INR&tn=VIP%20Subscription`;
     document.getElementById("upiPaymentBtn").href = upiUrl;
 }
@@ -364,7 +355,6 @@ function submitVipApplicationForm() {
     const txnId = document.getElementById('vipTxnId').value.trim();
     const screenshot = document.getElementById('vipScreenshotBase64').value;
     
-    // UTR Optional, Screenshot Mandatory
     if(!screenshot) { alert("Please upload the payment screenshot. It is mandatory."); return; }
 
     const btn = document.getElementById('submitVipBtn');
@@ -398,4 +388,8 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-function openCart() { window.location.href = "cart/cart.html"; }
+// 🌟 EXACT FOLDER RASTA FIX 🌟
+function openCart() { 
+    // Yahan '../cart/cart.html' likha hai kyunki booking.js 'booking' folder ke andar hai
+    window.location.href = "../cart/cart.html"; 
+}

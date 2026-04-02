@@ -21,6 +21,8 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 cart = cart.map(item => ({...item, qty: item.qty || 1})); 
 
 let searchTimeout; 
+let pollingInterval; // Background Auto-Refresh ke liye timer
+
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 window.onload = () => {
@@ -45,23 +47,84 @@ function formatText(text) {
 
 function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
 
+// 🌟 FAST CACHE & BACKGROUND FETCH LOGIC 🌟
 function fetchBookingData() {
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
+    
+    // Step 1: Load instantly from Cache if available
+    const cachedServices = localStorage.getItem("bhavya_services_cache");
+    const cachedPlan = localStorage.getItem("bhavya_plan_cache");
+    
+    if (cachedServices) {
+        allServices = JSON.parse(cachedServices);
+        userPlanStatus = cachedPlan || "basic";
+        document.getElementById("loading").style.display = "none";
+        handleBannerDisplay();
+        renderCategories();
+        renderServices();
+    }
+
+    // Step 2: Fetch fresh data silently in background
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: userId }) })
     .then(res => res.json())
     .then(response => {
-        document.getElementById("loading").style.display = "none";
         if(response.status === "success") {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            if (userPlanStatus === "pending") {
-                document.getElementById("pendingWarningBanner").style.display = "block";
-            }
+            // Save fresh data to cache
+            localStorage.setItem("bhavya_services_cache", JSON.stringify(allServices));
+            localStorage.setItem("bhavya_plan_cache", userPlanStatus);
+            
+            document.getElementById("loading").style.display = "none";
+            handleBannerDisplay();
             renderCategories();
             renderServices(); 
-        } else { alert("Error fetching services."); }
-    }).catch(error => { document.getElementById("loading").innerHTML = "Failed to load data."; });
+        }
+    }).catch(error => { 
+        if(!cachedServices) document.getElementById("loading").innerHTML = "Failed to load data."; 
+    });
+}
+
+// 🌟 BACKGROUND POLLING FOR AUTO BANNER REMOVAL 🌟
+function handleBannerDisplay() {
+    const banner = document.getElementById("pendingWarningBanner");
+    if (userPlanStatus === "pending") {
+        banner.style.display = "block";
+        startVipPolling(); // Start checking backend
+    } else {
+        banner.style.display = "none";
+        if(pollingInterval) clearInterval(pollingInterval);
+    }
+}
+
+function startVipPolling() {
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(() => {
+        const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id"); 
+        if (!userId) return;
+        
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "checkVipStatus", user_id: userId }) })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                const status = data.data.status;
+                if (status === "active") {
+                    userPlanStatus = "vip"; // Switch UI to VIP
+                    localStorage.setItem("bhavya_plan_cache", "vip");
+                    handleBannerDisplay(); // This hides the banner
+                    renderServices(); // Re-render prices automatically
+                    clearInterval(pollingInterval);
+                } else if (status === "rejected") {
+                    userPlanStatus = "basic"; 
+                    localStorage.setItem("bhavya_plan_cache", "basic");
+                    handleBannerDisplay();
+                    renderServices();
+                    clearInterval(pollingInterval);
+                }
+            }
+        }).catch(err => console.log("Polling error ignored."));
+    }, 15000); // Har 15 second me check karega
 }
 
 function renderCategories() {
@@ -245,7 +308,8 @@ function handleVipPromoClick() {
 
 function updateVipPayableUI() {
     document.getElementById('vipFinalAmount').innerText = currentVipAmount;
-    const upiUrl = `upi://pay?pa=bhavya.care@ybl&pn=BhavyaCare&am=${currentVipAmount}&cu=INR&tn=VIP%20Subscription`;
+    // 🌟 UPI ID CHANGED TO 8950112467@ptsbi 🌟
+    const upiUrl = `upi://pay?pa=8950112467@ptsbi&pn=BhavyaCare&am=${currentVipAmount}&cu=INR&tn=VIP%20Subscription`;
     document.getElementById("upiPaymentBtn").href = upiUrl;
 }
 
@@ -300,12 +364,11 @@ if (screenInput) {
 }
 
 function submitVipApplicationForm() {
-    // Payment mode is always Online UPI now.
     const txnId = document.getElementById('vipTxnId').value.trim();
     const screenshot = document.getElementById('vipScreenshotBase64').value;
     
-    if(!txnId) { alert("Please enter the UTR No."); return; }
-    if(!screenshot) { alert("Please upload the payment screenshot."); return; }
+    // 🌟 UTR Optional but Screenshot Mandatory 🌟
+    if(!screenshot) { alert("Please upload the payment screenshot. It is mandatory."); return; }
 
     const btn = document.getElementById('submitVipBtn');
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`; btn.disabled = true;
@@ -317,8 +380,8 @@ function submitVipApplicationForm() {
         member2_name: document.getElementById("vipMem2").value.trim(),
         member3_name: document.getElementById("vipMem3").value.trim(),
         referrer_user_id: validReferrerId,
-        payment_mode: "online", // Hardcoded safely
-        payment_id: txnId,
+        payment_mode: "online", 
+        payment_id: txnId, // UTR can be empty now
         payment_screenshot: screenshot,
         amount_paid: currentVipAmount
     };
@@ -327,11 +390,12 @@ function submitVipApplicationForm() {
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {
-            alert("VIP Application Submitted! You can now book at VIP rates.");
+            alert("VIP Application Submitted! Your plan is under review.");
             userPlanStatus = "pending"; 
+            localStorage.setItem("bhavya_plan_cache", "pending"); // Save to cache
             closeVipFormModal();
-            document.getElementById("pendingWarningBanner").style.display = "block";
-            renderServices(); 
+            handleBannerDisplay(); // Show banner & start auto-polling
+            renderServices(); // Show VIP prices instantly
         } else { alert("Error: " + res.message); }
     }).catch(error => { alert("Network error."); })
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });

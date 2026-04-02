@@ -10,23 +10,14 @@
         :root { --primary: #0056b3; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #333333; --text-light: #777777; }
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-
         .header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { color: var(--text-main); font-size: 18px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold;}
-        
         .main-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
         .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
-        
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        .input-box:focus { border-color: var(--primary); }
         .form-group { margin-bottom: 15px; }
-        
         .radio-group { display: flex; gap: 15px; margin-top: 10px; }
-        .radio-btn { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-        
         .btn-primary { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-primary:disabled { background: #a0c4e8; cursor: not-allowed; }
-        
         #vip-form-container, #vip-pending-container, #vip-active-container, #vip-rejected-container { display: none; }
     </style>
 </head>
@@ -38,11 +29,9 @@
     </div>
 
     <div class="main-content">
-        
         <div id="vip-pending-container" style="text-align: center; padding: 40px 10px;">
             <i class="fas fa-hourglass-half" style="font-size: 60px; color: #f57c00; margin-bottom: 20px;"></i>
             <h3 style="color: var(--text-main);">Application Under Review</h3>
-            <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Aapki VIP application Admin ke paas review ke liye chali gayi hai. Kripya activate hone ka wait karein.</p>
             <button onclick="window.location.href='../patient_dashboard/patient_dashboard.html'" class="btn-primary" style="margin-top: 30px; background: #555;">Go to Dashboard</button>
         </div>
 
@@ -50,11 +39,9 @@
             <div class="card" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #a5d6a7;">
                 <i class="fas fa-check-circle" style="font-size: 60px; color: #2e7d32; margin-bottom: 15px;"></i>
                 <h3 style="color: #1b5e20; margin: 0;">VIP Plan Active</h3>
-                <p style="color: #2e7d32; font-size: 14px; margin-top: 5px;">Aap aur aapki family ab VIP members hain!</p>
-                
-                <div style="background: white; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #555;"><strong>Start Date:</strong> <span id="activeStartDate" style="color:#333; float:right; font-weight:bold;">-</span></p>
-                    <p style="margin: 0; font-size: 14px; color: #555;"><strong>End Date:</strong> <span id="activeEndDate" style="color:#d32f2f; float:right; font-weight:bold;">-</span></p>
+                <div style="background: white; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: left;">
+                    <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>Start Date:</strong> <span id="activeStartDate" style="float:right; font-weight:bold;">-</span></p>
+                    <p style="margin: 0; font-size: 14px;"><strong>End Date:</strong> <span id="activeEndDate" style="float:right; font-weight:bold;">-</span></p>
                 </div>
             </div>
             <button onclick="window.location.href='../patient_dashboard/patient_dashboard.html'" class="btn-primary" style="margin-top: 10px;">Go to Dashboard</button>
@@ -63,24 +50,21 @@
         <div id="vip-rejected-container" style="text-align: center; padding: 20px 10px;">
             <i class="fas fa-times-circle" style="font-size: 60px; color: var(--danger); margin-bottom: 15px;"></i>
             <h3 style="color: var(--danger);">Application Rejected</h3>
-            <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Aapki pichli VIP application reject kar di gayi hai.</p>
-            
-            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-top: 20px; font-size: 13px; text-align: left; border: 1px solid #f5c6cb;">
-                <strong>Admin Remarks:</strong> <br><span id="rejectedRemarks" style="display:block; margin-top:5px;"></span>
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
+                <strong>Admin Remarks:</strong> <br><span id="rejectedRemarks"></span>
             </div>
-            <button onclick="showVipForm()" class="btn-primary" style="margin-top: 30px;">Re-Apply for VIP</button>
+            <button onclick="showVipForm()" class="btn-primary" style="margin-top: 30px;">Re-Apply</button>
         </div>
 
         <div id="vip-form-container">
             <div class="card" style="text-align: center; background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);">
                 <i class="fas fa-crown" style="font-size: 40px; color: #f57c00; margin-bottom: 10px;"></i>
                 <h3 style="margin: 0; color: #e65100;">BhavyaCare VIP</h3>
-                <p style="font-size: 13px; color: #d84315; margin-top: 5px;">Add up to 3 family members</p>
             </div>
 
             <div class="card">
                 <h4 style="margin: 0 0 15px 0;">Family Members</h4>
-                <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 1 (Self)</label><input type="text" id="mem1Name" class="input-box" readonly style="background:#f9f9f9; color:#666;"></div>
+                <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 1 (Self)</label><input type="text" id="mem1Name" class="input-box" readonly style="background:#f9f9f9;"></div>
                 <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 2 (Optional)</label><input type="text" id="mem2Name" class="input-box" placeholder="Enter Full Name"></div>
                 <div class="form-group"><label style="font-size:12px; font-weight:600;">Member 3 (Optional)</label><input type="text" id="mem3Name" class="input-box" placeholder="Enter Full Name"></div>
             </div>
@@ -89,7 +73,7 @@
                 <label style="font-size:12px; font-weight:600;">Referral Code</label>
                 <div style="display:flex; gap:10px; margin-top:5px;">
                     <input type="text" id="refCodeInput" class="input-box" placeholder="Enter Code" style="margin-top:0; text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
-                    <button id="btn-apply-ref" type="button" onclick="verifyReferral()" style="background:var(--text-main); color:white; border:none; border-radius:8px; padding:0 15px; font-weight:bold; cursor:pointer;">Apply</button>
+                    <button id="btn-apply-ref" type="button" onclick="verifyReferral()" style="background:var(--text-main); color:white; border:none; border-radius:8px; padding:0 15px; font-weight:bold;">Apply</button>
                 </div>
                 <small id="refMsg" style="display:none; font-weight:bold; margin-top:8px;"></small>
             </div>
@@ -97,15 +81,17 @@
             <div class="card">
                 <h4 style="margin: 0 0 15px 0;">Payment Method</h4>
                 <div class="radio-group">
-                    <label class="radio-btn"><input type="radio" name="payMode" value="cash" onchange="togglePaymentMode()" checked> Cash to Lab</label>
-                    <label class="radio-btn"><input type="radio" name="payMode" value="online" onchange="togglePaymentMode()"> Online UPI</label>
+                    <label><input type="radio" name="payMode" value="cash" onchange="togglePaymentMode()" checked> Cash to Lab</label>
+                    <label><input type="radio" name="payMode" value="online" onchange="togglePaymentMode()"> Online UPI</label>
                 </div>
 
                 <div id="online-pay-section" style="display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                     <div style="text-align: center; margin-bottom: 15px;">
-                        <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">Scan to Pay</p>
-                        <img src="../image/upi_qr_code.jpeg" alt="UPI QR Code" style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
-                        <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">UPI ID: <strong>8950112467@ptsbi</strong></p>
+                        <p style="font-size: 14px; font-weight: bold; color: var(--primary);">Pay directly using any UPI App</p>
+                        <button type="button" onclick="payViaUPI()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 10px auto;">
+                            <i class="fas fa-mobile-alt"></i> Pay via UPI App
+                        </button>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 5px;">UPI ID: <strong>8950112467@ptsbi</strong></p>
                     </div>
                     <div class="form-group">
                         <label style="font-size:12px; font-weight:600;">Transaction UTR / Payment ID</label>
@@ -123,7 +109,6 @@
                 <span style="font-size: 15px; font-weight: 600;">Total Payable</span>
                 <span style="font-size: 22px; font-weight:800; color:#2e7d32;">₹<span id="finalPayable">0</span></span>
             </div>
-
             <button id="btn-submit" class="btn-primary" onclick="submitVIP()">Submit Application</button>
         </div>
     </div>

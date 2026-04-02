@@ -91,8 +91,7 @@
 
     <div class="card">
       <h3 class="card-title"><i class="fas fa-shopping-basket" style="color:var(--primary);"></i> 2. Selected Services</h3>
-      <div id="cartItemsContainer">
-        </div>
+      <div id="cartItemsContainer"></div>
     </div>
 
     <div class="card" id="labSelectionSection" style="display: none;">
@@ -104,8 +103,7 @@
     <div class="card" id="dateTimeSection" style="display: none;">
       <h3 class="card-title"><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> 4. Select Date & Time</h3>
       <input type="date" id="bookingDate" class="form-input" style="width:100%; margin-bottom:15px;" onchange="generateTimeSlots()">
-      <div class="slot-grid" id="timeSlotContainer">
-        </div>
+      <div class="slot-grid" id="timeSlotContainer"></div>
     </div>
 
   </div>
@@ -132,9 +130,9 @@
       </div>
     </div>
   </div>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="../app.js"></script>
-  <script src="cart.js?v=1"></script>
+  <script src="../app.js"></script> <script src="cart.js?v=2"></script>
 </body>
 </html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Your Cart - BhavyaCare</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0056b3; --primary-light: #e6f0fa;
+      --success: #16a34a; --warning: #f59e0b; --danger: #dc3545;
+      --bg-color: #f0f4f8; --card-bg: #ffffff;
+      --text-main: #1e293b; --text-muted: #64748b;
+    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 100px; }
+    * { box-sizing: border-box; }
+    
+    .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+    .header h2 { margin: 0; font-size: 18px; font-weight: 700; }
+    .back-btn { color: white; text-decoration: none; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;}
+
+    .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+    
+    .card { background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+    .card-title { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
+    
+    /* Input & Pincode */
+    .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+    .form-input { flex-grow: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; font-weight: 600; outline: none;}
+    .form-input:focus { border-color: var(--primary); }
+    .btn-verify { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0 20px; font-weight: 800; cursor: pointer; transition: 0.2s;}
+
+    /* Cart Items */
+    .cart-item { display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; border-bottom: 1px dashed #cbd5e1; margin-bottom: 15px; }
+    .cart-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .item-name { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 0;}
+    .item-price { font-size: 15px; font-weight: 800; color: var(--success); }
+    
+    /* Service Type Toggles */
+    .service-toggle-box { background: #f8fafc; border-radius: 8px; padding: 8px; display: flex; gap: 5px; border: 1px solid #e2e8f0;}
+    .toggle-btn { flex: 1; padding: 8px; font-size: 12px; font-weight: 700; border: none; background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: 0.3s;}
+    .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .center-only-badge { background: #fee2e2; color: #991b1b; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #fecaca;}
+
+    /* Lab Selection */
+    .lab-card { border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; gap: 12px; cursor: pointer; transition: 0.2s; margin-bottom: 10px;}
+    .lab-card.selected { border-color: var(--success); background: #f0fdf4; }
+    .lab-img { width: 50px; height: 50px; border-radius: 8px; background: #cbd5e1; object-fit: cover;}
+    .lab-info h4 { margin: 0 0 5px 0; font-size: 14px; color: var(--text-main); }
+    .lab-info p { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+    /* Time Slots */
+    .slot-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
+    .slot-btn { padding: 10px 15px; border: 1px solid #cbd5e1; background: white; color: var(--text-main); font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s;}
+    .slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Bottom Bar */
+    .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 100;}
+    .total-box { display: flex; flex-direction: column; }
+    .total-box span { font-size: 12px; color: var(--text-muted); font-weight: 700;}
+    .total-box strong { font-size: 20px; color: var(--text-main); font-weight: 900;}
+    .proceed-btn { background: var(--success); color: white; border: none; padding: 14px 25px; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);}
+
+    /* Modal for Pincode Warning */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);}
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 16px; padding: 25px 20px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);}
+    
+    #loading { text-align: center; padding: 20px; color: var(--primary); font-weight: 700; display: none;}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="booking.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <h2>Your Cart</h2>
+    <div style="width: 60px;"></div>
+  </div>
+
+  <div class="container">
+    
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-map-marker-alt" style="color:var(--primary);"></i> 1. Enter Your Location</h3>
+      <div class="input-group">
+        <input type="text" id="userPincode" class="form-input" placeholder="Enter Pincode (e.g. 124507)" maxlength="6">
+        <button class="btn-verify" onclick="verifyLocation()">Verify</button>
+      </div>
+      <input type="text" id="userAddress" class="form-input" placeholder="Complete Address (Optional for Center Visit)" style="width: 100%; margin-top: 5px;">
+    </div>
+
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-shopping-basket" style="color:var(--primary);"></i> 2. Selected Services</h3>
+      <div id="cartItemsContainer">
+        </div>
+    </div>
+
+    <div class="card" id="labSelectionSection" style="display: none;">
+      <h3 class="card-title"><i class="fas fa-hospital" style="color:var(--primary);"></i> 3. Select Diagnostics Center</h3>
+      <div id="loadingLabs" style="text-align:center; padding:10px; color:var(--text-muted); font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Finding best labs near you...</div>
+      <div id="labsContainer"></div>
+    </div>
+
+    <div class="card" id="dateTimeSection" style="display: none;">
+      <h3 class="card-title"><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> 4. Select Date & Time</h3>
+      <input type="date" id="bookingDate" class="form-input" style="width:100%; margin-bottom:15px;" onchange="generateTimeSlots()">
+      <div class="slot-grid" id="timeSlotContainer">
+        </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-bar">
+    <div class="total-box">
+      <span>Total Amount</span>
+      <strong>₹<span id="cartTotalAmt">0</span></strong>
+    </div>
+    <button class="proceed-btn" onclick="proceedToPayment()">Proceed to Pay <i class="fas fa-arrow-right"></i></button>
+  </div>
+
+  <div class="modal-overlay" id="pincodeWarningModal">
+    <div class="modal-content">
+      <i class="fas fa-exclamation-triangle" style="font-size: 50px; color: var(--danger); margin-bottom: 15px;"></i>
+      <h3 style="margin: 0 0 10px; color: var(--text-main); font-weight: 800; font-size: 18px;">Service Not Available</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+        Sorry! Home Collection is currently not available in your area (Pincode: <span id="alertPincode"></span>).<br><br>
+        Would you like to switch these tests to <b>'Center Visit'</b> and visit our premium labs instead?
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="closePincodeModal()" style="flex: 1; background: #f1f5f9; color: var(--text-main); border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+        <button onclick="switchAllToCenter()" style="flex: 1; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">Switch to Center</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cart.js?v=1"></script>
+</body>
+</html>

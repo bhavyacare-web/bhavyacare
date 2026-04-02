@@ -398,4 +398,4 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-function openCart() { window.location.href = "cart.html"; }
+function openCart() { window.location.href = "cart/cart.html"; }

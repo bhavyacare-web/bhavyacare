@@ -21,38 +21,35 @@
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 90px; }
     * { box-sizing: border-box; }
     
-    /* 🌟 STICKY TOP WRAPPER (Header + Banner dono fix rahenge) 🌟 */
     .sticky-top-wrapper { position: sticky; top: 0; z-index: 1000; width: 100%; display: flex; flex-direction: column; }
     
     .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 12px rgba(0,86,179,0.15);}
     .header h2 { margin: 0; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.5px;}
     .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);}
-    .nav-btn:hover { background: white; color: var(--primary); }
     
     .warning-banner { background-color: #fffbeb; border-bottom: 1px solid #fde68a; color: #b45309; padding: 12px 15px; font-size: 12px; font-weight: 600; text-align: center; display: none; line-height: 1.5; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    .warning-banner i { color: #f59e0b; margin-right: 5px; font-size: 14px; }
     
     .search-container { padding: 15px 20px 5px; position: relative; max-width: 800px; margin: 0 auto; }
-    .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; font-weight: 500;}
-    .search-container input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+    .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); outline: none; font-weight: 500;}
+    .search-container input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
     .search-icon { position: absolute; left: 35px; top: 29px; color: #94a3b8; font-size: 18px; }
 
     .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 15px 20px; max-width: 800px; margin: 0 auto;}
-    .cat-card { background: var(--card-bg); border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 2px solid transparent; transition: all 0.2s ease;}
+    .cat-card { background: var(--card-bg); border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s;}
     .cat-card.selected { border-color: var(--primary); background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,86,179,0.1);}
     .cat-icon { font-size: 26px; margin-bottom: 6px; }
     .cat-name { font-size: 12px; font-weight: 700; color: var(--text-main); }
 
     .sub-cat-nav { display: flex; gap: 10px; padding: 0 20px 15px; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth; max-width: 800px; margin: 0 auto;}
     .sub-cat-nav::-webkit-scrollbar { display: none; }
-    .sub-cat-btn { padding: 8px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 13px; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.3s;}
+    .sub-cat-btn { padding: 8px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 13px; color: var(--text-muted); font-weight: 600; cursor: pointer;}
     .sub-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,86,179,0.2);}
 
     .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 800px; margin: 0 auto;}
     
-    .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; position: relative;}
+    .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #e2e8f0;}
     .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .param-badge { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
     
     .service-info h3 { margin: 0 0 6px; font-size: 15px; color: var(--text-main); font-weight: 800; line-height: 1.2; }
@@ -67,14 +64,17 @@
     .final-price { color: var(--text-main); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 6px;}
     .locked-price { color: #64748b; font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1; cursor: pointer;}
     
-    .action-container { height: 34px; display: flex; align-items: center; justify-content: flex-end;}
+    /* 🌟 UNIVERSAL BUTTON STYLING (Packages + Normal Tests) 🌟 */
+    .action-container { flex-shrink: 0; height: 36px; min-width: 90px; display: flex; align-items: center; justify-content: flex-end;}
     .add-to-cart-btn { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 0 20px; border-radius: 8px; font-weight: 800; font-size: 13px; height: 100%; cursor: pointer;}
-    .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--success); color: white; border-radius: 8px; height: 100%; min-width: 90px; font-weight: bold; overflow: hidden; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);}
+    .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--success); color: white; border-radius: 8px; height: 100%; width: 90px; font-weight: bold; overflow: hidden; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);}
     .qty-control button { background: transparent; border: none; color: white; width: 30px; height: 100%; cursor: pointer;}
     .qty-text { flex-grow: 1; text-align: center; font-size: 14px; }
     
+    /* NORMAL TEST UI FIX */
     .service-item { background: var(--card-bg); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: row; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center;}
-    .service-img-box { width: 55px; height: 55px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; }
+    .service-img-box { width: 55px; height: 55px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .service-info-normal { flex-grow: 1; min-width: 0; padding-right: 5px; } /* min-width 0 prevents text from pushing button out */
 
     .bottom-cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--text-main); color: white; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 100; cursor: pointer; box-shadow: 0 -8px 20px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.4s; border-top-left-radius: 20px; border-top-right-radius: 20px;}
     .bottom-cart-bar.visible { transform: translateY(0); }
@@ -84,15 +84,15 @@
     /* MODALS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 15px; backdrop-filter: blur(3px);}
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; max-height: 90vh;}
+    .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; position: relative; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh;}
     .close-modal { font-size: 24px; cursor: pointer; color: #94a3b8; font-weight: bold; transition: 0.2s;}
 
     .modal-header-sticky { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; z-index: 10; position: sticky; top: 0;}
     .modal-scroll-body { overflow-y: auto; padding: 15px; background: var(--bg-color); }
     
-    .card-mini { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
-    .form-input { width: 100%; padding: 12px 14px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: inherit; transition: 0.2s;}
-    .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .card-mini { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+    .form-input { width: 100%; padding: 12px 14px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: inherit; outline: none;}
+    .form-input:focus { border-color: var(--primary); }
     .form-input[readonly] { background: #f8fafc; color: #94a3b8; border-color: #e2e8f0;}
     
     .file-input-wrapper { position: relative; overflow: hidden; display: block; width: 100%; }
@@ -149,7 +149,7 @@
   <div class="modal-overlay" id="vipPromoModal">
     <div class="modal-content" style="padding: 25px 20px; text-align:center;">
       <span class="close-modal" onclick="closeVipPromo()" style="position:absolute; right:20px; top:15px;">&times;</span>
-      <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" class="promo-img-responsive" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onerror="this.src='https://via.placeholder.com/600x300?text=VIP+Family+Plan'">
+      <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" class="promo-img-responsive" style="width:100%; border-radius:12px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/600x300?text=VIP+Family+Plan'">
       <h3 style="font-size:18px; margin-bottom:10px; font-weight:800;">Activate VIP Family Plan?</h3>
       <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Unlock premium discounts for your entire family instantly!</p>
       <button onclick="handleVipPromoClick()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">
@@ -160,14 +160,11 @@
 
   <div class="modal-overlay" id="vipFormModal">
     <div class="modal-content">
-      
       <div class="modal-header-sticky">
         <h3 style="margin:0; color:var(--warning); font-size:16px; font-weight:800;"><i class="fas fa-crown"></i> VIP Family Plan</h3>
         <span class="close-modal" onclick="closeVipFormModal()">&times;</span>
       </div>
-
       <div class="modal-scroll-body">
-        
         <div class="card-mini">
             <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-main);"><i class="fas fa-users" style="color:var(--primary); margin-right:5px;"></i> Family Members</h4>
             <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 1 (Self)</label>
@@ -189,15 +186,12 @@
 
         <div class="card-mini">
             <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-main);"><i class="fas fa-wallet" style="color:var(--primary); margin-right:5px;"></i> Payment Method</h4>
-            
             <div id="vipOnlinePaySection">
-                <a id="upiPaymentBtn" href="#" style="display:flex; justify-content:center; align-items:center; gap:8px; background:#1e293b; color:white; padding:14px; border-radius:10px; text-decoration:none; font-weight:800; font-size:14px; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                <a id="upiPaymentBtn" href="#" style="display:flex; justify-content:center; align-items:center; gap:8px; background:#1e293b; color:white; padding:14px; border-radius:10px; text-decoration:none; font-weight:800; font-size:14px; margin-bottom:5px;">
                     <i class="fas fa-mobile-alt"></i> Pay via UPI App (GPay, PhonePe)
                 </a>
                 <p style="font-size:10px; color:var(--text-muted); text-align:center; margin:0 0 15px;">UPI ID: <b>8950112467@ptsbi</b></p>
-                
                 <input type="text" id="vipTxnId" class="form-input" placeholder="12-digit UTR / Ref No. (Optional)" style="margin-bottom:10px;">
-                
                 <div class="file-input-wrapper">
                     <div class="file-input-btn" id="fileUploadBtnText"><i class="fas fa-image"></i> Upload Screenshot (Mandatory)</div>
                     <input type="file" id="vipScreenshot" accept="image/*" onchange="updateFileName()">
@@ -210,17 +204,15 @@
             <span style="font-weight:700; color:var(--text-main);">Total Payable</span>
             <span style="font-size:22px; font-weight:900; color:var(--success);">₹<span id="vipFinalAmount">3000</span></span>
         </div>
-        
-        <button id="submitVipBtn" onclick="submitVipApplicationForm()" style="background:var(--success); color:white; border:none; padding:16px; border-radius:12px; font-weight:800; font-size:15px; width:100%; box-shadow:0 4px 12px rgba(22, 163, 74, 0.2);">
+        <button id="submitVipBtn" onclick="submitVipApplicationForm()" style="background:var(--success); color:white; border:none; padding:16px; border-radius:12px; font-weight:800; font-size:15px; width:100%;">
             Submit Application <i class="fas fa-arrow-right"></i>
         </button>
-
       </div>
     </div>
   </div>
 
   <div id="login-section" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:10000; backdrop-filter: blur(3px);">
-    <div style="background:white; padding:25px; border-radius:20px; width:90%; max-width:400px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); text-align:center;">
+    <div style="background:white; padding:25px; border-radius:20px; width:90%; max-width:400px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
       <span onclick="closeLoginPopup()" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#94a3b8; font-weight:bold;">&times;</span>
       <h3 id="form-title" style="font-size:18px; font-weight:800; color:#1e293b; margin-top:0; margin-bottom:20px;">Patient Login</h3>
       <div id="phone-section">
@@ -239,6 +231,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script>
-  <script src="booking.js?v=20"></script>
+  <script src="booking.js?v=21"></script>
 </body>
 </html>

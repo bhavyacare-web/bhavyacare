@@ -3,234 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BhavyaCare - Book Premium Services</title>
+  <title>Cart & Checkout - BhavyaCare</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #0056b3;
-      --primary-light: #e6f0fa;
-      --success: #16a34a; 
-      --warning: #f59e0b; 
-      --danger: #dc3545;
-      --bg-color: #f0f4f8; 
-      --card-bg: #ffffff;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
+    :root { 
+      --primary: #2563eb; --primary-soft: #eff6ff;
+      --success: #059669; --warning: #d97706; --danger: #dc2626; 
+      --bg-color: #f8fafc; --card-bg: #ffffff; 
+      --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
     }
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding-bottom: 120px; color: var(--text-main); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 90px; }
-    * { box-sizing: border-box; }
-    
-    .sticky-top-wrapper { position: sticky; top: 0; z-index: 1000; width: 100%; display: flex; flex-direction: column; }
-    
-    .header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 12px rgba(0,86,179,0.15);}
-    .header h2 { margin: 0; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.5px;}
-    .nav-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);}
-    
-    .warning-banner { background-color: #fffbeb; border-bottom: 1px solid #fde68a; color: #b45309; padding: 12px 15px; font-size: 12px; font-weight: 600; text-align: center; display: none; line-height: 1.5; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    
-    .search-container { padding: 15px 20px 5px; position: relative; max-width: 800px; margin: 0 auto; }
-    .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.02); outline: none; font-weight: 500;}
-    .search-container input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
-    .search-icon { position: absolute; left: 35px; top: 29px; color: #94a3b8; font-size: 18px; }
+    /* Header & Stepper */
+    .header { background: white; padding: 16px 20px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .header h2 { margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1; text-align: center; margin-right: 20px; }
+    .stepper { display: flex; justify-content: space-between; padding: 20px; max-width: 500px; margin: 0 auto; }
+    .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; }
+    .step-icon { width: 32px; height: 32px; border-radius: 50%; background: white; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; z-index: 2; color: var(--text-muted); transition: 0.3s; }
+    .step.active .step-icon { background: var(--primary); border-color: var(--primary); color: white; }
+    .step.completed .step-icon { background: var(--success); border-color: var(--success); color: white; }
+    .step-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+    .step:not(:last-child)::after { content: ''; position: absolute; top: 16px; left: 60%; width: 80%; height: 2px; background: var(--border); z-index: 1; }
 
-    .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 15px 20px; max-width: 800px; margin: 0 auto;}
-    .cat-card { background: var(--card-bg); border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s;}
-    .cat-card.selected { border-color: var(--primary); background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,86,179,0.1);}
-    .cat-icon { font-size: 26px; margin-bottom: 6px; }
-    .cat-name { font-size: 12px; font-weight: 700; color: var(--text-main); }
-
-    .sub-cat-nav { display: flex; gap: 10px; padding: 0 20px 15px; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth; max-width: 800px; margin: 0 auto;}
-    .sub-cat-nav::-webkit-scrollbar { display: none; }
-    .sub-cat-btn { padding: 8px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 13px; color: var(--text-muted); font-weight: 600; cursor: pointer;}
-    .sub-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,86,179,0.2);}
-
-    .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 800px; margin: 0 auto;}
+    /* Cards & Forms */
+    .container { max-width: 600px; margin: 0 auto; padding: 0 16px; }
+    .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); transition: 0.3s; }
+    .card-title { font-size: 16px; font-weight: 700; margin: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; }
+    .input-group { margin-bottom: 16px; }
+    .input-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 500; background: #fcfdfe; transition: 0.2s; }
+    .form-input:focus { border-color: var(--primary); outline: none; background: white; box-shadow: 0 0 0 4px var(--primary-soft); }
+    .form-input[readonly] { background: #f1f5f9; color: var(--text-muted); cursor: not-allowed; }
     
-    .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #e2e8f0;}
-    .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-    .param-badge { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
-    
-    .service-info h3 { margin: 0 0 6px; font-size: 15px; color: var(--text-main); font-weight: 800; line-height: 1.2; }
-    .desc-preview { background: #f8fafc; border-radius: 8px; padding: 8px 12px; border: 1px solid #f1f5f9;}
-    .desc-preview ul { margin: 0; padding-left: 15px; font-size: 11px; color: var(--text-muted); line-height: 1.4; font-weight: 600;}
-    .view-more-btn { font-size: 11px; color: var(--primary); margin-top: 5px; font-weight: 800; cursor: pointer; display: inline-block; padding: 4px 8px; background: var(--primary-light); border-radius: 6px;}
-    
-    .price-action-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 2px;}
-    .price-box { display: flex; flex-direction: column; gap: 2px; }
-    .mrp-row { font-size: 11px; color: #94a3b8; font-weight: 500;}
-    .mrp { text-decoration: line-through; }
-    .final-price { color: var(--text-main); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 6px;}
-    .locked-price { color: #64748b; font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1; cursor: pointer;}
-    
-    /* 🌟 UNIVERSAL BUTTON STYLING (Packages + Normal Tests) 🌟 */
-    .action-container { flex-shrink: 0; height: 36px; min-width: 90px; display: flex; align-items: center; justify-content: flex-end;}
-    .add-to-cart-btn { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 0 20px; border-radius: 8px; font-weight: 800; font-size: 13px; height: 100%; cursor: pointer;}
-    .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--success); color: white; border-radius: 8px; height: 100%; width: 90px; font-weight: bold; overflow: hidden; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);}
-    .qty-control button { background: transparent; border: none; color: white; width: 30px; height: 100%; cursor: pointer;}
-    .qty-text { flex-grow: 1; text-align: center; font-size: 14px; }
-    
-    /* NORMAL TEST UI FIX */
-    .service-item { background: var(--card-bg); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: row; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center;}
-    .service-img-box { width: 55px; height: 55px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-    .service-info-normal { flex-grow: 1; min-width: 0; padding-right: 5px; } /* min-width 0 prevents text from pushing button out */
+    /* Buttons & Toggles */
+    .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
+    .btn-main:active { transform: scale(0.98); }
+    .service-toggle-box { background: #f1f5f9; border-radius: 10px; padding: 4px; display: flex; gap: 4px; margin-top: 10px; }
+    .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .bottom-cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--text-main); color: white; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 100; cursor: pointer; box-shadow: 0 -8px 20px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.4s; border-top-left-radius: 20px; border-top-right-radius: 20px;}
-    .bottom-cart-bar.visible { transform: translateY(0); }
-    .cart-summary { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;}
-    .cart-action { font-size: 15px; font-weight: 800; background: var(--primary); padding: 8px 16px; border-radius: 10px;}
-
-    /* MODALS */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; padding: 15px; backdrop-filter: blur(3px);}
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; position: relative; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh;}
-    .close-modal { font-size: 24px; cursor: pointer; color: #94a3b8; font-weight: bold; transition: 0.2s;}
-
-    .modal-header-sticky { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; z-index: 10; position: sticky; top: 0;}
-    .modal-scroll-body { overflow-y: auto; padding: 15px; background: var(--bg-color); }
+    /* Lab & Time Slots */
+    .lab-card { border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; display: flex; gap: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
+    .lab-card.selected { border-color: var(--success); background: #f0fdf4; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1); }
+    .lab-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-left: 4px; }
+    .badge-nabl { background-color: #0284c7; }
+    .badge-nabh { background-color: #16a34a; }
+    .fallback-msg { background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 15px; display: flex; gap: 10px; align-items: flex-start; }
     
-    .card-mini { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-    .form-input { width: 100%; padding: 12px 14px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: inherit; outline: none;}
-    .form-input:focus { border-color: var(--primary); }
-    .form-input[readonly] { background: #f8fafc; color: #94a3b8; border-color: #e2e8f0;}
-    
-    .file-input-wrapper { position: relative; overflow: hidden; display: block; width: 100%; }
-    .file-input-btn { background: #f1f5f9; border: 1px dashed #94a3b8; color: var(--text-main); padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;}
-    .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+    .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
-    #loading { text-align: center; padding: 40px 20px; color: var(--primary); font-size: 15px; font-weight: 600;}
+    /* Bottom Bar */
+    .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px 24px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-radius: 24px 24px 0 0; z-index: 100; }
+    .proceed-btn { background: var(--success); color: white; border: none; padding: 16px 32px; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .proceed-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
 
-    @media (min-width: 768px) {
-        .services-container { display: grid; grid-template-columns: repeat(2, 1fr); }
-        .modal-content { max-width: 600px; }
-        .promo-img-responsive { max-height: 40vh; object-fit: contain; }
-    }
+    /* Modals & Overlays */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
+    .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
-  <div class="sticky-top-wrapper">
-    <div class="header">
-      <button class="nav-btn" onclick="window.location.href='../patient_dashboard/patient_dashboard.html'">🏠 Home</button>
-      <h2>Book Services</h2>
-      <button class="nav-btn" id="topCartBtn" onclick="openCart()">🛒 Cart (0)</button>
-    </div>
-
-    <div class="warning-banner" id="pendingWarningBanner">
-      <i class="fas fa-exclamation-triangle"></i> 
-      <b>Verification Pending:</b> Your VIP Plan is under review. You can book at VIP rates now, but if any discrepancy is found, your plan will be reverted to the Basic Plan.
+  <div id="loadingOverlay" class="modal-overlay" style="display: flex; background: white;">
+    <div style="text-align: center;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary);"></i>
+      <p style="margin-top: 15px; font-weight: 600; color: var(--text-muted);">Please wait...</p>
     </div>
   </div>
 
-  <div class="search-container">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search tests, profiles, scans..." onkeyup="filterServices()">
-  </div>
-
-  <div class="category-grid" id="mainCategories"></div>
-  <div id="loading"><i class="fas fa-spinner fa-spin"></i> Fetching best prices...</div>
-  <div id="subCategoryContainer"></div>
-  <div class="services-container" id="servicesList"></div>
-
-  <div id="bottomCartBar" class="bottom-cart-bar" onclick="openCart()">
-    <div class="cart-summary" id="bottomCartText">0 Items <span style="color:#cbd5e1;">|</span> ₹0</div>
-    <div class="cart-action">Proceed <i class="fas fa-arrow-right"></i></div>
-  </div>
-
-  <div class="modal-overlay" id="infoModal">
-    <div class="modal-content" style="padding: 20px;">
-      <span class="close-modal" onclick="closeModal()" style="position:absolute; right:20px; top:15px;">&times;</span>
-      <h3 id="modalTitle" style="margin-top:0; font-size:16px; font-weight:800; border-bottom:1px solid #eee; padding-bottom:10px;">Package Details</h3>
-      <div id="modalBody" style="font-size:13px; line-height:1.5; max-height:60vh; overflow-y:auto;"></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="vipPromoModal">
-    <div class="modal-content" style="padding: 25px 20px; text-align:center;">
-      <span class="close-modal" onclick="closeVipPromo()" style="position:absolute; right:20px; top:15px;">&times;</span>
-      <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" class="promo-img-responsive" style="width:100%; border-radius:12px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/600x300?text=VIP+Family+Plan'">
-      <h3 style="font-size:18px; margin-bottom:10px; font-weight:800;">Activate VIP Family Plan?</h3>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Unlock premium discounts for your entire family instantly!</p>
-      <button onclick="handleVipPromoClick()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">
-        <i class="fas fa-crown"></i> Activate Now
-      </button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="vipFormModal">
+  <div id="pincodeModal" class="modal-overlay">
     <div class="modal-content">
-      <div class="modal-header-sticky">
-        <h3 style="margin:0; color:var(--warning); font-size:16px; font-weight:800;"><i class="fas fa-crown"></i> VIP Family Plan</h3>
-        <span class="close-modal" onclick="closeVipFormModal()">&times;</span>
-      </div>
-      <div class="modal-scroll-body">
-        <div class="card-mini">
-            <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-main);"><i class="fas fa-users" style="color:var(--primary); margin-right:5px;"></i> Family Members</h4>
-            <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 1 (Self)</label>
-            <input type="text" id="vipMem1" class="form-input" readonly>
-            <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 2 (Optional)</label>
-            <input type="text" id="vipMem2" class="form-input" placeholder="Enter Full Name">
-            <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; display:block;">Member 3 (Optional)</label>
-            <input type="text" id="vipMem3" class="form-input" placeholder="Enter Full Name" style="margin-bottom:0;">
-        </div>
-
-        <div class="card-mini" style="background:#f8fafc;">
-            <label style="font-size:12px; font-weight:700; color:var(--text-main); display:block; margin-bottom:6px;">Have a Referral Code?</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="vipRefCode" class="form-input" placeholder="Enter Code" style="margin-bottom:0; text-transform: uppercase;">
-                <button onclick="applyVipPromo()" style="background:var(--primary); color:white; border:none; border-radius:10px; padding:0 20px; font-weight:800; cursor:pointer;">Apply</button>
-            </div>
-            <small id="vipRefMsg" style="display:none; font-weight:700; margin-top:8px; font-size:12px;"></small>
-        </div>
-
-        <div class="card-mini">
-            <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-main);"><i class="fas fa-wallet" style="color:var(--primary); margin-right:5px;"></i> Payment Method</h4>
-            <div id="vipOnlinePaySection">
-                <a id="upiPaymentBtn" href="#" style="display:flex; justify-content:center; align-items:center; gap:8px; background:#1e293b; color:white; padding:14px; border-radius:10px; text-decoration:none; font-weight:800; font-size:14px; margin-bottom:5px;">
-                    <i class="fas fa-mobile-alt"></i> Pay via UPI App (GPay, PhonePe)
-                </a>
-                <p style="font-size:10px; color:var(--text-muted); text-align:center; margin:0 0 15px;">UPI ID: <b>8950112467@ptsbi</b></p>
-                <input type="text" id="vipTxnId" class="form-input" placeholder="12-digit UTR / Ref No. (Optional)" style="margin-bottom:10px;">
-                <div class="file-input-wrapper">
-                    <div class="file-input-btn" id="fileUploadBtnText"><i class="fas fa-image"></i> Upload Screenshot (Mandatory)</div>
-                    <input type="file" id="vipScreenshot" accept="image/*" onchange="updateFileName()">
-                </div>
-                <input type="hidden" id="vipScreenshotBase64">
-            </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; padding:15px; border-radius:12px; border:1px solid #bbf7d0; margin-bottom:15px;">
-            <span style="font-weight:700; color:var(--text-main);">Total Payable</span>
-            <span style="font-size:22px; font-weight:900; color:var(--success);">₹<span id="vipFinalAmount">3000</span></span>
-        </div>
-        <button id="submitVipBtn" onclick="submitVipApplicationForm()" style="background:var(--success); color:white; border:none; padding:16px; border-radius:12px; font-weight:800; font-size:15px; width:100%;">
-            Submit Application <i class="fas fa-arrow-right"></i>
-        </button>
+      <i class="fas fa-map-marker-alt" style="font-size: 40px; color: var(--warning); margin-bottom: 15px;"></i>
+      <h3 style="margin-top:0;">Area Not Serviceable</h3>
+      <p style="font-size: 14px; color: var(--text-muted);">Home collection is currently not available for <b id="alertPin"></b>.</p>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn-main" style="background: var(--bg-color); color: var(--text-main);" onclick="closePincodeModal()">Edit Details</button>
+        <button class="btn-main" onclick="switchAllToCenter()">Switch to Center</button>
       </div>
     </div>
   </div>
 
-  <div id="login-section" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:10000; backdrop-filter: blur(3px);">
-    <div style="background:white; padding:25px; border-radius:20px; width:90%; max-width:400px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
-      <span onclick="closeLoginPopup()" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#94a3b8; font-weight:bold;">&times;</span>
-      <h3 id="form-title" style="font-size:18px; font-weight:800; color:#1e293b; margin-top:0; margin-bottom:20px;">Patient Login</h3>
-      <div id="phone-section">
-        <input type="text" id="userName" placeholder="Full Name" class="form-input">
-        <input type="number" id="phoneNumber" placeholder="Mobile Number" class="form-input">
-        <div id="recaptcha-container" style="margin-bottom:15px; display:flex; justify-content:center;"></div>
-        <button onclick="sendOTP()" style="background:var(--primary); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">Send OTP</button>
-      </div>
-      <div id="otp-section" style="display:none;">
-        <input type="number" id="otpCode" placeholder="Enter 6-digit OTP" class="form-input">
-        <button onclick="verifyOTP()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">Verify & Login</button>
+  <div id="otpModal" class="modal-overlay">
+    <div class="modal-content">
+      <i class="fas fa-mobile-alt" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+      <h3 style="margin-top:0; color: var(--text-main);">Verify Mobile Number</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+        To confirm your booking, we need to verify your number: <br><strong id="displayOtpMobile" style="color:var(--text-main); font-size: 16px;"></strong>
+      </p>
+      <div id="otpInputSection">
+        <input type="number" id="otpCode" class="form-input" placeholder="Enter 6-digit OTP" style="text-align: center; letter-spacing: 4px; font-weight: 800; font-size: 18px; margin-bottom: 15px;">
+        <button class="btn-main" id="verifyOtpBtn" onclick="verifyFirebaseOTP()">Verify & Confirm Order</button>
       </div>
     </div>
+  </div>
+
+  <div class="header">
+    <a href="javascript:history.back()" style="color: var(--text-main); font-size: 18px;"><i class="fas fa-arrow-left"></i></a>
+    <h2>Cart & Checkout</h2>
+  </div>
+
+  <div class="stepper">
+    <div class="step active" id="step1-nav"><div class="step-icon">1</div><span class="step-label">My Info</span></div>
+    <div class="step" id="step2-nav"><div class="step-icon">2</div><span class="step-label">Services</span></div>
+    <div class="step" id="step3-nav"><div class="step-icon">3</div><span class="step-label">Checkout</span></div>
+  </div>
+
+  <div class="container">
+    
+    <div class="card" id="step1-card">
+      <div class="card-title">Patient Details <span id="vipBadge"></span></div>
+      
+      <div id="infoForm">
+        <div class="input-group">
+          <label class="input-label">Patient Name</label>
+          <div id="nameInputBox">
+            <input type="text" id="uName" class="form-input" placeholder="Enter Patient Name">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Mobile Number</label>
+          <input type="tel" id="uMobile" class="form-input" placeholder="Enter 10-digit Mobile Number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Pincode <span style="color:red">*</span></label>
+          <input type="number" id="uPincode" class="form-input" placeholder="e.g. 110001">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Complete Address</label>
+          <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
+        </div>
+        <button class="btn-main" onclick="savePatientInfo()">Save & Continue</button>
+      </div>
+
+      <div id="infoSummary" style="display: none;">
+        <div style="display: flex; justify-content: space-between;">
+          <div style="font-size: 14px; line-height: 1.6;">
+            <strong id="sumName" style="font-size: 16px;"></strong><br>
+            <span id="sumMobile" style="color: var(--text-muted);"></span><br>
+            <span id="sumAddress" style="color: var(--text-muted);"></span>
+          </div>
+          <button onclick="editPatientInfo()" style="background: var(--primary-soft); color: var(--primary); border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; height: max-content; cursor: pointer;">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
+      <div class="card-title">Selected Tests</div>
+      <div id="cartItemsContainer" style="margin-bottom: 24px;"></div>
+      
+      <div id="labSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px;">
+        <div class="card-title">Select Diagnostics Center</div>
+        
+        <div id="fallbackMessage" class="fallback-msg" style="display: none;">
+          <i class="fas fa-info-circle" style="margin-top: 2px;"></i>
+          <span id="fallbackText"></span>
+        </div>
+
+        <div id="labsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+
+      <div id="dateTimeSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px; margin-top: 20px;">
+        <div class="card-title">Select Date & Time</div>
+        <input type="date" id="bookingDate" class="form-input" onchange="generateSlots()">
+        <div class="slot-grid" id="slotContainer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-bar">
+    <div>
+      <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Total Payable</span><br>
+      <strong style="font-size: 22px; color: var(--text-main);">₹<span id="totalAmt">0</span></strong>
+    </div>
+    <button class="proceed-btn" id="confirmBtn" disabled onclick="finalizeBooking()">Confirm Booking</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="../app.js"></script>
-  <script src="booking.js?v=21"></script>
+  <script src="cart.js?v=final"></script>
 </body>
 </html>

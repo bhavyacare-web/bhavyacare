@@ -1,340 +1,264 @@
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
-// Active Pincodes for Home Collection
+// App Configuration
 const serviceablePincodes = ["124507", "124508", "110043"]; 
-// Added missing types to prevent wrong "Center Only" flags
-const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'holter', 'pft', 'blood test'];
+const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
+// State Management
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
-let matchedLabsList = [];
+let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
+let matchedLabs = [];
 let selectedLabId = null;
-let selectedTimeSlot = null;
-
-let bookingPatient = { name: "", mobile: "", pincode: "", address: "", isVip: false };
+let selectedTime = null;
 
 window.onload = () => {
-    checkEmptyCart();
-    
-    // Ensure Date picker cannot select past dates
-    let today = new Date().toISOString().split('T')[0];
-    document.getElementById("bookingDate").setAttribute('min', today);
-
-    // 🌟 FIX: TRIGGER BUILT-IN LOGIN POPUP 🌟
-    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
-    if (!userId) {
-        document.getElementById('loadingOverlay').style.display = "none";
-        document.getElementById('login-section').style.display = "block";
-        if(typeof setupRecaptcha === "function") setupRecaptcha();
+    if(cart.length === 0) {
+        document.querySelector('.container').innerHTML = "<h3 style='text-align:center; margin-top:50px;'>Your Cart is Empty</h3>";
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.querySelector('.bottom-bar').style.display = 'none';
         return;
     }
-    fetchPatientProfile(userId);
+
+    // Auth Check
+    const userId = localStorage.getItem("bhavya_user_id");
+    if (!userId) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('loginModal').style.display = 'flex';
+    } else {
+        fetchProfile(userId);
+    }
 };
 
-function checkEmptyCart() {
-    if (cart.length === 0) {
-        document.getElementById('loadingOverlay').style.display = "none";
-        document.querySelector('.container').innerHTML = "<div style='text-align:center; padding:40px;'><i class='fas fa-shopping-cart' style='font-size:40px; color:#cbd5e1; margin-bottom:15px;'></i><br><h3 style='color:var(--text-main);'>Cart is Empty</h3><a href='../booking/booking.html' style='color:var(--primary); font-weight:bold; text-decoration:none;'>Go Back to Booking</a></div>";
-        document.querySelector('.bottom-bar').style.display = "none";
-        return true;
-    }
-    return false;
+// Placeholder for Firebase Auth
+function triggerFirebaseLogin() {
+    alert("Firebase Auth logic runs here. After success, save 'bhavya_user_id' and reload.");
+    // localStorage.setItem("bhavya_user_id", "user123"); location.reload();
 }
 
-// 🌟 STEP 1: FETCH PROFILE 🌟
-function fetchPatientProfile(userId) {
+// STEP 1 LOGIC
+function fetchProfile(userId) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
-    .then(response => {
-        document.getElementById('loadingOverlay').style.display = "none";
-        if (response.status === "success") {
-            const data = response.data;
-            bookingPatient.mobile = data.mobile;
-            bookingPatient.isVip = data.isVip;
-            
-            document.getElementById('userMobile').value = data.mobile;
-            document.getElementById('userPincode').value = data.pincode;
-            document.getElementById('userAddress').value = data.address;
+    .then(res => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        if(res.status === "success") {
+            const data = res.data;
+            bookingData.mobile = data.mobile;
+            document.getElementById('uMobile').value = data.mobile;
+            document.getElementById('uPincode').value = data.pincode;
+            document.getElementById('uAddress').value = data.address;
 
-            const nameContainer = document.getElementById('nameInputContainer');
-            if (data.isVip && data.vipMembers.length > 0) {
-                document.getElementById('vipTagContainer').innerHTML = '<span class="vip-badge"><i class="fas fa-crown"></i> VIP Active</span>';
-                let selectHtml = `<select id="userNameInput" class="form-input">`;
-                data.vipMembers.forEach(mem => { selectHtml += `<option value="${mem}">${mem}</option>`; });
-                selectHtml += `</select>`;
-                nameContainer.innerHTML = selectHtml;
+            const nameBox = document.getElementById('nameInputBox');
+            if(data.isVip && data.vipMembers.length > 0) {
+                document.getElementById('vipBadge').innerHTML = '<span style="background:var(--warning); color:white; font-size:10px; padding:4px 8px; border-radius:12px;">VIP Active</span>';
+                let opts = data.vipMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+                nameBox.innerHTML = `<select id="uName" class="form-input">${opts}</select>`;
             } else {
-                document.getElementById('vipTagContainer').innerHTML = '';
-                nameContainer.innerHTML = `<input type="text" id="userNameInput" class="form-input" placeholder="Enter Patient Name" value="${data.name}">`;
+                nameBox.innerHTML = `<input type="text" id="uName" class="form-input" value="${data.name}" placeholder="Patient Name">`;
             }
         }
-    }).catch(err => { document.getElementById('loadingOverlay').style.display = "none"; });
+    }).catch(e => console.error("Profile Fetch Error", e));
 }
 
 function savePatientInfo() {
-    const name = document.getElementById('userNameInput').value.trim();
-    const pincode = document.getElementById('userPincode').value.trim();
-    const address = document.getElementById('userAddress').value.trim();
+    const name = document.getElementById('uName').value.trim();
+    const pin = document.getElementById('uPincode').value.trim();
+    const addr = document.getElementById('uAddress').value.trim();
 
-    if(!name) return alert("Patient Name is required.");
-    if(pincode.length < 6) return alert("Valid 6-digit Pincode is required.");
+    if(!name || pin.length < 6) return alert("Valid Name and Pincode required!");
 
-    bookingPatient.name = name;
-    bookingPatient.pincode = pincode;
-    bookingPatient.address = address;
+    bookingData.name = name;
+    bookingData.pincode = pin;
+    bookingData.address = addr;
 
-    // Fix: Force fulfillment logic for items initially
+    // Set default fulfillment for cart items
     cart.forEach(item => {
-        let type = (item.service_type || "pathology").toLowerCase().trim();
+        let type = (item.service_type || "pathology").toLowerCase();
         if(!item.fulfillment) item.fulfillment = homeServiceCategories.includes(type) ? "home" : "center";
     });
 
-    const needsHome = cart.some(item => item.fulfillment === "home");
-    if (needsHome && !serviceablePincodes.includes(pincode)) {
-        document.getElementById("alertPincode").innerText = pincode;
-        document.getElementById("pincodeWarningModal").classList.add("active");
-        return; 
+    // Pincode Verification for Home Collection
+    const needsHome = cart.some(i => i.fulfillment === "home");
+    if(needsHome && !serviceablePincodes.includes(pin)) {
+        document.getElementById('alertPin').innerText = pin;
+        document.getElementById('pincodeModal').style.display = 'flex';
+        return;
     }
-    proceedToStep2();
+
+    lockStep1();
 }
 
-function proceedToStep2() {
-    document.getElementById('sumName').innerText = bookingPatient.name;
-    document.getElementById('sumMobile').innerText = bookingPatient.mobile;
-    document.getElementById('sumAddress').innerText = bookingPatient.address || "Not provided";
-    document.getElementById('sumPincode').innerText = bookingPatient.pincode;
+function lockStep1() {
+    document.getElementById('step1-nav').classList.add('completed');
+    document.getElementById('step2-nav').classList.add('active');
 
-    document.getElementById('patientInfoForm').style.display = "none";
-    document.getElementById('patientInfoSummary').style.display = "block";
-    document.getElementById('editInfoBtn').style.display = "block";
+    document.getElementById('sumName').innerText = bookingData.name;
+    document.getElementById('sumMobile').innerText = bookingData.mobile;
+    document.getElementById('sumAddress').innerText = `${bookingData.address} - ${bookingData.pincode}`;
 
-    document.getElementById('step2-card').style.display = "block";
-    document.getElementById('step2-card').style.opacity = "1";
-    document.getElementById('step2-card').style.pointerEvents = "auto";
-    
-    renderCartItems();
-    calculateTotal();
-    fetchLabs(bookingPatient.pincode); 
+    document.getElementById('infoForm').style.display = 'none';
+    document.getElementById('infoSummary').style.display = 'block';
+
+    const s2 = document.getElementById('step2-card');
+    s2.style.display = 'block'; s2.style.opacity = '1'; s2.style.pointerEvents = 'auto';
+
+    renderCart();
+    fetchLabs();
 }
 
 function editPatientInfo() {
-    document.getElementById('patientInfoForm').style.display = "block";
-    document.getElementById('patientInfoSummary').style.display = "none";
-    document.getElementById('editInfoBtn').style.display = "none";
-    
-    document.getElementById('step2-card').style.opacity = "0.5";
-    document.getElementById('step2-card').style.pointerEvents = "none";
-    checkProceedReady();
+    document.getElementById('infoForm').style.display = 'block';
+    document.getElementById('infoSummary').style.display = 'none';
+    const s2 = document.getElementById('step2-card');
+    s2.style.opacity = '0.5'; s2.style.pointerEvents = 'none';
+    validateCheckout();
 }
 
-function closePincodeModal() { document.getElementById("pincodeWarningModal").classList.remove("active"); }
-
+// MODAL HANDLERS
+function closePincodeModal() { document.getElementById('pincodeModal').style.display = 'none'; editPatientInfo(); }
 function switchAllToCenter() {
-    cart.forEach(item => { if (item.fulfillment === "home") item.fulfillment = "center"; });
-    closePincodeModal();
-    proceedToStep2(); 
+    cart.forEach(i => { if(i.fulfillment === 'home') i.fulfillment = 'center'; });
+    document.getElementById('pincodeModal').style.display = 'none';
+    lockStep1();
 }
 
-// 🌟 STEP 2: CART CONFIGURATION 🌟
-
-// 🌟 FIX: REMOVE CART ITEM 🌟
-function removeCartItem(index) {
-    cart.splice(index, 1);
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    if(!checkEmptyCart()) {
-        renderCartItems();
-        calculateTotal();
-        checkProceedReady();
-        // Lab types might have changed, refetch labs
-        fetchLabs(bookingPatient.pincode);
-    }
-}
-
-function renderCartItems() {
-    const container = document.getElementById("cartItemsContainer");
-    let html = "";
-
+// STEP 2 LOGIC
+function renderCart() {
+    let html = ""; let total = 0;
     cart.forEach((item, index) => {
-        // Fallback type if missing from older cart
-        let type = (item.service_type || "pathology").toLowerCase().trim();
-        let isHomeEligible = homeServiceCategories.includes(type);
-        
-        let toggleHtml = "";
-        if (isHomeEligible) {
-            let homeActive = item.fulfillment === "home" ? "active" : "";
-            let centerActive = item.fulfillment === "center" ? "active" : "";
-            toggleHtml = `
-                <div class="service-toggle-box">
-                    <button class="toggle-btn ${homeActive}" onclick="changeFulfillment(${index}, 'home')"><i class="fas fa-home"></i> Home</button>
-                    <button class="toggle-btn ${centerActive}" onclick="changeFulfillment(${index}, 'center')"><i class="fas fa-hospital"></i> Center</button>
-                </div>
-            `;
+        total += (item.price * item.qty);
+        let type = (item.service_type || "pathology").toLowerCase();
+        let toggle = "";
+
+        if(homeServiceCategories.includes(type)) {
+            let hAct = item.fulfillment === "home" ? "active" : "";
+            let cAct = item.fulfillment === "center" ? "active" : "";
+            toggle = `<div class="service-toggle-box">
+                        <button class="toggle-btn ${hAct}" onclick="changeFulfill(${index}, 'home')">Home</button>
+                        <button class="toggle-btn ${cAct}" onclick="changeFulfill(${index}, 'center')">Center</button>
+                      </div>`;
         } else {
-            item.fulfillment = "center"; 
-            toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
+            item.fulfillment = "center";
+            toggle = `<div style="font-size:11px; color:var(--danger); font-weight:600; margin-top:8px;">[ Center Visit Required ]</div>`;
         }
 
-        html += `
-            <div class="cart-item">
-                <div class="item-header">
-                    <div class="item-name-box">
-                        <button class="btn-delete" onclick="removeCartItem(${index})"><i class="fas fa-times"></i></button>
-                        <h4 class="item-name">${item.service_name} <span style="color:var(--text-muted); font-size:12px;">(x${item.qty})</span></h4>
+        html += `<div style="padding:12px 0; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong style="font-size:14px;">${item.service_name} x${item.qty}</strong>
+                        <strong style="color:var(--success);">₹${item.price * item.qty}</strong>
                     </div>
-                    <span class="item-price">₹${item.price * item.qty}</span>
-                </div>
-                ${toggleHtml}
-            </div>
-        `;
+                    ${toggle}
+                 </div>`;
     });
-    container.innerHTML = html;
-    checkItemToggles();
+    document.getElementById('cartItemsContainer').innerHTML = html;
+    document.getElementById('totalAmt').innerText = total;
 }
 
-function changeFulfillment(index, type) {
-    if (type === "home" && !serviceablePincodes.includes(bookingPatient.pincode)) {
-        alert("Home collection is not available in " + bookingPatient.pincode + ". Please edit your pincode or select Center Visit.");
-        return;
+function changeFulfill(index, type) {
+    if(type === 'home' && !serviceablePincodes.includes(bookingData.pincode)) {
+        return alert("Area not serviceable for Home Collection.");
     }
     cart[index].fulfillment = type;
-    renderCartItems();
+    renderCart(); validateCheckout();
 }
 
-function checkItemToggles() {
-    selectedTimeSlot = null;
-    generateTimeSlots(); // clear slots visually
-    checkProceedReady();
-}
+function fetchLabs() {
+    document.getElementById('labSection').style.display = 'block';
+    document.getElementById('labsContainer').innerHTML = "<p style='font-size:13px; color:var(--text-muted);'>Finding partner labs...</p>";
+    
+    let requiredTypes = [...new Set(cart.map(i => i.service_type))];
 
-function calculateTotal() {
-    let total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    document.getElementById("cartTotalAmt").innerText = total;
-}
-
-// 🌟 FETCH LABS WITH TYPES 🌟
-function fetchLabs(pincode) {
-    document.getElementById("labSelectionSection").style.display = "block";
-    document.getElementById("loadingLabs").style.display = "block";
-    document.getElementById("labsContainer").innerHTML = "";
-
-    // GATHER ALL UNIQUE REQUIRED TYPES FROM CART
-    let requiredTypes = [...new Set(cart.map(item => (item.service_type || "pathology").toLowerCase().trim()))];
-
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "getMatchedLabs", pincode: pincode, required_types: requiredTypes }) 
-    })
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getMatchedLabs", pincode: bookingData.pincode, required_types: requiredTypes })})
     .then(res => res.json())
-    .then(response => {
-        document.getElementById("loadingLabs").style.display = "none";
-        if (response.status === "success" && response.data.labs.length > 0) {
-            matchedLabsList = response.data.labs;
-            selectedLabId = null; // reset selection
+    .then(res => {
+        if(res.status === "success" && res.data.labs.length > 0) {
+            matchedLabs = res.data.labs;
+            selectedLabId = null;
             renderLabs();
         } else {
-            document.getElementById("labsContainer").innerHTML = "<p style='color:var(--danger); font-size:13px; text-align:center;'>No partner labs found that provide all selected services in your area.</p>";
+            document.getElementById('labsContainer').innerHTML = "<p style='color:var(--danger); font-size:13px;'>No labs found offering all selected services in your area.</p>";
         }
-    }).catch(err => { document.getElementById("loadingLabs").innerHTML = "Error fetching labs."; });
-}
-
-// 🌟 FIX: HIDE OTHER LABS WHEN SELECTED 🌟
-function renderLabs() {
-    const container = document.getElementById("labsContainer");
-    let html = "";
-    
-    if (selectedLabId) {
-        // Show ONLY the selected lab with a "Change" button
-        let lab = matchedLabsList.find(l => l.lab_id === selectedLabId);
-        if(!lab) return;
-        let imgSrc = lab.lab_image || "https://via.placeholder.com/50?text=LAB";
-        html += `
-            <div class="lab-card selected" style="cursor:default; display:flex; align-items:center;">
-                <img src="${imgSrc}" class="lab-img" onerror="this.src='https://via.placeholder.com/50?text=LAB'">
-                <div class="lab-info" style="flex-grow:1;">
-                    <h4>${lab.lab_name}</h4>
-                    <p>${lab.lab_address}, ${lab.lab_city}</p>
-                </div>
-                <button onclick="changeLab()" style="background:#fee2e2; color:var(--danger); border:1px solid #fecaca; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px;">Change</button>
-            </div>
-        `;
-    } else {
-        // Show all matching labs
-        matchedLabsList.forEach(lab => {
-            let imgSrc = lab.lab_image || "https://via.placeholder.com/50?text=LAB";
-            html += `
-                <div class="lab-card" onclick="selectLab('${lab.lab_id}', '${lab.open_time}', '${lab.close_time}')">
-                    <img src="${imgSrc}" class="lab-img" onerror="this.src='https://via.placeholder.com/50?text=LAB'">
-                    <div class="lab-info">
-                        <h4>${lab.lab_name}</h4>
-                        <p>${lab.lab_address}, ${lab.lab_city}</p>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    container.innerHTML = html;
-}
-
-function selectLab(labId, openTime, closeTime) {
-    selectedLabId = labId;
-    renderLabs(); 
-    
-    document.getElementById("dateTimeSection").style.display = "block";
-    document.getElementById("timeSlotContainer").setAttribute("data-open", openTime);
-    document.getElementById("timeSlotContainer").setAttribute("data-close", closeTime);
-    generateTimeSlots();
-    checkProceedReady();
-}
-
-function changeLab() {
-    selectedLabId = null;
-    selectedTimeSlot = null;
-    document.getElementById("dateTimeSection").style.display = "none";
-    renderLabs();
-    checkProceedReady();
-}
-
-// 🌟 TIME SLOTS 🌟
-function generateTimeSlots() {
-    const dateStr = document.getElementById("bookingDate").value;
-    selectedTimeSlot = null; 
-    checkProceedReady();
-
-    if(!dateStr) return;
-
-    const container = document.getElementById("timeSlotContainer");
-    const slots = ["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "02:00 PM", "04:00 PM"];
-    
-    let html = "";
-    slots.forEach(slot => {
-        html += `<button class="slot-btn" onclick="selectTimeSlot(this, '${slot}')">${slot}</button>`;
     });
-    container.innerHTML = html;
 }
 
-function selectTimeSlot(btnElement, slotTime) {
-    document.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
-    btnElement.classList.add('selected');
-    selectedTimeSlot = slotTime;
-    checkProceedReady();
+function renderLabs() {
+    let html = matchedLabs.map(lab => `
+        <div class="lab-card ${selectedLabId === lab.lab_id ? 'selected' : ''}" onclick="selectLab('${lab.lab_id}')">
+            <strong style="font-size:14px;">${lab.lab_name}</strong>
+            <span style="font-size:12px; color:var(--text-muted);">${lab.lab_address}</span>
+        </div>
+    `).join('');
+    document.getElementById('labsContainer').innerHTML = html;
 }
 
-// 🌟 FINAL CHECKOUT 🌟
-function checkProceedReady() {
-    const btn = document.getElementById("mainProceedBtn");
-    const date = document.getElementById("bookingDate").value;
+function selectLab(id) {
+    selectedLabId = id;
+    renderLabs();
+    document.getElementById('dateTimeSection').style.display = 'block';
     
-    if (selectedLabId && date && selectedTimeSlot) {
+    // Set min date to today
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById('bookingDate').setAttribute('min', today);
+    validateCheckout();
+}
+
+function generateSlots() {
+    if(!document.getElementById('bookingDate').value) return;
+    const slots = ["09:00 AM", "10:00 AM", "11:30 AM", "01:00 PM", "03:00 PM", "05:00 PM"];
+    let html = slots.map(s => `<button class="slot-btn" onclick="selectTime(this, '${s}')">${s}</button>`).join('');
+    document.getElementById('slotContainer').innerHTML = html;
+    selectedTime = null;
+    validateCheckout();
+}
+
+function selectTime(btn, time) {
+    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTime = time;
+    validateCheckout();
+}
+
+// STEP 3 LOGIC
+function validateCheckout() {
+    const btn = document.getElementById('confirmBtn');
+    const date = document.getElementById('bookingDate').value;
+    
+    if(selectedLabId && date && selectedTime) {
         btn.disabled = false;
-        btn.style.background = "var(--success)";
+        document.getElementById('step3-nav').classList.add('active');
     } else {
         btn.disabled = true;
-        btn.style.background = "#cbd5e1";
+        document.getElementById('step3-nav').classList.remove('active');
     }
 }
 
 function finalizeBooking() {
-    const date = document.getElementById("bookingDate").value;
-    const finalAmount = document.getElementById("cartTotalAmt").innerText;
+    const btn = document.getElementById('confirmBtn');
+    btn.innerText = "Processing..."; btn.disabled = true;
 
-    alert(`🎉 Booking Confirmed!\n\nPatient: ${bookingPatient.name}\nLab ID: ${selectedLabId}\nSlot: ${date} at ${selectedTimeSlot}\nAmount: ₹${finalAmount}`);
+    const payload = {
+        action: "submitBookingOrder",
+        user_id: localStorage.getItem("bhavya_user_id"),
+        patient_name: bookingData.name,
+        pincode: bookingData.pincode,
+        address: bookingData.address,
+        cart_items: cart,
+        total_amount: document.getElementById('totalAmt').innerText,
+        lab_id: selectedLabId,
+        slot_date: document.getElementById('bookingDate').value,
+        slot_time: selectedTime
+    };
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === "success") {
+            localStorage.removeItem('bhavyaCart');
+            alert(`🎉 Booking Successful!\nOrder ID: ${res.data.order_id}`);
+            window.location.href = "../index.html"; // Redirect to Home/Orders
+        } else {
+            alert("Error: " + res.message);
+            btn.innerText = "Confirm Booking"; btn.disabled = false;
+        }
+    }).catch(e => { alert("Network Error"); btn.innerText = "Confirm Booking"; btn.disabled = false; });
 }

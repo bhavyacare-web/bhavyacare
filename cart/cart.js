@@ -2,7 +2,7 @@
 // CART & CHECKOUT LOGIC (BHAVYACARE)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
+const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
@@ -10,7 +10,7 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
-let confirmationResult; 
+let cartConfirmationResult; 
 
 // ==========================================
 // 1. INITIALIZATION
@@ -49,7 +49,7 @@ function showEmptyCart() {
 // 2. PATIENT PROFILE LOGIC
 // ==========================================
 function fetchProfile(userId) {
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
+    fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
     .then(res => {
         document.getElementById('loadingOverlay').style.display = 'none';
@@ -126,7 +126,7 @@ function fetchLabs() {
     if (spinner) spinner.style.display = 'block';
     document.getElementById('cartItemsContainer').innerHTML = "";
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getAllActiveLabs" }) })
+    fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getAllActiveLabs" }) })
     .then(res => res.json())
     .then(res => {
         if (spinner) spinner.style.display = 'none';
@@ -175,7 +175,7 @@ function autoAssignLabsByCategory() {
             item.selected_lab_id = null; 
         }
     });
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // Update local storage
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
 }
 
 function renderCartWithLabs() {
@@ -223,7 +223,6 @@ function renderCartWithLabs() {
                 return `<option value="${String(lab.lab_id).trim()}" ${sel}>${lab.lab_name} ${badges}</option>`;
             }).join('');
 
-            // 🌟 FIX: Removed type from HTML string to prevent spacing bugs
             labSelectHtml = `
                 <div class="item-lab-selector">
                     <label style="font-size:11px; color:var(--text-muted); font-weight:600;">Assign to Lab:</label>
@@ -278,12 +277,10 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-// 🌟 FIX: Type is directly extracted from array, not from HTML
 function assignLabToItem(index, labId) {
     let cleanLabId = String(labId).trim();
     let targetType = (cart[index].service_type || "pathology").toLowerCase().trim();
     
-    // Assign to all items of the same type
     cart.forEach(item => {
         let t = (item.service_type || "pathology").toLowerCase().trim();
         if (t === targetType) {
@@ -291,7 +288,7 @@ function assignLabToItem(index, labId) {
         }
     });
 
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // Save to memory
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); 
     renderCartWithLabs(); 
     validateCheckout();
 }
@@ -341,92 +338,94 @@ function validateCheckout() {
 }
 
 // ==========================================
-// 5. FINAL BOOKING & FIREBASE OTP
+// 5. FINAL BOOKING & SYNC LOGIN LOGIC
 // ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
-        document.getElementById("otpModal").style.display = "flex";
+        document.getElementById("cartOtpModal").style.display = "flex";
         
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
-            window.recaptchaVerifier.render();
+        if (!window.cartRecaptchaVerifier) {
+            window.cartRecaptchaVerifier = new firebase.auth.RecaptchaVerifier('cart-recaptcha-container', { 'size': 'normal' });
+            window.cartRecaptchaVerifier.render();
         }
 
         let phoneNumber = "+91" + bookingData.mobile;
         
-        firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+        firebase.auth().signInWithPhoneNumber(phoneNumber, window.cartRecaptchaVerifier)
             .then((result) => {
-                confirmationResult = result;
-                document.getElementById("recaptcha-container").style.display = "none";
-                document.getElementById("otpInputSection").style.display = "block";
+                cartConfirmationResult = result;
+                document.getElementById("cart-recaptcha-container").style.display = "none";
+                document.getElementById("cartOtpInputSection").style.display = "block";
                 alert("OTP has been sent to your mobile number.");
             }).catch((error) => {
                 console.error(error);
                 alert("Error sending OTP. Please try again.");
-                document.getElementById("otpModal").style.display = "none";
+                document.getElementById("cartOtpModal").style.display = "none";
             });
     } else {
         processOrderSubmission(userId);
     }
 }
 
-function verifyFirebaseOTP() {
-    const otp = document.getElementById('otpCode').value;
+function verifyCartOTP() {
+    const otp = document.getElementById('cartOtpCode').value;
     if(otp.length !== 6) return alert("Please enter valid 6-digit OTP");
 
-    const btn = document.getElementById('verifyOtpBtn');
+    const btn = document.getElementById('cartVerifyOtpBtn');
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    confirmationResult.confirm(otp).then((result) => {
+    cartConfirmationResult.confirm(otp).then((result) => {
         const user = result.user;
-        proceedWithRegistration(user.uid); 
+        proceedWithRegistration(user); // 🌟 Naya login logic yahan call hoga
     }).catch((error) => {
         alert("Invalid OTP! Please try again.");
-        resetOtpBtn();
+        resetCartOtpBtn();
     });
 }
 
-function proceedWithRegistration(firebaseUid) {
-    const newUserPayload = {
-        action: "registerNewPatient",
-        firebase_uid: firebaseUid,
-        name: bookingData.name,
-        mobile: bookingData.mobile,
-        pincode: bookingData.pincode,
-        address: bookingData.address
+function proceedWithRegistration(user) {
+    const loginPayload = {
+        action: "login",
+        uid: user.uid,
+        mobile: user.phoneNumber, // Ye hamesha +91 ke sath aata hai
+        role: "patient",
+        name: bookingData.name
     };
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(newUserPayload) })
-    .then(res => res.text())
-    .then(text => {
-        try {
-            let res = JSON.parse(text);
-            if(res.status === "success") {
-                const newUserId = res.user_id || (res.data ? res.data.user_id : null); 
-                localStorage.setItem("bhavya_user_id", newUserId); 
-                document.getElementById('otpModal').style.display = 'none';
-                processOrderSubmission(newUserId);
-            } else {
-                alert("Registration failed: " + res.message);
-                resetOtpBtn();
-            }
-        } catch(e) {
-            console.error("Parse Error:", e, text);
-            alert("Server returned an error. Check console.");
-            resetOtpBtn();
+    fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify(loginPayload) })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === "success") {
+            const finalUserId = res.user_id || (res.data ? res.data.user_id : null); 
+            const finalRole = res.role || "patient";
+
+            // 🌟 NAYA: app.js ki tarah saari details browser me save kar do
+            localStorage.setItem("bhavya_uid", user.uid);
+            localStorage.setItem("bhavya_mobile", user.phoneNumber);
+            localStorage.setItem("bhavya_role", finalRole);
+            localStorage.setItem("bhavya_user_id", finalUserId);
+            localStorage.setItem("bhavya_name", bookingData.name);
+
+            document.getElementById('cartOtpModal').style.display = 'none';
+            
+            // Login hone ke baad direct order process karo
+            processOrderSubmission(finalUserId);
+        } else {
+            alert("Login/Registration failed: " + res.message);
+            resetCartOtpBtn();
         }
     }).catch(e => { 
         alert("Network Error: " + e.message); 
-        resetOtpBtn(); 
+        resetCartOtpBtn(); 
     });
 }
 
-function resetOtpBtn() {
-    const btn = document.getElementById('verifyOtpBtn');
+function resetCartOtpBtn() {
+    const btn = document.getElementById('cartVerifyOtpBtn');
     btn.innerText = "Verify & Confirm Order"; 
     btn.disabled = false;
 }
@@ -448,7 +447,7 @@ function processOrderSubmission(userId) {
         slot_time: selectedTime
     };
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+    fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {

@@ -4,19 +4,15 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
-// Active categories eligible for home collection
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
-// State Management
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let matchedLabs = [];
 let selectedLabId = null;
 let selectedTime = null;
 
-// Initialize Page
 window.onload = () => {
-    // Check if cart is empty
     if(cart.length === 0) {
         document.querySelector('.container').innerHTML = `
             <div style="text-align:center; padding: 50px 20px;">
@@ -31,11 +27,9 @@ window.onload = () => {
 
     const userId = localStorage.getItem("bhavya_user_id");
     
-    // If Logged In: Fetch profile and lock mobile number
     if (userId) {
         fetchProfile(userId);
     } else {
-        // If Guest/New User: Allow free text entry
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 };
@@ -53,7 +47,7 @@ function fetchProfile(userId) {
             bookingData.mobile = data.mobile;
             
             document.getElementById('uMobile').value = data.mobile;
-            document.getElementById('uMobile').setAttribute("readonly", true); // Lock mobile
+            document.getElementById('uMobile').setAttribute("readonly", true); 
             document.getElementById('uPincode').value = data.pincode;
             document.getElementById('uAddress').value = data.address;
 
@@ -87,7 +81,6 @@ function savePatientInfo() {
     bookingData.pincode = pin;
     bookingData.address = addr;
 
-    // Set default fulfillment based on service category
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase();
         if(!item.fulfillment) {
@@ -99,11 +92,9 @@ function savePatientInfo() {
 }
 
 function lockStep1() {
-    // Update Stepper
     document.getElementById('step1-nav').classList.add('completed');
     document.getElementById('step2-nav').classList.add('active');
 
-    // Update Summary UI
     document.getElementById('sumName').innerText = bookingData.name;
     document.getElementById('sumMobile').innerText = "+91 " + bookingData.mobile;
     document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
@@ -111,21 +102,19 @@ function lockStep1() {
     document.getElementById('infoForm').style.display = 'none';
     document.getElementById('infoSummary').style.display = 'block';
 
-    // Unlock Step 2
     const s2 = document.getElementById('step2-card');
     s2.style.display = 'block'; 
     s2.style.opacity = '1'; 
     s2.style.pointerEvents = 'auto';
 
     renderCart();
-    fetchLabs(); // Start Lab Matchmaking based on Pincode
+    fetchLabs(); 
 }
 
 function editPatientInfo() {
     document.getElementById('infoForm').style.display = 'block';
     document.getElementById('infoSummary').style.display = 'none';
     
-    // Lock Step 2 visually
     const s2 = document.getElementById('step2-card');
     s2.style.opacity = '0.5'; 
     s2.style.pointerEvents = 'none';
@@ -180,7 +169,6 @@ function fetchLabs() {
     document.getElementById('labsContainer').innerHTML = "<div style='text-align:center; padding:20px;'><i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:24px;'></i><p style='font-size:13px; color:var(--text-muted); margin-top:10px;'>Finding best labs for you...</p></div>";
     document.getElementById('fallbackMessage').style.display = 'none';
 
-    // Get unique required test types from cart
     let requiredTypes = [...new Set(cart.map(i => i.service_type))];
 
     fetch(GAS_URL, { 
@@ -193,11 +181,10 @@ function fetchLabs() {
             matchedLabs = res.data.labs;
             selectedLabId = null;
             
-            // Check if backend returned a Fallback Message (Pincode out of reach for home)
-            if(res.data.message) {
+            // 🌟 FALLBACK UI LOGIC (Pincode Not Reachable for Home)
+            if(res.data.isFallback || res.data.message) {
                 document.getElementById('fallbackText').innerText = res.data.message;
                 document.getElementById('fallbackMessage').style.display = 'flex';
-                // Force switch all items to center visit
                 cart.forEach(i => { if(i.fulfillment === 'home') i.fulfillment = 'center'; });
                 renderCart();
             }
@@ -219,13 +206,12 @@ function renderLabs() {
         
         let imgSrc = lab.lab_image || "https://via.placeholder.com/60?text=LAB";
 
-        // Validate Home Support dynamically
         let isHomeSelected = cart.some(i => i.fulfillment === "home");
         let labSupportsHome = lab.available_pincodes.includes(bookingData.pincode.toString());
         
         let warningUI = "";
         if(isHomeSelected && !labSupportsHome) {
-            warningUI = `<div style="font-size:11px; color:var(--danger); font-weight:700; margin-top:6px; background: #fee2e2; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-exclamation-triangle"></i> Home Collection unavailable. Will switch to Center Visit.</div>`;
+            warningUI = `<div style="font-size:11px; color:var(--danger); font-weight:700; margin-top:6px; background: #fee2e2; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-exclamation-triangle"></i> Home Collection unavailable here.</div>`;
         }
 
         return `
@@ -244,7 +230,6 @@ function renderLabs() {
 
 function changeFulfill(index, type) {
     if(type === 'home') {
-        // If a lab is already selected, verify if it supports home collection at this pincode
         if(selectedLabId) {
             let lab = matchedLabs.find(l => l.lab_id === selectedLabId);
             if(lab && !lab.available_pincodes.includes(bookingData.pincode.toString())) {
@@ -260,7 +245,6 @@ function changeFulfill(index, type) {
 function selectLab(id, labSupportsHome) {
     selectedLabId = id;
     
-    // Auto-switch to Center if Home is selected but Lab doesn't support it
     let isHomeSelected = cart.some(i => i.fulfillment === "home");
     if(isHomeSelected && !labSupportsHome) {
         cart.forEach(i => { if(i.fulfillment === 'home') i.fulfillment = 'center'; });
@@ -270,7 +254,6 @@ function selectLab(id, labSupportsHome) {
 
     renderLabs();
     
-    // Show Time Slots
     document.getElementById('dateTimeSection').style.display = 'block';
     let today = new Date().toISOString().split('T')[0];
     document.getElementById('bookingDate').setAttribute('min', today);
@@ -284,7 +267,6 @@ function generateSlots() {
     const dateVal = document.getElementById('bookingDate').value;
     if(!dateVal) return;
 
-    // Hardcoded slots for UI, can be dynamic based on lab open_time/close_time
     const slots = ["08:00 AM", "09:30 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
     
     let html = slots.map(s => `<button class="slot-btn" onclick="selectTime(this, '${s}')">${s}</button>`).join('');
@@ -319,18 +301,11 @@ function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
     if (!userId) {
-        // GUEST USER: Trigger Firebase OTP Flow
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
         
-        // ---------------------------------------------------------
-        // TODO: ADD YOUR FIREBASE SEND OTP LOGIC HERE
-        // Example: 
-        // firebase.auth().signInWithPhoneNumber("+91" + bookingData.mobile, appVerifier)
-        // .then((confirmationResult) => { window.confirmationResult = confirmationResult; })
-        // ---------------------------------------------------------
+        // Firebase Send OTP Logic Here...
     } else {
-        // EXISTING USER: Directly Submit Order
         processOrderSubmission(userId);
     }
 }
@@ -343,21 +318,12 @@ function verifyFirebaseOTP() {
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    // ---------------------------------------------------------
-    // TODO: ADD YOUR FIREBASE VERIFY OTP LOGIC HERE
-    // Example:
-    // window.confirmationResult.confirm(otp).then((result) => {
-    //     let firebaseUid = result.user.uid;
-    //     proceedWithRegistration(firebaseUid);
-    // })
-    // ---------------------------------------------------------
-
-    // ⚠️ For now, simulating successful OTP verification
+    // Firebase Verify OTP Logic Here...
+    // Currently simulating a success response:
     proceedWithRegistration("FB-UID-" + Math.floor(Math.random()*1000));
 }
 
 function proceedWithRegistration(firebaseUid) {
-    // 1. Register User in Google Sheets
     const newUserPayload = {
         action: "registerNewPatient",
         firebase_uid: firebaseUid,
@@ -372,11 +338,9 @@ function proceedWithRegistration(firebaseUid) {
     .then(res => {
         if(res.status === "success") {
             const newUserId = res.data.user_id;
-            localStorage.setItem("bhavya_user_id", newUserId); // Keep logged in
+            localStorage.setItem("bhavya_user_id", newUserId); 
             
             document.getElementById('otpModal').style.display = 'none';
-            
-            // 2. Submit Final Order for this new user
             processOrderSubmission(newUserId);
         } else {
             alert("Registration failed: " + res.message);
@@ -416,10 +380,9 @@ function processOrderSubmission(userId) {
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {
-            // Success! Clear Cart and Redirect
             localStorage.removeItem('bhavyaCart');
             alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}`);
-            window.location.href = "../index.html"; // Adjust path to Home/Orders page
+            window.location.href = "../index.html"; 
         } else {
             alert("Booking Error: " + res.message);
             btn.innerText = "Confirm Booking"; 

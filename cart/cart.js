@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (BHAVYACARE) - SPLIT CART
+// CART & CHECKOUT LOGIC (BHAVYACARE) - SMART SPLIT CART
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -15,20 +15,11 @@ let selectedTime = null;
 // INITIALIZE PAGE
 // ==========================================
 window.onload = () => {
-    // 1. Check if cart is empty
     if(cart.length === 0) {
-        document.querySelector('.container').innerHTML = `
-            <div style="text-align:center; padding: 50px 20px;">
-                <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
-                <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
-                <a href="../booking/booking.html" style="color: var(--primary); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">Browse Services</a>
-            </div>`;
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.querySelector('.bottom-bar').style.display = 'none';
+        showEmptyCart();
         return;
     }
 
-    // 2. Initial Total Calculation
     let initialTotal = 0;
     cart.forEach(item => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -38,14 +29,23 @@ window.onload = () => {
     document.getElementById('totalAmt').innerText = initialTotal;
 
     const userId = localStorage.getItem("bhavya_user_id");
-    
-    // 3. Fetch profile if logged in
     if (userId) {
         fetchProfile(userId);
     } else {
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 };
+
+function showEmptyCart() {
+    document.querySelector('.container').innerHTML = `
+        <div style="text-align:center; padding: 50px 20px;">
+            <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
+            <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
+            <a href="../booking/booking.html" style="color: var(--primary); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">Browse Services</a>
+        </div>`;
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.querySelector('.bottom-bar').style.display = 'none';
+}
 
 // ==========================================
 // STEP 1: PATIENT INFO LOGIC
@@ -75,7 +75,6 @@ function fetchProfile(userId) {
         }
     }).catch(e => {
         document.getElementById('loadingOverlay').style.display = 'none';
-        console.error("Profile Fetch Error", e);
     });
 }
 
@@ -94,6 +93,7 @@ function savePatientInfo() {
     bookingData.pincode = pin;
     bookingData.address = addr;
 
+    // Set default fulfillment
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase();
         if(!item.fulfillment) {
@@ -135,12 +135,11 @@ function editPatientInfo() {
 }
 
 // ==========================================
-// STEP 2: SPLIT CART & SMART LAB MATCHMAKING
+// STEP 2: SMART LAB MATCHMAKING (GROUPED BY TYPE)
 // ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
-    
     document.getElementById('cartItemsContainer').innerHTML = "";
 
     fetch(GAS_URL, { 
@@ -152,14 +151,50 @@ function fetchLabs() {
         if (spinner) spinner.style.display = 'none';
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
+            autoAssignLabsByCategory(); // Nai lab aate hi smart auto-assign karenge
             renderCartWithLabs(); 
         } else {
-            alert("Error fetching labs. Please try again.");
+            alert("Error fetching labs.");
         }
     }).catch(e => {
         if (spinner) spinner.style.display = 'none';
-        console.error(e);
-        alert("Network Error while fetching diagnostic centers.");
+        alert("Network Error.");
+    });
+}
+
+// 🌟 NAYA LOGIC: Ek category ke test me same lab default set karne ke liye
+function autoAssignLabsByCategory() {
+    let assignedLabs = {}; // Map to track category -> Lab ID
+
+    cart.forEach(item => {
+        let type = (item.service_type || "pathology").toLowerCase();
+        
+        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+        if (item.fulfillment === "home") {
+            eligibleLabs = eligibleLabs.filter(lab => {
+                let pStr = bookingData.pincode.toString();
+                return lab.available_pincodes.includes(pStr) || lab.pincode === pStr;
+            });
+        }
+
+        if (eligibleLabs.length > 0) {
+            // Check if this category already has an assigned lab in our map
+            if (assignedLabs[type]) {
+                // Check if the previously assigned lab is still valid for THIS specific item
+                if (eligibleLabs.some(l => l.lab_id === assignedLabs[type])) {
+                    item.selected_lab_id = assignedLabs[type];
+                } else {
+                    item.selected_lab_id = eligibleLabs[0].lab_id; // Fallback
+                    assignedLabs[type] = item.selected_lab_id;
+                }
+            } else {
+                // First time seeing this category, assign the first eligible lab
+                item.selected_lab_id = eligibleLabs[0].lab_id;
+                assignedLabs[type] = item.selected_lab_id;
+            }
+        } else {
+            item.selected_lab_id = null; // No labs found
+        }
     });
 }
 
@@ -168,6 +203,7 @@ function renderCartWithLabs() {
     let total = 0;
     let allItemsConfigured = true;
     
+    // UI clean karne ke liye item index pass karenge
     cart.forEach((item, index) => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
         let itemQty = Number(item.qty || 1);
@@ -175,10 +211,8 @@ function renderCartWithLabs() {
         total += (itemPrice * itemQty);
         let type = (item.service_type || "pathology").toLowerCase();
         
-        // 1. Find labs that do THIS specific test
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-
-        // 2. Filter further if user wants Home Collection
+        let isHomeEligible = homeServiceCategories.includes(type);
         let isHome = item.fulfillment === "home";
         let finalLabs = eligibleLabs;
 
@@ -189,9 +223,9 @@ function renderCartWithLabs() {
             });
         }
 
-        // --- Build Item UI ---
+        // 🌟 Center Visit Only UI UPDATE 🌟
         let toggleHtml = "";
-        if(homeServiceCategories.includes(type)) {
+        if(isHomeEligible) {
             let hAct = isHome ? "active" : "";
             let cAct = !isHome ? "active" : "";
             toggleHtml = `
@@ -200,19 +234,14 @@ function renderCartWithLabs() {
                     <button class="toggle-btn ${cAct}" onclick="changeFulfill(${index}, 'center')"><i class="fas fa-hospital"></i> Center</button>
                 </div>`;
         } else {
+            // FORCE Center visit if category is not in homeServiceCategories
             item.fulfillment = "center";
-            toggleHtml = `<div style="font-size:11px; color:var(--danger); font-weight:600; margin-top:8px;"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
+            toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
-        // Lab Dropdown
         let labSelectHtml = "";
         
         if (finalLabs.length > 0) {
-            // Auto-select first lab if none selected or if previously selected lab is no longer valid
-            if(!item.selected_lab_id || !finalLabs.find(l => l.lab_id === item.selected_lab_id)) {
-                item.selected_lab_id = finalLabs[0].lab_id; 
-            }
-
             let options = finalLabs.map(lab => {
                 let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
                 let sel = lab.lab_id === item.selected_lab_id ? "selected" : "";
@@ -222,12 +251,11 @@ function renderCartWithLabs() {
             labSelectHtml = `
                 <div class="item-lab-selector">
                     <label style="font-size:11px; color:var(--text-muted); font-weight:600;">Assign to Lab:</label>
-                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value)">
+                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value, '${type}')">
                         ${options}
                     </select>
                 </div>`;
         } else {
-            // ERROR: No labs found for this config
             item.selected_lab_id = null;
             allItemsConfigured = false;
             
@@ -241,20 +269,22 @@ function renderCartWithLabs() {
                 labSelectHtml = `
                     <div class="item-error-box">
                         <span><i class="fas fa-times-circle"></i> No partner lab found for this service in your area.</span>
-                        <button class="btn-small-outline" onclick="removeCartItem(${index})"><i class="fas fa-trash"></i> Remove Item</button>
                     </div>`;
             }
         }
 
-        // Combine HTML
+        // 🌟 CART ITEM UI WITH REMOVE BUTTON 🌟
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
-                <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-                    <div>
+                <div class="cart-item-header">
+                    <div class="item-title-box">
                         <strong style="font-size:14px; color: var(--text-main);">${item.service_name}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Qty: ${itemQty}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Type: <span style="text-transform:capitalize;">${type}</span> | Qty: ${itemQty}</div>
                     </div>
-                    <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * itemQty}</strong>
+                    <div class="price-box" style="display:flex; align-items:center;">
+                        <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * itemQty}</strong>
+                        <button class="btn-remove-item" onclick="removeCartItem(${index})" title="Remove Item"><i class="fas fa-times"></i></button>
+                    </div>
                 </div>
                 ${toggleHtml}
                 ${labSelectHtml}
@@ -266,8 +296,10 @@ function renderCartWithLabs() {
 
     if (cart.length > 0 && allItemsConfigured) {
         document.getElementById('dateTimeSection').style.display = 'block';
-        let today = new Date().toISOString().split('T')[0];
-        document.getElementById('bookingDate').setAttribute('min', today);
+        if(!document.getElementById('bookingDate').value) {
+            let today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').setAttribute('min', today);
+        }
     } else {
         document.getElementById('dateTimeSection').style.display = 'none';
     }
@@ -277,19 +309,36 @@ function renderCartWithLabs() {
 
 function changeFulfill(index, type) {
     cart[index].fulfillment = type;
+    autoAssignLabsByCategory(); // Re-evaluate labs to keep grouping consistent
     renderCartWithLabs(); 
 }
 
-function assignLabToItem(index, labId) {
-    cart[index].selected_lab_id = labId;
+// 🌟 NAYA LOGIC: Jab user dropdown se lab change kare, toh baaki same category ke tests ka bhi lab change ho jaye
+function assignLabToItem(index, labId, categoryType) {
+    cart.forEach(item => {
+        let t = (item.service_type || "pathology").toLowerCase();
+        if (t === categoryType) {
+            // Optional: You could check if this lab is valid for the other item's fulfillment type first
+            item.selected_lab_id = labId;
+        }
+    });
+    renderCartWithLabs(); // UI refresh karne ke liye taaki baaki dropdowns bhi update ho jayein
     validateCheckout();
 }
 
+// 🌟 NAYA LOGIC: Remove Item
 function removeCartItem(index) {
-    cart.splice(index, 1);
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    if(cart.length === 0) location.reload(); 
-    else renderCartWithLabs();
+    if(confirm("Are you sure you want to remove this item?")) {
+        cart.splice(index, 1);
+        localStorage.setItem('bhavyaCart', JSON.stringify(cart));
+        
+        if(cart.length === 0) {
+            showEmptyCart();
+        } else {
+            autoAssignLabsByCategory();
+            renderCartWithLabs();
+        }
+    }
 }
 
 // ==========================================
@@ -317,10 +366,11 @@ function selectTime(btn, time) {
 
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
-    
+    if (cart.length === 0) { btn.disabled = true; return; }
+
     let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
     
-    if(cart.length > 0 && allAssigned && document.getElementById('bookingDate').value && selectedTime) {
+    if(allAssigned && document.getElementById('bookingDate').value && selectedTime) {
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
     } else {
@@ -338,8 +388,6 @@ function finalizeBooking() {
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
-        
-        // ADD YOUR FIREBASE SEND OTP LOGIC HERE
     } else {
         processOrderSubmission(userId);
     }
@@ -353,8 +401,6 @@ function verifyFirebaseOTP() {
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    // ADD YOUR FIREBASE VERIFY OTP LOGIC HERE
-    // Simulating success for now:
     proceedWithRegistration("FB-UID-" + Math.floor(Math.random()*1000));
 }
 
@@ -374,7 +420,6 @@ function proceedWithRegistration(firebaseUid) {
         if(res.status === "success") {
             const newUserId = res.data.user_id;
             localStorage.setItem("bhavya_user_id", newUserId); 
-            
             document.getElementById('otpModal').style.display = 'none';
             processOrderSubmission(newUserId);
         } else {
@@ -382,7 +427,7 @@ function proceedWithRegistration(firebaseUid) {
             resetOtpBtn();
         }
     }).catch(e => { 
-        alert("Error saving patient details. Please check network."); 
+        alert("Error saving patient details."); 
         resetOtpBtn(); 
     });
 }
@@ -404,7 +449,7 @@ function processOrderSubmission(userId) {
         patient_name: bookingData.name,
         pincode: bookingData.pincode,
         address: bookingData.address,
-        cart_items: cart, // Ab cart item ke andar 'selected_lab_id' field jayega
+        cart_items: cart, 
         total_amount: document.getElementById('totalAmt').innerText,
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime
@@ -423,7 +468,7 @@ function processOrderSubmission(userId) {
             btn.disabled = false;
         }
     }).catch(e => { 
-        alert("Network Error during checkout. Please try again."); 
+        alert("Network Error during checkout."); 
         btn.innerText = "Confirm Booking"; 
         btn.disabled = false; 
     });

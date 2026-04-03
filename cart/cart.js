@@ -10,7 +10,7 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
-let confirmationResult; // Firebase OTP result
+let confirmationResult; 
 
 // ==========================================
 // 1. INITIALIZATION
@@ -21,7 +21,6 @@ window.onload = () => {
         return;
     }
 
-    // Display initial total amount immediately
     let initialTotal = 0;
     cart.forEach(item => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -142,7 +141,7 @@ function fetchLabs() {
     });
 }
 
-// Ensure items of the same category (e.g., all "pathology") auto-select the same lab
+// 🌟 FIX: IDs are now compared perfectly as Strings 🌟
 function autoAssignLabsByCategory() {
     let assignedLabs = {}; 
     cart.forEach(item => {
@@ -155,10 +154,10 @@ function autoAssignLabsByCategory() {
 
         if (eligibleLabs.length > 0) {
             if (assignedLabs[type]) {
-                if (eligibleLabs.some(l => l.lab_id === assignedLabs[type])) item.selected_lab_id = assignedLabs[type];
-                else { item.selected_lab_id = eligibleLabs[0].lab_id; assignedLabs[type] = item.selected_lab_id; }
+                if (eligibleLabs.some(l => String(l.lab_id) === String(assignedLabs[type]))) item.selected_lab_id = String(assignedLabs[type]);
+                else { item.selected_lab_id = String(eligibleLabs[0].lab_id); assignedLabs[type] = item.selected_lab_id; }
             } else {
-                item.selected_lab_id = eligibleLabs[0].lab_id;
+                item.selected_lab_id = String(eligibleLabs[0].lab_id);
                 assignedLabs[type] = item.selected_lab_id;
             }
         } else item.selected_lab_id = null; 
@@ -185,7 +184,6 @@ function renderCartWithLabs() {
             finalLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
         }
 
-        // Fulfillment Toggles
         let toggleHtml = "";
         if(isHomeEligible) {
             let hAct = isHome ? "active" : "";
@@ -200,12 +198,12 @@ function renderCartWithLabs() {
             toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
-        // Lab Selector
         let labSelectHtml = "";
         if (finalLabs.length > 0) {
             let options = finalLabs.map(lab => {
                 let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
-                let sel = lab.lab_id === item.selected_lab_id ? "selected" : "";
+                // 🌟 FIX: String strict equality 🌟
+                let sel = String(lab.lab_id) === String(item.selected_lab_id) ? "selected" : "";
                 return `<option value="${lab.lab_id}" ${sel}>${lab.lab_name} ${badges}</option>`;
             }).join('');
 
@@ -226,7 +224,6 @@ function renderCartWithLabs() {
             }
         }
 
-        // Item HTML
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
                 <div class="cart-item-header">
@@ -247,7 +244,6 @@ function renderCartWithLabs() {
     document.getElementById('cartItemsContainer').innerHTML = html;
     document.getElementById('totalAmt').innerText = total;
 
-    // Show Date selector only if all items have assigned labs
     if (cart.length > 0 && allItemsConfigured) {
         document.getElementById('dateTimeSection').style.display = 'block';
         if(!document.getElementById('bookingDate').value) {
@@ -265,12 +261,12 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-// Group lab assignment by category
+// 🌟 FIX: Assigning Lab as strict String 🌟
 function assignLabToItem(index, labId, categoryType) {
     cart.forEach(item => {
         let t = (item.service_type || "pathology").toLowerCase().trim();
         if (t === categoryType.trim()) {
-            item.selected_lab_id = labId;
+            item.selected_lab_id = String(labId);
         }
     });
     renderCartWithLabs(); 
@@ -331,7 +327,6 @@ function finalizeBooking() {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
         
-        // Initialize Firebase Recaptcha
         if (!window.recaptchaVerifier) {
             window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
             window.recaptchaVerifier.render();
@@ -339,7 +334,6 @@ function finalizeBooking() {
 
         let phoneNumber = "+91" + bookingData.mobile;
         
-        // Send OTP
         firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
             .then((result) => {
                 confirmationResult = result;
@@ -373,6 +367,7 @@ function verifyFirebaseOTP() {
     });
 }
 
+// 🌟 FIX: Bulletproof Error checking to know EXACTLY what fails 🌟
 function proceedWithRegistration(firebaseUid) {
     const newUserPayload = {
         action: "registerNewPatient",
@@ -384,19 +379,26 @@ function proceedWithRegistration(firebaseUid) {
     };
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(newUserPayload) })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === "success") {
-            const newUserId = res.data.user_id;
-            localStorage.setItem("bhavya_user_id", newUserId); 
-            document.getElementById('otpModal').style.display = 'none';
-            processOrderSubmission(newUserId);
-        } else {
-            alert("Registration failed: " + res.message);
+    .then(res => res.text()) // Changed to text() first to catch invisible backend crashes
+    .then(text => {
+        try {
+            let res = JSON.parse(text);
+            if(res.status === "success") {
+                const newUserId = res.data.user_id;
+                localStorage.setItem("bhavya_user_id", newUserId); 
+                document.getElementById('otpModal').style.display = 'none';
+                processOrderSubmission(newUserId);
+            } else {
+                alert("Registration failed: " + res.message);
+                resetOtpBtn();
+            }
+        } catch(e) {
+            console.error("Backend Error Response:", text);
+            alert("Server returned an error. Please check the deployment version.");
             resetOtpBtn();
         }
     }).catch(e => { 
-        alert("Error saving patient details."); 
+        alert("Network Error: " + e.message); 
         resetOtpBtn(); 
     });
 }

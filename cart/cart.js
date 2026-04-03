@@ -1,6 +1,7 @@
 // ==========================================
 // Configuration
 // ==========================================
+// Aapka live Google Apps Script Web App URL
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 const SERVICEABLE_PINCODES = ["110001", "110002", "132103"]; // Replace with your actual dynamic list if needed
 
@@ -68,6 +69,8 @@ async function initStep1() {
 
 function renderMyInfoForm() {
     infoForm.classList.remove("hidden");
+    
+    // Auto-fill Mobile, Address & Pincode (Editable if patient wants)
     document.getElementById("patient-mobile").value = userDetails.mobile || "";
     document.getElementById("patient-address").value = userDetails.address || "";
     document.getElementById("patient-pincode").value = userDetails.pincode || "";
@@ -75,17 +78,24 @@ function renderMyInfoForm() {
     const nameContainer = document.getElementById("patient-name-container");
     nameContainer.innerHTML = "<label>Patient Name</label>";
 
-    // Smart Auto-Fill Logic (VIP vs Basic)
-    if (userDetails.vip_status === "active") {
-        let selectHtml = `<select id="patient-name">
+    // Smart Auto-Fill Logic (VIP vs Basic) based on backend is_vip flag
+    if (userDetails.is_vip) {
+        // VIP Member: Dropdown limit to registered members
+        let selectHtml = `<select id="patient-name" style="background: #e8f5e9; border: 1px solid #4caf50; width: 100%; padding: 8px; border-radius: 4px;">
             <option value="${userDetails.name}">${userDetails.name} (Self)</option>`;
-        if(userDetails.vip_member_1) selectHtml += `<option value="${userDetails.vip_member_1}">${userDetails.vip_member_1}</option>`;
-        if(userDetails.vip_member_2) selectHtml += `<option value="${userDetails.vip_member_2}">${userDetails.vip_member_2}</option>`;
-        if(userDetails.vip_member_3) selectHtml += `<option value="${userDetails.vip_member_3}">${userDetails.vip_member_3}</option>`;
-        selectHtml += `</select>`;
+        
+        if(userDetails.member_1_name) selectHtml += `<option value="${userDetails.member_1_name}">${userDetails.member_1_name}</option>`;
+        if(userDetails.member_2_name) selectHtml += `<option value="${userDetails.member_2_name}">${userDetails.member_2_name}</option>`;
+        if(userDetails.member_3_name) selectHtml += `<option value="${userDetails.member_3_name}">${userDetails.member_3_name}</option>`;
+        
+        selectHtml += `</select>
+        <small style="color: #2e7d32; display: block; margin-top: 5px;">👑 VIP Account: Select registered family member.</small>`;
         nameContainer.innerHTML += selectHtml;
     } else {
-        nameContainer.innerHTML += `<input type="text" id="patient-name" value="${userDetails.name || ""}" required>`;
+        // Basic Member: Free Text Input
+        nameContainer.innerHTML += `
+        <input type="text" id="patient-name" value="${userDetails.name || ""}" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <small style="color: #666; display: block; margin-top: 5px;">You can change the patient name for this booking.</small>`;
     }
 
     document.getElementById("btn-save-step-1").addEventListener("click", saveStep1);
@@ -97,14 +107,19 @@ function saveStep1() {
     userDetails.pincode = document.getElementById("patient-pincode").value;
 
     if(!userDetails.selectedName || !userDetails.address || !userDetails.pincode) {
-        alert("Please fill all the details.");
+        alert("Please fill all the details in My Info section.");
         return;
     }
 
-    // Lock Step 1 & Open Step 2
-    document.querySelectorAll("#my-info-form input, #my-info-form select, #btn-save-step-1").forEach(el => el.disabled = true);
-    document.getElementById("btn-save-step-1").innerText = "Saved";
+    // Lock Step 1 (My Info)
+    document.querySelectorAll("#my-info-form input, #my-info-form select").forEach(el => el.disabled = true);
     
+    let btn = document.getElementById("btn-save-step-1");
+    btn.innerText = "Info Saved ✅";
+    btn.style.background = "#28a745";
+    btn.disabled = true;
+    
+    // Open Step 2
     step2.classList.remove("hidden");
     renderCartItems();
 }
@@ -119,7 +134,7 @@ function renderCartItems() {
     let requiredTestCategories = new Set(); 
 
     cart.forEach((item, index) => {
-        // Infer test category for backend match based on service name or type
+        // Infer test category for backend match
         let testTypeStr = (item.service_name + " " + (item.service_type || "")).toLowerCase();
         let needsCenterVisitOnly = testTypeStr.includes("mri") || testTypeStr.includes("ct") || testTypeStr.includes("usg");
         
@@ -182,7 +197,7 @@ async function fetchMatchingLabs(requiredServices) {
             labsContainer.innerHTML = "";
             result.data.forEach(lab => {
                 labsContainer.innerHTML += `
-                    <div class="lab-item">
+                    <div class="lab-item" style="border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px;">
                         <label style="display: block; cursor: pointer;">
                             <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')" style="margin-right: 10px;">
                             <strong>${lab.lab_name}</strong><br>
@@ -192,10 +207,10 @@ async function fetchMatchingLabs(requiredServices) {
                 `;
             });
         } else {
-            labsContainer.innerHTML = "<span class='warning-text'>Sorry, no active labs found matching all your selected tests in your pincode area.</span>";
+            labsContainer.innerHTML = "<span class='warning-text' style='color: red;'>Sorry, no active labs found matching all your selected tests in your pincode area.</span>";
         }
     } catch (e) {
-        labsContainer.innerHTML = "<span class='warning-text'>Error fetching labs. Please try again.</span>";
+        labsContainer.innerHTML = "<span class='warning-text' style='color: red;'>Error fetching labs. Please try again.</span>";
         console.error("Matchmaking error", e);
     }
 }
@@ -205,11 +220,9 @@ function selectLab(labId) {
     const scheduleSection = document.getElementById("schedule-section");
     scheduleSection.classList.remove("hidden");
     
-    // Attach event listeners to date/time fields to enable Checkout button
     document.getElementById("booking-date").addEventListener("change", checkCheckoutReady);
     document.getElementById("booking-time").addEventListener("change", checkCheckoutReady);
     
-    // Check immediately in case they re-select a lab after filling date/time
     checkCheckoutReady();
 }
 
@@ -224,8 +237,6 @@ function checkCheckoutReady() {
         step3.classList.remove("hidden");
         const btn = document.getElementById("btn-confirm-booking");
         btn.disabled = false;
-        
-        // Single listener attachment to avoid duplicate orders
         btn.onclick = submitOrder; 
     } else {
         document.getElementById("btn-confirm-booking").disabled = true;
@@ -259,8 +270,8 @@ async function submitOrder() {
 
         if(result.status === 'success') {
             alert("Booking Confirmed Successfully! Total Amount: ₹" + result.data.orderAmount);
-            localStorage.removeItem("bhavyaCart"); // Clear cart after successful order
-            window.location.href = "success.html"; // Redirect to your success/dashboard page
+            localStorage.removeItem("bhavyaCart"); // Clear cart
+            window.location.href = "success.html"; // Redirect
         } else {
             alert("Error placing order: " + result.message);
             btn.disabled = false;

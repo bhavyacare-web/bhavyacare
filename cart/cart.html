@@ -3,268 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Checkout - BhavyaCare</title>
+  <title>Cart & Checkout - BhavyaCare</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     :root { 
-      --primary: #2563eb; 
-      --primary-soft: #eff6ff;
-      --success: #059669; 
-      --warning: #d97706; 
-      --danger: #dc2626; 
-      --bg-color: #f8fafc; 
-      --card-bg: #ffffff; 
-      --text-main: #0f172a; 
-      --text-muted: #64748b; 
-      --border: #e2e8f0;
+      --primary: #2563eb; --primary-soft: #eff6ff;
+      --success: #059669; --warning: #d97706; --danger: #dc2626; 
+      --bg-color: #f8fafc; --card-bg: #ffffff; 
+      --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
     }
-
-    body { 
-      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-      background-color: var(--bg-color); 
-      margin: 0; 
-      padding-bottom: 120px; 
-      color: var(--text-main);
-    }
-
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding-bottom: 120px; color: var(--text-main); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* Header & Navigation */
-    .header { 
-      background: white; 
-      padding: 16px 20px; 
-      display: flex; 
-      align-items: center; 
-      gap: 15px;
-      position: sticky; 
-      top: 0; 
-      z-index: 100; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .header h2 { margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1; text-align: center; margin-right: 35px; }
-    .back-btn { color: var(--text-main); text-decoration: none; font-size: 18px; }
-
-    /* Progress Stepper */
-    .stepper {
-      display: flex;
-      justify-content: space-between;
-      padding: 20px;
-      max-width: 500px;
-      margin: 0 auto;
-    }
+    /* Header & Stepper */
+    .header { background: white; padding: 16px 20px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .header h2 { margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1; text-align: center; }
+    .stepper { display: flex; justify-content: space-between; padding: 20px; max-width: 500px; margin: 0 auto; }
     .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; }
     .step-icon { width: 32px; height: 32px; border-radius: 50%; background: white; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; z-index: 2; color: var(--text-muted); }
     .step.active .step-icon { background: var(--primary); border-color: var(--primary); color: white; }
     .step.completed .step-icon { background: var(--success); border-color: var(--success); color: white; }
     .step-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
-    .step.active .step-label { color: var(--primary); }
     .step:not(:last-child)::after { content: ''; position: absolute; top: 16px; left: 60%; width: 80%; height: 2px; background: var(--border); z-index: 1; }
 
+    /* Cards & Forms */
     .container { max-width: 600px; margin: 0 auto; padding: 0 16px; }
-    
-    .card { 
-      background: var(--card-bg); 
-      border-radius: 20px; 
-      padding: 20px; 
-      margin-bottom: 16px; 
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
-      border: 1px solid var(--border);
-    }
-
-    .card-title { 
-      font-size: 16px; 
-      font-weight: 700; 
-      margin: 0 0 16px 0; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-    }
-
-    /* Form Design */
+    .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); transition: 0.3s; }
+    .card-title { font-size: 16px; font-weight: 700; margin: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; }
     .input-group { margin-bottom: 16px; }
-    .input-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; padding-left: 4px;}
-    .form-input { 
-      width: 100%; 
-      padding: 14px; 
-      border: 1px solid var(--border); 
-      border-radius: 12px; 
-      font-size: 14px; 
-      font-weight: 500; 
-      transition: all 0.2s;
-      background: #fcfdfe;
-    }
+    .input-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 500; background: #fcfdfe; }
     .form-input:focus { border-color: var(--primary); outline: none; background: white; box-shadow: 0 0 0 4px var(--primary-soft); }
-
-    /* Cart Items */
-    .cart-item { padding: 16px 0; border-bottom: 1px solid var(--border); position: relative; }
-    .cart-item:last-child { border-bottom: none; }
-    .item-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .item-info h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-main); }
-    .item-price { font-size: 16px; font-weight: 800; color: var(--text-main); }
     
-    .service-toggle-box { 
-      background: #f1f5f9; 
-      border-radius: 10px; 
-      padding: 4px; 
-      display: flex; 
-      gap: 4px; 
-    }
-    .toggle-btn { 
-      flex: 1; 
-      padding: 10px; 
-      font-size: 12px; 
-      font-weight: 600; 
-      border: none; 
-      background: transparent; 
-      color: var(--text-muted); 
-      border-radius: 8px; 
-      cursor: pointer; 
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
+    /* Buttons & Toggles */
+    .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; }
+    .service-toggle-box { background: #f1f5f9; border-radius: 10px; padding: 4px; display: flex; gap: 4px; margin-top: 10px; }
+    .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; }
     .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .btn-delete-circle {
-      position: absolute; right: -5px; top: 10px;
-      width: 24px; height: 24px; background: #fee2e2; color: var(--danger);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 10px; cursor: pointer; border: none;
-    }
-
-    /* Lab Selection */
-    .lab-card { 
-      border: 1.5px solid var(--border); 
-      border-radius: 16px; 
-      padding: 16px; 
-      display: flex; 
-      gap: 15px; 
-      margin-bottom: 12px;
-      transition: 0.2s;
-    }
-    .lab-card.selected { border-color: var(--primary); background: var(--primary-soft); }
-    .lab-img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; }
+    /* Lab & Time Slots */
+    .lab-card { border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; cursor: pointer; }
+    .lab-card.selected { border-color: var(--success); background: #f0fdf4; }
+    .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
     /* Bottom Bar */
-    .bottom-bar { 
-      position: fixed; bottom: 0; left: 0; width: 100%; 
-      background: white; padding: 20px 24px 34px; 
-      box-shadow: 0 -10px 20px rgba(0,0,0,0.05); 
-      display: flex; justify-content: space-between; align-items: center;
-      border-radius: 24px 24px 0 0; z-index: 100;
-    }
-    .total-box strong { font-size: 22px; font-weight: 900; }
-    .proceed-btn { 
-      background: var(--primary); color: white; border: none; 
-      padding: 16px 32px; border-radius: 16px; 
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
-    }
+    .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px 24px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-radius: 24px 24px 0 0; z-index: 100; }
+    .proceed-btn { background: var(--success); color: white; border: none; padding: 16px 32px; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .proceed-btn:disabled { background: var(--border); cursor: not-allowed; }
 
-    /* Status Badges */
-    .vip-badge { background: linear-gradient(135deg, #fbbf24, #d97706); color: white; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;}
-
-    #loadingOverlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    /* Modals & Overlays */
+    #loadingOverlay, #loginModal, #pincodeModal { position: fixed; inset: 0; background: rgba(15,23,42,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
+    .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <div id="loadingOverlay">
-    <div class="loader-spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-    <p style="margin-top: 15px; font-weight: 600; color: var(--text-muted);">Preparing your cart...</p>
+  <div id="loadingOverlay" style="display: flex; background: white;">
+    <div style="text-align: center;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary);"></i>
+      <p style="margin-top: 15px; font-weight: 600; color: var(--text-muted);">Please wait...</p>
+    </div>
+  </div>
+
+  <div id="loginModal">
+    <div class="modal-content">
+      <i class="fas fa-lock" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+      <h3 style="margin-top:0;">Login Required</h3>
+      <p style="font-size: 14px; color: var(--text-muted);">Please log in to proceed with your booking.</p>
+      <button class="btn-main" onclick="triggerFirebaseLogin()">Login / Sign Up</button>
+    </div>
+  </div>
+
+  <div id="pincodeModal">
+    <div class="modal-content">
+      <i class="fas fa-map-marker-alt" style="font-size: 40px; color: var(--warning); margin-bottom: 15px;"></i>
+      <h3 style="margin-top:0;">Area Not Serviceable</h3>
+      <p style="font-size: 14px; color: var(--text-muted);">Home collection is not available for <b id="alertPin"></b>.</p>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn-main" style="background: var(--bg-color); color: var(--text-main);" onclick="closePincodeModal()">Edit Details</button>
+        <button class="btn-main" onclick="switchAllToCenter()">Switch to Center</button>
+      </div>
+    </div>
   </div>
 
   <div class="header">
-    <a href="../booking/booking.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
-    <h2>Checkout</h2>
+    <a href="javascript:history.back()" style="color: var(--text-main);"><i class="fas fa-arrow-left"></i></a>
+    <h2>Cart & Checkout</h2>
   </div>
 
   <div class="stepper">
-    <div class="step active" id="step1-nav">
-      <div class="step-icon">1</div>
-      <span class="step-label">Details</span>
-    </div>
-    <div class="step" id="step2-nav">
-      <div class="step-icon">2</div>
-      <span class="step-label">Services</span>
-    </div>
-    <div class="step" id="step3-nav">
-      <div class="step-icon">3</div>
-      <span class="step-label">Payment</span>
-    </div>
+    <div class="step active" id="step1-nav"><div class="step-icon">1</div><span class="step-label">My Info</span></div>
+    <div class="step" id="step2-nav"><div class="step-icon">2</div><span class="step-label">Services</span></div>
+    <div class="step" id="step3-nav"><div class="step-icon">3</div><span class="step-label">Checkout</span></div>
   </div>
 
   <div class="container">
     
     <div class="card" id="step1-card">
-      <div class="card-title">
-        <span>Patient Details</span>
-        <div id="vipTagContainer"></div>
-      </div>
+      <div class="card-title">Patient Details <span id="vipBadge"></span></div>
       
-      <div id="patientInfoForm">
+      <div id="infoForm">
         <div class="input-group">
           <label class="input-label">Patient Name</label>
-          <div id="nameInputContainer"></div>
+          <div id="nameInputBox"></div>
         </div>
         <div class="input-group">
           <label class="input-label">Mobile Number</label>
-          <input type="tel" id="userMobile" class="form-input" readonly>
-        </div>
-        <div class="input-row" style="display: flex; gap: 12px;">
-          <div class="input-group" style="flex: 1;">
-            <label class="input-label">Pincode *</label>
-            <input type="number" id="userPincode" class="form-input" placeholder="124507">
-          </div>
+          <input type="tel" id="uMobile" class="form-input" readonly>
         </div>
         <div class="input-group">
-          <label class="input-label">Full Address</label>
-          <input type="text" id="userAddress" class="form-input" placeholder="House/Flat No, Landmark">
+          <label class="input-label">Pincode *</label>
+          <input type="number" id="uPincode" class="form-input" placeholder="e.g. 110001">
         </div>
-        <button class="proceed-btn" style="width: 100%; margin-top: 10px;" onclick="savePatientInfo()">Save & Continue</button>
+        <div class="input-group">
+          <label class="input-label">Address</label>
+          <input type="text" id="uAddress" class="form-input" placeholder="Complete Address">
+        </div>
+        <button class="btn-main" onclick="savePatientInfo()">Save & Continue</button>
       </div>
 
-      <div id="patientInfoSummary" style="display:none;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div style="font-size: 14px; line-height: 1.6;">
-                <b id="sumName" style="font-size: 16px;"></b><br>
-                <span id="sumMobile" style="color: var(--text-muted);"></span><br>
-                <span id="sumAddress" style="color: var(--text-muted);"></span>
-            </div>
-            <button onclick="editPatientInfo()" style="background: var(--primary-soft); color: var(--primary); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px;">Change</button>
+      <div id="infoSummary" style="display: none;">
+        <div style="display: flex; justify-content: space-between;">
+          <div style="font-size: 14px; line-height: 1.6;">
+            <strong id="sumName" style="font-size: 16px;"></strong><br>
+            <span id="sumMobile" style="color: var(--text-muted);"></span><br>
+            <span id="sumAddress" style="color: var(--text-muted);"></span>
+          </div>
+          <button onclick="editPatientInfo()" style="background: var(--primary-soft); color: var(--primary); border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; height: max-content;">Edit</button>
         </div>
       </div>
     </div>
 
-    <div class="card" id="step2-card" style="display: none; opacity: 0;">
+    <div class="card" id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
       <div class="card-title">Selected Tests</div>
-      <div id="cartItemsContainer"></div>
+      <div id="cartItemsContainer" style="margin-bottom: 24px;"></div>
       
-      <div id="labSelectionSection" style="display: none; margin-top: 24px;">
-        <div class="card-title">Select Center</div>
+      <div id="labSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px;">
+        <div class="card-title">Select Diagnostics Center</div>
         <div id="labsContainer"></div>
       </div>
 
-      <div id="dateTimeSection" style="display: none; margin-top: 24px;">
+      <div id="dateTimeSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px; margin-top: 20px;">
         <div class="card-title">Date & Time</div>
-        <input type="date" id="bookingDate" class="form-input" style="margin-bottom:12px;" onchange="generateTimeSlots()">
-        <div class="slot-grid" id="timeSlotContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;"></div>
+        <input type="date" id="bookingDate" class="form-input" onchange="generateSlots()">
+        <div class="slot-grid" id="slotContainer"></div>
       </div>
     </div>
 
   </div>
 
   <div class="bottom-bar">
-    <div class="total-box">
+    <div>
       <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Total Amount</span><br>
-      <strong>₹<span id="cartTotalAmt">0</span></strong>
+      <strong style="font-size: 22px;">₹<span id="totalAmt">0</span></strong>
     </div>
-    <button class="proceed-btn" id="mainProceedBtn" disabled onclick="finalizeBooking()">Confirm <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></button>
+    <button class="proceed-btn" id="confirmBtn" disabled onclick="finalizeBooking()">Confirm Booking</button>
   </div>
 
-  <style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
-  
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="../app.js"></script> 
-  <script src="cart.js?v=6"></script>
+  <script src="cart.js"></script>
 </body>
 </html>

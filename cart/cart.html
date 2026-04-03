@@ -7,15 +7,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     :root { 
-      --primary: #2563eb; --primary-soft: #eff6ff;
-      --success: #059669; --warning: #d97706; --danger: #dc2626; 
-      --bg-color: #f8fafc; --card-bg: #ffffff; 
-      --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+      --primary: #2563eb; --primary-soft: #eff6ff; --success: #059669; --warning: #d97706; --danger: #dc2626; 
+      --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
     }
     body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding-bottom: 120px; color: var(--text-main); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    /* Header & Stepper */
     .header { background: white; padding: 16px 20px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .header h2 { margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1; text-align: center; margin-right: 20px; }
     .stepper { display: flex; justify-content: space-between; padding: 20px; max-width: 500px; margin: 0 auto; }
@@ -25,8 +21,6 @@
     .step.completed .step-icon { background: var(--success); border-color: var(--success); color: white; }
     .step-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
     .step:not(:last-child)::after { content: ''; position: absolute; top: 16px; left: 60%; width: 80%; height: 2px; background: var(--border); z-index: 1; }
-
-    /* Cards & Forms */
     .container { max-width: 600px; margin: 0 auto; padding: 0 16px; }
     .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); transition: 0.3s; }
     .card-title { font-size: 16px; font-weight: 700; margin: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; }
@@ -35,37 +29,26 @@
     .form-input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 500; background: #fcfdfe; transition: 0.2s; }
     .form-input:focus { border-color: var(--primary); outline: none; background: white; box-shadow: 0 0 0 4px var(--primary-soft); }
     .form-input[readonly] { background: #f1f5f9; color: var(--text-muted); cursor: not-allowed; }
-    
-    /* Buttons & Toggles */
     .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
     .btn-main:active { transform: scale(0.98); }
     .service-toggle-box { background: #f1f5f9; border-radius: 10px; padding: 4px; display: flex; gap: 4px; margin-top: 10px; }
     .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; }
     .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-    /* SMART SPLIT CART SPECIFIC STYLES */
     .cart-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .item-title-box { flex-grow: 1; padding-right: 10px; }
     .btn-remove-item { background: #fee2e2; color: var(--danger); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; margin-left: 10px; }
     .btn-remove-item:hover { background: var(--danger); color: white; }
-    
     .item-lab-selector { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 12px; margin-top: 10px; }
     .item-lab-select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); background: white; outline: none; }
     .item-error-box { background: #fee2e2; border: 1px dashed #f87171; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .btn-small-outline { border: 1px solid var(--danger); background: transparent; color: var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
-    
     .center-only-badge { font-size: 11px; color: #b45309; background: #fef3c7; padding: 4px 8px; border-radius: 6px; font-weight: 700; display: inline-block; margin-top: 8px; border: 1px solid #fde68a; }
-    
     .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
     .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; }
     .slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
-
-    /* Bottom Bar */
     .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px 20px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; z-index: 100; }
     .proceed-btn { background: var(--success); color: white; border: none; padding: 14px 28px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .proceed-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
-
-    /* Modals & Overlays */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
     .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
   </style>
@@ -86,7 +69,10 @@
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
         To confirm your booking, we need to verify your number: <br><strong id="displayOtpMobile" style="color:var(--text-main); font-size: 16px;"></strong>
       </p>
-      <div id="otpInputSection">
+      
+      <div id="recaptcha-container" style="margin-bottom: 15px; display: flex; justify-content: center;"></div>
+      
+      <div id="otpInputSection" style="display: none;">
         <input type="number" id="otpCode" class="form-input" placeholder="Enter 6-digit OTP" style="text-align: center; letter-spacing: 4px; font-weight: 800; font-size: 18px; margin-bottom: 15px;">
         <button class="btn-main" id="verifyOtpBtn" onclick="verifyFirebaseOTP()">Verify & Confirm Order</button>
       </div>
@@ -112,9 +98,7 @@
       <div id="infoForm">
         <div class="input-group">
           <label class="input-label">Patient Name</label>
-          <div id="nameInputBox">
-            <input type="text" id="uName" class="form-input" placeholder="Enter Patient Name">
-          </div>
+          <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Enter Patient Name"></div>
         </div>
         <div class="input-group">
           <label class="input-label">Mobile Number</label>
@@ -172,6 +156,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="cart.js?v=smart"></script>
+  <script src="../app.js"></script> 
+  <script src="cart.js?v=smart_fixed"></script>
 </body>
 </html>

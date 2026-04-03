@@ -119,7 +119,7 @@ function editPatientInfo() {
 }
 
 // ==========================================
-// 3. SMART LAB MATCHMAKING (SPLIT CART)
+// 3. SMART LAB MATCHMAKING
 // ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
@@ -141,7 +141,6 @@ function fetchLabs() {
     });
 }
 
-// 🌟 FIX: IDs are now compared perfectly as Strings 🌟
 function autoAssignLabsByCategory() {
     let assignedLabs = {}; 
     cart.forEach(item => {
@@ -202,7 +201,6 @@ function renderCartWithLabs() {
         if (finalLabs.length > 0) {
             let options = finalLabs.map(lab => {
                 let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
-                // 🌟 FIX: String strict equality 🌟
                 let sel = String(lab.lab_id) === String(item.selected_lab_id) ? "selected" : "";
                 return `<option value="${lab.lab_id}" ${sel}>${lab.lab_name} ${badges}</option>`;
             }).join('');
@@ -261,7 +259,6 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-// 🌟 FIX: Assigning Lab as strict String 🌟
 function assignLabToItem(index, labId, categoryType) {
     cart.forEach(item => {
         let t = (item.service_type || "pathology").toLowerCase().trim();
@@ -367,7 +364,7 @@ function verifyFirebaseOTP() {
     });
 }
 
-// 🌟 FIX: Bulletproof Error checking to know EXACTLY what fails 🌟
+// 🌟 FIX: Handle response data extraction properly here 🌟
 function proceedWithRegistration(firebaseUid) {
     const newUserPayload = {
         action: "registerNewPatient",
@@ -379,12 +376,13 @@ function proceedWithRegistration(firebaseUid) {
     };
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(newUserPayload) })
-    .then(res => res.text()) // Changed to text() first to catch invisible backend crashes
+    .then(res => res.text()) // Safely read as text first
     .then(text => {
         try {
             let res = JSON.parse(text);
             if(res.status === "success") {
-                const newUserId = res.data.user_id;
+                // Correctly fetch user_id whether it's at root or inside data
+                const newUserId = res.user_id || (res.data ? res.data.user_id : null); 
                 localStorage.setItem("bhavya_user_id", newUserId); 
                 document.getElementById('otpModal').style.display = 'none';
                 processOrderSubmission(newUserId);
@@ -393,8 +391,8 @@ function proceedWithRegistration(firebaseUid) {
                 resetOtpBtn();
             }
         } catch(e) {
-            console.error("Backend Error Response:", text);
-            alert("Server returned an error. Please check the deployment version.");
+            console.error("Parse Error:", e, text);
+            alert("Server returned an error. Check console.");
             resetOtpBtn();
         }
     }).catch(e => { 

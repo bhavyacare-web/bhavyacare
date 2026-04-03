@@ -1,287 +1,237 @@
-// ==========================================
-// CART & BOOKING LOGIC (Idea 2 Flow)
-// ==========================================
+// Configuration
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
+const SERVICEABLE_PINCODES = ["110001", "110002", "132103"]; // Replace with dynamic backend list if needed
 
-const API_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; // Backend link daalein
+// State Management
+let cart = JSON.parse(localStorage.getItem("bhavyaCart")) || [];
+let userId = localStorage.getItem("bhavya_user_id");
+let userDetails = {};
+let selectedLab = null;
 
-// State Variables
-let cart = []; 
-let currentUser = null; 
-let checkoutData = {
-    mode: 'Center',
-    labData: null,
-    date: '',
-    time: '',
-    patientData: null // Stores VIP status and addresses fetched from DB
-};
+// DOM Elements
+const step1 = document.getElementById("step-1");
+const step2 = document.getElementById("step-2");
+const step3 = document.getElementById("step-3");
+const infoForm = document.getElementById("my-info-form");
+const authWarning = document.getElementById("auth-warning");
 
-// --- Dummy Data (Delete this when your app is ready) ---
-cart = [
-    { id: 1, name: "Complete Blood Count (CBC)", type: "pathology", price: 500 },
-];
-// --------------------------------------------------------
-
-window.onload = function() {
-    renderCart();
-    document.getElementById("bookingDate").value = new Date().toISOString().split('T')[0];
-};
-
-// --- UI HELPERS ---
-function closeAllPopups() {
-    document.querySelectorAll('.popup-box').forEach(b => b.style.display = "none");
-    document.getElementById("overlay").style.display = "none";
-}
-
-function showModal(id) {
-    closeAllPopups();
-    document.getElementById("overlay").style.display = "block";
-    document.getElementById(id).style.display = "flex";
-}
-
-function handleLoginClick() {
-    showModal("loginModal");
-}
-
-function executeLogin() {
-    // Replace with your actual Login API call
-    let mob = document.getElementById("loginMobile").value;
-    if(mob.length === 10) {
-        currentUser = { mobile: mob, user_id: "U-" + mob }; // Mock user
-        document.getElementById("loginBtnUI").innerText = "👤 Logged In";
-        closeAllPopups();
-        alert("Login Successful!");
-    } else {
-        alert("Enter valid mobile number");
+// On Load
+document.addEventListener("DOMContentLoaded", () => {
+    if (cart.length === 0) {
+        document.querySelector(".container").innerHTML = "<h2>Cart is empty!</h2>";
+        return;
     }
-}
+    initStep1();
+});
 
-// --- CART RENDERING ---
-function renderCart() {
-    let container = document.getElementById("cartItemsContainer");
-    let html = "";
-    let total = 0;
-
-    if(cart.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#999;'>Cart is empty.</p>";
+// --- STEP 1 LOGIC ---
+async function initStep1() {
+    if (!userId) {
+        authWarning.classList.remove("hidden");
+        // TODO: Trigger Firebase Phone Auth Popup here
         return;
     }
 
-    cart.forEach(item => {
-        total += item.price;
-        html += `
+    try {
+        // Fetch User Profile from GAS
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=getUserProfile&userId=${userId}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            userDetails = data.data;
+            renderMyInfoForm();
+        } else {
+            alert("Error fetching profile details.");
+        }
+    } catch (e) {
+        console.error("Failed to fetch user data", e);
+    }
+}
+
+function renderMyInfoForm() {
+    infoForm.classList.remove("hidden");
+    document.getElementById("patient-mobile").value = userDetails.mobile || "";
+    document.getElementById("patient-address").value = userDetails.address || "";
+    document.getElementById("patient-pincode").value = userDetails.pincode || "";
+
+    const nameContainer = document.getElementById("patient-name-container");
+    nameContainer.innerHTML = "<label>Patient Name</label>";
+
+    if (userDetails.vip_status === "active") {
+        let selectHtml = `<select id="patient-name">
+            <option value="${userDetails.name}">${userDetails.name} (Self)</option>`;
+        if(userDetails.vip_member_1) selectHtml += `<option value="${userDetails.vip_member_1}">${userDetails.vip_member_1}</option>`;
+        if(userDetails.vip_member_2) selectHtml += `<option value="${userDetails.vip_member_2}">${userDetails.vip_member_2}</option>`;
+        selectHtml += `</select>`;
+        nameContainer.innerHTML += selectHtml;
+    } else {
+        nameContainer.innerHTML += `<input type="text" id="patient-name" value="${userDetails.name || ""}" required>`;
+    }
+
+    document.getElementById("btn-save-step-1").addEventListener("click", saveStep1);
+}
+
+function saveStep1() {
+    userDetails.selectedName = document.getElementById("patient-name").value;
+    userDetails.address = document.getElementById("patient-address").value;
+    userDetails.pincode = document.getElementById("patient-pincode").value;
+
+    if(!userDetails.selectedName || !userDetails.address || !userDetails.pincode) {
+        alert("Please fill all details.");
+        return;
+    }
+
+    // Lock Step 1 & Open Step 2
+    document.querySelectorAll("#my-info-form input, #my-info-form select, #btn-save-step-1").forEach(el => el.disabled = true);
+    step2.classList.remove("hidden");
+    renderCartItems();
+}
+
+// --- STEP 2 LOGIC ---
+function renderCartItems() {
+    const container = document.getElementById("cart-items-container");
+    container.innerHTML = "";
+    
+    let requiredTestCategories = new Set(); // To store types like 'pathology', 'mri' for lab matchmaking
+
+    cart.forEach((item, index) => {
+        // Infer test category for backend match (assuming service_name or type contains these words)
+        let testTypeStr = (item.service_name + " " + (item.service_type || "")).toLowerCase();
+        let needsCenterVisitOnly = testTypeStr.includes("mri") || testTypeStr.includes("ct") || testTypeStr.includes("usg");
+        
+        // Add to required categories for Step 2 lab match
+        if (testTypeStr.includes("mri")) requiredTestCategories.add("mri");
+        else if (testTypeStr.includes("usg")) requiredTestCategories.add("usg");
+        else requiredTestCategories.add("pathology"); // Defaulting others to pathology for example
+
+        let itemHtml = `
             <div class="cart-item">
-                <div class="item-details">
-                    <h4>${item.name}</h4>
-                    <p>Service Type: ${item.type}</p>
-                </div>
-                <div class="item-price">₹${item.price}</div>
+                <strong>${item.service_name}</strong> - ₹${item.price} <br>
+                ${needsCenterVisitOnly ? 
+                    `<span style="color: blue; font-weight:bold;">[Center Visit Required]</span>` : 
+                    `<label><input type="radio" name="collection_${index}" value="home" checked onchange="validateHomeCollection()"> Home Collection</label>
+                     <label><input type="radio" name="collection_${index}" value="center" onchange="validateHomeCollection()"> Center Visit</label>`
+                }
             </div>
         `;
+        container.innerHTML += itemHtml;
     });
 
-    container.innerHTML = html;
-    document.getElementById("cartTotalDisplay").innerText = "₹" + total;
+    validateHomeCollection();
+    fetchMatchingLabs(Array.from(requiredTestCategories));
 }
 
+function validateHomeCollection() {
+    let homeSelected = false;
+    document.querySelectorAll('input[type="radio"][value="home"]:checked').forEach(() => homeSelected = true);
 
-// ==========================================
-// STEP 1: INITIALIZE CHECKOUT (Select Lab & Time)
-// ==========================================
-function startCheckoutFlow() {
-    if (cart.length === 0) {
-        alert("Cart is empty!");
-        return;
+    if (homeSelected && !SERVICEABLE_PINCODES.includes(userDetails.pincode)) {
+        alert("Warning: Your area (" + userDetails.pincode + ") is not serviceable for Home Collection. Please switch to Center Visit for all items or update your pincode.");
+        // Uncheck home, check center
+        document.querySelectorAll('input[type="radio"][value="home"]').forEach(el => el.checked = false);
+        document.querySelectorAll('input[type="radio"][value="center"]').forEach(el => el.checked = true);
     }
-    if (!currentUser) {
-        showModal("loginModal");
-        return;
-    }
-
-    // Determine category based on cart items (Assuming cart has similar items)
-    let primaryCategory = cart[0].type; 
-    
-    // Show/Hide Home Collection based on service type
-    if(primaryCategory === 'pathology' || primaryCategory === 'package') {
-        document.getElementById("modeGroup").style.display = "flex";
-    } else {
-        document.getElementById("modeGroup").style.display = "none";
-        checkoutData.mode = "Center"; // Force Center for USG/Xray etc.
-    }
-
-    showModal("step1Modal");
-    fetchLabs(primaryCategory);
 }
 
-function selectMode(btn, mode) {
-    document.querySelectorAll('#modeGroup .option-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    checkoutData.mode = mode;
-}
+async function fetchMatchingLabs(requiredServices) {
+    const labsContainer = document.getElementById("labs-container");
+    const scheduleSection = document.getElementById("schedule-section");
+    document.getElementById("lab-matchmaking-section").classList.remove("hidden");
+    labsContainer.innerHTML = "Finding the best labs for your required tests...";
 
-function fetchLabs(category) {
-    let labSelect = document.getElementById("labSelect");
-    labSelect.innerHTML = "<option>Loading labs...</option>";
+    try {
+        const payload = {
+            action: "getLabs",
+            pincode: userDetails.pincode,
+            services: requiredServices
+        };
 
-    // Backend API Call (Uncomment when API is ready)
-    /*
-    fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "getLabsForService", category: category })
-    })
-    .then(res => res.json())
-    .then(res => {
-        // Build Options
-    });
-    */
-
-    // MOCK DATA for Demo
-    let mockLabs = [
-        { lab_id: "L1", lab_name: "Shree Diagnostic", address: "Main Road, Bahadurgarh" },
-        { lab_id: "L2", lab_name: "Wellness Path Lab", address: "Sector 6, Bahadurgarh" }
-    ];
-    
-    let html = "<option value=''>Select Lab...</option>";
-    mockLabs.forEach(lab => {
-        html += `<option value='${JSON.stringify(lab)}'>${lab.lab_name}</option>`;
-    });
-    labSelect.innerHTML = html;
-}
-
-function generateTimeSlots() {
-    let labVal = document.getElementById("labSelect").value;
-    let container = document.getElementById("timeSlotsContainer");
-    
-    if(!labVal) {
-        container.innerHTML = "<div style='grid-column: span 3; text-align: center; color: #999; font-size:12px;'>Select Lab & Date first</div>";
-        return;
-    }
-
-    // Generate Mock Slots between 9 AM and 6 PM
-    let html = "";
-    for(let i = 9; i <= 18; i++) {
-        let ampm = i >= 12 ? "PM" : "AM";
-        let hr = i > 12 ? i - 12 : i;
-        html += `<div class="time-slot" onclick="selectTime(this, '${hr}:00 ${ampm}')">${hr}:00 ${ampm}</div>`;
-    }
-    container.innerHTML = html;
-}
-
-function selectTime(el, timeVal) {
-    document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
-    el.classList.add('selected');
-    checkoutData.time = timeVal;
-}
-
-
-// ==========================================
-// STEP 2: PATIENT DETAILS (VIP vs Basic Check)
-// ==========================================
-function proceedToStep2() {
-    let labVal = document.getElementById("labSelect").value;
-    let dateVal = document.getElementById("bookingDate").value;
-
-    if(!labVal || !dateVal || !checkoutData.time) {
-        alert("Please select Lab, Date and Time to proceed.");
-        return;
-    }
-
-    checkoutData.labData = JSON.parse(labVal);
-    checkoutData.date = dateVal;
-
-    // Transition to Step 2
-    document.getElementById("step1Modal").style.display = "none";
-    document.getElementById("step2Modal").style.display = "flex";
-
-    fetchPatientDetails();
-}
-
-function fetchPatientDetails() {
-    // Show loading state
-    document.getElementById("patientNameContainer").innerHTML = "Loading data...";
-
-    // Backend API Call (Uncomment when API is ready)
-    /*
-    fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "getCheckoutCheckoutInfo", user_id: currentUser.user_id })
-    })
-    ...
-    */
-
-    // MOCK RESPONSE based on IDEA 2 requirements
-    let mockResponse = {
-        isVIP: true, // Change to false to test Basic user flow
-        members: ["Rajesh Kumar", "Sunita Sharma", "Ravi Kumar"], // VIP dropdown list
-        address: "H.No 123, Venus Plaza",
-        city: "Bahadurgarh",
-        pincode: "124507"
-    };
-
-    checkoutData.patientData = mockResponse;
-
-    // 1. Auto-fill Address Info
-    document.getElementById("patientAddress").value = mockResponse.address || "";
-    document.getElementById("patientCity").value = mockResponse.city || "";
-    document.getElementById("patientPincode").value = mockResponse.pincode || "";
-
-    // 2. Setup Name Field based on VIP Status
-    let nameContainer = document.getElementById("patientNameContainer");
-    
-    if (mockResponse.isVIP) {
-        document.getElementById("vipNotice").style.display = "block";
-        let dropHtml = `<select id="finalPatientName" class="med-input" style="background:#fff8e1; border-color:#ffb300; font-weight:bold;">`;
-        dropHtml += `<option value="">Select VIP Member...</option>`;
-        mockResponse.members.forEach(name => {
-            dropHtml += `<option value="${name}">👑 ${name}</option>`;
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
         });
-        dropHtml += `</select>`;
-        nameContainer.innerHTML = dropHtml;
-    } else {
-        document.getElementById("vipNotice").style.display = "none";
-        nameContainer.innerHTML = `<input type="text" id="finalPatientName" class="med-input" placeholder="Enter Patient Name">`;
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data.length > 0) {
+            labsContainer.innerHTML = "";
+            result.data.forEach(lab => {
+                labsContainer.innerHTML += `
+                    <div class="lab-item">
+                        <label>
+                            <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}', '${lab.open_time}', '${lab.close_time}')">
+                            <strong>${lab.lab_name}</strong><br>
+                            <small>${lab.lab_address} (Timing: ${lab.open_time} - ${lab.close_time})</small>
+                        </label>
+                    </div>
+                `;
+            });
+        } else {
+            labsContainer.innerHTML = "<span class='warning-text'>No active labs found matching your tests in your pincode.</span>";
+        }
+    } catch (e) {
+        labsContainer.innerHTML = "Error fetching labs.";
+        console.error(e);
     }
 }
 
+function selectLab(labId, openTime, closeTime) {
+    selectedLab = labId;
+    const scheduleSection = document.getElementById("schedule-section");
+    scheduleSection.classList.remove("hidden");
+    
+    // Simple logic to show step 3 when date/time changes
+    document.getElementById("booking-date").addEventListener("change", checkCheckoutReady);
+    document.getElementById("booking-time").addEventListener("change", checkCheckoutReady);
+}
 
-// ==========================================
-// FINAL STEP: SUBMIT ORDER
-// ==========================================
-function submitFinalOrder() {
-    let patientName = document.getElementById("finalPatientName").value;
-    let addr = document.getElementById("patientAddress").value;
-    let city = document.getElementById("patientCity").value;
-    let pin = document.getElementById("patientPincode").value;
+// --- STEP 3 LOGIC ---
+function checkCheckoutReady() {
+    const date = document.getElementById("booking-date").value;
+    const time = document.getElementById("booking-time").value;
 
-    if(!patientName) {
-        alert("Please provide the Patient Name.");
-        return;
+    if (selectedLab && date && time) {
+        step3.classList.remove("hidden");
+        const btn = document.getElementById("btn-confirm-booking");
+        btn.disabled = false;
+        
+        // Single listener attachment to avoid duplicate orders
+        btn.onclick = submitOrder; 
     }
+}
 
-    // Prepare final payload
-    let finalPayload = {
-        action: "submitOrder",
-        user_id: currentUser.user_id,
-        patient_name: patientName,
-        address: `${addr}, ${city} - ${pin}`,
-        booking_mode: checkoutData.mode,
-        lab_name: checkoutData.labData.lab_name,
-        date: checkoutData.date,
-        time: checkoutData.time,
-        items: cart
+async function submitOrder() {
+    document.getElementById("btn-confirm-booking").disabled = true;
+    document.getElementById("btn-confirm-booking").innerText = "Processing...";
+
+    const orderData = {
+        action: "placeOrder",
+        userId: userId,
+        patientName: userDetails.selectedName,
+        address: userDetails.address,
+        pincode: userDetails.pincode,
+        cart: cart,
+        labId: selectedLab,
+        bookingDate: document.getElementById("booking-date").value,
+        bookingTime: document.getElementById("booking-time").value
     };
 
-    console.log("Submitting to Server: ", finalPayload);
-    
-    // Simulate API Success
-    document.getElementById("step2Modal").innerHTML = `
-        <div style="padding:40px; text-align:center;">
-            <div style="font-size:50px; color:#2e7d32;">✅</div>
-            <h3 style="color:#2e7d32;">Booking Successful!</h3>
-            <p style="color:#666;">Your request has been sent to ${checkoutData.labData.lab_name}.</p>
-            <button class="primary-btn" onclick="location.reload()" style="margin-top:20px;">Return Home</button>
-        </div>
-    `;
-    
-    // Clear Cart
-    cart = [];
+    try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(orderData)
+        });
+        const result = await response.json();
+
+        if(result.status === 'success') {
+            alert("Booking Confirmed Successfully!");
+            localStorage.removeItem("bhavyaCart");
+            window.location.href = "success.html"; // Redirect to success page
+        } else {
+            alert("Error placing order.");
+            document.getElementById("btn-confirm-booking").disabled = false;
+        }
+    } catch (e) {
+        alert("Network Error.");
+        document.getElementById("btn-confirm-booking").disabled = false;
+    }
 }

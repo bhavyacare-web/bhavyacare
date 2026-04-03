@@ -2,141 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Cart - Bhavya Diagnostics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - BhavyaCare</title>
     <style>
-        /* MODERN UI STYLES (Retained from your design) */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; padding-bottom: 80px; }
-        
-        /* HEADER */
-        .summary { position: sticky; top: 0; background: #fff; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 900; display: flex; justify-content: space-between; align-items: center; }
-        .summary-total { font-size: 18px; font-weight: 800; color: #0a73c0; }
-        
-        /* CART ITEMS */
-        .cart-container { padding: 15px; }
-        .cart-item { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .item-details h4 { margin: 0 0 5px 0; color: #333; }
-        .item-details p { margin: 0; font-size: 12px; color: #666; }
-        .item-price { font-weight: bold; color: #2e7d32; }
-        
-        /* BUTTONS */
-        .primary-btn { background: linear-gradient(135deg, #0a73c0, #005b9f); color: white; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; box-shadow: 0 4px 10px rgba(10, 115, 192, 0.3); }
-        .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: #fff; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        
-        /* BOTTOM SHEETS (MODALS) */
-        .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 5000; backdrop-filter: blur(2px); }
-        .popup-box { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-radius: 25px 25px 0 0; z-index: 5100; max-height: 85vh; overflow-y: auto; flex-direction: column; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .sheet-header { padding: 15px 20px; border-bottom: 1px solid #eee; text-align: center; }
-        .sheet-body { padding: 20px; flex-grow: 1; }
-        .sheet-footer { padding: 15px 20px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: #fff; }
-        
-        /* FORM INPUTS */
-        .med-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; font-size: 14px; }
-        .booking-label { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; display: block; text-transform: uppercase; }
-        
-        /* OPTIONS & TIME SLOTS */
-        .option-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .option-btn { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .option-btn.selected { background: #e3f2fd; color: #0a73c0; border-color: #0a73c0; }
-        
-        .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .time-slot { padding: 10px; border: 1px solid #ddd; text-align: center; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .time-slot.selected { background: #0a73c0; color: white; border-color: #0a73c0; }
-        
-        /* VIP BADGE */
-        .vip-highlight { background: #fff8e1; border: 1px solid #ffb300; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; color: #f57f17; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .step-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:disabled { background: #cccccc; cursor: not-allowed; }
+        .btn-success { background: #28a745; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .cart-item, .lab-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .warning-text { color: #dc3545; font-size: 0.9em; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="summary">
-        <div>
-            <div style="font-size: 12px; color: #666;">Total Amount</div>
-            <div class="summary-total" id="cartTotalDisplay">₹0</div>
-        </div>
-        <button onclick="handleLoginClick()" id="loginBtnUI" style="background:transparent; border:1px solid #0a73c0; color:#0a73c0; padding:5px 15px; border-radius:15px; cursor:pointer;">Login</button>
-    </div>
+<div class="container">
+    <h2>Your Cart</h2>
 
-    <div class="cart-container" id="cartItemsContainer">
-        </div>
-
-    <div class="bottom-bar">
-        <button class="primary-btn" onclick="startCheckoutFlow()">Proceed to Checkout ➔</button>
-    </div>
-
-
-    <div class="popup-overlay" id="overlay" onclick="closeAllPopups()"></div>
-
-    <div class="popup-box" id="loginModal">
-        <div class="sheet-header"><h3 style="margin:0; color:#0a73c0;">Login</h3></div>
-        <div class="sheet-body">
-            <input type="tel" id="loginMobile" class="med-input" placeholder="Enter Mobile Number">
-            <input type="password" id="loginPass" class="med-input" placeholder="Password">
-            <button class="primary-btn" onclick="executeLogin()">Login</button>
-        </div>
-    </div>
-
-    <div class="popup-box" id="step1Modal">
-        <div class="sheet-header">
-            <h3 style="margin:0; color:#0a73c0;">Step 1: Setup Service</h3>
-        </div>
-        <div class="sheet-body">
-            <span class="booking-label">Collection Mode</span>
-            <div class="option-group" id="modeGroup">
-                <div class="option-btn selected" onclick="selectMode(this, 'Center')">Visit Lab</div>
-                <div class="option-btn" onclick="selectMode(this, 'Home')">Home Collection</div>
+    <div id="step-1" class="step-card">
+        <h3>Step 1: Patient Information</h3>
+        <div id="auth-warning" class="warning-text hidden">Please login to continue. (Triggering Firebase Auth...)</div>
+        
+        <form id="my-info-form" class="hidden">
+            <div class="form-group" id="patient-name-container">
+                </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" id="patient-mobile" readonly>
             </div>
-
-            <span class="booking-label">Select Lab Center</span>
-            <select id="labSelect" class="med-input" onchange="generateTimeSlots()">
-                <option value="">Select Lab...</option>
-                </select>
-
-            <span class="booking-label">Select Date</span>
-            <input type="date" id="bookingDate" class="med-input" onchange="generateTimeSlots()">
-
-            <span class="booking-label">Select Time</span>
-            <div class="time-grid" id="timeSlotsContainer">
-                <div style="grid-column: span 3; text-align: center; color: #999; font-size:12px;">Select Lab & Date first</div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="patient-address" required>
             </div>
-        </div>
-        <div class="sheet-footer">
-            <button class="primary-btn" onclick="proceedToStep2()">Next: Patient Details ➔</button>
-        </div>
+            <div class="form-group">
+                <label>Pincode</label>
+                <input type="text" id="patient-pincode" required>
+            </div>
+            <button type="button" class="btn" id="btn-save-step-1">Save & Continue</button>
+        </form>
     </div>
 
-
-    <div class="popup-box" id="step2Modal">
-        <div class="sheet-header">
-            <h3 style="margin:0; color:#0a73c0;">Step 2: Patient Details</h3>
-        </div>
-        <div class="sheet-body">
+    <div id="step-2" class="step-card hidden">
+        <h3>Step 2: Service Configuration</h3>
+        <div id="cart-items-container"></div>
+        
+        <div id="lab-matchmaking-section" class="hidden" style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
+            <h4>Available Labs in your Area</h4>
+            <div id="labs-container">Loading labs...</div>
             
-            <div id="vipNotice" class="vip-highlight" style="display:none;">
-                👑 VIP Member: Please select a registered family member.
+            <div id="schedule-section" class="hidden form-group" style="margin-top: 15px;">
+                <label>Select Date</label>
+                <input type="date" id="booking-date">
+                <label style="margin-top: 10px;">Select Time</label>
+                <input type="time" id="booking-time">
             </div>
-
-            <span class="booking-label">Patient Name</span>
-            <div id="patientNameContainer"></div>
-
-            <span class="booking-label">Address Details (Auto-filled)</span>
-            <textarea id="patientAddress" class="med-input" rows="2" placeholder="Street Address"></textarea>
-            
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="patientCity" class="med-input" placeholder="City">
-                <input type="number" id="patientPincode" class="med-input" placeholder="Pincode">
-            </div>
-
-        </div>
-        <div class="sheet-footer">
-            <button class="primary-btn" style="background: linear-gradient(135deg, #2e7d32, #1b5e20);" onclick="submitFinalOrder()">Confirm & Book</button>
-            <button onclick="document.getElementById('step2Modal').style.display='none'; document.getElementById('step1Modal').style.display='flex';" style="width:100%; margin-top:10px; background:transparent; border:none; color:#666;">⬅ Back to Step 1</button>
         </div>
     </div>
 
-    <script src="cart.js"></script>
+    <div id="step-3" class="step-card hidden">
+        <h3>Step 3: Checkout</h3>
+        <button type="button" class="btn btn-success" id="btn-confirm-booking" disabled>Confirm Booking</button>
+    </div>
+
+</div>
+
+<script src="cart.js"></script>
 </body>
 </html>

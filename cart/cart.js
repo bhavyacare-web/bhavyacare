@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (BHAVYACARE) - SMART SPLIT CART
+// CART & CHECKOUT LOGIC (BHAVYACARE)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -10,10 +10,8 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
+let confirmationResult; // For Firebase OTP
 
-// ==========================================
-// INITIALIZE PAGE
-// ==========================================
 window.onload = () => {
     if(cart.length === 0) {
         showEmptyCart();
@@ -29,11 +27,8 @@ window.onload = () => {
     document.getElementById('totalAmt').innerText = initialTotal;
 
     const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) {
-        fetchProfile(userId);
-    } else {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
+    if (userId) { fetchProfile(userId); } 
+    else { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
 function showEmptyCart() {
@@ -47,9 +42,6 @@ function showEmptyCart() {
     document.querySelector('.bottom-bar').style.display = 'none';
 }
 
-// ==========================================
-// STEP 1: PATIENT INFO LOGIC
-// ==========================================
 function fetchProfile(userId) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
@@ -58,7 +50,6 @@ function fetchProfile(userId) {
         if(res.status === "success") {
             const data = res.data;
             bookingData.mobile = data.mobile;
-            
             document.getElementById('uMobile').value = data.mobile;
             document.getElementById('uMobile').setAttribute("readonly", true); 
             document.getElementById('uPincode').value = data.pincode;
@@ -73,9 +64,7 @@ function fetchProfile(userId) {
                 nameBox.innerHTML = `<input type="text" id="uName" class="form-input" value="${data.name}" placeholder="Patient Name">`;
             }
         }
-    }).catch(e => {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    });
+    }).catch(e => { document.getElementById('loadingOverlay').style.display = 'none'; });
 }
 
 function savePatientInfo() {
@@ -84,21 +73,16 @@ function savePatientInfo() {
     const pin = document.getElementById('uPincode').value.trim();
     const addr = document.getElementById('uAddress').value.trim();
 
-    if(!name || pin.length < 6 || mobile.length < 10) {
-        return alert("Please enter valid Name, 10-digit Mobile, and 6-digit Pincode.");
-    }
+    if(!name || pin.length < 6 || mobile.length < 10) return alert("Please enter valid Name, 10-digit Mobile, and 6-digit Pincode.");
 
     bookingData.name = name;
     bookingData.mobile = mobile;
     bookingData.pincode = pin;
     bookingData.address = addr;
 
-    // Set default fulfillment
     cart.forEach(item => {
-        let type = (item.service_type || "pathology").toLowerCase();
-        if(!item.fulfillment) {
-            item.fulfillment = homeServiceCategories.includes(type) ? "home" : "center";
-        }
+        let type = (item.service_type || "pathology").toLowerCase().trim();
+        if(!item.fulfillment) item.fulfillment = homeServiceCategories.includes(type) ? "home" : "center";
     });
 
     lockStep1();
@@ -107,7 +91,6 @@ function savePatientInfo() {
 function lockStep1() {
     document.getElementById('step1-nav').classList.add('completed');
     document.getElementById('step2-nav').classList.add('active');
-
     document.getElementById('sumName').innerText = bookingData.name;
     document.getElementById('sumMobile').innerText = "+91 " + bookingData.mobile;
     document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
@@ -116,9 +99,7 @@ function lockStep1() {
     document.getElementById('infoSummary').style.display = 'block';
 
     const s2 = document.getElementById('step2-card');
-    s2.style.display = 'block'; 
-    s2.style.opacity = '1'; 
-    s2.style.pointerEvents = 'auto';
+    s2.style.display = 'block'; s2.style.opacity = '1'; s2.style.pointerEvents = 'auto';
 
     fetchLabs(); 
 }
@@ -126,75 +107,49 @@ function lockStep1() {
 function editPatientInfo() {
     document.getElementById('infoForm').style.display = 'block';
     document.getElementById('infoSummary').style.display = 'none';
-    
     const s2 = document.getElementById('step2-card');
-    s2.style.opacity = '0.5'; 
-    s2.style.pointerEvents = 'none';
-    
+    s2.style.opacity = '0.5'; s2.style.pointerEvents = 'none';
     validateCheckout();
 }
 
-// ==========================================
-// STEP 2: SMART LAB MATCHMAKING (GROUPED BY TYPE)
-// ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
     document.getElementById('cartItemsContainer').innerHTML = "";
 
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "getAllActiveLabs" }) 
-    })
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getAllActiveLabs" }) })
     .then(res => res.json())
     .then(res => {
         if (spinner) spinner.style.display = 'none';
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
-            autoAssignLabsByCategory(); // Nai lab aate hi smart auto-assign karenge
+            autoAssignLabsByCategory(); 
             renderCartWithLabs(); 
-        } else {
-            alert("Error fetching labs.");
-        }
+        } else alert("Error fetching labs.");
     }).catch(e => {
         if (spinner) spinner.style.display = 'none';
         alert("Network Error.");
     });
 }
 
-// 🌟 NAYA LOGIC: Ek category ke test me same lab default set karne ke liye
 function autoAssignLabsByCategory() {
-    let assignedLabs = {}; // Map to track category -> Lab ID
-
+    let assignedLabs = {}; 
     cart.forEach(item => {
-        let type = (item.service_type || "pathology").toLowerCase();
-        
+        let type = (item.service_type || "pathology").toLowerCase().trim();
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
         if (item.fulfillment === "home") {
-            eligibleLabs = eligibleLabs.filter(lab => {
-                let pStr = bookingData.pincode.toString();
-                return lab.available_pincodes.includes(pStr) || lab.pincode === pStr;
-            });
+            eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
         }
 
         if (eligibleLabs.length > 0) {
-            // Check if this category already has an assigned lab in our map
             if (assignedLabs[type]) {
-                // Check if the previously assigned lab is still valid for THIS specific item
-                if (eligibleLabs.some(l => l.lab_id === assignedLabs[type])) {
-                    item.selected_lab_id = assignedLabs[type];
-                } else {
-                    item.selected_lab_id = eligibleLabs[0].lab_id; // Fallback
-                    assignedLabs[type] = item.selected_lab_id;
-                }
+                if (eligibleLabs.some(l => l.lab_id === assignedLabs[type])) item.selected_lab_id = assignedLabs[type];
+                else { item.selected_lab_id = eligibleLabs[0].lab_id; assignedLabs[type] = item.selected_lab_id; }
             } else {
-                // First time seeing this category, assign the first eligible lab
                 item.selected_lab_id = eligibleLabs[0].lab_id;
                 assignedLabs[type] = item.selected_lab_id;
             }
-        } else {
-            item.selected_lab_id = null; // No labs found
-        }
+        } else item.selected_lab_id = null; 
     });
 }
 
@@ -203,13 +158,11 @@ function renderCartWithLabs() {
     let total = 0;
     let allItemsConfigured = true;
     
-    // UI clean karne ke liye item index pass karenge
     cart.forEach((item, index) => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
         let itemQty = Number(item.qty || 1);
-        
         total += (itemPrice * itemQty);
-        let type = (item.service_type || "pathology").toLowerCase();
+        let type = (item.service_type || "pathology").toLowerCase().trim();
         
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
         let isHomeEligible = homeServiceCategories.includes(type);
@@ -217,13 +170,9 @@ function renderCartWithLabs() {
         let finalLabs = eligibleLabs;
 
         if (isHome) {
-            finalLabs = eligibleLabs.filter(lab => {
-                let pStr = bookingData.pincode.toString();
-                return lab.available_pincodes.includes(pStr) || lab.pincode === pStr;
-            });
+            finalLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
         }
 
-        // 🌟 Center Visit Only UI UPDATE 🌟
         let toggleHtml = "";
         if(isHomeEligible) {
             let hAct = isHome ? "active" : "";
@@ -234,13 +183,11 @@ function renderCartWithLabs() {
                     <button class="toggle-btn ${cAct}" onclick="changeFulfill(${index}, 'center')"><i class="fas fa-hospital"></i> Center</button>
                 </div>`;
         } else {
-            // FORCE Center visit if category is not in homeServiceCategories
             item.fulfillment = "center";
             toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
         let labSelectHtml = "";
-        
         if (finalLabs.length > 0) {
             let options = finalLabs.map(lab => {
                 let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
@@ -258,22 +205,13 @@ function renderCartWithLabs() {
         } else {
             item.selected_lab_id = null;
             allItemsConfigured = false;
-            
             if (isHome && eligibleLabs.length > 0) {
-                labSelectHtml = `
-                    <div class="item-error-box">
-                        <span><i class="fas fa-exclamation-triangle"></i> Home collection not available at Pin ${bookingData.pincode} for this test.</span>
-                        <button class="btn-small-outline" onclick="changeFulfill(${index}, 'center')">Switch to Center Visit</button>
-                    </div>`;
+                labSelectHtml = `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> Home collection not available at Pin ${bookingData.pincode}.</span><button class="btn-small-outline" onclick="changeFulfill(${index}, 'center')">Switch to Center Visit</button></div>`;
             } else {
-                labSelectHtml = `
-                    <div class="item-error-box">
-                        <span><i class="fas fa-times-circle"></i> No partner lab found for this service in your area.</span>
-                    </div>`;
+                labSelectHtml = `<div class="item-error-box"><span><i class="fas fa-times-circle"></i> No partner lab found in your area.</span></div>`;
             }
         }
 
-        // 🌟 CART ITEM UI WITH REMOVE BUTTON 🌟
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
                 <div class="cart-item-header">
@@ -300,59 +238,44 @@ function renderCartWithLabs() {
             let today = new Date().toISOString().split('T')[0];
             document.getElementById('bookingDate').setAttribute('min', today);
         }
-    } else {
-        document.getElementById('dateTimeSection').style.display = 'none';
-    }
+    } else document.getElementById('dateTimeSection').style.display = 'none';
 
     validateCheckout();
 }
 
 function changeFulfill(index, type) {
     cart[index].fulfillment = type;
-    autoAssignLabsByCategory(); // Re-evaluate labs to keep grouping consistent
+    autoAssignLabsByCategory(); 
     renderCartWithLabs(); 
 }
 
-// 🌟 NAYA LOGIC: Jab user dropdown se lab change kare, toh baaki same category ke tests ka bhi lab change ho jaye
+// 🌟 FIX: Trim lagaya gaya hai taaki "usg " bhi correctly match ho jaye
 function assignLabToItem(index, labId, categoryType) {
     cart.forEach(item => {
-        let t = (item.service_type || "pathology").toLowerCase();
-        if (t === categoryType) {
-            // Optional: You could check if this lab is valid for the other item's fulfillment type first
+        let t = (item.service_type || "pathology").toLowerCase().trim();
+        if (t === categoryType.trim()) {
             item.selected_lab_id = labId;
         }
     });
-    renderCartWithLabs(); // UI refresh karne ke liye taaki baaki dropdowns bhi update ho jayein
+    renderCartWithLabs(); 
     validateCheckout();
 }
 
-// 🌟 NAYA LOGIC: Remove Item
 function removeCartItem(index) {
     if(confirm("Are you sure you want to remove this item?")) {
         cart.splice(index, 1);
         localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-        
-        if(cart.length === 0) {
-            showEmptyCart();
-        } else {
-            autoAssignLabsByCategory();
-            renderCartWithLabs();
-        }
+        if(cart.length === 0) showEmptyCart();
+        else { autoAssignLabsByCategory(); renderCartWithLabs(); }
     }
 }
 
-// ==========================================
-// STEP 3: DATE, TIME & CHECKOUT VALIDATION
-// ==========================================
 function generateSlots() {
     const dateVal = document.getElementById('bookingDate').value;
     if(!dateVal) return;
-
     const slots = ["08:00 AM", "09:30 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
-    
     let html = slots.map(s => `<button class="slot-btn" onclick="selectTime(this, '${s}')">${s}</button>`).join('');
     document.getElementById('slotContainer').innerHTML = html;
-    
     selectedTime = null;
     validateCheckout();
 }
@@ -367,9 +290,7 @@ function selectTime(btn, time) {
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
     if (cart.length === 0) { btn.disabled = true; return; }
-
     let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
-    
     if(allAssigned && document.getElementById('bookingDate').value && selectedTime) {
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
@@ -380,7 +301,7 @@ function validateCheckout() {
 }
 
 // ==========================================
-// FINAL BOOKING & OTP LOGIC
+// 🌟 FINAL BOOKING & REAL FIREBASE OTP LOGIC 🌟
 // ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
@@ -388,6 +309,29 @@ function finalizeBooking() {
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
+        
+        // Initialize Firebase Recaptcha
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                'size': 'normal'
+            });
+            window.recaptchaVerifier.render();
+        }
+
+        let phoneNumber = "+91" + bookingData.mobile;
+        
+        // Send OTP
+        firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+            .then((result) => {
+                confirmationResult = result;
+                document.getElementById("recaptcha-container").style.display = "none";
+                document.getElementById("otpInputSection").style.display = "block";
+                alert("OTP has been sent to your mobile number.");
+            }).catch((error) => {
+                console.error(error);
+                alert("Error sending OTP. Please try again.");
+                document.getElementById("otpModal").style.display = "none";
+            });
     } else {
         processOrderSubmission(userId);
     }
@@ -395,13 +339,20 @@ function finalizeBooking() {
 
 function verifyFirebaseOTP() {
     const otp = document.getElementById('otpCode').value;
-    if(otp.length < 6) return alert("Please enter valid 6-digit OTP");
+    if(otp.length !== 6) return alert("Please enter valid 6-digit OTP");
 
     const btn = document.getElementById('verifyOtpBtn');
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    proceedWithRegistration("FB-UID-" + Math.floor(Math.random()*1000));
+    // Verify OTP code
+    confirmationResult.confirm(otp).then((result) => {
+        const user = result.user;
+        proceedWithRegistration(user.uid); // Pass actual Firebase UID
+    }).catch((error) => {
+        alert("Invalid OTP! Please try again.");
+        resetOtpBtn();
+    });
 }
 
 function proceedWithRegistration(firebaseUid) {

@@ -5,67 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart - BhavyaCare</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 800px; margin: auto; }
-        .step-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn:disabled { background: #cccccc; cursor: not-allowed; }
-        .btn-success { background: #28a745; }
+        .step-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .hidden { display: none !important; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; width: 100%; font-size: 1.1em; padding: 15px; }
+        .btn-success:disabled { background: #cccccc; cursor: not-allowed; }
+        .btn-warning { background: #ff9800; color: white; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .cart-item, .lab-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
-        .warning-text { color: #dc3545; font-size: 0.9em; margin-top: 5px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .cart-item { border: 1px solid #eee; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fafafa; }
+        .warning-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 15px; }
+        .lab-item { display: flex; align-items: center; border: 1px solid #e0e0e0; padding: 15px; margin-top: 15px; border-radius: 8px; background: #fff; transition: 0.2s; }
+        .lab-item:hover { border-color: #007bff; box-shadow: 0 2px 8px rgba(0,123,255,0.1); }
+        .lab-image { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; margin-right: 15px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Your Cart</h2>
+    <h2 style="color: #2c3e50; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Your Cart</h2>
 
     <div id="step-1" class="step-card">
-        <h3>Step 1: Patient Information</h3>
-        <div id="auth-warning" class="warning-text hidden">Please login to continue. (Triggering Firebase Auth...)</div>
+        <h3 style="margin-top: 0; color: #007bff;">Step 1: Patient Information</h3>
+        
+        <div id="auth-warning" class="warning-box hidden" style="text-align: center;">
+            <h4 style="margin-top: 0;">You are not logged in!</h4>
+            <p style="margin-bottom: 15px;">Please login or create an account to proceed with your booking.</p>
+            <button id="btn-trigger-login" class="btn btn-warning" style="padding: 10px 25px; font-size: 16px;">
+                Login / Sign Up via OTP
+            </button>
+        </div>
         
         <form id="my-info-form" class="hidden">
             <div class="form-group" id="patient-name-container">
                 </div>
             <div class="form-group">
                 <label>Mobile Number</label>
-                <input type="text" id="patient-mobile" readonly>
+                <input type="text" id="patient-mobile" readonly style="background: #f0f0f0;">
             </div>
             <div class="form-group">
                 <label>Address</label>
-                <input type="text" id="patient-address" required>
+                <input type="text" id="patient-address" required placeholder="Enter complete address">
             </div>
             <div class="form-group">
                 <label>Pincode</label>
-                <input type="text" id="patient-pincode" required>
+                <input type="text" id="patient-pincode" required placeholder="e.g. 110001">
             </div>
-            <button type="button" class="btn" id="btn-save-step-1">Save & Continue</button>
+            <button type="button" class="btn btn-primary" id="btn-save-step-1">Save & Continue</button>
         </form>
     </div>
 
     <div id="step-2" class="step-card hidden">
-        <h3>Step 2: Service Configuration</h3>
+        <h3 style="margin-top: 0; color: #007bff;">Step 2: Select Lab & Services</h3>
         <div id="cart-items-container"></div>
         
-        <div id="lab-matchmaking-section" class="hidden" style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
-            <h4>Available Labs in your Area</h4>
+        <div id="lab-matchmaking-section" class="hidden" style="margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px;">
+            <h4 style="margin-top: 0;">Available Labs in your Area</h4>
             <div id="labs-container">Loading labs...</div>
             
-            <div id="schedule-section" class="hidden form-group" style="margin-top: 15px;">
+            <div id="schedule-section" class="hidden form-group" style="margin-top: 20px; background: #e9f5ff; padding: 15px; border-radius: 8px;">
                 <label>Select Date</label>
-                <input type="date" id="booking-date">
-                <label style="margin-top: 10px;">Select Time</label>
+                <input type="date" id="booking-date" min="" style="margin-bottom: 15px;">
+                <label>Select Time</label>
                 <input type="time" id="booking-time">
             </div>
         </div>
     </div>
 
     <div id="step-3" class="step-card hidden">
-        <h3>Step 3: Checkout</h3>
+        <h3 style="margin-top: 0; color: #28a745;">Step 3: Checkout</h3>
         <button type="button" class="btn btn-success" id="btn-confirm-booking" disabled>Confirm Booking</button>
     </div>
 

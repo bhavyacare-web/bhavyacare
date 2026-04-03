@@ -226,3 +226,125 @@ function goToDashboard() {
         alert("Role not found. Please log in again.");
     }
 }
+    document.getElementById('partner-role-container').style.display = 'block';
+    document.getElementById('form-title').innerText = "Partner Registration";
+    toggleMenu(); 
+    showLoginPopup();
+}
+
+function showLoginPopup() {
+    document.getElementById('otp-section').style.display = 'none';
+    document.getElementById('phone-section').style.display = 'block';
+    document.getElementById('login-section').style.display = 'block';
+    setupRecaptcha();
+}
+
+function closeLoginPopup() { 
+    document.getElementById('login-section').style.display = 'none'; 
+}
+
+// ==========================================
+// 4. FIREBASE OTP LOGIC
+// ==========================================
+function setupRecaptcha() {
+    try {
+        if (typeof firebase !== 'undefined' && document.getElementById('recaptcha-container') && !window.recaptchaVerifier) {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
+            window.recaptchaVerifier.render();
+        }
+    } catch(e) { console.error(e); }
+}
+
+function sendOTP() {
+    if (typeof firebase === 'undefined') { alert("System loading, please wait a moment."); return; }
+    
+    const userName = document.getElementById('userName').value.trim();
+    if(!userName) { alert("Please enter your full name!"); return; }
+
+    const userNumber = document.getElementById('phoneNumber').value.trim();
+    if(userNumber.length !== 10 || isNaN(userNumber)) { alert("Please enter a valid 10-digit mobile number!"); return; }
+    
+    firebase.auth().signInWithPhoneNumber("+91" + userNumber, window.recaptchaVerifier).then((res) => {
+        window.confirmationResult = res;
+        document.getElementById('phone-section').style.display = 'none';
+        document.getElementById('otp-section').style.display = 'block';
+        document.getElementById('form-title').innerText = "Verify OTP";
+        alert("OTP sent successfully!");
+    }).catch((err) => { alert("Firebase Error: " + err.message); });
+}
+
+async function verifyOTP() {
+    const code = document.getElementById('otpCode').value.trim();
+    const selectedRole = isPartnerMode ? document.getElementById('partnerRole').value : 'patient';
+    const userName = document.getElementById('userName').value.trim();
+
+    if(code.length !== 6) { alert("Please enter a 6-digit OTP."); return; }
+
+    try {
+        const result = await window.confirmationResult.confirm(code);
+        const user = result.user;
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify({ action: "login", uid: user.uid, mobile: user.phoneNumber, role: selectedRole, name: userName })
+        });
+        const resData = await response.json();
+
+        const finalRole = resData.role;
+        const finalUserId = resData.user_id;
+
+        localStorage.setItem("bhavya_uid", user.uid);
+        localStorage.setItem("bhavya_mobile", user.phoneNumber);
+        localStorage.setItem("bhavya_role", finalRole);
+        localStorage.setItem("bhavya_user_id", finalUserId);
+        localStorage.setItem("bhavya_name", userName); 
+
+        closeLoginPopup();
+        alert("Login Successful! Welcome " + userName);
+        
+        checkLoginState();
+
+        // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
+        if (localStorage.getItem("pending_vip_redirect") === "true") {
+            // Hum flag delete nahi karenge, booking.js ise khud delete karega
+            window.location.reload(); // Bas same page ko refresh kar do taaki form khul jaye
+        } else {
+            window.location.reload(); 
+        }
+
+    } catch (error) { 
+        console.error("OTP Error Details:", error);
+        if(error.code) { 
+            alert("Invalid OTP! Please try again."); 
+        } else {
+            alert("System Error. Please check console logs.");
+        }
+    }
+}
+
+// ==========================================
+// 5. LOGOUT & DASHBOARD NAVIGATION
+// ==========================================
+function logoutUser() {
+    if (typeof firebase !== 'undefined') {
+        firebase.auth().signOut().then(() => {
+            localStorage.clear();
+            alert("You have successfully logged out!");
+            window.location.reload(); 
+        }).catch((err) => { console.error("Logout Error:", err); });
+    } else {
+        localStorage.clear();
+        window.location.reload();
+    }
+}
+
+function goToDashboard() {
+    const role = localStorage.getItem("bhavya_role");
+    if (role === "patient") {
+        window.location.href = "patient_dashboard/patient_dashboard.html"; 
+    } else if (role) {
+        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Coming Soon)");
+    } else {
+        alert("Role not found. Please log in again.");
+    }
+}

@@ -1,50 +1,68 @@
+// ==========================================
 // Configuration
+// ==========================================
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
-const SERVICEABLE_PINCODES = ["110001", "110002", "132103"]; // Replace with dynamic backend list if needed
+const SERVICEABLE_PINCODES = ["110001", "110002", "132103"]; // Replace with your actual dynamic list if needed
 
+// ==========================================
 // State Management
+// ==========================================
 let cart = JSON.parse(localStorage.getItem("bhavyaCart")) || [];
 let userId = localStorage.getItem("bhavya_user_id");
 let userDetails = {};
 let selectedLab = null;
 
+// ==========================================
 // DOM Elements
+// ==========================================
 const step1 = document.getElementById("step-1");
 const step2 = document.getElementById("step-2");
 const step3 = document.getElementById("step-3");
 const infoForm = document.getElementById("my-info-form");
 const authWarning = document.getElementById("auth-warning");
 
-// On Load
+// ==========================================
+// On Load Initialization
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     if (cart.length === 0) {
-        document.querySelector(".container").innerHTML = "<h2>Cart is empty!</h2>";
+        document.querySelector(".container").innerHTML = "<h2>Your Cart is empty!</h2><p>Please add some tests to continue.</p>";
         return;
     }
     initStep1();
 });
 
-// --- STEP 1 LOGIC ---
+// ==========================================
+// --- STEP 1: My Info Logic ---
+// ==========================================
 async function initStep1() {
     if (!userId) {
         authWarning.classList.remove("hidden");
-        // TODO: Trigger Firebase Phone Auth Popup here
+        // TODO: Trigger your Firebase Phone Auth Popup logic here
         return;
     }
 
     try {
-        // Fetch User Profile from GAS
-        const response = await fetch(`${GAS_WEB_APP_URL}?action=getUserProfile&userId=${userId}`);
-        const data = await response.json();
+        const payload = {
+            action: "getCartUserProfile",
+            userId: userId
+        };
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
         
-        if (data.status === 'success') {
-            userDetails = data.data;
+        if (result.status === 'success') {
+            userDetails = result.data;
             renderMyInfoForm();
         } else {
-            alert("Error fetching profile details.");
+            alert("Error fetching profile details: " + result.message);
         }
     } catch (e) {
         console.error("Failed to fetch user data", e);
+        alert("Network error while fetching profile.");
     }
 }
 
@@ -57,11 +75,13 @@ function renderMyInfoForm() {
     const nameContainer = document.getElementById("patient-name-container");
     nameContainer.innerHTML = "<label>Patient Name</label>";
 
+    // Smart Auto-Fill Logic (VIP vs Basic)
     if (userDetails.vip_status === "active") {
         let selectHtml = `<select id="patient-name">
             <option value="${userDetails.name}">${userDetails.name} (Self)</option>`;
         if(userDetails.vip_member_1) selectHtml += `<option value="${userDetails.vip_member_1}">${userDetails.vip_member_1}</option>`;
         if(userDetails.vip_member_2) selectHtml += `<option value="${userDetails.vip_member_2}">${userDetails.vip_member_2}</option>`;
+        if(userDetails.vip_member_3) selectHtml += `<option value="${userDetails.vip_member_3}">${userDetails.vip_member_3}</option>`;
         selectHtml += `</select>`;
         nameContainer.innerHTML += selectHtml;
     } else {
@@ -77,41 +97,48 @@ function saveStep1() {
     userDetails.pincode = document.getElementById("patient-pincode").value;
 
     if(!userDetails.selectedName || !userDetails.address || !userDetails.pincode) {
-        alert("Please fill all details.");
+        alert("Please fill all the details.");
         return;
     }
 
     // Lock Step 1 & Open Step 2
     document.querySelectorAll("#my-info-form input, #my-info-form select, #btn-save-step-1").forEach(el => el.disabled = true);
+    document.getElementById("btn-save-step-1").innerText = "Saved";
+    
     step2.classList.remove("hidden");
     renderCartItems();
 }
 
-// --- STEP 2 LOGIC ---
+// ==========================================
+// --- STEP 2: Service Configuration & Matchmaking ---
+// ==========================================
 function renderCartItems() {
     const container = document.getElementById("cart-items-container");
     container.innerHTML = "";
     
-    let requiredTestCategories = new Set(); // To store types like 'pathology', 'mri' for lab matchmaking
+    let requiredTestCategories = new Set(); 
 
     cart.forEach((item, index) => {
-        // Infer test category for backend match (assuming service_name or type contains these words)
+        // Infer test category for backend match based on service name or type
         let testTypeStr = (item.service_name + " " + (item.service_type || "")).toLowerCase();
         let needsCenterVisitOnly = testTypeStr.includes("mri") || testTypeStr.includes("ct") || testTypeStr.includes("usg");
         
-        // Add to required categories for Step 2 lab match
+        // Add required categories for Step 2 lab matchmaking
         if (testTypeStr.includes("mri")) requiredTestCategories.add("mri");
         else if (testTypeStr.includes("usg")) requiredTestCategories.add("usg");
-        else requiredTestCategories.add("pathology"); // Defaulting others to pathology for example
+        else if (testTypeStr.includes("package")) requiredTestCategories.add("package");
+        else requiredTestCategories.add("pathology"); // Defaulting standard tests to pathology
 
         let itemHtml = `
             <div class="cart-item">
                 <strong>${item.service_name}</strong> - ₹${item.price} <br>
-                ${needsCenterVisitOnly ? 
-                    `<span style="color: blue; font-weight:bold;">[Center Visit Required]</span>` : 
-                    `<label><input type="radio" name="collection_${index}" value="home" checked onchange="validateHomeCollection()"> Home Collection</label>
-                     <label><input type="radio" name="collection_${index}" value="center" onchange="validateHomeCollection()"> Center Visit</label>`
-                }
+                <div style="margin-top: 5px;">
+                    ${needsCenterVisitOnly ? 
+                        `<span style="color: #0056b3; font-weight:bold; font-size: 0.9em;">[Center Visit Required]</span>` : 
+                        `<label style="margin-right: 15px; font-size: 0.9em;"><input type="radio" name="collection_${index}" value="home" checked onchange="validateHomeCollection()"> Home Collection</label>
+                         <label style="font-size: 0.9em;"><input type="radio" name="collection_${index}" value="center" onchange="validateHomeCollection()"> Center Visit</label>`
+                    }
+                </div>
             </div>
         `;
         container.innerHTML += itemHtml;
@@ -126,8 +153,8 @@ function validateHomeCollection() {
     document.querySelectorAll('input[type="radio"][value="home"]:checked').forEach(() => homeSelected = true);
 
     if (homeSelected && !SERVICEABLE_PINCODES.includes(userDetails.pincode)) {
-        alert("Warning: Your area (" + userDetails.pincode + ") is not serviceable for Home Collection. Please switch to Center Visit for all items or update your pincode.");
-        // Uncheck home, check center
+        alert(`Warning: Your area pincode (${userDetails.pincode}) is currently not serviceable for Home Collection. Please switch to Center Visit for all items or update your pincode.`);
+        // Force uncheck home, check center
         document.querySelectorAll('input[type="radio"][value="home"]').forEach(el => el.checked = false);
         document.querySelectorAll('input[type="radio"][value="center"]').forEach(el => el.checked = true);
     }
@@ -135,9 +162,8 @@ function validateHomeCollection() {
 
 async function fetchMatchingLabs(requiredServices) {
     const labsContainer = document.getElementById("labs-container");
-    const scheduleSection = document.getElementById("schedule-section");
     document.getElementById("lab-matchmaking-section").classList.remove("hidden");
-    labsContainer.innerHTML = "Finding the best labs for your required tests...";
+    labsContainer.innerHTML = "<em>Finding the best labs for your required tests...</em>";
 
     try {
         const payload = {
@@ -157,34 +183,39 @@ async function fetchMatchingLabs(requiredServices) {
             result.data.forEach(lab => {
                 labsContainer.innerHTML += `
                     <div class="lab-item">
-                        <label>
-                            <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}', '${lab.open_time}', '${lab.close_time}')">
+                        <label style="display: block; cursor: pointer;">
+                            <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')" style="margin-right: 10px;">
                             <strong>${lab.lab_name}</strong><br>
-                            <small>${lab.lab_address} (Timing: ${lab.open_time} - ${lab.close_time})</small>
+                            <small style="color: #666; margin-left: 25px; display: block;">${lab.lab_address} <br>Timing: ${lab.open_time} - ${lab.close_time}</small>
                         </label>
                     </div>
                 `;
             });
         } else {
-            labsContainer.innerHTML = "<span class='warning-text'>No active labs found matching your tests in your pincode.</span>";
+            labsContainer.innerHTML = "<span class='warning-text'>Sorry, no active labs found matching all your selected tests in your pincode area.</span>";
         }
     } catch (e) {
-        labsContainer.innerHTML = "Error fetching labs.";
-        console.error(e);
+        labsContainer.innerHTML = "<span class='warning-text'>Error fetching labs. Please try again.</span>";
+        console.error("Matchmaking error", e);
     }
 }
 
-function selectLab(labId, openTime, closeTime) {
+function selectLab(labId) {
     selectedLab = labId;
     const scheduleSection = document.getElementById("schedule-section");
     scheduleSection.classList.remove("hidden");
     
-    // Simple logic to show step 3 when date/time changes
+    // Attach event listeners to date/time fields to enable Checkout button
     document.getElementById("booking-date").addEventListener("change", checkCheckoutReady);
     document.getElementById("booking-time").addEventListener("change", checkCheckoutReady);
+    
+    // Check immediately in case they re-select a lab after filling date/time
+    checkCheckoutReady();
 }
 
-// --- STEP 3 LOGIC ---
+// ==========================================
+// --- STEP 3: Checkout ---
+// ==========================================
 function checkCheckoutReady() {
     const date = document.getElementById("booking-date").value;
     const time = document.getElementById("booking-time").value;
@@ -196,17 +227,21 @@ function checkCheckoutReady() {
         
         // Single listener attachment to avoid duplicate orders
         btn.onclick = submitOrder; 
+    } else {
+        document.getElementById("btn-confirm-booking").disabled = true;
     }
 }
 
 async function submitOrder() {
-    document.getElementById("btn-confirm-booking").disabled = true;
-    document.getElementById("btn-confirm-booking").innerText = "Processing...";
+    const btn = document.getElementById("btn-confirm-booking");
+    btn.disabled = true;
+    btn.innerText = "Processing Booking...";
 
     const orderData = {
         action: "placeOrder",
         userId: userId,
         patientName: userDetails.selectedName,
+        mobile: userDetails.mobile,
         address: userDetails.address,
         pincode: userDetails.pincode,
         cart: cart,
@@ -223,15 +258,18 @@ async function submitOrder() {
         const result = await response.json();
 
         if(result.status === 'success') {
-            alert("Booking Confirmed Successfully!");
-            localStorage.removeItem("bhavyaCart");
-            window.location.href = "success.html"; // Redirect to success page
+            alert("Booking Confirmed Successfully! Total Amount: ₹" + result.data.orderAmount);
+            localStorage.removeItem("bhavyaCart"); // Clear cart after successful order
+            window.location.href = "success.html"; // Redirect to your success/dashboard page
         } else {
-            alert("Error placing order.");
-            document.getElementById("btn-confirm-booking").disabled = false;
+            alert("Error placing order: " + result.message);
+            btn.disabled = false;
+            btn.innerText = "Confirm Booking";
         }
     } catch (e) {
-        alert("Network Error.");
-        document.getElementById("btn-confirm-booking").disabled = false;
+        alert("Network Error while placing the order.");
+        console.error("Order submission error", e);
+        btn.disabled = false;
+        btn.innerText = "Confirm Booking";
     }
 }

@@ -1,9 +1,7 @@
 // ==========================================
 // Configuration
 // ==========================================
-// Aapka live Google Apps Script Web App URL
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
-const SERVICEABLE_PINCODES = ["110001", "110002", "132103"]; // Replace with your actual dynamic list if needed
 
 // ==========================================
 // State Management
@@ -22,14 +20,17 @@ const step3 = document.getElementById("step-3");
 const infoForm = document.getElementById("my-info-form");
 const authWarning = document.getElementById("auth-warning");
 
-// ==========================================
-// On Load Initialization
-// ==========================================
+// Set minimum date for booking to today
 document.addEventListener("DOMContentLoaded", () => {
     if (cart.length === 0) {
-        document.querySelector(".container").innerHTML = "<h2>Your Cart is empty!</h2><p>Please add some tests to continue.</p>";
+        document.querySelector(".container").innerHTML = "<div class='step-card' style='text-align:center;'><h2>Your Cart is empty!</h2><p>Please add some tests to continue.</p></div>";
         return;
     }
+    
+    // Set min date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("booking-date").setAttribute('min', today);
+    
     initStep1();
 });
 
@@ -39,20 +40,17 @@ document.addEventListener("DOMContentLoaded", () => {
 async function initStep1() {
     if (!userId) {
         authWarning.classList.remove("hidden");
-        // TODO: Trigger your Firebase Phone Auth Popup logic here
+        // Login button event
+        document.getElementById("btn-trigger-login").addEventListener("click", () => {
+            // Yahan apne login page ka link daalein
+            window.location.href = "login.html"; 
+        });
         return;
     }
 
     try {
-        const payload = {
-            action: "getCartUserProfile",
-            userId: userId
-        };
-
-        const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const payload = { action: "getCartUserProfile", userId: userId };
+        const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await response.json();
         
         if (result.status === 'success') {
@@ -70,7 +68,6 @@ async function initStep1() {
 function renderMyInfoForm() {
     infoForm.classList.remove("hidden");
     
-    // Auto-fill Mobile, Address & Pincode (Editable if patient wants)
     document.getElementById("patient-mobile").value = userDetails.mobile || "";
     document.getElementById("patient-address").value = userDetails.address || "";
     document.getElementById("patient-pincode").value = userDetails.pincode || "";
@@ -78,23 +75,18 @@ function renderMyInfoForm() {
     const nameContainer = document.getElementById("patient-name-container");
     nameContainer.innerHTML = "<label>Patient Name</label>";
 
-    // Smart Auto-Fill Logic (VIP vs Basic) based on backend is_vip flag
     if (userDetails.is_vip) {
-        // VIP Member: Dropdown limit to registered members
-        let selectHtml = `<select id="patient-name" style="background: #e8f5e9; border: 1px solid #4caf50; width: 100%; padding: 8px; border-radius: 4px;">
+        let selectHtml = `<select id="patient-name" style="background: #e8f5e9; border-color: #4caf50;">
             <option value="${userDetails.name}">${userDetails.name} (Self)</option>`;
         
         if(userDetails.member_1_name) selectHtml += `<option value="${userDetails.member_1_name}">${userDetails.member_1_name}</option>`;
         if(userDetails.member_2_name) selectHtml += `<option value="${userDetails.member_2_name}">${userDetails.member_2_name}</option>`;
         if(userDetails.member_3_name) selectHtml += `<option value="${userDetails.member_3_name}">${userDetails.member_3_name}</option>`;
         
-        selectHtml += `</select>
-        <small style="color: #2e7d32; display: block; margin-top: 5px;">👑 VIP Account: Select registered family member.</small>`;
+        selectHtml += `</select><small style="color: #2e7d32; display: block; margin-top: 5px;">👑 VIP Account: Select registered family member.</small>`;
         nameContainer.innerHTML += selectHtml;
     } else {
-        // Basic Member: Free Text Input
-        nameContainer.innerHTML += `
-        <input type="text" id="patient-name" value="${userDetails.name || ""}" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        nameContainer.innerHTML += `<input type="text" id="patient-name" value="${userDetails.name || ""}" required>
         <small style="color: #666; display: block; margin-top: 5px;">You can change the patient name for this booking.</small>`;
     }
 
@@ -111,15 +103,13 @@ function saveStep1() {
         return;
     }
 
-    // Lock Step 1 (My Info)
+    // Lock Step 1
     document.querySelectorAll("#my-info-form input, #my-info-form select").forEach(el => el.disabled = true);
-    
     let btn = document.getElementById("btn-save-step-1");
     btn.innerText = "Info Saved ✅";
-    btn.style.background = "#28a745";
+    btn.classList.replace("btn-primary", "btn-success");
     btn.disabled = true;
     
-    // Open Step 2
     step2.classList.remove("hidden");
     renderCartItems();
 }
@@ -130,30 +120,23 @@ function saveStep1() {
 function renderCartItems() {
     const container = document.getElementById("cart-items-container");
     container.innerHTML = "";
-    let requiredTestCategories = new Set(); 
-    let canDoHomeCollection = true;
 
     cart.forEach((item, index) => {
         let type = (item.service_type || "").toLowerCase();
         let name = (item.service_name || "").toLowerCase();
 
-        // Nayi List ke hisaab se sirf pathology aur package hi home collection denge
+        // Check if home collection is possible for this specific item
         let isHomeServiceable = name.includes("pathology") || name.includes("package") || type.includes("pathology") || type.includes("package");
-        
-        // Agar ek bhi test aisa hai jo pathology/package nahi hai, toh home collection disable ho jayega
-        if (!isHomeServiceable) canDoHomeCollection = false;
-
-        // Add to required categories for matching
-        requiredTestCategories.add(type || "pathology");
 
         let itemHtml = `
             <div class="cart-item">
-                <strong>${item.service_name}</strong> - ₹${item.price} <br>
-                <div style="margin-top: 5px;">
+                <strong style="font-size: 1.1em; color:#0056b3;">${item.service_name}</strong> <br>
+                <span style="font-weight:bold; color:#333;">Price: ₹${item.price}</span>
+                <div style="margin-top: 10px;">
                     ${!isHomeServiceable ? 
-                        `<span style="color: #d32f2f; font-weight:bold;">[Center Visit Required]</span>` : 
-                        `<label><input type="radio" name="collection_${index}" value="home" checked onchange="updateMatchmaking()"> Home Collection</label>
-                         <label style="margin-left:10px;"><input type="radio" name="collection_${index}" value="center" onchange="updateMatchmaking()"> Center Visit</label>`
+                        `<span style="color: #dc3545; font-weight:bold; background: #ffeeba; padding: 3px 8px; border-radius: 4px; font-size: 0.9em;">📍 Center Visit Required</span>` : 
+                        `<label style="margin-right: 15px; cursor:pointer;"><input type="radio" name="collection_${index}" value="home" checked onchange="updateMatchmaking()"> 🏠 Home Collection</label>
+                         <label style="cursor:pointer;"><input type="radio" name="collection_${index}" value="center" onchange="updateMatchmaking()"> 🏥 Center Visit</label>`
                     }
                 </div>
             </div>
@@ -164,17 +147,23 @@ function renderCartItems() {
     updateMatchmaking();
 }
 
-async function updateMatchmaking() {
+function updateMatchmaking() {
     let isHomeSelected = false;
     document.querySelectorAll('input[type="radio"][value="home"]:checked').forEach(() => isHomeSelected = true);
 
-    const categories = Array.from(new Set(cart.map(item => (item.service_type || "pathology").toLowerCase())));
+    // Collect all unique service types from cart (e.g. ['pathology', 'mri'])
+    const categories = Array.from(new Set(cart.map(item => {
+        let type = (item.service_type || "").toLowerCase();
+        return type || "pathology"; 
+    })));
+
     fetchMatchingLabs(categories, isHomeSelected);
 }
 
 async function fetchMatchingLabs(requiredServices, isHomeSelected) {
     const labsContainer = document.getElementById("labs-container");
-    labsContainer.innerHTML = "<em>Finding labs...</em>";
+    document.getElementById("lab-matchmaking-section").classList.remove("hidden");
+    labsContainer.innerHTML = "<em>Finding best labs based on your tests...</em>";
 
     try {
         const payload = {
@@ -190,24 +179,28 @@ async function fetchMatchingLabs(requiredServices, isHomeSelected) {
         if (result.status === 'success' && result.data.labs.length > 0) {
             let html = "";
             
-            // Naya Warning Message Logic
+            // Smart Warning Message if pincode doesn't match for Home Collection
             if (isHomeSelected && !result.data.hasExactMatch) {
-                html += `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ffeeba;">
-                    <strong>Service Alert:</strong> Home collection is not available in your area. 
-                    Please visit any of the labs below for your tests.
+                html += `
+                <div class="warning-box">
+                    <strong>⚠️ Service Alert:</strong> Home collection is currently not available for your pincode (${userDetails.pincode}). <br>
+                    Don't worry! You can visit any of the excellent labs below to get your tests done.
                 </div>`;
             }
 
             result.data.labs.forEach(lab => {
+                let defaultImg = 'https://via.placeholder.com/90?text=Lab+Image';
                 html += `
-                    <div class="lab-item" style="display: flex; align-items: center; border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 8px;">
-                        <img src="${lab.image || 'https://via.placeholder.com/80'}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; margin-right: 15px;">
+                    <div class="lab-item">
+                        <img src="${lab.image || defaultImg}" class="lab-image" alt="${lab.lab_name}">
                         <div style="flex: 1;">
-                            <label style="display: block; cursor: pointer;">
-                                <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')">
-                                <strong>${lab.lab_name}</strong>
-                                <div style="font-size: 0.85em; color: #555;">${lab.lab_address}</div>
-                                <div style="font-size: 0.85em; color: #2e7d32;">Today: ${lab.open_time} - ${lab.close_time}</div>
+                            <label style="display: block; cursor: pointer; width: 100%;">
+                                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                    <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')" style="width: auto; margin-right: 10px; transform: scale(1.3);">
+                                    <strong style="font-size: 1.1em; color: #333;">${lab.lab_name}</strong>
+                                </div>
+                                <div style="font-size: 0.9em; color: #666; margin-left: 25px;">📍 ${lab.lab_address}</div>
+                                <div style="font-size: 0.9em; color: #28a745; margin-left: 25px; margin-top: 3px; font-weight: bold;">🕒 Today's Timing: ${lab.open_time} to ${lab.close_time}</div>
                             </label>
                         </div>
                     </div>
@@ -215,11 +208,24 @@ async function fetchMatchingLabs(requiredServices, isHomeSelected) {
             });
             labsContainer.innerHTML = html;
         } else {
-            labsContainer.innerHTML = "<div class='warning-text'>No labs found for the selected tests.</div>";
+            labsContainer.innerHTML = "<div class='warning-box' style='color: #dc3545; background: #f8d7da; border-color: #f5c6cb;'>Sorry, no active labs found matching all your selected tests. Please try changing your tests or contact support.</div>";
+            document.getElementById("schedule-section").classList.add("hidden");
         }
     } catch (e) {
-        labsContainer.innerHTML = "Error loading labs.";
+        labsContainer.innerHTML = "<div style='color: red;'>Error fetching labs. Please check your internet connection.</div>";
+        console.error("Matchmaking error", e);
     }
+}
+
+function selectLab(labId) {
+    selectedLab = labId;
+    const scheduleSection = document.getElementById("schedule-section");
+    scheduleSection.classList.remove("hidden");
+    
+    document.getElementById("booking-date").addEventListener("change", checkCheckoutReady);
+    document.getElementById("booking-time").addEventListener("change", checkCheckoutReady);
+    
+    checkCheckoutReady();
 }
 
 // ==========================================
@@ -258,16 +264,13 @@ async function submitOrder() {
     };
 
     try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(orderData)
-        });
+        const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify(orderData) });
         const result = await response.json();
 
         if(result.status === 'success') {
-            alert("Booking Confirmed Successfully! Total Amount: ₹" + result.data.orderAmount);
-            localStorage.removeItem("bhavyaCart"); // Clear cart
-            window.location.href = "success.html"; // Redirect
+            alert("🎉 Booking Confirmed Successfully! Total Amount: ₹" + result.data.orderAmount);
+            localStorage.removeItem("bhavyaCart"); 
+            window.location.href = "success.html"; // Yahan apne success page ka naam daalein
         } else {
             alert("Error placing order: " + result.message);
             btn.disabled = false;

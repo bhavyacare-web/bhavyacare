@@ -4,15 +4,20 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
+// Active categories eligible for home collection
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
+// State Management
 let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
-let matchedLabs = [];
-let selectedLabId = null;
+let allActiveLabsList = []; // Backend se saari active labs yahan aayengi
 let selectedTime = null;
 
+// ==========================================
+// INITIALIZE PAGE
+// ==========================================
 window.onload = () => {
+    // 1. Check if cart is empty
     if(cart.length === 0) {
         document.querySelector('.container').innerHTML = `
             <div style="text-align:center; padding: 50px 20px;">
@@ -27,9 +32,11 @@ window.onload = () => {
 
     const userId = localStorage.getItem("bhavya_user_id");
     
+    // 2. If Logged In: Fetch profile and lock mobile number
     if (userId) {
         fetchProfile(userId);
     } else {
+        // 3. If Guest/New User: Allow free text entry
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 };
@@ -46,13 +53,15 @@ function fetchProfile(userId) {
             const data = res.data;
             bookingData.mobile = data.mobile;
             
+            // Populate and lock mobile
             document.getElementById('uMobile').value = data.mobile;
             document.getElementById('uMobile').setAttribute("readonly", true); 
             document.getElementById('uPincode').value = data.pincode;
             document.getElementById('uAddress').value = data.address;
 
+            // Handle VIP Names
             const nameBox = document.getElementById('nameInputBox');
-            if(data.isVip && data.vipMembers.length > 0) {
+            if(data.isVip && data.vipMembers && data.vipMembers.length > 0) {
                 document.getElementById('vipBadge').innerHTML = '<span style="background:var(--warning); color:white; font-size:10px; padding:4px 8px; border-radius:12px; margin-left: 10px;"><i class="fas fa-crown"></i> VIP Active</span>';
                 let opts = data.vipMembers.map(m => `<option value="${m}">${m}</option>`).join('');
                 nameBox.innerHTML = `<select id="uName" class="form-input">${opts}</select>`;
@@ -81,6 +90,7 @@ function savePatientInfo() {
     bookingData.pincode = pin;
     bookingData.address = addr;
 
+    // Set default fulfillment based on service category
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase();
         if(!item.fulfillment) {
@@ -92,9 +102,11 @@ function savePatientInfo() {
 }
 
 function lockStep1() {
+    // Update Stepper UI
     document.getElementById('step1-nav').classList.add('completed');
     document.getElementById('step2-nav').classList.add('active');
 
+    // Update Summary UI
     document.getElementById('sumName').innerText = bookingData.name;
     document.getElementById('sumMobile').innerText = "+91 " + bookingData.mobile;
     document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
@@ -102,12 +114,13 @@ function lockStep1() {
     document.getElementById('infoForm').style.display = 'none';
     document.getElementById('infoSummary').style.display = 'block';
 
+    // Unlock Step 2 Card
     const s2 = document.getElementById('step2-card');
     s2.style.display = 'block'; 
     s2.style.opacity = '1'; 
     s2.style.pointerEvents = 'auto';
 
-    renderCart();
+    // Start Lab Matchmaking logic
     fetchLabs(); 
 }
 
@@ -115,6 +128,7 @@ function editPatientInfo() {
     document.getElementById('infoForm').style.display = 'block';
     document.getElementById('infoSummary').style.display = 'none';
     
+    // Lock Step 2 visually
     const s2 = document.getElementById('step2-card');
     s2.style.opacity = '0.5'; 
     s2.style.pointerEvents = 'none';
@@ -123,20 +137,63 @@ function editPatientInfo() {
 }
 
 // ==========================================
-// STEP 2: CART & LAB MATCHMAKING
+// STEP 2: SPLIT CART & SMART LAB MATCHMAKING
 // ==========================================
-function renderCart() {
+function fetchLabs() {
+    document.getElementById('loadingLabsSpinner').style.display = 'block';
+    document.getElementById('cartItemsContainer').innerHTML = "";
+
+    // Fetch ALL active labs from backend
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "getAllActiveLabs" }) 
+    })
+    .then(res => res.json())
+    .then(res => {
+        document.getElementById('loadingLabsSpinner').style.display = 'none';
+        if(res.status === "success") {
+            allActiveLabsList = res.data.labs;
+            renderCartWithLabs(); // Render cart items with individual dropdowns
+        } else {
+            alert("Error fetching labs. Please try again.");
+        }
+    }).catch(e => {
+        document.getElementById('loadingLabsSpinner').style.display = 'none';
+        alert("Network Error while fetching diagnostic centers.");
+    });
+}
+
+function renderCartWithLabs() {
     let html = ""; 
     let total = 0;
+    let allItemsConfigured = true;
     
     cart.forEach((item, index) => {
         total += (item.price * item.qty);
         let type = (item.service_type || "pathology").toLowerCase();
-        let toggleHtml = "";
+        
+        // 1. Find labs that do THIS specific test
+        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
 
+        // 2. Filter further if user wants Home Collection
+        let isHome = item.fulfillment === "home";
+        let finalLabs = eligibleLabs;
+
+        if (isHome) {
+            // Check if user pincode is in the lab's available_pincodes array OR matches base pincode
+            finalLabs = eligibleLabs.filter(lab => {
+                let pStr = bookingData.pincode.toString();
+                return lab.available_pincodes.includes(pStr) || lab.pincode === pStr;
+            });
+        }
+
+        // --- Build Item UI ---
+        
+        // Toggle Buttons
+        let toggleHtml = "";
         if(homeServiceCategories.includes(type)) {
-            let hAct = item.fulfillment === "home" ? "active" : "";
-            let cAct = item.fulfillment === "center" ? "active" : "";
+            let hAct = isHome ? "active" : "";
+            let cAct = !isHome ? "active" : "";
             toggleHtml = `
                 <div class="service-toggle-box">
                     <button class="toggle-btn ${hAct}" onclick="changeFulfill(${index}, 'home')"><i class="fas fa-home"></i> Home</button>
@@ -147,6 +204,51 @@ function renderCart() {
             toggleHtml = `<div style="font-size:11px; color:var(--danger); font-weight:600; margin-top:8px;"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
+        // Lab Dropdown
+        let labSelectHtml = "";
+        
+        if (finalLabs.length > 0) {
+            // Auto-select first lab if none selected
+            if(!item.selected_lab_id || !finalLabs.find(l => l.lab_id === item.selected_lab_id)) {
+                item.selected_lab_id = finalLabs[0].lab_id; 
+            }
+
+            let options = finalLabs.map(lab => {
+                let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
+                let sel = lab.lab_id === item.selected_lab_id ? "selected" : "";
+                return `<option value="${lab.lab_id}" ${sel}>${lab.lab_name} ${badges}</option>`;
+            }).join('');
+
+            labSelectHtml = `
+                <div class="item-lab-selector">
+                    <label style="font-size:11px; color:var(--text-muted); font-weight:600;">Assign to Lab:</label>
+                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value)">
+                        ${options}
+                    </select>
+                </div>`;
+        } else {
+            // ERROR: No labs found for this config
+            item.selected_lab_id = null;
+            allItemsConfigured = false;
+            
+            if (isHome && eligibleLabs.length > 0) {
+                // Labs exist, but don't do home collection here
+                labSelectHtml = `
+                    <div class="item-error-box">
+                        <span><i class="fas fa-exclamation-triangle"></i> Home collection not available at Pin ${bookingData.pincode} for this test.</span>
+                        <button class="btn-small-outline" onclick="changeFulfill(${index}, 'center')">Switch to Center Visit</button>
+                    </div>`;
+            } else {
+                // No labs do this test at all
+                labSelectHtml = `
+                    <div class="item-error-box">
+                        <span><i class="fas fa-times-circle"></i> No partner lab found for this service in your area.</span>
+                        <button class="btn-small-outline" onclick="removeCartItem(${index})"><i class="fas fa-trash"></i> Remove Item</button>
+                    </div>`;
+            }
+        }
+
+        // Combine HTML
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
                 <div style="display:flex; justify-content:space-between; align-items: flex-start;">
@@ -157,107 +259,41 @@ function renderCart() {
                     <strong style="color:var(--success); font-size: 15px;">₹${item.price * item.qty}</strong>
                 </div>
                 ${toggleHtml}
+                ${labSelectHtml}
             </div>`;
     });
     
     document.getElementById('cartItemsContainer').innerHTML = html;
     document.getElementById('totalAmt').innerText = total;
+
+    // Show Date/Time selector ONLY if all items are configured properly
+    if (cart.length > 0 && allItemsConfigured) {
+        document.getElementById('dateTimeSection').style.display = 'block';
+        let today = new Date().toISOString().split('T')[0];
+        document.getElementById('bookingDate').setAttribute('min', today);
+    } else {
+        document.getElementById('dateTimeSection').style.display = 'none';
+    }
+
+    validateCheckout();
 }
 
-function fetchLabs() {
-    document.getElementById('labSection').style.display = 'block';
-    document.getElementById('labsContainer').innerHTML = "<div style='text-align:center; padding:20px;'><i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:24px;'></i><p style='font-size:13px; color:var(--text-muted); margin-top:10px;'>Finding best labs for you...</p></div>";
-    document.getElementById('fallbackMessage').style.display = 'none';
-
-    let requiredTypes = [...new Set(cart.map(i => i.service_type))];
-
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "getMatchedLabs", pincode: bookingData.pincode, required_types: requiredTypes })
-    })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === "success" && res.data.labs.length > 0) {
-            matchedLabs = res.data.labs;
-            selectedLabId = null;
-            
-            // 🌟 FALLBACK UI LOGIC (Pincode Not Reachable for Home)
-            if(res.data.isFallback || res.data.message) {
-                document.getElementById('fallbackText').innerText = res.data.message;
-                document.getElementById('fallbackMessage').style.display = 'flex';
-                cart.forEach(i => { if(i.fulfillment === 'home') i.fulfillment = 'center'; });
-                renderCart();
-            }
-            
-            renderLabs();
-        } else {
-            document.getElementById('labsContainer').innerHTML = "<p style='color:var(--danger); font-size:13px; text-align:center; padding: 10px; background: #fee2e2; border-radius: 8px;'>No partner labs found offering all the selected services in this area.</p>";
-        }
-    }).catch(e => {
-        document.getElementById('labsContainer').innerHTML = "<p style='color:var(--danger); font-size:13px; text-align:center;'>Network error. Please try again.</p>";
-    });
-}
-
-function renderLabs() {
-    let html = matchedLabs.map(lab => {
-        let badges = "";
-        if(lab.nabl) badges += `<span class="lab-badge badge-nabl">NABL</span>`;
-        if(lab.nabh) badges += `<span class="lab-badge badge-nabh">NABH</span>`;
-        
-        let imgSrc = lab.lab_image || "https://via.placeholder.com/60?text=LAB";
-
-        let isHomeSelected = cart.some(i => i.fulfillment === "home");
-        let labSupportsHome = lab.available_pincodes.includes(bookingData.pincode.toString());
-        
-        let warningUI = "";
-        if(isHomeSelected && !labSupportsHome) {
-            warningUI = `<div style="font-size:11px; color:var(--danger); font-weight:700; margin-top:6px; background: #fee2e2; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-exclamation-triangle"></i> Home Collection unavailable here.</div>`;
-        }
-
-        return `
-        <div class="lab-card ${selectedLabId === lab.lab_id ? 'selected' : ''}" onclick="selectLab('${lab.lab_id}', ${labSupportsHome})">
-            <img src="${imgSrc}" style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border);">
-            <div style="flex-grow: 1;">
-                <strong style="font-size:15px; color: var(--text-main); display:flex; align-items:center; gap:5px; margin-bottom: 4px;">${lab.lab_name} ${badges}</strong>
-                <span style="font-size:12px; color:var(--text-muted); display:block; line-height: 1.4;"><i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${lab.lab_address}, ${lab.city}</span>
-                ${warningUI}
-            </div>
-        </div>`;
-    }).join('');
-    
-    document.getElementById('labsContainer').innerHTML = html;
-}
-
+// Actions
 function changeFulfill(index, type) {
-    if(type === 'home') {
-        if(selectedLabId) {
-            let lab = matchedLabs.find(l => l.lab_id === selectedLabId);
-            if(lab && !lab.available_pincodes.includes(bookingData.pincode.toString())) {
-                return alert(`Home collection is not available for Pin ${bookingData.pincode} from ${lab.lab_name}. Please choose Center Visit.`);
-            }
-        }
-    }
     cart[index].fulfillment = type;
-    renderCart(); 
+    renderCartWithLabs(); // Re-render to update the dropdowns
+}
+
+function assignLabToItem(index, labId) {
+    cart[index].selected_lab_id = labId;
     validateCheckout();
 }
 
-function selectLab(id, labSupportsHome) {
-    selectedLabId = id;
-    
-    let isHomeSelected = cart.some(i => i.fulfillment === "home");
-    if(isHomeSelected && !labSupportsHome) {
-        cart.forEach(i => { if(i.fulfillment === 'home') i.fulfillment = 'center'; });
-        renderCart();
-        alert("Switched to Center Visit as this lab does not provide home collection in your area.");
-    }
-
-    renderLabs();
-    
-    document.getElementById('dateTimeSection').style.display = 'block';
-    let today = new Date().toISOString().split('T')[0];
-    document.getElementById('bookingDate').setAttribute('min', today);
-    validateCheckout();
+function removeCartItem(index) {
+    cart.splice(index, 1);
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
+    if(cart.length === 0) location.reload(); 
+    else renderCartWithLabs();
 }
 
 // ==========================================
@@ -267,6 +303,7 @@ function generateSlots() {
     const dateVal = document.getElementById('bookingDate').value;
     if(!dateVal) return;
 
+    // Hardcoded global slots
     const slots = ["08:00 AM", "09:30 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
     
     let html = slots.map(s => `<button class="slot-btn" onclick="selectTime(this, '${s}')">${s}</button>`).join('');
@@ -285,7 +322,11 @@ function selectTime(btn, time) {
 
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
-    if(selectedLabId && document.getElementById('bookingDate').value && selectedTime) {
+    
+    // Check if ALL items have a selected_lab_id
+    let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
+    
+    if(cart.length > 0 && allAssigned && document.getElementById('bookingDate').value && selectedTime) {
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
     } else {
@@ -301,11 +342,18 @@ function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
     if (!userId) {
+        // GUEST USER: Trigger Firebase OTP Flow
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
         
-        // Firebase Send OTP Logic Here...
+        // ---------------------------------------------------------
+        // TODO: ADD YOUR FIREBASE SEND OTP LOGIC HERE
+        // Example: 
+        // firebase.auth().signInWithPhoneNumber("+91" + bookingData.mobile, appVerifier)
+        // .then((confirmationResult) => { window.confirmationResult = confirmationResult; })
+        // ---------------------------------------------------------
     } else {
+        // EXISTING USER: Directly Submit Order
         processOrderSubmission(userId);
     }
 }
@@ -318,12 +366,21 @@ function verifyFirebaseOTP() {
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    // Firebase Verify OTP Logic Here...
-    // Currently simulating a success response:
+    // ---------------------------------------------------------
+    // TODO: ADD YOUR FIREBASE VERIFY OTP LOGIC HERE
+    // Example:
+    // window.confirmationResult.confirm(otp).then((result) => {
+    //     let firebaseUid = result.user.uid;
+    //     proceedWithRegistration(firebaseUid);
+    // })
+    // ---------------------------------------------------------
+
+    // ⚠️ For testing, simulating successful OTP verification
     proceedWithRegistration("FB-UID-" + Math.floor(Math.random()*1000));
 }
 
 function proceedWithRegistration(firebaseUid) {
+    // 1. Register User in Google Sheets
     const newUserPayload = {
         action: "registerNewPatient",
         firebase_uid: firebaseUid,
@@ -341,6 +398,8 @@ function proceedWithRegistration(firebaseUid) {
             localStorage.setItem("bhavya_user_id", newUserId); 
             
             document.getElementById('otpModal').style.display = 'none';
+            
+            // 2. Submit Final Order for this new user
             processOrderSubmission(newUserId);
         } else {
             alert("Registration failed: " + res.message);
@@ -369,9 +428,8 @@ function processOrderSubmission(userId) {
         patient_name: bookingData.name,
         pincode: bookingData.pincode,
         address: bookingData.address,
-        cart_items: cart,
+        cart_items: cart, // Contains individual selected_lab_id per item
         total_amount: document.getElementById('totalAmt').innerText,
-        lab_id: selectedLabId,
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime
     };
@@ -380,6 +438,7 @@ function processOrderSubmission(userId) {
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {
+            // Success! Clear Cart and Redirect
             localStorage.removeItem('bhavyaCart');
             alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}`);
             window.location.href = "../index.html"; 

@@ -10,14 +10,18 @@ let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
-let confirmationResult; // For Firebase OTP
+let confirmationResult; // Firebase OTP result
 
+// ==========================================
+// 1. INITIALIZATION
+// ==========================================
 window.onload = () => {
     if(cart.length === 0) {
         showEmptyCart();
         return;
     }
 
+    // Display initial total amount immediately
     let initialTotal = 0;
     cart.forEach(item => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -42,6 +46,9 @@ function showEmptyCart() {
     document.querySelector('.bottom-bar').style.display = 'none';
 }
 
+// ==========================================
+// 2. PATIENT PROFILE LOGIC
+// ==========================================
 function fetchProfile(userId) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
@@ -112,6 +119,9 @@ function editPatientInfo() {
     validateCheckout();
 }
 
+// ==========================================
+// 3. SMART LAB MATCHMAKING (SPLIT CART)
+// ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
@@ -132,11 +142,13 @@ function fetchLabs() {
     });
 }
 
+// Ensure items of the same category (e.g., all "pathology") auto-select the same lab
 function autoAssignLabsByCategory() {
     let assignedLabs = {}; 
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase().trim();
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+        
         if (item.fulfillment === "home") {
             eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
         }
@@ -173,6 +185,7 @@ function renderCartWithLabs() {
             finalLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
         }
 
+        // Fulfillment Toggles
         let toggleHtml = "";
         if(isHomeEligible) {
             let hAct = isHome ? "active" : "";
@@ -187,6 +200,7 @@ function renderCartWithLabs() {
             toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
+        // Lab Selector
         let labSelectHtml = "";
         if (finalLabs.length > 0) {
             let options = finalLabs.map(lab => {
@@ -212,6 +226,7 @@ function renderCartWithLabs() {
             }
         }
 
+        // Item HTML
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
                 <div class="cart-item-header">
@@ -232,6 +247,7 @@ function renderCartWithLabs() {
     document.getElementById('cartItemsContainer').innerHTML = html;
     document.getElementById('totalAmt').innerText = total;
 
+    // Show Date selector only if all items have assigned labs
     if (cart.length > 0 && allItemsConfigured) {
         document.getElementById('dateTimeSection').style.display = 'block';
         if(!document.getElementById('bookingDate').value) {
@@ -249,7 +265,7 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-// 🌟 FIX: Trim lagaya gaya hai taaki "usg " bhi correctly match ho jaye
+// Group lab assignment by category
 function assignLabToItem(index, labId, categoryType) {
     cart.forEach(item => {
         let t = (item.service_type || "pathology").toLowerCase().trim();
@@ -262,7 +278,7 @@ function assignLabToItem(index, labId, categoryType) {
 }
 
 function removeCartItem(index) {
-    if(confirm("Are you sure you want to remove this item?")) {
+    if(confirm("Remove this item from your cart?")) {
         cart.splice(index, 1);
         localStorage.setItem('bhavyaCart', JSON.stringify(cart));
         if(cart.length === 0) showEmptyCart();
@@ -270,6 +286,9 @@ function removeCartItem(index) {
     }
 }
 
+// ==========================================
+// 4. DATE, TIME & CHECKOUT VALIDATION
+// ==========================================
 function generateSlots() {
     const dateVal = document.getElementById('bookingDate').value;
     if(!dateVal) return;
@@ -290,7 +309,9 @@ function selectTime(btn, time) {
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
     if (cart.length === 0) { btn.disabled = true; return; }
+    
     let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
+    
     if(allAssigned && document.getElementById('bookingDate').value && selectedTime) {
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
@@ -301,7 +322,7 @@ function validateCheckout() {
 }
 
 // ==========================================
-// 🌟 FINAL BOOKING & REAL FIREBASE OTP LOGIC 🌟
+// 5. FINAL BOOKING & FIREBASE OTP
 // ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
@@ -312,9 +333,7 @@ function finalizeBooking() {
         
         // Initialize Firebase Recaptcha
         if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'normal'
-            });
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
             window.recaptchaVerifier.render();
         }
 
@@ -345,10 +364,9 @@ function verifyFirebaseOTP() {
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    // Verify OTP code
     confirmationResult.confirm(otp).then((result) => {
         const user = result.user;
-        proceedWithRegistration(user.uid); // Pass actual Firebase UID
+        proceedWithRegistration(user.uid); 
     }).catch((error) => {
         alert("Invalid OTP! Please try again.");
         resetOtpBtn();

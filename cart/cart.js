@@ -130,28 +130,30 @@ function saveStep1() {
 function renderCartItems() {
     const container = document.getElementById("cart-items-container");
     container.innerHTML = "";
-    
     let requiredTestCategories = new Set(); 
+    let canDoHomeCollection = true;
 
     cart.forEach((item, index) => {
-        // Infer test category for backend match
-        let testTypeStr = (item.service_name + " " + (item.service_type || "")).toLowerCase();
-        let needsCenterVisitOnly = testTypeStr.includes("mri") || testTypeStr.includes("ct") || testTypeStr.includes("usg");
+        let type = (item.service_type || "").toLowerCase();
+        let name = (item.service_name || "").toLowerCase();
+
+        // Nayi List ke hisaab se sirf pathology aur package hi home collection denge
+        let isHomeServiceable = name.includes("pathology") || name.includes("package") || type.includes("pathology") || type.includes("package");
         
-        // Add required categories for Step 2 lab matchmaking
-        if (testTypeStr.includes("mri")) requiredTestCategories.add("mri");
-        else if (testTypeStr.includes("usg")) requiredTestCategories.add("usg");
-        else if (testTypeStr.includes("package")) requiredTestCategories.add("package");
-        else requiredTestCategories.add("pathology"); // Defaulting standard tests to pathology
+        // Agar ek bhi test aisa hai jo pathology/package nahi hai, toh home collection disable ho jayega
+        if (!isHomeServiceable) canDoHomeCollection = false;
+
+        // Add to required categories for matching
+        requiredTestCategories.add(type || "pathology");
 
         let itemHtml = `
             <div class="cart-item">
                 <strong>${item.service_name}</strong> - ₹${item.price} <br>
                 <div style="margin-top: 5px;">
-                    ${needsCenterVisitOnly ? 
-                        `<span style="color: #0056b3; font-weight:bold; font-size: 0.9em;">[Center Visit Required]</span>` : 
-                        `<label style="margin-right: 15px; font-size: 0.9em;"><input type="radio" name="collection_${index}" value="home" checked onchange="validateHomeCollection()"> Home Collection</label>
-                         <label style="font-size: 0.9em;"><input type="radio" name="collection_${index}" value="center" onchange="validateHomeCollection()"> Center Visit</label>`
+                    ${!isHomeServiceable ? 
+                        `<span style="color: #d32f2f; font-weight:bold;">[Center Visit Required]</span>` : 
+                        `<label><input type="radio" name="collection_${index}" value="home" checked onchange="updateMatchmaking()"> Home Collection</label>
+                         <label style="margin-left:10px;"><input type="radio" name="collection_${index}" value="center" onchange="updateMatchmaking()"> Center Visit</label>`
                     }
                 </div>
             </div>
@@ -159,71 +161,65 @@ function renderCartItems() {
         container.innerHTML += itemHtml;
     });
 
-    validateHomeCollection();
-    fetchMatchingLabs(Array.from(requiredTestCategories));
+    updateMatchmaking();
 }
 
-function validateHomeCollection() {
-    let homeSelected = false;
-    document.querySelectorAll('input[type="radio"][value="home"]:checked').forEach(() => homeSelected = true);
+async function updateMatchmaking() {
+    let isHomeSelected = false;
+    document.querySelectorAll('input[type="radio"][value="home"]:checked').forEach(() => isHomeSelected = true);
 
-    if (homeSelected && !SERVICEABLE_PINCODES.includes(userDetails.pincode)) {
-        alert(`Warning: Your area pincode (${userDetails.pincode}) is currently not serviceable for Home Collection. Please switch to Center Visit for all items or update your pincode.`);
-        // Force uncheck home, check center
-        document.querySelectorAll('input[type="radio"][value="home"]').forEach(el => el.checked = false);
-        document.querySelectorAll('input[type="radio"][value="center"]').forEach(el => el.checked = true);
-    }
+    const categories = Array.from(new Set(cart.map(item => (item.service_type || "pathology").toLowerCase())));
+    fetchMatchingLabs(categories, isHomeSelected);
 }
 
-async function fetchMatchingLabs(requiredServices) {
+async function fetchMatchingLabs(requiredServices, isHomeSelected) {
     const labsContainer = document.getElementById("labs-container");
-    document.getElementById("lab-matchmaking-section").classList.remove("hidden");
-    labsContainer.innerHTML = "<em>Finding the best labs for your required tests...</em>";
+    labsContainer.innerHTML = "<em>Finding labs...</em>";
 
     try {
         const payload = {
             action: "getLabs",
             pincode: userDetails.pincode,
-            services: requiredServices
+            services: requiredServices,
+            isHomeCollection: isHomeSelected
         };
 
-        const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await response.json();
 
-        if (result.status === 'success' && result.data.length > 0) {
-            labsContainer.innerHTML = "";
-            result.data.forEach(lab => {
-                labsContainer.innerHTML += `
-                    <div class="lab-item" style="border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px;">
-                        <label style="display: block; cursor: pointer;">
-                            <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')" style="margin-right: 10px;">
-                            <strong>${lab.lab_name}</strong><br>
-                            <small style="color: #666; margin-left: 25px; display: block;">${lab.lab_address} <br>Timing: ${lab.open_time} - ${lab.close_time}</small>
-                        </label>
+        if (result.status === 'success' && result.data.labs.length > 0) {
+            let html = "";
+            
+            // Naya Warning Message Logic
+            if (isHomeSelected && !result.data.hasExactMatch) {
+                html += `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ffeeba;">
+                    <strong>Service Alert:</strong> Home collection is not available in your area. 
+                    Please visit any of the labs below for your tests.
+                </div>`;
+            }
+
+            result.data.labs.forEach(lab => {
+                html += `
+                    <div class="lab-item" style="display: flex; align-items: center; border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 8px;">
+                        <img src="${lab.image || 'https://via.placeholder.com/80'}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; margin-right: 15px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; cursor: pointer;">
+                                <input type="radio" name="selected_lab" value="${lab.lab_id}" onchange="selectLab('${lab.lab_id}')">
+                                <strong>${lab.lab_name}</strong>
+                                <div style="font-size: 0.85em; color: #555;">${lab.lab_address}</div>
+                                <div style="font-size: 0.85em; color: #2e7d32;">Today: ${lab.open_time} - ${lab.close_time}</div>
+                            </label>
+                        </div>
                     </div>
                 `;
             });
+            labsContainer.innerHTML = html;
         } else {
-            labsContainer.innerHTML = "<span class='warning-text' style='color: red;'>Sorry, no active labs found matching all your selected tests in your pincode area.</span>";
+            labsContainer.innerHTML = "<div class='warning-text'>No labs found for the selected tests.</div>";
         }
     } catch (e) {
-        labsContainer.innerHTML = "<span class='warning-text' style='color: red;'>Error fetching labs. Please try again.</span>";
-        console.error("Matchmaking error", e);
+        labsContainer.innerHTML = "Error loading labs.";
     }
-}
-
-function selectLab(labId) {
-    selectedLab = labId;
-    const scheduleSection = document.getElementById("schedule-section");
-    scheduleSection.classList.remove("hidden");
-    
-    document.getElementById("booking-date").addEventListener("change", checkCheckoutReady);
-    document.getElementById("booking-time").addEventListener("change", checkCheckoutReady);
-    
-    checkCheckoutReady();
 }
 
 // ==========================================

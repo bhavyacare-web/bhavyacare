@@ -43,13 +43,11 @@
     .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; }
     .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    /* Lab & Time Slots */
-    .lab-card { border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; display: flex; gap: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
-    .lab-card.selected { border-color: var(--success); background: #f0fdf4; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1); }
-    .lab-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-left: 4px; }
-    .badge-nabl { background-color: #0284c7; }
-    .badge-nabh { background-color: #16a34a; }
-    .fallback-msg { background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 15px; display: flex; gap: 10px; align-items: flex-start; }
+    /* SPLIT CART SPECIFIC STYLES */
+    .item-lab-selector { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 12px; margin-top: 10px; }
+    .item-lab-select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); background: white; outline: none; }
+    .item-error-box { background: #fee2e2; border: 1px dashed #f87171; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .btn-small-outline { border: 1px solid var(--danger); background: transparent; color: var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
     
     .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
     .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
@@ -71,18 +69,6 @@
     <div style="text-align: center;">
       <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary);"></i>
       <p style="margin-top: 15px; font-weight: 600; color: var(--text-muted);">Please wait...</p>
-    </div>
-  </div>
-
-  <div id="pincodeModal" class="modal-overlay">
-    <div class="modal-content">
-      <i class="fas fa-map-marker-alt" style="font-size: 40px; color: var(--warning); margin-bottom: 15px;"></i>
-      <h3 style="margin-top:0;">Area Not Serviceable</h3>
-      <p style="font-size: 14px; color: var(--text-muted);">Home collection is currently not available for <b id="alertPin"></b>.</p>
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn-main" style="background: var(--bg-color); color: var(--text-main);" onclick="closePincodeModal()">Edit Details</button>
-        <button class="btn-main" onclick="switchAllToCenter()">Switch to Center</button>
-      </div>
     </div>
   </div>
 
@@ -151,22 +137,17 @@
     </div>
 
     <div class="card" id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
-      <div class="card-title">Selected Tests</div>
-      <div id="cartItemsContainer" style="margin-bottom: 24px;"></div>
+      <div class="card-title">Services & Centers</div>
       
-      <div id="labSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px;">
-        <div class="card-title">Select Diagnostics Center</div>
-        
-        <div id="fallbackMessage" class="fallback-msg" style="display: none;">
-          <i class="fas fa-info-circle" style="margin-top: 2px;"></i>
-          <span id="fallbackText"></span>
-        </div>
-
-        <div id="labsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      <div id="loadingLabsSpinner" style="display:none; text-align:center; padding: 20px;">
+        <i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:24px;'></i>
+        <p style='font-size:13px; color:var(--text-muted); margin-top:10px;'>Finding eligible labs...</p>
       </div>
 
+      <div id="cartItemsContainer" style="margin-bottom: 24px;"></div>
+
       <div id="dateTimeSection" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px; margin-top: 20px;">
-        <div class="card-title">Select Date & Time</div>
+        <div class="card-title">Select Global Date & Time</div>
         <input type="date" id="bookingDate" class="form-input" onchange="generateSlots()">
         <div class="slot-grid" id="slotContainer"></div>
       </div>

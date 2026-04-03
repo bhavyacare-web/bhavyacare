@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (BHAVYACARE) - FIXED
+// CART & CHECKOUT LOGIC (BHAVYACARE) - SPLIT CART
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -11,6 +11,9 @@ let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false
 let allActiveLabsList = []; 
 let selectedTime = null;
 
+// ==========================================
+// INITIALIZE PAGE
+// ==========================================
 window.onload = () => {
     // 1. Check if cart is empty
     if(cart.length === 0) {
@@ -25,10 +28,9 @@ window.onload = () => {
         return;
     }
 
-    // 🌟 FIX 1: PAGE LOAD HOTE HI INITIAL TOTAL DIKHAO 🌟
+    // 2. Initial Total Calculation
     let initialTotal = 0;
     cart.forEach(item => {
-        // Fallback for different price keys (price, service_price, basic_price)
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
         let itemQty = Number(item.qty || 1);
         initialTotal += (itemPrice * itemQty);
@@ -37,7 +39,7 @@ window.onload = () => {
 
     const userId = localStorage.getItem("bhavya_user_id");
     
-    // 2. Fetch profile if logged in
+    // 3. Fetch profile if logged in
     if (userId) {
         fetchProfile(userId);
     } else {
@@ -136,7 +138,9 @@ function editPatientInfo() {
 // STEP 2: SPLIT CART & SMART LAB MATCHMAKING
 // ==========================================
 function fetchLabs() {
-    document.getElementById('loadingLabsSpinner').style.display = 'block';
+    let spinner = document.getElementById('loadingLabsSpinner');
+    if (spinner) spinner.style.display = 'block';
+    
     document.getElementById('cartItemsContainer').innerHTML = "";
 
     fetch(GAS_URL, { 
@@ -145,7 +149,7 @@ function fetchLabs() {
     })
     .then(res => res.json())
     .then(res => {
-        document.getElementById('loadingLabsSpinner').style.display = 'none';
+        if (spinner) spinner.style.display = 'none';
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
             renderCartWithLabs(); 
@@ -153,7 +157,8 @@ function fetchLabs() {
             alert("Error fetching labs. Please try again.");
         }
     }).catch(e => {
-        document.getElementById('loadingLabsSpinner').style.display = 'none';
+        if (spinner) spinner.style.display = 'none';
+        console.error(e);
         alert("Network Error while fetching diagnostic centers.");
     });
 }
@@ -164,15 +169,16 @@ function renderCartWithLabs() {
     let allItemsConfigured = true;
     
     cart.forEach((item, index) => {
-        // 🌟 FIX 2: SAFE PRICE EXTRACTION 🌟
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
         let itemQty = Number(item.qty || 1);
         
         total += (itemPrice * itemQty);
         let type = (item.service_type || "pathology").toLowerCase();
         
+        // 1. Find labs that do THIS specific test
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
 
+        // 2. Filter further if user wants Home Collection
         let isHome = item.fulfillment === "home";
         let finalLabs = eligibleLabs;
 
@@ -183,6 +189,7 @@ function renderCartWithLabs() {
             });
         }
 
+        // --- Build Item UI ---
         let toggleHtml = "";
         if(homeServiceCategories.includes(type)) {
             let hAct = isHome ? "active" : "";
@@ -197,9 +204,11 @@ function renderCartWithLabs() {
             toggleHtml = `<div style="font-size:11px; color:var(--danger); font-weight:600; margin-top:8px;"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
         }
 
+        // Lab Dropdown
         let labSelectHtml = "";
         
         if (finalLabs.length > 0) {
+            // Auto-select first lab if none selected or if previously selected lab is no longer valid
             if(!item.selected_lab_id || !finalLabs.find(l => l.lab_id === item.selected_lab_id)) {
                 item.selected_lab_id = finalLabs[0].lab_id; 
             }
@@ -218,6 +227,7 @@ function renderCartWithLabs() {
                     </select>
                 </div>`;
         } else {
+            // ERROR: No labs found for this config
             item.selected_lab_id = null;
             allItemsConfigured = false;
             
@@ -236,6 +246,7 @@ function renderCartWithLabs() {
             }
         }
 
+        // Combine HTML
         html += `
             <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
                 <div style="display:flex; justify-content:space-between; align-items: flex-start;">
@@ -306,6 +317,7 @@ function selectTime(btn, time) {
 
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
+    
     let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
     
     if(cart.length > 0 && allAssigned && document.getElementById('bookingDate').value && selectedTime) {
@@ -322,9 +334,12 @@ function validateCheckout() {
 // ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
+    
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("otpModal").style.display = "flex";
+        
+        // ADD YOUR FIREBASE SEND OTP LOGIC HERE
     } else {
         processOrderSubmission(userId);
     }
@@ -338,7 +353,8 @@ function verifyFirebaseOTP() {
     btn.innerText = "Verifying..."; 
     btn.disabled = true;
 
-    // Simulate OTP Success for testing
+    // ADD YOUR FIREBASE VERIFY OTP LOGIC HERE
+    // Simulating success for now:
     proceedWithRegistration("FB-UID-" + Math.floor(Math.random()*1000));
 }
 
@@ -358,6 +374,7 @@ function proceedWithRegistration(firebaseUid) {
         if(res.status === "success") {
             const newUserId = res.data.user_id;
             localStorage.setItem("bhavya_user_id", newUserId); 
+            
             document.getElementById('otpModal').style.display = 'none';
             processOrderSubmission(newUserId);
         } else {
@@ -387,7 +404,7 @@ function processOrderSubmission(userId) {
         patient_name: bookingData.name,
         pincode: bookingData.pincode,
         address: bookingData.address,
-        cart_items: cart, 
+        cart_items: cart, // Ab cart item ke andar 'selected_lab_id' field jayega
         total_amount: document.getElementById('totalAmt').innerText,
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime

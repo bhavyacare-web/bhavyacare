@@ -152,15 +152,30 @@ function autoAssignLabsByCategory() {
         }
 
         if (eligibleLabs.length > 0) {
+            let currentValid = item.selected_lab_id && eligibleLabs.some(l => String(l.lab_id).trim() === String(item.selected_lab_id).trim());
+            
             if (assignedLabs[type]) {
-                if (eligibleLabs.some(l => String(l.lab_id) === String(assignedLabs[type]))) item.selected_lab_id = String(assignedLabs[type]);
-                else { item.selected_lab_id = String(eligibleLabs[0].lab_id); assignedLabs[type] = item.selected_lab_id; }
+                if (eligibleLabs.some(l => String(l.lab_id).trim() === String(assignedLabs[type]).trim())) {
+                    item.selected_lab_id = String(assignedLabs[type]).trim();
+                } else if (currentValid) {
+                    assignedLabs[type] = String(item.selected_lab_id).trim();
+                } else {
+                    item.selected_lab_id = String(eligibleLabs[0].lab_id).trim(); 
+                    assignedLabs[type] = item.selected_lab_id;
+                }
             } else {
-                item.selected_lab_id = String(eligibleLabs[0].lab_id);
-                assignedLabs[type] = item.selected_lab_id;
+                if (currentValid) {
+                    assignedLabs[type] = String(item.selected_lab_id).trim();
+                } else {
+                    item.selected_lab_id = String(eligibleLabs[0].lab_id).trim();
+                    assignedLabs[type] = item.selected_lab_id;
+                }
             }
-        } else item.selected_lab_id = null; 
+        } else {
+            item.selected_lab_id = null; 
+        }
     });
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // Update local storage
 }
 
 function renderCartWithLabs() {
@@ -199,16 +214,20 @@ function renderCartWithLabs() {
 
         let labSelectHtml = "";
         if (finalLabs.length > 0) {
+            let currentValid = item.selected_lab_id && finalLabs.some(l => String(l.lab_id).trim() === String(item.selected_lab_id).trim());
+            if (!currentValid) item.selected_lab_id = String(finalLabs[0].lab_id).trim();
+
             let options = finalLabs.map(lab => {
                 let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
-                let sel = String(lab.lab_id) === String(item.selected_lab_id) ? "selected" : "";
-                return `<option value="${lab.lab_id}" ${sel}>${lab.lab_name} ${badges}</option>`;
+                let sel = String(lab.lab_id).trim() === String(item.selected_lab_id).trim() ? "selected" : "";
+                return `<option value="${String(lab.lab_id).trim()}" ${sel}>${lab.lab_name} ${badges}</option>`;
             }).join('');
 
+            // 🌟 FIX: Removed type from HTML string to prevent spacing bugs
             labSelectHtml = `
                 <div class="item-lab-selector">
                     <label style="font-size:11px; color:var(--text-muted); font-weight:600;">Assign to Lab:</label>
-                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value, '${type}')">
+                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value)">
                         ${options}
                     </select>
                 </div>`;
@@ -259,13 +278,20 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-function assignLabToItem(index, labId, categoryType) {
+// 🌟 FIX: Type is directly extracted from array, not from HTML
+function assignLabToItem(index, labId) {
+    let cleanLabId = String(labId).trim();
+    let targetType = (cart[index].service_type || "pathology").toLowerCase().trim();
+    
+    // Assign to all items of the same type
     cart.forEach(item => {
         let t = (item.service_type || "pathology").toLowerCase().trim();
-        if (t === categoryType.trim()) {
-            item.selected_lab_id = String(labId);
+        if (t === targetType) {
+            item.selected_lab_id = cleanLabId;
         }
     });
+
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // Save to memory
     renderCartWithLabs(); 
     validateCheckout();
 }
@@ -364,7 +390,6 @@ function verifyFirebaseOTP() {
     });
 }
 
-// 🌟 FIX: Handle response data extraction properly here 🌟
 function proceedWithRegistration(firebaseUid) {
     const newUserPayload = {
         action: "registerNewPatient",
@@ -376,12 +401,11 @@ function proceedWithRegistration(firebaseUid) {
     };
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(newUserPayload) })
-    .then(res => res.text()) // Safely read as text first
+    .then(res => res.text())
     .then(text => {
         try {
             let res = JSON.parse(text);
             if(res.status === "success") {
-                // Correctly fetch user_id whether it's at root or inside data
                 const newUserId = res.user_id || (res.data ? res.data.user_id : null); 
                 localStorage.setItem("bhavya_user_id", newUserId); 
                 document.getElementById('otpModal').style.display = 'none';

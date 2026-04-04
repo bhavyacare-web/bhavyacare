@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (100% FIXED: LAB SLOTS + GUEST REF)
+// CART & CHECKOUT LOGIC (100% FIXED: EMPTY BUG + LAB SLOTS)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -14,10 +14,10 @@ let cartConfirmationResult;
 let appRules = {};
 let userWalletBalance = 0;
 let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 0, totalPayable: 0, refCode: "" };
-let labSlots = {}; // 🌟 FIXED: Stores slots by LAB ID now, not by service type
+let labSlots = {}; // 🌟 SLOTS AB LAB KE HISAAB SE SAVE HONGE 🌟
 
 // ==========================================
-// 1. AGGRESSIVE LOAD CART (Fix for Empty Bug)
+// 1. ULTRA-AGGRESSIVE CART LOADER (Fix for Empty Cart)
 // ==========================================
 window.onload = () => {
     loadCartData();
@@ -39,11 +39,25 @@ function loadCartData() {
         let stored = localStorage.getItem('bhavyaCart');
         if (stored) {
             let parsed = JSON.parse(stored);
+            
+            // 🌟 THE FIX: Agar browser ne isko double stringify kar diya ho toh theek karo
+            if (typeof parsed === 'string') {
+                parsed = JSON.parse(parsed);
+            }
+            
+            // 🌟 THE FIX: Bina kisi strict filter ke saara data array me daalo
             if (Array.isArray(parsed) && parsed.length > 0) {
-                cart = parsed.filter(item => item && item.service_name); 
-            } else cart = [];
-        } else cart = [];
-    } catch(e) { cart = []; console.error("Cart Parse Error:", e); }
+                cart = parsed.filter(item => item !== null && typeof item === 'object'); 
+            } else {
+                cart = [];
+            }
+        } else {
+            cart = [];
+        }
+    } catch(e) { 
+        cart = []; 
+        console.error("Cart Load Error Fixed:", e); 
+    }
 }
 
 function showEmptyCart() {
@@ -60,7 +74,6 @@ function showEmptyCart() {
     let loadingOverlay = document.getElementById('loadingOverlay');
     if(loadingOverlay) loadingOverlay.style.display = 'none';
     
-    // Hide components cleanly
     ['step1-card', 'step2-card', 'step3-card', 'dateTimeSection'].forEach(id => {
         let el = document.getElementById(id);
         if(el) el.style.display = 'none';
@@ -224,10 +237,10 @@ function renderGroupedCart() {
             html += `
                 <div class="cart-item-header" style="margin-bottom: 12px;">
                     <div class="item-title-box">
-                        <strong style="font-size:14px; color: var(--text-main);">${item.service_name} <span style="color:var(--text-muted); font-size:12px;">(x${item.qty})</span></strong>
+                        <strong style="font-size:14px; color: var(--text-main);">${item.service_name} <span style="color:var(--text-muted); font-size:12px;">(x${item.qty || 1})</span></strong>
                     </div>
                     <div class="price-box" style="display:flex; align-items:center;">
-                        <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * item.qty}</strong>
+                        <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * (item.qty || 1)}</strong>
                         <button class="btn-remove-item" onclick="removeCartItem(${item.originalIndex})" title="Remove"><i class="fas fa-times"></i></button>
                     </div>
                 </div>`;
@@ -275,7 +288,7 @@ function renderGroupedCart() {
     
     document.getElementById('cartItemsContainer').innerHTML = html;
     
-    // 🌟 RENDER LAB-WISE TIMES 🌟
+    // 🌟 THE MAGIC: RENDER LAB-WISE TIMES 🌟
     renderLabTimeSelectors();
     calculateFinalBill(); 
 }
@@ -331,6 +344,7 @@ function renderLabTimeSelectors() {
     let container = document.getElementById('labTimesContainer');
     if(!container) return;
 
+    // Har unique LAB ke liye ek alag time dabba banega
     let uniqueLabIds = [...new Set(cart.map(c => c.selected_lab_id).filter(Boolean))];
     
     if(uniqueLabIds.length === 0) { 
@@ -340,13 +354,12 @@ function renderLabTimeSelectors() {
     }
 
     let todayStr = new Date().toISOString().split('T')[0];
-    let html = `<h3 style="font-size:15px; font-weight:800; margin-bottom:15px; color:var(--text-main);">Appointment Time</h3>`;
+    let html = `<h3 style="font-size:15px; font-weight:800; margin-bottom:15px; color:var(--text-main);">Select Appointment Time</h3>`;
 
     uniqueLabIds.forEach(labId => {
         let lab = allActiveLabsList.find(l => String(l.lab_id) === String(labId));
         let labName = lab ? lab.lab_name : "Selected Provider";
         
-        // Find if this lab is doing Home Collection or Center Visit
         let fulfills = cart.filter(c => c.selected_lab_id === labId).map(c => c.fulfillment);
         let fText = fulfills.includes("home") ? "Home Collection" : "Center Visit";
 
@@ -357,7 +370,7 @@ function renderLabTimeSelectors() {
         <div style="background: var(--primary-soft); border: 1px solid #bfdbfe; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
             <strong style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:12px; color:var(--primary);">
                 <span><i class="far fa-clock"></i> ${labName}</span>
-                <span style="font-size:11px; background:#dbeafe; padding:2px 8px; border-radius:6px;">${fText}</span>
+                <span style="font-size:11px; background:#dbeafe; padding:2px 8px; border-radius:6px; color:var(--text-main); font-weight:800;">${fText}</span>
             </strong>
             <input type="date" class="form-input" min="${todayStr}" value="${savedDate}" onchange="updateLabDate('${labId}', this.value)" style="margin-bottom:10px; background:white; padding:10px;">
             <div class="slot-grid" id="slots-${labId}"></div>
@@ -366,7 +379,6 @@ function renderLabTimeSelectors() {
 
     container.innerHTML = html;
 
-    // Restore slots if date already selected
     uniqueLabIds.forEach(labId => {
         if(labSlots[labId].date) {
             updateLabDate(labId, labSlots[labId].date, true);
@@ -378,7 +390,7 @@ function renderLabTimeSelectors() {
 
 function updateLabDate(labId, dateStr, isRenderCall = false) {
     labSlots[labId].date = dateStr;
-    if(!isRenderCall) labSlots[labId].time = ""; // Reset time if user changes date
+    if(!isRenderCall) labSlots[labId].time = ""; 
 
     let container = document.getElementById(`slots-${labId}`);
     if(!container || !dateStr) return;
@@ -395,7 +407,7 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
         let c = parseTime(lab.timings[dayName].close) || parseTime("08:00 PM");
         
         if (o >= c - 30) {
-            html = `<p style="color:var(--danger); font-size:12px;">Provider is closed on this day.</p>`;
+            html = `<p style="color:var(--danger); font-size:12px; font-weight:700;">Provider is closed on this day.</p>`;
         } else {
             for(let t = o; t <= c - 30; t += 30) {
                 let slotStr = formatTime(t);
@@ -410,10 +422,8 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
 
 function selectLabTime(labId, timeStr) {
     labSlots[labId].time = timeStr;
-    // Re-render only the specific lab's slots to update UI selection
     updateLabDate(labId, labSlots[labId].date, true);
 }
-
 
 // ==========================================
 // 5. SMART BILLING & GUEST REFERRAL VALIDATION 🌟
@@ -431,7 +441,6 @@ function applyReferral() {
         msg.innerText = `Minimum order ₹${minOrder} required.`; msg.style.color = "var(--danger)"; return;
     }
 
-    // 🌟 FIXED: Ab GUEST users bhi code lagayenge 🌟
     const userId = localStorage.getItem("bhavya_user_id") || "GUEST"; 
 
     btn.innerText = "Wait..."; btn.disabled = true;
@@ -595,7 +604,7 @@ function processOrderSubmission(userId) {
         address: bookingData.address,
         cart_items: cart, 
         
-        lab_slots: labSlots, // 🌟 NAYA: Sending Lab-wise slots to backend
+        lab_slots: labSlots, // 🌟 Lab-wise slots bhej rahe hain
 
         subtotal: finalBill.subtotal,
         collection_charge: finalBill.collectionCharge,

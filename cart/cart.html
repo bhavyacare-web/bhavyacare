@@ -13,8 +13,29 @@
     body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding-bottom: 120px; color: var(--text-main); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    .header { background: white; padding: 16px 20px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .header h2 { margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1; text-align: center; margin-right: 20px; }
+    /* 🌟 NAVBAR & LOGIN STYLES (From Header.html) 🌟 */
+    .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+    .logo { display: flex; align-items: center; gap: 15px; }
+    .logo h2 { color: #0056b3; font-size: 22px; font-weight: 800; margin: 0; }
+    .logo span { color: #28a745; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .btn { border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center; font-size: 13px;}
+    .login-btn { background-color: #0056b3; }
+    .login-btn:hover { background-color: #004494; }
+    .admin-btn { background-color: #17a2b8; text-decoration: none; }
+    .admin-btn:hover { background-color: #138496; }
+    #user-menu-container { display: none; }
+    .user-profile-btn { background: #f4f7f6; color: #0056b3; border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 13px;}
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
+    .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 500; }
+    .show-menu { display: block; }
+    #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; }
+    .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
+    .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+
+    /* Cart Specific Styles */
     .stepper { display: flex; justify-content: space-between; padding: 20px; max-width: 500px; margin: 0 auto; }
     .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; }
     .step-icon { width: 32px; height: 32px; border-radius: 50%; background: white; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; z-index: 2; color: var(--text-muted); transition: 0.3s; }
@@ -29,13 +50,8 @@
     .input-group { margin-bottom: 16px; }
     .input-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
     .form-input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 500; background: #fcfdfe; transition: 0.2s; }
-    .form-input:focus { border-color: var(--primary); outline: none; background: white; box-shadow: 0 0 0 4px var(--primary-soft); }
-    .form-input[readonly] { background: #f1f5f9; color: var(--text-muted); cursor: not-allowed; }
-    
     .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
-    .btn-main:active { transform: scale(0.98); }
     
-    /* Split Cart specific styles */
     .service-toggle-box { background: #f1f5f9; border-radius: 10px; padding: 4px; display: flex; gap: 4px; margin-top: 10px; }
     .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; }
     .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -43,8 +59,6 @@
     .cart-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .item-title-box { flex-grow: 1; padding-right: 10px; }
     .btn-remove-item { background: #fee2e2; color: var(--danger); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; margin-left: 10px; }
-    .btn-remove-item:hover { background: var(--danger); color: white; }
-    
     .item-lab-selector { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 12px; margin-top: 10px; }
     .item-lab-select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); background: white; outline: none; }
     .item-error-box { background: #fee2e2; border: 1px dashed #f87171; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
@@ -72,26 +86,73 @@
     </div>
   </div>
 
-  <div id="otpModal" class="modal-overlay">
+  <header class="navbar">
+      <div class="logo">
+          <a href="javascript:history.back()" style="color: var(--text-main); font-size: 18px;"><i class="fas fa-arrow-left"></i></a>
+          <h2>Bhavya<span>Care</span></h2>
+      </div>
+      
+      <div class="nav-actions">
+          <a href="../admin.html" class="btn admin-btn" style="display: none;">🛡️ Admin</a>
+          <button id="nav-login-btn" class="btn login-btn" onclick="openPatientLogin()">Login</button>
+          
+          <div class="dropdown">
+              <button id="main-menu-btn" class="dropbtn" onclick="toggleMenu()">⋮</button>
+              <div id="user-menu-container">
+                   <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
+              </div>
+            <div id="myDropdown" class="dropdown-content">
+                  <a href="#" id="menu-join" onclick="openPartnerLogin()">🤝 Join Us (Partner)</a>
+                  <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;">📊 My Dashboard</a>
+                  <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;">🚪 Logout</a>
+              </div>
+          </div>
+      </div>
+  </header>
+
+  <div id="login-section">
+      <h3 id="form-title">Login / Sign Up</h3>
+      
+      <div id="phone-section">
+          <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
+              <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
+              <select id="partnerRole" class="input-box">
+                  <option value="doctor" selected>Doctor</option>
+                  <option value="lab">Lab</option>
+              </select>
+          </div>
+          <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
+          <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
+
+          <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>
+          <input type="tel" id="phoneNumber" class="input-box" placeholder="e.g. 8950112467" maxlength="10">
+          
+          <div id="recaptcha-container" style="margin-top: 10px;"></div>
+          <button id="send-otp-btn" class="action-btn" onclick="sendOTP()">Get OTP</button>
+          <p style="margin-top: 15px; font-size: 13px; color: #0056b3; cursor: pointer; text-decoration: underline;" onclick="closeLoginPopup()">Cancel</p>
+      </div>
+
+      <div id="otp-section" style="display: none;">
+          <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Enter OTP:</p>
+          <input type="tel" id="otpCode" class="input-box" placeholder="6-digit OTP" maxlength="6">
+          <button class="action-btn" style="background-color: #0056b3;" onclick="verifyOTP()">Verify Mobile</button>
+          <p style="margin-top: 15px; font-size: 13px; color: #0056b3; cursor: pointer; text-decoration: underline;" onclick="closeLoginPopup()">Cancel</p>
+      </div>
+  </div>
+
+  <div id="cartOtpModal" class="modal-overlay">
     <div class="modal-content">
       <i class="fas fa-mobile-alt" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
-      <h3 style="margin-top:0; color: var(--text-main);">Verify Mobile Number</h3>
+      <h3 style="margin-top:0; color: var(--text-main);">Verify Checkout Number</h3>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
         To confirm your booking, we need to verify your number: <br><strong id="displayOtpMobile" style="color:var(--text-main); font-size: 16px;"></strong>
       </p>
-      
-      <div id="recaptcha-container" style="margin-bottom: 15px; display: flex; justify-content: center;"></div>
-      
-      <div id="otpInputSection" style="display: none;">
-        <input type="number" id="otpCode" class="form-input" placeholder="Enter 6-digit OTP" style="text-align: center; letter-spacing: 4px; font-weight: 800; font-size: 18px; margin-bottom: 15px;">
-        <button class="btn-main" id="verifyOtpBtn" onclick="verifyFirebaseOTP()">Verify & Confirm Order</button>
+      <div id="cart-recaptcha-container" style="margin-bottom: 15px; display: flex; justify-content: center;"></div>
+      <div id="cartOtpInputSection" style="display: none;">
+        <input type="number" id="cartOtpCode" class="form-input" placeholder="Enter 6-digit OTP" style="text-align: center; letter-spacing: 4px; font-weight: 800; font-size: 18px; margin-bottom: 15px;">
+        <button class="btn-main" id="cartVerifyOtpBtn" onclick="verifyCartOTP()">Verify & Confirm Order</button>
       </div>
     </div>
-  </div>
-
-  <div class="header">
-    <a href="javascript:history.back()" style="color: var(--text-main); font-size: 18px;"><i class="fas fa-arrow-left"></i></a>
-    <h2>Cart & Checkout</h2>
   </div>
 
   <div class="stepper">
@@ -138,7 +199,7 @@
     </div>
 
     <div class="card" id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
-      <div class="card-title">Selected Tests & Centers</div>
+      <div class="card-title">Selected Tests</div>
       
       <div id="loadingLabsSpinner" style="display:none; text-align:center; padding: 20px;">
         <i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:24px;'></i>
@@ -167,6 +228,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script> 
-  <script src="cart.js"></script>
+  <script src="cart.js?v=final_fix"></script>
 </body>
 </html>

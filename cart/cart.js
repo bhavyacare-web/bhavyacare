@@ -1,28 +1,33 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (BHAVYACARE)
+// CART & CHECKOUT LOGIC (PREMIUM AGGREGATOR)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
-let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
+let cart = [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
 let cartConfirmationResult; 
 
 // ==========================================
-// 1. INITIALIZATION
+// 1. INITIALIZATION & SAFE LOCAL STORAGE
 // ==========================================
 window.onload = () => {
-    // 🌟 FIX: Better Empty Cart Check 🌟
-    if(cart.length === 0) {
-        showEmptyCart();
-        return; // Yahan se aage ka code nahi chalega agar cart khali hai
+    try {
+        cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
+    } catch(e) {
+        console.error("Local Storage Error:", e);
+        cart = [];
     }
 
-    // Agar cart khali NAHI hai, tabhi Total calculate karo
+    if(cart.length === 0) {
+        showEmptyCart();
+        return;
+    }
+
     let initialTotal = 0;
     cart.forEach(item => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -32,13 +37,9 @@ window.onload = () => {
     document.getElementById('totalAmt').innerText = initialTotal;
 
     const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { 
-        fetchProfile(userId); 
-    } else { 
-        document.getElementById('loadingOverlay').style.display = 'none'; 
-    }
+    if (userId) { fetchProfile(userId); } 
+    else { document.getElementById('loadingOverlay').style.display = 'none'; }
 
-    // Ensure Date picker cannot select past dates
     let today = new Date().toISOString().split('T')[0];
     let dateInput = document.getElementById('bookingDate');
     if(dateInput) dateInput.setAttribute('min', today);
@@ -51,20 +52,16 @@ function showEmptyCart() {
             <div style="text-align:center; padding: 50px 20px;">
                 <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
                 <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
-                <a href="../booking/booking.html" style="color: var(--primary); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">Browse Services</a>
+                <p style="font-size:13px; color:var(--text-muted);">Please add tests from the booking page to proceed.</p>
+                <a href="../booking/booking.html" class="btn-main" style="display: inline-block; margin-top: 15px; width: auto; text-decoration:none;">Browse Services</a>
             </div>`;
     }
-    
-    let loadingOverlay = document.getElementById('loadingOverlay');
-    if(loadingOverlay) loadingOverlay.style.display = 'none';
-    
+    document.getElementById('loadingOverlay').style.display = 'none';
     let bottomBar = document.querySelector('.bottom-bar');
     if(bottomBar) bottomBar.style.display = 'none';
 }
 
-// ==========================================
-// 2. PATIENT PROFILE LOGIC
-// ==========================================
+// ... (fetchProfile, savePatientInfo, lockStep1, editPatientInfo SAME RAHENGE JO PICHLI BAAR THE) ...
 function fetchProfile(userId) {
     fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
@@ -117,13 +114,10 @@ function lockStep1() {
     document.getElementById('sumName').innerText = bookingData.name;
     document.getElementById('sumMobile').innerText = "+91 " + bookingData.mobile;
     document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
-
     document.getElementById('infoForm').style.display = 'none';
     document.getElementById('infoSummary').style.display = 'block';
-
     const s2 = document.getElementById('step2-card');
     s2.style.display = 'block'; s2.style.opacity = '1'; s2.style.pointerEvents = 'auto';
-
     fetchLabs(); 
 }
 
@@ -136,7 +130,7 @@ function editPatientInfo() {
 }
 
 // ==========================================
-// 3. SMART LAB MATCHMAKING
+// 3. SMART GROUPING & LAB CARDS
 // ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
@@ -149,8 +143,8 @@ function fetchLabs() {
         if (spinner) spinner.style.display = 'none';
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
-            autoAssignLabsByCategory(); 
-            renderCartWithLabs(); 
+            autoAssignGroupLabs(); 
+            renderGroupedCart(); 
         } else alert("Error fetching labs.");
     }).catch(e => {
         if (spinner) spinner.style.display = 'none';
@@ -158,7 +152,7 @@ function fetchLabs() {
     });
 }
 
-function autoAssignLabsByCategory() {
+function autoAssignGroupLabs() {
     let assignedLabs = {}; 
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase().trim();
@@ -169,25 +163,12 @@ function autoAssignLabsByCategory() {
         }
 
         if (eligibleLabs.length > 0) {
-            let currentValid = item.selected_lab_id && eligibleLabs.some(l => String(l.lab_id).trim() === String(item.selected_lab_id).trim());
-            
-            if (assignedLabs[type]) {
-                if (eligibleLabs.some(l => String(l.lab_id).trim() === String(assignedLabs[type]).trim())) {
-                    item.selected_lab_id = String(assignedLabs[type]).trim();
-                } else if (currentValid) {
-                    assignedLabs[type] = String(item.selected_lab_id).trim();
-                } else {
-                    item.selected_lab_id = String(eligibleLabs[0].lab_id).trim(); 
-                    assignedLabs[type] = item.selected_lab_id;
-                }
-            } else {
-                if (currentValid) {
-                    assignedLabs[type] = String(item.selected_lab_id).trim();
-                } else {
-                    item.selected_lab_id = String(eligibleLabs[0].lab_id).trim();
-                    assignedLabs[type] = item.selected_lab_id;
-                }
+            // Group logic: assign same lab to same service type
+            if (!assignedLabs[type]) {
+                let existingValidLab = eligibleLabs.find(l => String(l.lab_id) === String(item.selected_lab_id));
+                assignedLabs[type] = existingValidLab ? String(existingValidLab.lab_id) : String(eligibleLabs[0].lab_id);
             }
+            item.selected_lab_id = assignedLabs[type];
         } else {
             item.selected_lab_id = null; 
         }
@@ -195,84 +176,90 @@ function autoAssignLabsByCategory() {
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
 }
 
-function renderCartWithLabs() {
+function renderGroupedCart() {
     let html = ""; 
     let total = 0;
     let allItemsConfigured = true;
-    
+
+    // 🌟 GROUPING LOGIC 🌟
+    let groupedCart = {};
     cart.forEach((item, index) => {
-        let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
-        let itemQty = Number(item.qty || 1);
-        total += (itemPrice * itemQty);
         let type = (item.service_type || "pathology").toLowerCase().trim();
-        
-        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-        let isHomeEligible = homeServiceCategories.includes(type);
-        let isHome = item.fulfillment === "home";
-        let finalLabs = eligibleLabs;
-
-        if (isHome) {
-            finalLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
+        if(!groupedCart[type]) {
+            groupedCart[type] = {
+                items: [],
+                fulfillment: item.fulfillment || (homeServiceCategories.includes(type) ? "home" : "center"),
+                selected_lab_id: item.selected_lab_id
+            };
         }
+        groupedCart[type].items.push({ ...item, originalIndex: index });
+        total += Number(item.price || item.service_price || item.basic_price || 0) * Number(item.qty || 1);
+    });
 
-        let toggleHtml = "";
-        if(isHomeEligible) {
-            let hAct = isHome ? "active" : "";
-            let cAct = !isHome ? "active" : "";
-            toggleHtml = `
-                <div class="service-toggle-box">
-                    <button class="toggle-btn ${hAct}" onclick="changeFulfill(${index}, 'home')"><i class="fas fa-home"></i> Home</button>
-                    <button class="toggle-btn ${cAct}" onclick="changeFulfill(${index}, 'center')"><i class="fas fa-hospital"></i> Center</button>
-                </div>`;
-        } else {
-            item.fulfillment = "center";
-            toggleHtml = `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required</div>`;
-        }
+    // 🌟 RENDER GROUPS 🌟
+    for (const [type, group] of Object.entries(groupedCart)) {
+        html += `<div class="group-container">
+                    <div class="group-header"><i class="fas fa-notes-medical"></i> ${type} Services</div>`;
 
-        let labSelectHtml = "";
-        if (finalLabs.length > 0) {
-            let currentValid = item.selected_lab_id && finalLabs.some(l => String(l.lab_id).trim() === String(item.selected_lab_id).trim());
-            if (!currentValid) item.selected_lab_id = String(finalLabs[0].lab_id).trim();
-
-            let options = finalLabs.map(lab => {
-                let badges = (lab.nabl ? " [NABL]" : "") + (lab.nabh ? " [NABH]" : "");
-                let sel = String(lab.lab_id).trim() === String(item.selected_lab_id).trim() ? "selected" : "";
-                return `<option value="${String(lab.lab_id).trim()}" ${sel}>${lab.lab_name} ${badges}</option>`;
-            }).join('');
-
-            labSelectHtml = `
-                <div class="item-lab-selector">
-                    <label style="font-size:11px; color:var(--text-muted); font-weight:600;">Assign to Lab:</label>
-                    <select class="item-lab-select" onchange="assignLabToItem(${index}, this.value)">
-                        ${options}
-                    </select>
-                </div>`;
-        } else {
-            item.selected_lab_id = null;
-            allItemsConfigured = false;
-            if (isHome && eligibleLabs.length > 0) {
-                labSelectHtml = `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> Home collection not available at Pin ${bookingData.pincode}.</span><button class="btn-small-outline" onclick="changeFulfill(${index}, 'center')">Switch to Center Visit</button></div>`;
-            } else {
-                labSelectHtml = `<div class="item-error-box"><span><i class="fas fa-times-circle"></i> No partner lab found in your area.</span></div>`;
-            }
-        }
-
-        html += `
-            <div style="padding:15px 0; border-bottom:1px dashed var(--border);">
-                <div class="cart-item-header">
+        // Render Items inside Group
+        group.items.forEach(item => {
+            let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
+            html += `
+                <div class="cart-item-header" style="margin-bottom: 12px;">
                     <div class="item-title-box">
-                        <strong style="font-size:14px; color: var(--text-main);">${item.service_name}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Type: <span style="text-transform:capitalize;">${type}</span> | Qty: ${itemQty}</div>
+                        <strong style="font-size:14px; color: var(--text-main);">${item.service_name} <span style="color:var(--text-muted); font-size:12px;">(x${item.qty})</span></strong>
                     </div>
                     <div class="price-box" style="display:flex; align-items:center;">
-                        <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * itemQty}</strong>
-                        <button class="btn-remove-item" onclick="removeCartItem(${index})" title="Remove Item"><i class="fas fa-times"></i></button>
+                        <strong style="color:var(--success); font-size: 15px;">₹${itemPrice * item.qty}</strong>
+                        <button class="btn-remove-item" onclick="removeCartItem(${item.originalIndex})" title="Remove"><i class="fas fa-times"></i></button>
                     </div>
-                </div>
-                ${toggleHtml}
-                ${labSelectHtml}
-            </div>`;
-    });
+                </div>`;
+        });
+
+        // Render Home/Center Toggle for Group
+        let isHomeEligible = homeServiceCategories.includes(type);
+        let isHome = group.fulfillment === "home";
+        if(isHomeEligible) {
+            html += `
+                <div class="service-toggle-box" style="margin-bottom:15px;">
+                    <button class="toggle-btn ${isHome ? 'active' : ''}" onclick="changeGroupFulfill('${type}', 'home')"><i class="fas fa-home"></i> Home Collection</button>
+                    <button class="toggle-btn ${!isHome ? 'active' : ''}" onclick="changeGroupFulfill('${type}', 'center')"><i class="fas fa-hospital"></i> Center Visit</button>
+                </div>`;
+        } else {
+            html += `<div class="center-only-badge" style="margin-bottom:15px;"><i class="fas fa-info-circle"></i> Center Visit Required for Scans</div>`;
+        }
+
+        // Render Lab Selection CARDS for Group
+        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+        if (isHome) eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
+
+        if (eligibleLabs.length > 0) {
+            html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Select Provider for ${type}:</p>`;
+            eligibleLabs.forEach(lab => {
+                let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
+                let nablBadge = lab.nabl ? `<span class="badge-small">NABL</span>` : "";
+                let nabhBadge = lab.nabh ? `<span class="badge-small" style="background:#dcfce7; color:#065f46;">NABH</span>` : "";
+                let imgSrc = lab.lab_image || "https://via.placeholder.com/60?text=LAB";
+
+                html += `
+                    <div class="lab-card ${isSelected}" onclick="assignLabToGroup('${type}', '${lab.lab_id}')">
+                        <img src="${imgSrc}" class="lab-img" onerror="this.src='https://via.placeholder.com/60?text=LAB'">
+                        <div class="lab-info">
+                            <h4 class="lab-name">${lab.lab_name} ${nablBadge} ${nabhBadge}</h4>
+                            <p class="lab-addr"><i class="fas fa-map-marker-alt"></i> ${lab.lab_address}, ${lab.city} - ${lab.pincode}</p>
+                        </div>
+                        ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
+                    </div>`;
+            });
+        } else {
+            allItemsConfigured = false;
+            html += `<div class="item-error-box" style="margin-top:10px;">
+                        <span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}.</span>
+                     </div>`;
+        }
+        
+        html += `</div>`; // Close group-container
+    }
     
     document.getElementById('cartItemsContainer').innerHTML = html;
     document.getElementById('totalAmt').innerText = total;
@@ -283,43 +270,101 @@ function renderCartWithLabs() {
             let today = new Date().toISOString().split('T')[0];
             document.getElementById('bookingDate').setAttribute('min', today);
         }
-    } else document.getElementById('dateTimeSection').style.display = 'none';
+        generateSlots(); // Generate slots immediately based on selected labs
+    } else {
+        document.getElementById('dateTimeSection').style.display = 'none';
+    }
 
     validateCheckout();
 }
 
-function changeFulfill(index, type) {
-    cart[index].fulfillment = type;
-    autoAssignLabsByCategory(); 
-    renderCartWithLabs(); 
+function changeGroupFulfill(type, fulfillment) {
+    if (fulfillment === "home" && !allActiveLabsList.some(l => l.provided_services[type] && (l.pincode === bookingData.pincode || l.available_pincodes.includes(bookingData.pincode)))) {
+        alert("Home collection is not available in your Pincode for this service.");
+        return;
+    }
+    cart.forEach(item => {
+        if ((item.service_type || "pathology").toLowerCase().trim() === type) item.fulfillment = fulfillment;
+    });
+    autoAssignGroupLabs(); 
+    renderGroupedCart(); 
 }
 
-function assignLabToItem(index, labId) {
-    let cleanLabId = String(labId).trim();
-    cart[index].selected_lab_id = cleanLabId;
-    
+function assignLabToGroup(type, labId) {
+    cart.forEach(item => {
+        if ((item.service_type || "pathology").toLowerCase().trim() === type) item.selected_lab_id = String(labId);
+    });
     localStorage.setItem('bhavyaCart', JSON.stringify(cart)); 
-    renderCartWithLabs(); 
-    validateCheckout();
+    renderGroupedCart(); 
 }
 
-function removeCartItem(index) {
+function removeCartItem(originalIndex) {
     if(confirm("Remove this item from your cart?")) {
-        cart.splice(index, 1);
+        cart.splice(originalIndex, 1);
         localStorage.setItem('bhavyaCart', JSON.stringify(cart));
         if(cart.length === 0) showEmptyCart();
-        else { autoAssignLabsByCategory(); renderCartWithLabs(); }
+        else { autoAssignGroupLabs(); renderGroupedCart(); }
     }
 }
 
 // ==========================================
-// 4. DATE, TIME & CHECKOUT VALIDATION
+// 4. DYNAMIC 30-MIN TIME SLOTS
 // ==========================================
+function parseTime(t) {
+    if(!t) return null;
+    let match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if(!match) return null;
+    let h = parseInt(match[1]);
+    let m = parseInt(match[2]);
+    let ampm = match[3].toUpperCase();
+    if(ampm === "PM" && h < 12) h += 12;
+    if(ampm === "AM" && h === 12) h = 0;
+    return h * 60 + m; // returns minutes from midnight
+}
+
+function formatTime(mins) {
+    let h = Math.floor(mins / 60);
+    let m = mins % 60;
+    let ampm = h >= 12 ? "PM" : "AM";
+    let h12 = h % 12;
+    if(h12 === 0) h12 = 12;
+    return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+
 function generateSlots() {
     const dateVal = document.getElementById('bookingDate').value;
     if(!dateVal) return;
-    const slots = ["08:00 AM", "09:30 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
-    let html = slots.map(s => `<button class="slot-btn" onclick="selectTime(this, '${s}')">${s}</button>`).join('');
+
+    const dateObj = new Date(dateVal);
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayName = days[dateObj.getDay()];
+
+    // Find the strictest overlapping open/close time for all selected labs
+    let maxOpen = 0;
+    let minClose = 24 * 60;
+    
+    let selectedLabIds = [...new Set(cart.map(i => i.selected_lab_id).filter(id => id))];
+    
+    selectedLabIds.forEach(id => {
+        let lab = allActiveLabsList.find(l => String(l.lab_id) === String(id));
+        if(lab && lab.timings && lab.timings[dayName]) {
+            let o = parseTime(lab.timings[dayName].open) || parseTime("09:00 AM");
+            let c = parseTime(lab.timings[dayName].close) || parseTime("08:00 PM");
+            if(o > maxOpen) maxOpen = o;
+            if(c < minClose) minClose = c;
+        }
+    });
+
+    let html = "";
+    if (maxOpen >= minClose - 30) {
+        html = `<p style="grid-column: span 3; color: var(--danger); font-size:12px; font-weight:600;">Selected providers are closed or do not have overlapping timings on this day.</p>`;
+    } else {
+        for(let t = maxOpen; t <= minClose - 30; t += 30) {
+            let slotStr = formatTime(t);
+            html += `<button class="slot-btn" onclick="selectTime(this, '${slotStr}')">${slotStr}</button>`;
+        }
+    }
+    
     document.getElementById('slotContainer').innerHTML = html;
     selectedTime = null;
     validateCheckout();

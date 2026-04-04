@@ -19,7 +19,7 @@ try {
     console.error("Firebase init error:", e);
 }
 
-// 🌟 TUMHARA NAYA GOOGLE SCRIPT URL YAHAN HAI 🌟
+// 🌟 GOOGLE SCRIPT URL 🌟
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 let isPartnerMode = false;
 
@@ -56,7 +56,8 @@ initApp();
 // 3. UI & NAVIGATION FUNCTIONS
 // ==========================================
 function toggleMenu() { 
-    document.getElementById("myDropdown").classList.toggle("show-menu"); 
+    const dropdown = document.getElementById("myDropdown");
+    if(dropdown) dropdown.classList.toggle("show-menu"); 
 }
 
 window.onclick = function(event) {
@@ -97,28 +98,37 @@ function checkLoginState() {
 
 function openPatientLogin() {
     isPartnerMode = false;
-    document.getElementById('partner-role-container').style.display = 'none';
-    document.getElementById('form-title').innerText = "Patient Login / Sign Up";
+    const partnerRoleContainer = document.getElementById('partner-role-container');
+    if(partnerRoleContainer) partnerRoleContainer.style.display = 'none';
+    const formTitle = document.getElementById('form-title');
+    if(formTitle) formTitle.innerText = "Patient Login / Sign Up";
     showLoginPopup();
 }
 
 function openPartnerLogin() {
     isPartnerMode = true;
-    document.getElementById('partner-role-container').style.display = 'block';
-    document.getElementById('form-title').innerText = "Partner Registration";
+    const partnerRoleContainer = document.getElementById('partner-role-container');
+    if(partnerRoleContainer) partnerRoleContainer.style.display = 'block';
+    const formTitle = document.getElementById('form-title');
+    if(formTitle) formTitle.innerText = "Partner Registration";
     toggleMenu(); 
     showLoginPopup();
 }
 
 function showLoginPopup() {
-    document.getElementById('otp-section').style.display = 'none';
-    document.getElementById('phone-section').style.display = 'block';
-    document.getElementById('login-section').style.display = 'block';
+    const otpSec = document.getElementById('otp-section');
+    const phoneSec = document.getElementById('phone-section');
+    const loginSec = document.getElementById('login-section');
+    
+    if(otpSec) otpSec.style.display = 'none';
+    if(phoneSec) phoneSec.style.display = 'block';
+    if(loginSec) loginSec.style.display = 'block';
     setupRecaptcha();
 }
 
 function closeLoginPopup() { 
-    document.getElementById('login-section').style.display = 'none'; 
+    const loginSec = document.getElementById('login-section');
+    if(loginSec) loginSec.style.display = 'none'; 
 }
 
 // ==========================================
@@ -136,10 +146,13 @@ function setupRecaptcha() {
 function sendOTP() {
     if (typeof firebase === 'undefined') { alert("System loading, please wait a moment."); return; }
     
-    const userName = document.getElementById('userName').value.trim();
+    const userNameInput = document.getElementById('userName');
+    if(!userNameInput) return; // safeguard
+    const userName = userNameInput.value.trim();
     if(!userName) { alert("Please enter your full name!"); return; }
 
-    const userNumber = document.getElementById('phoneNumber').value.trim();
+    const userNumberInput = document.getElementById('phoneNumber');
+    const userNumber = userNumberInput.value.trim();
     if(userNumber.length !== 10 || isNaN(userNumber)) { alert("Please enter a valid 10-digit mobile number!"); return; }
     
     firebase.auth().signInWithPhoneNumber("+91" + userNumber, window.recaptchaVerifier).then((res) => {
@@ -153,7 +166,8 @@ function sendOTP() {
 
 async function verifyOTP() {
     const code = document.getElementById('otpCode').value.trim();
-    const selectedRole = isPartnerMode ? document.getElementById('partnerRole').value : 'patient';
+    const roleElem = document.getElementById('partnerRole');
+    const selectedRole = (isPartnerMode && roleElem) ? roleElem.value : 'patient';
     const userName = document.getElementById('userName').value.trim();
 
     if(code.length !== 6) { alert("Please enter a 6-digit OTP."); return; }
@@ -182,132 +196,9 @@ async function verifyOTP() {
         
         checkLoginState();
 
-        // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
+        // VIP REDIRECT LOGIC
         if (localStorage.getItem("pending_vip_redirect") === "true") {
-            // Hum flag delete nahi karenge, booking.js ise khud delete karega
-            window.location.reload(); // Bas same page ko refresh kar do taaki form khul jaye
-        } else {
             window.location.reload(); 
-        }
-
-    } catch (error) { 
-        console.error("OTP Error Details:", error);
-        if(error.code) { 
-            alert("Invalid OTP! Please try again."); 
-        } else {
-            alert("System Error. Please check console logs.");
-        }
-    }
-}
-
-// ==========================================
-// 5. LOGOUT & DASHBOARD NAVIGATION
-// ==========================================
-function logoutUser() {
-    if (typeof firebase !== 'undefined') {
-        firebase.auth().signOut().then(() => {
-            localStorage.clear();
-            alert("You have successfully logged out!");
-            window.location.reload(); 
-        }).catch((err) => { console.error("Logout Error:", err); });
-    } else {
-        localStorage.clear();
-        window.location.reload();
-    }
-}
-
-function goToDashboard() {
-    const role = localStorage.getItem("bhavya_role");
-    if (role === "patient") {
-        window.location.href = "patient_dashboard/patient_dashboard.html"; 
-    } else if (role) {
-        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Coming Soon)");
-    } else {
-        alert("Role not found. Please log in again.");
-    }
-}
-    document.getElementById('partner-role-container').style.display = 'block';
-    document.getElementById('form-title').innerText = "Partner Registration";
-    toggleMenu(); 
-    showLoginPopup();
-}
-
-function showLoginPopup() {
-    document.getElementById('otp-section').style.display = 'none';
-    document.getElementById('phone-section').style.display = 'block';
-    document.getElementById('login-section').style.display = 'block';
-    setupRecaptcha();
-}
-
-function closeLoginPopup() { 
-    document.getElementById('login-section').style.display = 'none'; 
-}
-
-// ==========================================
-// 4. FIREBASE OTP LOGIC
-// ==========================================
-function setupRecaptcha() {
-    try {
-        if (typeof firebase !== 'undefined' && document.getElementById('recaptcha-container') && !window.recaptchaVerifier) {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
-            window.recaptchaVerifier.render();
-        }
-    } catch(e) { console.error(e); }
-}
-
-function sendOTP() {
-    if (typeof firebase === 'undefined') { alert("System loading, please wait a moment."); return; }
-    
-    const userName = document.getElementById('userName').value.trim();
-    if(!userName) { alert("Please enter your full name!"); return; }
-
-    const userNumber = document.getElementById('phoneNumber').value.trim();
-    if(userNumber.length !== 10 || isNaN(userNumber)) { alert("Please enter a valid 10-digit mobile number!"); return; }
-    
-    firebase.auth().signInWithPhoneNumber("+91" + userNumber, window.recaptchaVerifier).then((res) => {
-        window.confirmationResult = res;
-        document.getElementById('phone-section').style.display = 'none';
-        document.getElementById('otp-section').style.display = 'block';
-        document.getElementById('form-title').innerText = "Verify OTP";
-        alert("OTP sent successfully!");
-    }).catch((err) => { alert("Firebase Error: " + err.message); });
-}
-
-async function verifyOTP() {
-    const code = document.getElementById('otpCode').value.trim();
-    const selectedRole = isPartnerMode ? document.getElementById('partnerRole').value : 'patient';
-    const userName = document.getElementById('userName').value.trim();
-
-    if(code.length !== 6) { alert("Please enter a 6-digit OTP."); return; }
-
-    try {
-        const result = await window.confirmationResult.confirm(code);
-        const user = result.user;
-
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify({ action: "login", uid: user.uid, mobile: user.phoneNumber, role: selectedRole, name: userName })
-        });
-        const resData = await response.json();
-
-        const finalRole = resData.role;
-        const finalUserId = resData.user_id;
-
-        localStorage.setItem("bhavya_uid", user.uid);
-        localStorage.setItem("bhavya_mobile", user.phoneNumber);
-        localStorage.setItem("bhavya_role", finalRole);
-        localStorage.setItem("bhavya_user_id", finalUserId);
-        localStorage.setItem("bhavya_name", userName); 
-
-        closeLoginPopup();
-        alert("Login Successful! Welcome " + userName);
-        
-        checkLoginState();
-
-        // 🌟 NAYA: THE MAGIC VIP REDIRECT LOGIC (Same Page) 🌟
-        if (localStorage.getItem("pending_vip_redirect") === "true") {
-            // Hum flag delete nahi karenge, booking.js ise khud delete karega
-            window.location.reload(); // Bas same page ko refresh kar do taaki form khul jaye
         } else {
             window.location.reload(); 
         }

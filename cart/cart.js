@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (BHAVYACARE)
+// CART & CHECKOUT LOGIC (FIXED)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -277,18 +277,12 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
+// 🌟 BUG FIX: Only change the lab for the specific item clicked 🌟
 function assignLabToItem(index, labId) {
     let cleanLabId = String(labId).trim();
-    let targetType = (cart[index].service_type || "pathology").toLowerCase().trim();
+    cart[index].selected_lab_id = cleanLabId; // Set Lab ID per Item
     
-    cart.forEach(item => {
-        let t = (item.service_type || "pathology").toLowerCase().trim();
-        if (t === targetType) {
-            item.selected_lab_id = cleanLabId;
-        }
-    });
-
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); 
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // LocalStorage se pakka connection
     renderCartWithLabs(); 
     validateCheckout();
 }
@@ -343,6 +337,7 @@ function validateCheckout() {
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
+    // Yaha Guest user check hoga jo seedhe checkout par aaye hain bina login karke
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("cartOtpModal").style.display = "flex";
@@ -380,7 +375,7 @@ function verifyCartOTP() {
 
     cartConfirmationResult.confirm(otp).then((result) => {
         const user = result.user;
-        proceedWithRegistration(user); // 🌟 Naya login logic yahan call hoga
+        proceedWithRegistration(user); // Backend Database Save Call
     }).catch((error) => {
         alert("Invalid OTP! Please try again.");
         resetCartOtpBtn();
@@ -388,10 +383,11 @@ function verifyCartOTP() {
 }
 
 function proceedWithRegistration(user) {
+    // Agar hume old code me "login" action milta hai toh hum usi se account banayenge/fetch karenge
     const loginPayload = {
         action: "login",
         uid: user.uid,
-        mobile: user.phoneNumber, // Ye hamesha +91 ke sath aata hai
+        mobile: user.phoneNumber, 
         role: "patient",
         name: bookingData.name
     };
@@ -403,7 +399,6 @@ function proceedWithRegistration(user) {
             const finalUserId = res.user_id || (res.data ? res.data.user_id : null); 
             const finalRole = res.role || "patient";
 
-            // 🌟 NAYA: app.js ki tarah saari details browser me save kar do
             localStorage.setItem("bhavya_uid", user.uid);
             localStorage.setItem("bhavya_mobile", user.phoneNumber);
             localStorage.setItem("bhavya_role", finalRole);
@@ -411,11 +406,9 @@ function proceedWithRegistration(user) {
             localStorage.setItem("bhavya_name", bookingData.name);
 
             document.getElementById('cartOtpModal').style.display = 'none';
-            
-            // Login hone ke baad direct order process karo
-            processOrderSubmission(finalUserId);
+            processOrderSubmission(finalUserId); // Order Process Kardo
         } else {
-            alert("Login/Registration failed: " + res.message);
+            alert("Registration failed: " + res.message);
             resetCartOtpBtn();
         }
     }).catch(e => { 
@@ -441,7 +434,7 @@ function processOrderSubmission(userId) {
         patient_name: bookingData.name,
         pincode: bookingData.pincode,
         address: bookingData.address,
-        cart_items: cart, 
+        cart_items: cart, // Seedha LocalStorage se aayi hui values Backend pe jayengi
         total_amount: document.getElementById('totalAmt').innerText,
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime
@@ -451,7 +444,7 @@ function processOrderSubmission(userId) {
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {
-            localStorage.removeItem('bhavyaCart');
+            localStorage.removeItem('bhavyaCart'); // Cart clear after order
             alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}`);
             window.location.href = "../index.html"; 
         } else {

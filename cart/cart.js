@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (PREMIUM AGGREGATOR)
+// CART & CHECKOUT LOGIC (PREMIUM & CASH ONLY)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -12,9 +12,6 @@ let allActiveLabsList = [];
 let selectedTime = null;
 let cartConfirmationResult; 
 
-// ==========================================
-// 1. INITIALIZATION & SAFE LOCAL STORAGE
-// ==========================================
 window.onload = () => {
     try {
         cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
@@ -61,7 +58,6 @@ function showEmptyCart() {
     if(bottomBar) bottomBar.style.display = 'none';
 }
 
-// ... (fetchProfile, savePatientInfo, lockStep1, editPatientInfo SAME RAHENGE JO PICHLI BAAR THE) ...
 function fetchProfile(userId) {
     fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
@@ -116,8 +112,10 @@ function lockStep1() {
     document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
     document.getElementById('infoForm').style.display = 'none';
     document.getElementById('infoSummary').style.display = 'block';
+    
     const s2 = document.getElementById('step2-card');
     s2.style.display = 'block'; s2.style.opacity = '1'; s2.style.pointerEvents = 'auto';
+    
     fetchLabs(); 
 }
 
@@ -129,9 +127,6 @@ function editPatientInfo() {
     validateCheckout();
 }
 
-// ==========================================
-// 3. SMART GROUPING & LAB CARDS
-// ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
@@ -163,7 +158,6 @@ function autoAssignGroupLabs() {
         }
 
         if (eligibleLabs.length > 0) {
-            // Group logic: assign same lab to same service type
             if (!assignedLabs[type]) {
                 let existingValidLab = eligibleLabs.find(l => String(l.lab_id) === String(item.selected_lab_id));
                 assignedLabs[type] = existingValidLab ? String(existingValidLab.lab_id) : String(eligibleLabs[0].lab_id);
@@ -181,7 +175,6 @@ function renderGroupedCart() {
     let total = 0;
     let allItemsConfigured = true;
 
-    // 🌟 GROUPING LOGIC 🌟
     let groupedCart = {};
     cart.forEach((item, index) => {
         let type = (item.service_type || "pathology").toLowerCase().trim();
@@ -196,12 +189,10 @@ function renderGroupedCart() {
         total += Number(item.price || item.service_price || item.basic_price || 0) * Number(item.qty || 1);
     });
 
-    // 🌟 RENDER GROUPS 🌟
     for (const [type, group] of Object.entries(groupedCart)) {
         html += `<div class="group-container">
                     <div class="group-header"><i class="fas fa-notes-medical"></i> ${type} Services</div>`;
 
-        // Render Items inside Group
         group.items.forEach(item => {
             let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
             html += `
@@ -216,7 +207,6 @@ function renderGroupedCart() {
                 </div>`;
         });
 
-        // Render Home/Center Toggle for Group
         let isHomeEligible = homeServiceCategories.includes(type);
         let isHome = group.fulfillment === "home";
         if(isHomeEligible) {
@@ -229,7 +219,6 @@ function renderGroupedCart() {
             html += `<div class="center-only-badge" style="margin-bottom:15px;"><i class="fas fa-info-circle"></i> Center Visit Required for Scans</div>`;
         }
 
-        // Render Lab Selection CARDS for Group
         let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
         if (isHome) eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
 
@@ -257,8 +246,7 @@ function renderGroupedCart() {
                         <span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}.</span>
                      </div>`;
         }
-        
-        html += `</div>`; // Close group-container
+        html += `</div>`; 
     }
     
     document.getElementById('cartItemsContainer').innerHTML = html;
@@ -270,7 +258,7 @@ function renderGroupedCart() {
             let today = new Date().toISOString().split('T')[0];
             document.getElementById('bookingDate').setAttribute('min', today);
         }
-        generateSlots(); // Generate slots immediately based on selected labs
+        generateSlots(); 
     } else {
         document.getElementById('dateTimeSection').style.display = 'none';
     }
@@ -307,9 +295,6 @@ function removeCartItem(originalIndex) {
     }
 }
 
-// ==========================================
-// 4. DYNAMIC 30-MIN TIME SLOTS
-// ==========================================
 function parseTime(t) {
     if(!t) return null;
     let match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -319,7 +304,7 @@ function parseTime(t) {
     let ampm = match[3].toUpperCase();
     if(ampm === "PM" && h < 12) h += 12;
     if(ampm === "AM" && h === 12) h = 0;
-    return h * 60 + m; // returns minutes from midnight
+    return h * 60 + m; 
 }
 
 function formatTime(mins) {
@@ -339,7 +324,6 @@ function generateSlots() {
     const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const dayName = days[dateObj.getDay()];
 
-    // Find the strictest overlapping open/close time for all selected labs
     let maxOpen = 0;
     let minClose = 24 * 60;
     
@@ -377,6 +361,7 @@ function selectTime(btn, time) {
     validateCheckout();
 }
 
+// 🌟 STEP 3 (CASH CHECKOUT) UNLOCK LOGIC 🌟
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
     if (cart.length === 0) { btn.disabled = true; return; }
@@ -384,17 +369,42 @@ function validateCheckout() {
     let allAssigned = cart.every(item => item.selected_lab_id !== null && item.selected_lab_id !== undefined);
     
     if(allAssigned && document.getElementById('bookingDate').value && selectedTime) {
+        
+        // Step 3 (Payment Details) Unlock
+        const s3 = document.getElementById('step3-card');
+        if(s3) {
+            s3.style.display = 'block';
+            s3.style.opacity = '1';
+            s3.style.pointerEvents = 'auto';
+        }
+        
+        // Update Bill Summary
+        let totalItems = cart.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+        let totalAmt = document.getElementById('totalAmt').innerText;
+        
+        let sumCount = document.getElementById('summaryItemCount');
+        if(sumCount) sumCount.innerText = totalItems;
+        let sumTotal = document.getElementById('summaryTotalAmt');
+        if(sumTotal) sumTotal.innerText = totalAmt;
+
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
+
+        // Smoothly scroll to Step 3
+        if(s3) s3.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
     } else {
+        // Lock Step 3 if something is unselected
+        const s3 = document.getElementById('step3-card');
+        if(s3) {
+            s3.style.opacity = '0.5';
+            s3.style.pointerEvents = 'none';
+        }
         btn.disabled = true;
         document.getElementById('step3-nav').classList.remove('active');
     }
 }
 
-// ==========================================
-// 5. FINAL BOOKING & SYNC LOGIN LOGIC
-// ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
@@ -414,7 +424,6 @@ function finalizeBooking() {
                 cartConfirmationResult = result;
                 document.getElementById("cart-recaptcha-container").style.display = "none";
                 document.getElementById("cartOtpInputSection").style.display = "block";
-                alert("OTP has been sent to your mobile number.");
             }).catch((error) => {
                 console.error(error);
                 alert("Error sending OTP. Please try again.");
@@ -478,7 +487,7 @@ function proceedWithRegistration(user) {
 
 function resetCartOtpBtn() {
     const btn = document.getElementById('cartVerifyOtpBtn');
-    btn.innerText = "Verify & Confirm Order"; 
+    btn.innerHTML = "Confirm Order <i class='fas fa-check-circle' style='margin-left: 5px;'></i>"; 
     btn.disabled = false;
 }
 
@@ -504,7 +513,7 @@ function processOrderSubmission(userId) {
     .then(res => {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
-            alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}`);
+            alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}\n\nYou can pay directly at the center/home via Cash or UPI.`);
             window.location.href = "../index.html"; 
         } else {
             alert("Booking Error: " + res.message);

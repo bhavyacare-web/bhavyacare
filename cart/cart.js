@@ -464,6 +464,7 @@ function selectLabTime(labId, timeStr) {
 // ==========================================
 // 5. SMART BILLING & GUEST REFERRAL VALIDATION
 // ==========================================
+// --- REPLACE 1: applyReferral ---
 function applyReferral() {
     let code = document.getElementById('refCodeInput').value.trim().toUpperCase();
     let msg = document.getElementById('refMessage');
@@ -472,25 +473,31 @@ function applyReferral() {
     if(!code) { msg.innerText = "Enter code!"; msg.style.color = "var(--danger)"; return; }
     
     // --- NAYA LOGIC: Check Applicable Services (Row 8) ---
-    let allowedTypesStr = appRules.referral_applicable_services_type; 
-    if (allowedTypesStr) {
-        let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
-        let hasEligibleService = cart.some(item => {
-            let type = (item.service_type || "pathology").toLowerCase().trim();
-            return allowedTypes.includes(type) || allowedTypes.includes("all");
-        });
+    let allowedTypesStr = appRules.referral_applicable_services_type || "pathology, profile, package, ct, mri";
+    let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
 
-        if (!hasEligibleService) {
-            msg.innerText = `Referral only valid on: ${allowedTypesStr.toUpperCase()}`; 
-            msg.style.color = "var(--danger)"; 
-            return;
+    let hasEligibleService = false;
+    let eligibleSubtotal = 0;
+
+    cart.forEach(item => {
+        let type = (item.service_type || "pathology").toLowerCase().trim();
+        if (allowedTypes.includes(type) || allowedTypes.includes("all")) {
+            hasEligibleService = true;
+            eligibleSubtotal += (Number(item.price || item.basic_price || item.service_price || 0) * Number(item.qty || 1));
         }
+    });
+
+    if (!hasEligibleService) {
+        msg.innerText = `Referral only valid on: ${allowedTypesStr.toUpperCase()}`;
+        msg.style.color = "var(--danger)";
+        return;
     }
 
-    // --- NAYA LOGIC: Check Min Order Limit (Row 9) ---
     let minOrder = appRules.min_order_for_referral || 300;
-    if(finalBill.subtotal < minOrder) {
-        msg.innerText = `Minimum order ₹${minOrder} required.`; msg.style.color = "var(--danger)"; return;
+    if(eligibleSubtotal < minOrder) {
+        msg.innerText = `Minimum eligible order ₹${minOrder} required.`;
+        msg.style.color = "var(--danger)";
+        return;
     }
 
     const userId = localStorage.getItem("bhavya_user_id") || "GUEST"; 
@@ -516,12 +523,24 @@ function applyReferral() {
     }).catch(e => { btn.innerText = "Apply"; btn.disabled = false; });
 }
 
+// --- REPLACE 2: calculateFinalBill ---
 function calculateFinalBill() {
     let subtotal = 0;
+    let eligibleSubtotal = 0; // Sirf unhi services ka total jispar wallet/referral lag sakta hai
     let isHomeCollection = false;
     
+    let allowedTypesStr = appRules.referral_applicable_services_type || "pathology, profile, package, ct, mri";
+    let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
+
     cart.forEach(item => {
-        subtotal += (Number(item.price || item.basic_price || item.service_price || 0) * Number(item.qty || 1));
+        let itemPrice = (Number(item.price || item.basic_price || item.service_price || 0) * Number(item.qty || 1));
+        subtotal += itemPrice;
+
+        let type = (item.service_type || "pathology").toLowerCase().trim();
+        if (allowedTypes.includes(type) || allowedTypes.includes("all")) {
+            eligibleSubtotal += itemPrice;
+        }
+
         if (item.fulfillment === "home") isHomeCollection = true;
     });
 
@@ -533,14 +552,26 @@ function calculateFinalBill() {
         }
     }
 
+    // --- NAYA LOGIC: WALLET RESTRICTION ---
     let walletUsed = 0;
     let walletCb = document.getElementById('useWalletCb');
     if (walletCb && walletCb.checked) {
-        let maxAllowed = bookingData.isVip ? (appRules.vip_max_wallet_use || 200) : (appRules.basic_max_wallet_use || 50);
-        walletUsed = Math.min(userWalletBalance, maxAllowed, subtotal); 
+        if (eligibleSubtotal === 0) {
+            walletCb.checked = false; // Uncheck kar do agar eligible nahi hai
+            alert(`Wallet can only be used on: ${allowedTypesStr.toUpperCase()}`);
+        } else {
+            let maxAllowed = bookingData.isVip ? (appRules.vip_max_wallet_use || 200) : (appRules.basic_max_wallet_use || 50);
+            walletUsed = Math.min(userWalletBalance, maxAllowed, eligibleSubtotal); 
+        }
     }
 
-    let totalDiscount = walletUsed + finalBill.refDiscount;
+    // Ensure referral discount eligible amount se zyada na ho
+    let actualRefDiscount = finalBill.refDiscount;
+    if(actualRefDiscount > 0 && (eligibleSubtotal - walletUsed) < actualRefDiscount) {
+        actualRefDiscount = Math.max(0, eligibleSubtotal - walletUsed);
+    }
+
+    let totalDiscount = walletUsed + actualRefDiscount;
     let totalPayable = subtotal + collectionCharge - totalDiscount;
     if (totalPayable < 0) totalPayable = 0;
 

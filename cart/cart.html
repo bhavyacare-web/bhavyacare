@@ -21,49 +21,62 @@
     body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; padding-bottom: 120px; color: var(--text-main); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* Navbar, Stepper, Forms (Same as previous, omitted for length but keep yours intact) */
+    /* 🌟 NAVBAR 🌟 */
     .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 20px; box-shadow: var(--shadow-md); position: sticky; top: 0; z-index: 1000; }
     .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; }
-    .logo h2 { color: var(--primary); font-size: 22px; font-weight: 800; margin: 0;}
+    .logo h2 { color: var(--primary); font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.5px;}
     .logo span { color: var(--success); }
     .nav-actions { display: flex; align-items: center; gap: 10px; }
     .btn { border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; color: white; font-size: 13px;}
     .login-btn { background-color: var(--primary); }
+    .login-btn:hover { background-color: var(--primary-hover); }
     #user-menu-container { display: none; }
     .user-profile-btn { background: var(--primary-soft); color: var(--primary); border: 1px solid #bfdbfe; padding: 8px 15px; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 13px;}
+    
     .dropdown { position: relative; display: inline-block; }
     .dropbtn { background-color: transparent; color: var(--text-main); font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
     .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 200px; box-shadow: 0px 10px 25px rgba(0,0,0,0.1); z-index: 1001; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 10px;}
     .dropdown-content a { color: var(--text-main); padding: 14px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid var(--bg-color); font-weight: 600; transition: 0.2s;}
+    .dropdown-content a:hover { background-color: var(--bg-color); color: var(--primary); }
     .show-menu { display: block; }
-    
+
+    /* 🌟 STEPPER 🌟 */
     .stepper { display: flex; justify-content: space-between; padding: 25px 20px 10px; max-width: 600px; margin: 0 auto; }
     .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; }
     .step-icon { width: 36px; height: 36px; border-radius: 50%; background: white; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; z-index: 2; color: var(--text-muted); transition: all 0.4s ease; box-shadow: var(--shadow-sm);}
     .step.active .step-icon { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 0 4px var(--primary-soft);}
     .step.completed .step-icon { background: var(--success); border-color: var(--success); color: white; }
-    .step-label { font-size: 12px; font-weight: 700; color: var(--text-muted);}
+    .step-label { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.3px;}
     .step.active .step-label { color: var(--primary); }
     .step.completed .step-label { color: var(--success); }
     .step:not(:last-child)::after { content: ''; position: absolute; top: 18px; left: 60%; width: 80%; height: 3px; background: var(--border); z-index: 1; transition: 0.4s ease;}
     .step.completed:not(:last-child)::after { background: var(--success); }
-
+    
+    /* 🌟 MAIN CONTAINERS 🌟 */
     .container { max-width: 600px; margin: 0 auto; padding: 15px 16px; }
     .card { background: var(--card-bg); border-radius: 20px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-md); transition: 0.3s; }
     .card-title { font-size: 18px; font-weight: 800; margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
+    
+    /* 🌟 FORMS & INPUTS 🌟 */
     .input-group { margin-bottom: 18px; }
     .input-label { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block; }
     .form-input { width: 100%; padding: 15px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 600; background: #f8fafc; transition: all 0.3s ease; color: var(--text-main); outline: none; font-family: inherit;}
     .form-input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
     .form-input[readonly] { background: #e2e8f0; color: var(--text-muted); cursor: not-allowed; border-color: transparent;}
-    .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2); font-family: inherit;}
     
+    .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2); font-family: inherit;}
+    .btn-main:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(29, 78, 216, 0.3); }
+    .btn-main:disabled { opacity: 0.7; cursor: not-allowed; }
+    
+    /* 🌟 GROUPING & LAB CARDS UI 🌟 */
     .group-container { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
     .group-header { font-size: 15px; font-weight: 800; color: var(--text-main); padding-bottom: 15px; border-bottom: 2px dashed var(--border); margin-bottom: 15px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;}
     .group-header i { color: var(--primary); font-size: 18px; }
+    
     .service-toggle-box { background: var(--bg-color); border-radius: 12px; padding: 5px; display: flex; gap: 5px; border: 1px solid var(--border); margin-bottom: 15px;}
     .toggle-btn { flex: 1; padding: 12px; font-size: 13px; font-weight: 700; border: none; background: transparent; color: var(--text-muted); border-radius: 10px; cursor: pointer; transition: 0.3s; }
     .toggle-btn.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); border: 1px solid #bfdbfe; }
+    
     .cart-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .item-title-box { flex-grow: 1; padding-right: 15px; }
     .btn-remove-item { background: var(--danger-soft); color: var(--danger); border: none; width: 30px; height: 30px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
@@ -75,23 +88,25 @@
     .lab-info { flex-grow: 1; }
     .lab-name { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px;}
     .lab-addr { font-size: 12px; color: var(--text-muted); font-weight: 500; margin: 0; line-height: 1.4; }
-    .badge-small { font-size: 10px; font-weight: 800; background: #e0e7ff; color: #1e40af; padding: 3px 8px; border-radius: 6px;}
+    .badge-small { font-size: 10px; font-weight: 800; background: #e0e7ff; color: #1e40af; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;}
+    
     .center-only-badge { font-size: 12px; color: #b45309; background: var(--warning-soft); padding: 10px 15px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid #fde68a; margin-bottom: 15px;}
     .item-error-box { background: var(--danger-soft); border: 1px dashed #f87171; color: var(--danger); padding: 15px; border-radius: 12px; font-size: 13px; font-weight: 600; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-    
-    /* 🌟 PER GROUP TIME SLOTS 🌟 */
-    .group-time-sec { background: var(--primary-soft); padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #bfdbfe; }
-    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
-    .slot-btn { padding: 10px 8px; border: 1.5px solid var(--border); border-radius: 10px; background: white; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; color: var(--text-main); font-family: inherit;}
+
+    /* 🌟 LAB-WISE TIME SLOTS 🌟 */
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 10px; }
+    .slot-btn { padding: 10px 6px; border: 1.5px solid var(--border); border-radius: 8px; background: white; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; color: var(--text-main); font-family: inherit;}
     .slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);}
 
+    /* 🌟 BOTTOM BAR 🌟 */
     .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); padding: 15px 24px; box-shadow: 0 -10px 25px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; border-radius: 24px 24px 0 0; z-index: 100; backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.5);}
     .proceed-btn { background: var(--success); color: white; border: none; padding: 16px 32px; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2); font-family: inherit;}
     .proceed-btn:disabled { background: #cbd5e1; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(0);}
     
+    /* 🌟 MODALS 🌟 */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 20px; }
     .modal-content { background: white; width: 100%; max-width: 420px; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden;}
-    .input-box { width: 100%; padding: 14px; margin: 10px 0; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; font-family: inherit; font-weight: 600;}
+    .input-box { width: 100%; padding: 14px; margin: 10px 0; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s; font-family: inherit; font-weight: 600;}
   </style>
 </head>
 <body>
@@ -105,12 +120,17 @@
   <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
   <header class="navbar">
-      <a href="javascript:history.back()" class="logo"><i class="fas fa-arrow-left" style="color: var(--text-main); font-size: 18px; margin-right: 5px;"></i><h2>Bhavya<span>Care</span></h2></a>
+      <a href="javascript:history.back()" class="logo">
+          <i class="fas fa-arrow-left" style="color: var(--text-main); font-size: 18px; margin-right: 5px;"></i>
+          <h2>Bhavya<span>Care</span></h2>
+      </a>
       <div class="nav-actions">
           <button id="nav-login-btn" class="btn login-btn" onclick="openPatientLogin()">Login</button>
           <div class="dropdown">
               <button id="main-menu-btn" class="dropbtn" onclick="toggleMenu()">⋮</button>
-              <div id="user-menu-container"><button class="user-profile-btn" onclick="toggleMenu()"><i class="fas fa-user-circle"></i> Profile</button></div>
+              <div id="user-menu-container">
+                   <button class="user-profile-btn" onclick="toggleMenu()"><i class="fas fa-user-circle"></i> Profile</button>
+              </div>
             <div id="myDropdown" class="dropdown-content">
                   <a href="#" id="menu-join" onclick="openPartnerLogin()">🤝 Join Us</a>
                   <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;">📊 Dashboard</a>
@@ -143,6 +163,24 @@
       </div>
   </div>
 
+  <div id="cartOtpModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="background: var(--primary-soft); width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
+          <i class="fas fa-shield-alt" style="font-size: 35px; color: var(--primary);"></i>
+      </div>
+      <h3 style="margin-top:0; color: var(--text-main); font-weight: 800; font-size: 20px;">Secure Checkout</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+        To confirm your booking safely, we need to verify:<br>
+        <strong id="displayOtpMobile" style="color:var(--text-main); font-size: 18px; display: block; margin-top: 10px; letter-spacing: 1px;"></strong>
+      </p>
+      <div id="cart-recaptcha-container" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
+      <div id="cartOtpInputSection" style="display: none;">
+        <input type="number" id="cartOtpCode" class="input-box" placeholder="• • • • • •" style="text-align: center; letter-spacing: 8px; font-weight: 800; font-size: 22px; margin-bottom: 20px;">
+        <button class="btn-main" id="cartVerifyOtpBtn" style="background:var(--success)" onclick="verifyCartOTP()">Confirm Order <i class="fas fa-check-circle" style="margin-left: 5px;"></i></button>
+      </div>
+    </div>
+  </div>
+
   <div class="stepper">
     <div class="step active" id="step1-nav"><div class="step-icon">1</div><span class="step-label">My Info</span></div>
     <div class="step" id="step2-nav"><div class="step-icon">2</div><span class="step-label">Services</span></div>
@@ -150,16 +188,27 @@
   </div>
 
   <div class="container">
+    
     <div class="card" id="step1-card">
       <div class="card-title">Patient Details <span id="vipBadge"></span></div>
+      
       <div id="infoForm">
         <div class="input-group">
           <label class="input-label">Patient Name</label>
           <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Who is the test for?"></div>
         </div>
-        <div class="input-group"><label class="input-label">Mobile Number</label><input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number"></div>
-        <div class="input-group"><label class="input-label">Pincode <span style="color:var(--danger)">*</span></label><input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507"></div>
-        <div class="input-group"><label class="input-label">Complete Address</label><input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark"></div>
+        <div class="input-group">
+          <label class="input-label">Mobile Number</label>
+          <input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Pincode <span style="color:var(--danger)">*</span></label>
+          <input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Complete Address</label>
+          <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
+        </div>
         <button class="btn-main" onclick="savePatientInfo()">Save & Continue <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
       </div>
 
@@ -176,11 +225,16 @@
     </div>
 
     <div id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
+      
       <div id="loadingLabsSpinner" style="display:none; text-align:center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
         <i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:35px;'></i>
-        <p style='font-size:15px; font-weight: 700; color:var(--text-main); margin-top:15px;'>Finding premium labs near you...</p>
+        <p style='font-size:15px; font-weight: 700; color:var(--text-main); margin-top:15px;'>Finding premium providers...</p>
       </div>
-      <div id="cartItemsContainer" style="margin-bottom: 24px;"></div>
+
+      <div id="cartItemsContainer"></div>
+
+      <div id="labTimesContainer" style="margin-top: 20px; border-top: 2px dashed var(--border); padding-top: 20px;"></div>
+
     </div>
 
     <div class="card" id="step3-card" style="display: none; opacity: 0.5; pointer-events: none; scroll-margin-top: 100px;">
@@ -211,17 +265,24 @@
       
       <div style="background: #ffffff; border: 1px dashed var(--border); padding: 18px; border-radius: 12px;">
         <h4 style="margin: 0 0 15px 0; font-size: 13px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">Bill Summary</h4>
+        
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
-          <span>Total Tests/Packages:</span><strong id="summaryItemCount" style="color: var(--text-main);">0</strong>
+          <span>Total Tests/Packages:</span>
+          <strong id="summaryItemCount" style="color: var(--text-main);">0</strong>
         </div>
+        
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
-          <span>Collection Charge:</span><strong id="summaryChargeTxt" style="color: var(--success); background: var(--success-soft); padding: 2px 8px; border-radius: 6px;">FREE</strong>
+          <span>Collection Charge:</span>
+          <strong id="summaryChargeTxt" style="color: var(--success); background: var(--success-soft); padding: 2px 8px; border-radius: 6px;">FREE</strong>
         </div>
+        
         <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 16px; font-weight: 800; color: var(--text-main);">
-          <span>Amount to Pay:</span><span style="color: var(--primary); font-size: 18px;">₹<span id="summaryTotalAmt">0</span></span>
+          <span>Amount to Pay:</span>
+          <span style="color: var(--primary); font-size: 18px;">₹<span id="summaryTotalAmt">0</span></span>
         </div>
       </div>
     </div>
+
   </div>
 
   <div class="bottom-bar">
@@ -232,22 +293,9 @@
     <button class="proceed-btn" id="confirmBtn" disabled onclick="finalizeBooking()">Confirm Booking</button>
   </div>
 
-  <div id="cartOtpModal" class="modal-overlay">
-    <div class="modal-content">
-      <div style="background: var(--primary-soft); width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;"><i class="fas fa-shield-alt" style="font-size: 35px; color: var(--primary);"></i></div>
-      <h3 style="margin-top:0; color: var(--text-main); font-weight: 800; font-size: 20px;">Secure Checkout</h3>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">To confirm your booking safely, we need to verify:<br><strong id="displayOtpMobile" style="color:var(--text-main); font-size: 18px; display: block; margin-top: 10px; letter-spacing: 1px;"></strong></p>
-      <div id="cart-recaptcha-container" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
-      <div id="cartOtpInputSection" style="display: none;">
-        <input type="number" id="cartOtpCode" class="input-box" placeholder="• • • • • •" style="text-align: center; letter-spacing: 8px; font-weight: 800; font-size: 22px; margin-bottom: 20px;">
-        <button class="btn-main" id="cartVerifyOtpBtn" style="background:var(--success)" onclick="verifyCartOTP()">Confirm Order <i class="fas fa-check-circle" style="margin-left: 5px;"></i></button>
-      </div>
-    </div>
-  </div>
-
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script> 
-  <script src="cart.js?v=premium_ui_groups"></script>
+  <script src="cart.js?v=final_lab_slots"></script>
 </body>
 </html>

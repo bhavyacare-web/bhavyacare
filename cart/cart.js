@@ -471,6 +471,23 @@ function applyReferral() {
     
     if(!code) { msg.innerText = "Enter code!"; msg.style.color = "var(--danger)"; return; }
     
+    // --- NAYA LOGIC: Check Applicable Services (Row 8) ---
+    let allowedTypesStr = appRules.referral_applicable_services_type; 
+    if (allowedTypesStr) {
+        let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
+        let hasEligibleService = cart.some(item => {
+            let type = (item.service_type || "pathology").toLowerCase().trim();
+            return allowedTypes.includes(type) || allowedTypes.includes("all");
+        });
+
+        if (!hasEligibleService) {
+            msg.innerText = `Referral only valid on: ${allowedTypesStr.toUpperCase()}`; 
+            msg.style.color = "var(--danger)"; 
+            return;
+        }
+    }
+
+    // --- NAYA LOGIC: Check Min Order Limit (Row 9) ---
     let minOrder = appRules.min_order_for_referral || 300;
     if(finalBill.subtotal < minOrder) {
         msg.innerText = `Minimum order ₹${minOrder} required.`; msg.style.color = "var(--danger)"; return;

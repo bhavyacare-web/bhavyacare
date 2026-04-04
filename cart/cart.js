@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (100% FIXED: EMPTY BUG + LAB SLOTS)
+// CART & CHECKOUT LOGIC (100% FIXED & FINAL)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -14,12 +14,18 @@ let cartConfirmationResult;
 let appRules = {};
 let userWalletBalance = 0;
 let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 0, totalPayable: 0, refCode: "" };
-let labSlots = {}; // 🌟 SLOTS AB LAB KE HISAAB SE SAVE HONGE 🌟
+let labSlots = {}; // Slots per Lab
 
 // ==========================================
-// 1. ULTRA-AGGRESSIVE CART LOADER (Fix for Empty Cart)
+// 1. AGGRESSIVE LOADER & BF-CACHE FIX
 // ==========================================
-window.onload = () => {
+window.addEventListener('pageshow', function(event) {
+    // Agar page browser history (Back button) se aaya hai, toh force reload karo
+    if (event.persisted) {
+        window.location.reload();
+        return;
+    }
+
     loadCartData();
 
     if(cart.length === 0) {
@@ -27,37 +33,33 @@ window.onload = () => {
         return;
     }
 
+    // Unhide components if cart has items
+    let s2 = document.getElementById('step2-card');
+    if(s2 && document.getElementById('step1-nav').classList.contains('completed')) {
+        s2.style.display = 'block';
+    }
+
     calculateFinalBill(); 
 
     const userId = localStorage.getItem("bhavya_user_id");
     if (userId) { fetchProfile(userId); } 
     else { document.getElementById('loadingOverlay').style.display = 'none'; }
-};
+});
 
 function loadCartData() {
     try {
         let stored = localStorage.getItem('bhavyaCart');
         if (stored) {
             let parsed = JSON.parse(stored);
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Double stringify fix
             
-            // 🌟 THE FIX: Agar browser ne isko double stringify kar diya ho toh theek karo
-            if (typeof parsed === 'string') {
-                parsed = JSON.parse(parsed);
-            }
-            
-            // 🌟 THE FIX: Bina kisi strict filter ke saara data array me daalo
             if (Array.isArray(parsed) && parsed.length > 0) {
-                cart = parsed.filter(item => item !== null && typeof item === 'object'); 
+                cart = parsed.filter(item => item !== null && typeof item === 'object' && item.service_id); 
             } else {
                 cart = [];
             }
-        } else {
-            cart = [];
-        }
-    } catch(e) { 
-        cart = []; 
-        console.error("Cart Load Error Fixed:", e); 
-    }
+        } else { cart = []; }
+    } catch(e) { cart = []; console.error("Cart Load Error Fixed"); }
 }
 
 function showEmptyCart() {
@@ -288,7 +290,6 @@ function renderGroupedCart() {
     
     document.getElementById('cartItemsContainer').innerHTML = html;
     
-    // 🌟 THE MAGIC: RENDER LAB-WISE TIMES 🌟
     renderLabTimeSelectors();
     calculateFinalBill(); 
 }
@@ -323,7 +324,7 @@ function removeCartItem(originalIndex) {
 }
 
 // ==========================================
-// 4. LAB-WISE TIMING LOGIC (100% FIXED) 🌟
+// 4. LAB-WISE TIMING LOGIC
 // ==========================================
 function parseTime(t) {
     if(!t) return null;
@@ -344,7 +345,6 @@ function renderLabTimeSelectors() {
     let container = document.getElementById('labTimesContainer');
     if(!container) return;
 
-    // Har unique LAB ke liye ek alag time dabba banega
     let uniqueLabIds = [...new Set(cart.map(c => c.selected_lab_id).filter(Boolean))];
     
     if(uniqueLabIds.length === 0) { 
@@ -426,9 +426,8 @@ function selectLabTime(labId, timeStr) {
 }
 
 // ==========================================
-// 5. SMART BILLING & GUEST REFERRAL VALIDATION 🌟
+// 5. SMART BILLING & GUEST REFERRAL VALIDATION
 // ==========================================
-
 function applyReferral() {
     let code = document.getElementById('refCodeInput').value.trim().toUpperCase();
     let msg = document.getElementById('refMessage');
@@ -512,7 +511,6 @@ function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
     if (cart.length === 0) { btn.disabled = true; return; }
     
-    // Check if every unique lab has a selected date & time
     let uniqueLabIds = [...new Set(cart.map(c => c.selected_lab_id).filter(Boolean))];
     let allLabsAssigned = cart.every(item => item.selected_lab_id);
     let allTimesSelected = uniqueLabIds.every(id => labSlots[id] && labSlots[id].date && labSlots[id].time);
@@ -603,9 +601,7 @@ function processOrderSubmission(userId) {
         pincode: bookingData.pincode,
         address: bookingData.address,
         cart_items: cart, 
-        
-        lab_slots: labSlots, // 🌟 Lab-wise slots bhej rahe hain
-
+        lab_slots: labSlots,
         subtotal: finalBill.subtotal,
         collection_charge: finalBill.collectionCharge,
         wallet_used: finalBill.walletUsed,

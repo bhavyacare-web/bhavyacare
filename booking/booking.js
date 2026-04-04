@@ -1,3 +1,7 @@
+// ==========================================
+// booking.js
+// ==========================================
+
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
     'profile':   { name: 'Package', icon: '🩺' }, 
@@ -232,7 +236,7 @@ function renderServices(searchQuery = "") {
             let imgStr = service.service_image ? String(service.service_image).trim() : "";
             let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
 
-            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
+            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal" style="flex-grow:1; min-width:0; padding-right:5px;"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
         }
     });
     container.innerHTML = htmlContent;
@@ -275,6 +279,16 @@ function openModal(serviceId) {
 function closeModal() { document.getElementById("infoModal").classList.remove("active"); }
 function openVipPromo() { document.getElementById("vipPromoModal").classList.add("active"); }
 function closeVipPromo() { document.getElementById("vipPromoModal").classList.remove("active"); }
+
+// ==========================================
+// 🌟 VIP FORM LOGIC 🌟
+// ==========================================
+
+// Global variable definitions for VIP form
+let currentVipAmount = 3000;
+let baseVipPrice = 3000;
+let vipDiscount = 500;
+let validReferrerId = "";
 
 function openVipFormModal() {
     document.getElementById("vipFormModal").classList.add("active");

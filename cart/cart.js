@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (FIXED)
+// CART & CHECKOUT LOGIC (BHAVYACARE)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -16,11 +16,13 @@ let cartConfirmationResult;
 // 1. INITIALIZATION
 // ==========================================
 window.onload = () => {
+    // 🌟 FIX: Better Empty Cart Check 🌟
     if(cart.length === 0) {
         showEmptyCart();
-        return;
+        return; // Yahan se aage ka code nahi chalega agar cart khali hai
     }
 
+    // Agar cart khali NAHI hai, tabhi Total calculate karo
     let initialTotal = 0;
     cart.forEach(item => {
         let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -30,19 +32,34 @@ window.onload = () => {
     document.getElementById('totalAmt').innerText = initialTotal;
 
     const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { fetchProfile(userId); } 
-    else { document.getElementById('loadingOverlay').style.display = 'none'; }
+    if (userId) { 
+        fetchProfile(userId); 
+    } else { 
+        document.getElementById('loadingOverlay').style.display = 'none'; 
+    }
+
+    // Ensure Date picker cannot select past dates
+    let today = new Date().toISOString().split('T')[0];
+    let dateInput = document.getElementById('bookingDate');
+    if(dateInput) dateInput.setAttribute('min', today);
 };
 
 function showEmptyCart() {
-    document.querySelector('.container').innerHTML = `
-        <div style="text-align:center; padding: 50px 20px;">
-            <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
-            <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
-            <a href="../booking/booking.html" style="color: var(--primary); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">Browse Services</a>
-        </div>`;
-    document.getElementById('loadingOverlay').style.display = 'none';
-    document.querySelector('.bottom-bar').style.display = 'none';
+    let container = document.querySelector('.container');
+    if(container) {
+        container.innerHTML = `
+            <div style="text-align:center; padding: 50px 20px;">
+                <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
+                <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
+                <a href="../booking/booking.html" style="color: var(--primary); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">Browse Services</a>
+            </div>`;
+    }
+    
+    let loadingOverlay = document.getElementById('loadingOverlay');
+    if(loadingOverlay) loadingOverlay.style.display = 'none';
+    
+    let bottomBar = document.querySelector('.bottom-bar');
+    if(bottomBar) bottomBar.style.display = 'none';
 }
 
 // ==========================================
@@ -277,12 +294,11 @@ function changeFulfill(index, type) {
     renderCartWithLabs(); 
 }
 
-// 🌟 BUG FIX: Only change the lab for the specific item clicked 🌟
 function assignLabToItem(index, labId) {
     let cleanLabId = String(labId).trim();
-    cart[index].selected_lab_id = cleanLabId; // Set Lab ID per Item
+    cart[index].selected_lab_id = cleanLabId;
     
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); // LocalStorage se pakka connection
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart)); 
     renderCartWithLabs(); 
     validateCheckout();
 }
@@ -337,7 +353,6 @@ function validateCheckout() {
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
-    // Yaha Guest user check hoga jo seedhe checkout par aaye hain bina login karke
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
         document.getElementById("cartOtpModal").style.display = "flex";
@@ -375,7 +390,7 @@ function verifyCartOTP() {
 
     cartConfirmationResult.confirm(otp).then((result) => {
         const user = result.user;
-        proceedWithRegistration(user); // Backend Database Save Call
+        proceedWithRegistration(user); 
     }).catch((error) => {
         alert("Invalid OTP! Please try again.");
         resetCartOtpBtn();
@@ -383,7 +398,6 @@ function verifyCartOTP() {
 }
 
 function proceedWithRegistration(user) {
-    // Agar hume old code me "login" action milta hai toh hum usi se account banayenge/fetch karenge
     const loginPayload = {
         action: "login",
         uid: user.uid,
@@ -406,7 +420,7 @@ function proceedWithRegistration(user) {
             localStorage.setItem("bhavya_name", bookingData.name);
 
             document.getElementById('cartOtpModal').style.display = 'none';
-            processOrderSubmission(finalUserId); // Order Process Kardo
+            processOrderSubmission(finalUserId); 
         } else {
             alert("Registration failed: " + res.message);
             resetCartOtpBtn();
@@ -434,7 +448,7 @@ function processOrderSubmission(userId) {
         patient_name: bookingData.name,
         pincode: bookingData.pincode,
         address: bookingData.address,
-        cart_items: cart, // Seedha LocalStorage se aayi hui values Backend pe jayengi
+        cart_items: cart, 
         total_amount: document.getElementById('totalAmt').innerText,
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime
@@ -444,7 +458,7 @@ function processOrderSubmission(userId) {
     .then(res => res.json())
     .then(res => {
         if(res.status === "success") {
-            localStorage.removeItem('bhavyaCart'); // Cart clear after order
+            localStorage.removeItem('bhavyaCart'); 
             alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}`);
             window.location.href = "../index.html"; 
         } else {

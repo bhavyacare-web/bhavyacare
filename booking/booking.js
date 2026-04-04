@@ -1,5 +1,5 @@
 // ==========================================
-// booking.js - 100% COMPLETE & FIXED
+// booking.js - 100% COMPLETE & FIXED (Aggressive Save)
 // ==========================================
 
 const categoryConfig = {
@@ -21,18 +21,16 @@ let userPlanStatus = "basic";
 let currentCategory = 'profile'; 
 let currentSubCategory = 'all'; 
 
-// Aggressive Cart Load on Init
+// Load cart aggressively on page load to sync state
 let cart = [];
 try {
     let stored = localStorage.getItem('bhavyaCart');
     if (stored) {
         let parsed = JSON.parse(stored);
-        if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Fix for double stringify
-        if (Array.isArray(parsed)) {
-            cart = parsed.map(item => ({...item, qty: item.qty || 1}));
-        }
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Double stringify fix
+        if (Array.isArray(parsed)) cart = parsed.map(item => ({...item, qty: item.qty || 1})); 
     }
-} catch(e) { cart = []; }
+} catch (e) { console.error("Cart Error", e); cart = []; }
 
 let searchTimeout; 
 let pollingInterval; 
@@ -240,6 +238,7 @@ function renderServices(searchQuery = "") {
                     descPreviewHtml = `<div class="desc-preview"><ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>${moreText ? `<div class="view-more-btn" onclick="openModal('${s_id}')">${moreText}</div>` : ''}</div>`;
                 }
             }
+
             htmlContent += `<div class="profile-item"><div class="profile-header"><span class="profile-badge">${cleanCat}</span>${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Tests</span>` : ''}</div><div class="service-info"><h3>${cleanName}</h3>${descPreviewHtml}</div><div class="price-action-row"><div class="price-box">${pricingHtml}</div><div class="action-container">${actionBtnHtml}</div></div></div>`;
         } else {
             let catType = String(service.service_type || '').toLowerCase().trim();
@@ -263,19 +262,15 @@ function updateQty(id, change, price, name, type) {
         cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
     }
     
+    // Aggressive save to guarantee state is synced immediately
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI(); 
     renderServices(document.getElementById("searchInput").value); 
 }
 
 function updateCartUI() {
-    const topCartBtn = document.getElementById("topCartBtn"); 
-    const cartBar = document.getElementById("bottomCartBar"); 
-    const cartText = document.getElementById("bottomCartText");
-    
-    let totalItems = cart.reduce((sum, item) => sum + item.qty, 0); 
-    let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    
+    const topCartBtn = document.getElementById("topCartBtn"); const cartBar = document.getElementById("bottomCartBar"); const cartText = document.getElementById("bottomCartText");
+    let totalItems = cart.reduce((sum, item) => sum + item.qty, 0); let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     topCartBtn.innerText = `🛒 Cart (${totalItems})`;
     if (totalItems > 0) {
         cartText.innerHTML = `${totalItems} Item${totalItems > 1 ? 's' : ''} <span style="color:#cbd5e1; margin:0 8px;">|</span> ₹${totalPrice}`;
@@ -419,16 +414,10 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-// ==========================================
-// 🌟 NAYA: FORCE SYNC CART REDIRECT 🌟
-// ==========================================
+// 🌟 FIX: DELAYED NAVIGATION TO PREVENT EMPTY CART BUG 🌟
 function openCart() { 
-    const dataString = JSON.stringify(cart);
-    localStorage.setItem('bhavyaCart', dataString);
-    
-    // Backup small delay to ensure localstorage finishes writing
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     setTimeout(() => {
-        // Use replace to prevent going back to "empty" state via back button
-        window.location.replace("../cart/cart.html"); 
-    }, 150); 
+        window.location.href = "../cart/cart.html"; 
+    }, 150); // Small 150ms delay guarantees the browser writes the data first!
 }

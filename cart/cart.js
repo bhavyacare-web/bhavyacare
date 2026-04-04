@@ -20,7 +20,6 @@ let labSlots = {}; // Slots per Lab
 // 1. AGGRESSIVE LOADER & BF-CACHE FIX
 // ==========================================
 window.addEventListener('pageshow', function(event) {
-    // Agar page browser history (Back button) se aaya hai, toh force reload karo
     if (event.persisted) {
         window.location.reload();
         return;
@@ -33,7 +32,6 @@ window.addEventListener('pageshow', function(event) {
         return;
     }
 
-    // Unhide components if cart has items
     let s2 = document.getElementById('step2-card');
     if(s2 && document.getElementById('step1-nav').classList.contains('completed')) {
         s2.style.display = 'block';
@@ -51,7 +49,7 @@ function loadCartData() {
         let stored = localStorage.getItem('bhavyaCart');
         if (stored) {
             let parsed = JSON.parse(stored);
-            if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Double stringify fix
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
             
             if (Array.isArray(parsed) && parsed.length > 0) {
                 cart = parsed.filter(item => item !== null && typeof item === 'object' && item.service_id); 
@@ -395,6 +393,12 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
     let container = document.getElementById(`slots-${labId}`);
     if(!container || !dateStr) return;
 
+    // NAYA UI UPDATE: Grid ko wapas Reset/Show karo agar date change ho
+    container.style.maxHeight = "500px";
+    container.style.opacity = "1";
+    const label = document.getElementById(`selected-time-label-${labId}`);
+    if(label) label.remove();
+
     let dateObj = new Date(dateStr);
     let days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     let dayName = days[dateObj.getDay()];
@@ -420,9 +424,41 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
     validateCheckout();
 }
 
+// 🌟 UI UPDATE: AUTO-CLOSE SLOTS ON SELECTION 🌟
 function selectLabTime(labId, timeStr) {
+    // 1. Logic me time save karo
     labSlots[labId].time = timeStr;
-    updateLabDate(labId, labSlots[labId].date, true);
+
+    // 2. UI me active class update karo
+    const slotButtons = document.querySelectorAll(`#slots-${labId} .slot-btn`);
+    slotButtons.forEach(btn => {
+        if (btn.innerText === timeStr) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    // 3. AUTO-CLOSE FEATURE
+    const slotGrid = document.getElementById(`slots-${labId}`);
+    if (slotGrid) {
+        setTimeout(() => {
+            slotGrid.style.maxHeight = "0px";
+            slotGrid.style.overflow = "hidden";
+            slotGrid.style.opacity = "0";
+            slotGrid.style.transition = "all 0.4s ease";
+            
+            const timeLabel = document.createElement('div');
+            timeLabel.id = `selected-time-label-${labId}`;
+            timeLabel.innerHTML = `<span style="font-size:12px; color:var(--success); font-weight:700;"><i class="fas fa-check"></i> Selected: ${timeStr}</span>`;
+            
+            const oldLabel = document.getElementById(`selected-time-label-${labId}`);
+            if(oldLabel) oldLabel.remove();
+            slotGrid.parentNode.insertBefore(timeLabel, slotGrid);
+        }, 300);
+    }
+
+    validateCheckout();
 }
 
 // ==========================================

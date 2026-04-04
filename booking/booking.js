@@ -1,5 +1,5 @@
 // ==========================================
-// booking.js
+// booking.js - 100% COMPLETE & FIXED
 // ==========================================
 
 const categoryConfig = {
@@ -196,18 +196,21 @@ function renderServices(searchQuery = "") {
         const vipPrice = formatPrice(service.vip_price);
         const applicablePrice = isVip ? vipPrice : basicPrice;
         
-        const cartItem = cart.find(item => item.service_id === service.service_id);
+        // 🌟 GREEN BUTTON FIX: STRING ID CASTING & ESCAPING 🌟
+        const s_id = String(service.service_id).replace(/'/g, "\\'");
+        const cartItem = cart.find(item => String(item.service_id) === String(service.service_id));
         const inCart = !!cartItem;
         const currentQty = cartItem ? cartItem.qty : 0;
         
-        const cleanName = formatText(service.service_name).replace(/'/g, "\\'");
+        const cleanName = formatText(service.service_name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const cleanType = String(service.service_type || '').replace(/'/g, "\\'");
         const cleanCat = formatText(service.service_category);
 
         let actionBtnHtml = "";
         if (inCart) {
-            actionBtnHtml = `<div class="qty-control"><button onclick="updateQty('${service.service_id}', -1, ${applicablePrice}, '${cleanName}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}', '${service.service_type}')"><i class="fas fa-plus"></i></button></div>`;
+            actionBtnHtml = `<div class="qty-control"><button onclick="updateQty('${s_id}', -1, ${applicablePrice}, '${cleanName}', '${cleanType}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateQty('${s_id}', 1, ${applicablePrice}, '${cleanName}', '${cleanType}')"><i class="fas fa-plus"></i></button></div>`;
         } else {
-            actionBtnHtml = `<button class="add-to-cart-btn" onclick="updateQty('${service.service_id}', 1, ${applicablePrice}, '${cleanName}', '${service.service_type}')">ADD +</button>`;
+            actionBtnHtml = `<button class="add-to-cart-btn" onclick="updateQty('${s_id}', 1, ${applicablePrice}, '${cleanName}', '${cleanType}')">ADD +</button>`;
         }
 
         let pricingHtml = "";
@@ -225,7 +228,7 @@ function renderServices(searchQuery = "") {
                 if (items.length > 0) {
                     let previewItems = items.slice(0, 2).map(i => formatText(i.trim()));
                     let moreText = service.number_of_test ? `+ ${service.number_of_test} Parameters` : (items.length > 2 ? "View All Details" : "");
-                    descPreviewHtml = `<div class="desc-preview"><ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>${moreText ? `<div class="view-more-btn" onclick="openModal('${service.service_id}')">${moreText}</div>` : ''}</div>`;
+                    descPreviewHtml = `<div class="desc-preview"><ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>${moreText ? `<div class="view-more-btn" onclick="openModal('${s_id}')">${moreText}</div>` : ''}</div>`;
                 }
             }
 
@@ -243,7 +246,8 @@ function renderServices(searchQuery = "") {
 }
 
 function updateQty(id, change, price, name, type) {
-    let index = cart.findIndex(item => item.service_id === id);
+    id = String(id);
+    let index = cart.findIndex(item => String(item.service_id) === id);
     if (index > -1) {
         cart[index].qty += change;
         if (cart[index].qty <= 0) cart.splice(index, 1); 
@@ -251,7 +255,8 @@ function updateQty(id, change, price, name, type) {
         cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
     }
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    updateCartUI(); renderServices(document.getElementById("searchInput").value); 
+    updateCartUI(); 
+    renderServices(document.getElementById("searchInput").value); 
 }
 
 function updateCartUI() {
@@ -283,8 +288,6 @@ function closeVipPromo() { document.getElementById("vipPromoModal").classList.re
 // ==========================================
 // 🌟 VIP FORM LOGIC 🌟
 // ==========================================
-
-// Global variable definitions for VIP form
 let currentVipAmount = 3000;
 let baseVipPrice = 3000;
 let vipDiscount = 500;
@@ -402,8 +405,6 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-// 🌟 EXACT FOLDER RASTA FIX 🌟
 function openCart() { 
-    // Yahan '../cart/cart.html' likha hai kyunki booking.js 'booking' folder ke andar hai
     window.location.href = "../cart/cart.html"; 
 }

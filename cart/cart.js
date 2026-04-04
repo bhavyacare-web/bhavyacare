@@ -1,17 +1,26 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (PREMIUM & CASH ONLY)
+// CART & CHECKOUT LOGIC (PREMIUM + WALLET & REFERRAL)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
+// 🌟 GLOBAL STATE VARIABLES 🌟
 let cart = [];
 let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let selectedTime = null;
 let cartConfirmationResult; 
 
+// New Variables for Dynamic Billing
+let appRules = {};
+let userWalletBalance = 0;
+let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 0, totalPayable: 0, refCode: "" };
+
+// ==========================================
+// 1. INITIALIZATION & SAFE LOCAL STORAGE
+// ==========================================
 window.onload = () => {
     try {
         cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
@@ -25,17 +34,14 @@ window.onload = () => {
         return;
     }
 
-    let initialTotal = 0;
-    cart.forEach(item => {
-        let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
-        let itemQty = Number(item.qty || 1);
-        initialTotal += (itemPrice * itemQty);
-    });
-    document.getElementById('totalAmt').innerText = initialTotal;
+    calculateFinalBill(); // Initial calculation
 
     const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { fetchProfile(userId); } 
-    else { document.getElementById('loadingOverlay').style.display = 'none'; }
+    if (userId) { 
+        fetchProfile(userId); 
+    } else { 
+        document.getElementById('loadingOverlay').style.display = 'none'; 
+    }
 
     let today = new Date().toISOString().split('T')[0];
     let dateInput = document.getElementById('bookingDate');
@@ -53,12 +59,17 @@ function showEmptyCart() {
                 <a href="../booking/booking.html" class="btn-main" style="display: inline-block; margin-top: 15px; width: auto; text-decoration:none;">Browse Services</a>
             </div>`;
     }
-    document.getElementById('loadingOverlay').style.display = 'none';
+    let loadingOverlay = document.getElementById('loadingOverlay');
+    if(loadingOverlay) loadingOverlay.style.display = 'none';
     let bottomBar = document.querySelector('.bottom-bar');
     if(bottomBar) bottomBar.style.display = 'none';
 }
 
+// ==========================================
+// 2. PATIENT PROFILE, RULES & WALLET FETCH
+// ==========================================
 function fetchProfile(userId) {
+    // 1. Fetch Patient Info
     fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
     .then(res => {
@@ -66,6 +77,8 @@ function fetchProfile(userId) {
         if(res.status === "success") {
             const data = res.data;
             bookingData.mobile = data.mobile;
+            bookingData.isVip = data.isVip; // Important for VIP rules
+            
             document.getElementById('uMobile').value = data.mobile;
             document.getElementById('uMobile').setAttribute("readonly", true); 
             document.getElementById('uPincode').value = data.pincode;
@@ -73,14 +86,32 @@ function fetchProfile(userId) {
 
             const nameBox = document.getElementById('nameInputBox');
             if(data.isVip && data.vipMembers && data.vipMembers.length > 0) {
-                document.getElementById('vipBadge').innerHTML = '<span style="background:var(--warning); color:white; font-size:10px; padding:4px 8px; border-radius:12px; margin-left: 10px;"><i class="fas fa-crown"></i> VIP Active</span>';
+                let badge = document.getElementById('vipBadge');
+                if(badge) badge.innerHTML = '<span style="background:var(--warning); color:white; font-size:10px; padding:4px 8px; border-radius:12px; margin-left: 10px;"><i class="fas fa-crown"></i> VIP Active</span>';
+                
                 let opts = data.vipMembers.map(m => `<option value="${m}">${m}</option>`).join('');
                 nameBox.innerHTML = `<select id="uName" class="form-input">${opts}</select>`;
             } else {
                 nameBox.innerHTML = `<input type="text" id="uName" class="form-input" value="${data.name}" placeholder="Patient Name">`;
             }
+            calculateFinalBill(); // Recalculate if VIP status changes rules
         }
     }).catch(e => { document.getElementById('loadingOverlay').style.display = 'none'; });
+
+    // 2. Fetch Dynamic Rules & Wallet Balance
+    fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getCartRulesAndWallet", user_id: userId }) })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === "success") {
+            appRules = res.data.rules || {};
+            userWalletBalance = res.data.wallet_balance || 0;
+            
+            let walletTxt = document.getElementById('walletBalTxt');
+            if(walletTxt) walletTxt.innerText = userWalletBalance;
+            
+            calculateFinalBill(); // Recalculate with real wallet & rules
+        }
+    });
 }
 
 function savePatientInfo() {
@@ -127,6 +158,9 @@ function editPatientInfo() {
     validateCheckout();
 }
 
+// ==========================================
+// 3. SMART GROUPING & LAB CARDS
+// ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
@@ -172,7 +206,6 @@ function autoAssignGroupLabs() {
 
 function renderGroupedCart() {
     let html = ""; 
-    let total = 0;
     let allItemsConfigured = true;
 
     let groupedCart = {};
@@ -186,7 +219,6 @@ function renderGroupedCart() {
             };
         }
         groupedCart[type].items.push({ ...item, originalIndex: index });
-        total += Number(item.price || item.service_price || item.basic_price || 0) * Number(item.qty || 1);
     });
 
     for (const [type, group] of Object.entries(groupedCart)) {
@@ -250,7 +282,8 @@ function renderGroupedCart() {
     }
     
     document.getElementById('cartItemsContainer').innerHTML = html;
-    document.getElementById('totalAmt').innerText = total;
+    
+    calculateFinalBill(); // Re-calc on any cart change
 
     if (cart.length > 0 && allItemsConfigured) {
         document.getElementById('dateTimeSection').style.display = 'block';
@@ -295,6 +328,9 @@ function removeCartItem(originalIndex) {
     }
 }
 
+// ==========================================
+// 4. DYNAMIC 30-MIN TIME SLOTS
+// ==========================================
 function parseTime(t) {
     if(!t) return null;
     let match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -361,7 +397,96 @@ function selectTime(btn, time) {
     validateCheckout();
 }
 
-// 🌟 STEP 3 (CASH CHECKOUT) UNLOCK LOGIC 🌟
+// ==========================================
+// 5. SMART BILLING & CHECKOUT (WALLET/REFERRAL)
+// ==========================================
+
+function applyReferral() {
+    let code = document.getElementById('refCodeInput').value.trim().toUpperCase();
+    let msg = document.getElementById('refMessage');
+    
+    if(!code) { 
+        msg.innerText = "Please enter a valid code."; 
+        msg.style.color = "var(--danger)"; 
+        return; 
+    }
+    
+    let minOrder = appRules.min_order_for_referral || 300;
+    if(finalBill.subtotal < minOrder) {
+        msg.innerText = `Minimum order value for referral is ₹${minOrder}.`;
+        msg.style.color = "var(--danger)";
+        return;
+    }
+
+    // Applying basic logic. (Real backend validation can be added later)
+    finalBill.refCode = code;
+    finalBill.refDiscount = appRules.referral_bonus || 50; 
+    
+    msg.innerHTML = `<i class="fas fa-check-circle"></i> Code applied! ₹${finalBill.refDiscount} discount added.`;
+    msg.style.color = "var(--success)";
+    calculateFinalBill();
+}
+
+function calculateFinalBill() {
+    let subtotal = 0;
+    let isHomeCollection = false;
+    
+    cart.forEach(item => {
+        subtotal += (Number(item.price || item.basic_price || item.service_price || 0) * Number(item.qty || 1));
+        if (item.fulfillment === "home") isHomeCollection = true;
+    });
+
+    // 1. Calculate Home Collection Charge based on Free Limits
+    let collectionCharge = 0;
+    if (isHomeCollection) {
+        let freeLimit = bookingData.isVip ? (appRules.free_collection_limit_vip || 100) : (appRules.free_collection_limit_basic || 300);
+        if (subtotal < freeLimit) {
+            collectionCharge = appRules.home_collection_charge || 50;
+        }
+    }
+
+    // 2. Calculate Wallet Deduction based on Rules
+    let walletUsed = 0;
+    let walletCb = document.getElementById('useWalletCb');
+    if (walletCb && walletCb.checked) {
+        let maxAllowed = bookingData.isVip ? (appRules.vip_max_wallet_use || 200) : (appRules.basic_max_wallet_use || 50);
+        walletUsed = Math.min(userWalletBalance, maxAllowed, subtotal); 
+    }
+
+    // 3. Final Calculation
+    let totalDiscount = walletUsed + finalBill.refDiscount;
+    let totalPayable = subtotal + collectionCharge - totalDiscount;
+    if (totalPayable < 0) totalPayable = 0;
+
+    // Update Global State
+    finalBill.subtotal = subtotal;
+    finalBill.collectionCharge = collectionCharge;
+    finalBill.walletUsed = walletUsed;
+    finalBill.totalPayable = totalPayable;
+
+    // 4. Update UI Elements safely
+    let tAmt = document.getElementById('totalAmt');
+    if(tAmt) tAmt.innerText = totalPayable;
+    
+    let sumTotal = document.getElementById('summaryTotalAmt');
+    if(sumTotal) sumTotal.innerText = totalPayable;
+    
+    let sumCount = document.getElementById('summaryItemCount');
+    if(sumCount) sumCount.innerText = cart.length;
+    
+    let chargeUI = document.getElementById('summaryChargeTxt'); 
+    if (chargeUI) {
+        if (collectionCharge === 0) {
+            chargeUI.innerHTML = `<span style="color:var(--success); background:var(--success-soft); padding:2px 8px; border-radius:6px;">FREE</span>`;
+        } else {
+            chargeUI.innerText = `₹${collectionCharge}`;
+            chargeUI.style.color = "var(--text-main)";
+            chargeUI.style.background = "transparent";
+            chargeUI.style.padding = "0";
+        }
+    }
+}
+
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
     if (cart.length === 0) { btn.disabled = true; return; }
@@ -370,7 +495,6 @@ function validateCheckout() {
     
     if(allAssigned && document.getElementById('bookingDate').value && selectedTime) {
         
-        // Step 3 (Payment Details) Unlock
         const s3 = document.getElementById('step3-card');
         if(s3) {
             s3.style.display = 'block';
@@ -378,23 +502,14 @@ function validateCheckout() {
             s3.style.pointerEvents = 'auto';
         }
         
-        // Update Bill Summary
-        let totalItems = cart.reduce((sum, item) => sum + Number(item.qty || 1), 0);
-        let totalAmt = document.getElementById('totalAmt').innerText;
+        calculateFinalBill(); // Ensure fresh bill summary
         
-        let sumCount = document.getElementById('summaryItemCount');
-        if(sumCount) sumCount.innerText = totalItems;
-        let sumTotal = document.getElementById('summaryTotalAmt');
-        if(sumTotal) sumTotal.innerText = totalAmt;
-
         btn.disabled = false;
         document.getElementById('step3-nav').classList.add('active');
 
-        // Smoothly scroll to Step 3
         if(s3) s3.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
     } else {
-        // Lock Step 3 if something is unselected
         const s3 = document.getElementById('step3-card');
         if(s3) {
             s3.style.opacity = '0.5';
@@ -405,6 +520,9 @@ function validateCheckout() {
     }
 }
 
+// ==========================================
+// 6. FINAL BOOKING & SYNC LOGIN LOGIC
+// ==========================================
 function finalizeBooking() {
     const userId = localStorage.getItem("bhavya_user_id");
     
@@ -500,10 +618,19 @@ function processOrderSubmission(userId) {
         action: "submitBookingOrder",
         user_id: userId,
         patient_name: bookingData.name,
+        mobile: bookingData.mobile, // Important for Emails
         pincode: bookingData.pincode,
         address: bookingData.address,
         cart_items: cart, 
-        total_amount: document.getElementById('totalAmt').innerText,
+        
+        // 🌟 Naye Smart Fields 🌟
+        subtotal: finalBill.subtotal,
+        collection_charge: finalBill.collectionCharge,
+        wallet_used: finalBill.walletUsed,
+        total_discount: (finalBill.walletUsed + finalBill.refDiscount),
+        referral_code: finalBill.refCode,
+        final_total: finalBill.totalPayable,
+        
         slot_date: document.getElementById('bookingDate').value,
         slot_time: selectedTime
     };
@@ -513,7 +640,7 @@ function processOrderSubmission(userId) {
     .then(res => {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
-            alert(`🎉 Booking Successful!\nYour Order ID is: ${res.data.order_id}\n\nYou can pay directly at the center/home via Cash or UPI.`);
+            alert(`🎉 Booking Successful!\nYour Order is confirmed.\n\nYou can pay directly at the center/home via Cash or UPI.`);
             window.location.href = "../index.html"; 
         } else {
             alert("Booking Error: " + res.message);

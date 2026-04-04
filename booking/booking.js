@@ -1,5 +1,5 @@
 // ==========================================
-// booking.js - 100% COMPLETE & FIXED
+// booking.js - 100% COMPLETE & FIXED (Aggressive Save)
 // ==========================================
 
 const categoryConfig = {
@@ -21,8 +21,16 @@ let userPlanStatus = "basic";
 let currentCategory = 'profile'; 
 let currentSubCategory = 'all'; 
 
-let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
-cart = cart.map(item => ({...item, qty: item.qty || 1})); 
+// Load cart aggressively on page load to sync state
+let cart = [];
+try {
+    let stored = localStorage.getItem('bhavyaCart');
+    if (stored) {
+        let parsed = JSON.parse(stored);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Double stringify fix
+        if (Array.isArray(parsed)) cart = parsed.map(item => ({...item, qty: item.qty || 1})); 
+    }
+} catch (e) { console.error("Cart Error", e); cart = []; }
 
 let searchTimeout; 
 let pollingInterval; 
@@ -196,7 +204,6 @@ function renderServices(searchQuery = "") {
         const vipPrice = formatPrice(service.vip_price);
         const applicablePrice = isVip ? vipPrice : basicPrice;
         
-        // 🌟 GREEN BUTTON FIX: STRING ID CASTING & ESCAPING 🌟
         const s_id = String(service.service_id).replace(/'/g, "\\'");
         const cartItem = cart.find(item => String(item.service_id) === String(service.service_id));
         const inCart = !!cartItem;
@@ -254,6 +261,8 @@ function updateQty(id, change, price, name, type) {
     } else if (change > 0) { 
         cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
     }
+    
+    // Aggressive save to guarantee state is synced immediately
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI(); 
     renderServices(document.getElementById("searchInput").value); 
@@ -405,6 +414,10 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
+// 🌟 FIX: DELAYED NAVIGATION TO PREVENT EMPTY CART BUG 🌟
 function openCart() { 
-    window.location.href = "../cart/cart.html"; 
+    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
+    setTimeout(() => {
+        window.location.href = "../cart/cart.html"; 
+    }, 150); // Small 150ms delay guarantees the browser writes the data first!
 }

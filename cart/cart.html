@@ -235,6 +235,18 @@
 
       <div id="labTimesContainer" style="margin-top: 20px; border-top: 2px dashed var(--border); padding-top: 20px;"></div>
 
+      <button id="btnProceedCheckout" class="btn-main" style="display:none; margin-top: 20px;" onclick="goToStep3()">Proceed to Payment <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
+
+      <div id="servicesSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="font-size: 14px; line-height: 1.6;">
+            <strong style="font-size: 16px; color: var(--text-main);"><i class="fas fa-check-circle" style="color:var(--success); margin-right:5px;"></i>Services & Time Confirmed</strong><br>
+            <span id="sumTotalTests" style="color: var(--text-muted); font-weight: 600;"></span>
+          </div>
+          <button onclick="editServicesInfo()" style="background: white; color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: var(--shadow-sm);">Edit</button>
+        </div>
+      </div>
+
     </div>
 
     <div class="card" id="step3-card" style="display: none; opacity: 0.5; pointer-events: none; scroll-margin-top: 100px;">
@@ -296,6 +308,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script> 
-  <script src="cart.js?v=final_lab_slots"></script>
+  <script src="cart.js?v=final_lab_slots_ux"></script>
 </body>
 </html>

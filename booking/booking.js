@@ -136,18 +136,60 @@ function startVipPolling() {
 
 function renderCategories() {
     const mainContainer = document.getElementById("mainCategories");
+    const sliderContainer = document.getElementById("dynamicCategorySlider");
+    
     let mainHtml = "";
+    let sliderHtml = "";
+    
+    // Backend se aane wali saari unique categories
     const existingTypes = [...new Set(allServices.map(s => String(s.service_type || '').toLowerCase().trim()))];
 
+    // --- PART 1: FIXED CATEGORIES (GRID ME DIKHAYENGE) ---
     mainCategoryKeys.forEach(key => {
-        let config = categoryConfig[key] || { name: key.toUpperCase(), icon: defaultIcon };
+        let config = categoryConfig[key] || { name: formatText(key), icon: defaultIcon };
         let isPresent = existingTypes.includes(key);
         let isSelected = currentCategory === key ? 'selected' : '';
+        
+        // Agar backend me wo test available hai, tabhi grid me dikhao
         if(isPresent) {
-            mainHtml += `<div class="cat-card ${isSelected}" onclick="selectCategory('${key}')"><div class="cat-icon">${config.icon}</div><span class="cat-name">${config.name}</span></div>`;
+            mainHtml += `<div class="cat-card ${isSelected}" onclick="selectCategory('${key}')">
+                            <div class="cat-icon">${config.icon}</div>
+                            <span class="cat-name">${config.name}</span>
+                         </div>`;
         }
     });
-    mainContainer.innerHTML = mainHtml;
+    if(mainContainer) mainContainer.innerHTML = mainHtml;
+
+    // --- PART 2: NAYI CATEGORIES (SLIDER ME DIKHAYENGE) ---
+    let hasNewCategories = false;
+    
+    existingTypes.forEach(key => {
+        if (!key) return; // Blank item ko skip karo
+        
+        // Agar category purani fixed list me HAI, toh isko chhod do
+        if (mainCategoryKeys.includes(key)) return; 
+        
+        // Agar category NAYI hai:
+        hasNewCategories = true;
+        let isActive = currentCategory === key ? 'active' : '';
+        let config = categoryConfig[key] || { name: formatText(key), icon: defaultIcon };
+        
+        // Naye button ko sub-category wale style me slider me add karo
+        sliderHtml += `<button class="sub-cat-btn ${isActive}" onclick="selectCategory('${key}')" style="display:flex; align-items:center; gap:5px;">
+                          <span>${config.icon}</span> ${config.name}
+                       </button>`;
+    });
+
+    // Agar koi nayi category mili, toh slider dikhao, warna chupao
+    if (sliderContainer) {
+        if (hasNewCategories) {
+            sliderContainer.innerHTML = sliderHtml;
+            sliderContainer.style.display = "flex";
+        } else {
+            sliderContainer.innerHTML = "";
+            sliderContainer.style.display = "none";
+        }
+    }
 }
 
 function selectCategory(categoryKey) {

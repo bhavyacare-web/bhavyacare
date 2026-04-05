@@ -167,7 +167,7 @@ function editPatientInfo() {
 }
 
 // ==========================================
-// 3. SMART GROUPING & LAB SELECTION
+// 3. SMART GROUPING & LAB SELECTION (UPDATED)
 // ==========================================
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
@@ -193,10 +193,18 @@ function autoAssignGroupLabs() {
     let assignedLabs = {}; 
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase().trim();
-        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-        
+        let eligibleLabsAll = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+        let eligibleLabs = [...eligibleLabsAll];
+
         if (item.fulfillment === "home") {
-            eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
+            let homeEligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
+            
+            // 🌟 NEW LOGIC: Agar pincode match nahi karta to 'center' auto select ho jaye 🌟
+            if (homeEligibleLabs.length === 0 && eligibleLabsAll.length > 0) {
+                item.fulfillment = "center";
+            } else {
+                eligibleLabs = homeEligibleLabs;
+            }
         }
 
         if (eligibleLabs.length > 0) {
@@ -248,10 +256,20 @@ function renderGroupedCart() {
 
         let isHomeEligible = homeServiceCategories.includes(type);
         let isHome = group.fulfillment === "home";
+        
         if(isHomeEligible) {
+            // 🌟 NEW LOGIC: Lock Button UI and Error Alert 🌟
+            let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+            let homeLabsForSvc = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
+            let hasHomeProvider = homeLabsForSvc.length > 0;
+
+            let homeClickAction = hasHomeProvider ? `changeGroupFulfill('${type}', 'home')` : `showHomeUnavailableAlert('${type}')`;
+            let homeBtnStyle = hasHomeProvider ? "" : "opacity: 0.6; cursor: not-allowed; background: #f8fafc;";
+            let lockIcon = hasHomeProvider ? "" : ' <i class="fas fa-lock" style="font-size:11px; margin-left:4px;"></i>';
+
             html += `
                 <div class="service-toggle-box" style="margin-bottom:15px;">
-                    <button class="toggle-btn ${isHome ? 'active' : ''}" onclick="changeGroupFulfill('${type}', 'home')"><i class="fas fa-home"></i> Home Collection</button>
+                    <button class="toggle-btn ${isHome ? 'active' : ''}" style="${homeBtnStyle}" onclick="${homeClickAction}"><i class="fas fa-home"></i> Home Collection${lockIcon}</button>
                     <button class="toggle-btn ${!isHome ? 'active' : ''}" onclick="changeGroupFulfill('${type}', 'center')"><i class="fas fa-hospital"></i> Center Visit</button>
                 </div>`;
         } else {
@@ -280,7 +298,7 @@ function renderGroupedCart() {
                     </div>`;
             });
         } else {
-            html += `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}.</span></div>`;
+            html += `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}. Please change pincode or visit center.</span></div>`;
         }
         
         html += `</div>`; 
@@ -292,9 +310,14 @@ function renderGroupedCart() {
     calculateFinalBill(); 
 }
 
+// 🌟 NEW FUNCTION: To show alert when clicked on locked Home Collection button 🌟
+function showHomeUnavailableAlert(type) {
+    alert(`No provider found in your area for ${type}. Please change pincode or visit center.`);
+}
+
 function changeGroupFulfill(type, fulfillment) {
     if (fulfillment === "home" && !allActiveLabsList.some(l => l.provided_services[type] && (l.pincode === bookingData.pincode || l.available_pincodes.includes(bookingData.pincode)))) {
-        alert("Home collection is not available in your Pincode for this service.");
+        alert(`No provider found in your area for ${type}. Please change pincode or visit center.`);
         return;
     }
     cart.forEach(item => {

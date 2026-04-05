@@ -1,193 +1,222 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; // <-- YAHAN APNA URL UPDATE KAREIN
+let isUserVip = false;
 
-let currentTab = 'patients';
+document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
-document.addEventListener("DOMContentLoaded", fetchPatientsData);
-
-function switchAdminTab(tabName) {
-    currentTab = tabName;
-    
-    // Reset buttons
-    document.getElementById('tab-patients')?.classList.remove('active');
-    document.getElementById('tab-vips')?.classList.remove('active');
-    document.getElementById('tab-booking')?.classList.remove('active');
-    
-    // Hide sections
-    document.getElementById('patients-section').style.display = 'none';
-    document.getElementById('vips-section').style.display = 'none';
-    document.getElementById('booking-section').style.display = 'none';
-
-    // Activate selected
-    document.getElementById(`tab-${tabName}`)?.classList.add('active');
-    document.getElementById(`${tabName}-section`).style.display = 'block';
-
-    fetchCurrentTabData();
-}
-
-function fetchCurrentTabData() {
-    if (currentTab === 'patients') fetchPatientsData();
-    else if (currentTab === 'vips') fetchVipData();
-    else if (currentTab === 'booking') fetchBookingOrders();
-}
-
-function closeModals() {
-    document.getElementById('modalOverlay').style.display = 'none';
-    document.getElementById('orderStatusModal').style.display = 'none';
-    document.getElementById('orderReportModal').style.display = 'none';
-}
-
-// ==========================================
-// 1. PATIENTS LIST
-// ==========================================
-async function fetchPatientsData() {
-    const tableBody = document.getElementById("patientsTableBody");
-    const loader = document.getElementById("loader");
-    tableBody.innerHTML = ""; loader.style.display = "block"; 
+async function checkLoginAndFetchData() {
+    const userId = localStorage.getItem("bhavya_user_id");
+    if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", body: JSON.stringify({ action: "getPatients" }) 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) 
         });
+
         const result = await response.json();
-        loader.style.display = "none";
 
         if (result.status === "success") {
-            result.data.forEach(p => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><img src="${p.image}" class="patient-img"></td>
-                        <td><strong>${p.user_id}</strong></td>
-                        <td>${p.patient_name}</td>
-                        <td>${p.mobile_number}<br><small>${p.email}</small></td>
-                        <td style="font-size:12px;">${p.address}</td>
-                        <td style="color:green; font-weight:bold;">₹${p.wallet}</td>
-                        <td>${p.plan.toUpperCase()}</td>
-                        <td><span class="badge-btn status-active">${p.status}</span></td>
-                    </tr>`;
-            });
-        }
-    } catch (e) { loader.innerText = "Error loading patients."; }
-}
+            const patient = result.data;
+            
+            safeSetText("userNameMobile", patient.patient_name);
+            safeSetText("userNameDesktop", patient.patient_name);
+            safeSetText("userIdDisplay", "ID: " + patient.user_id);
+            safeSetText("walletBal", patient.wallet || "0");
+            safeSetText("refCode", patient.referral_code || "-----");
+            safeSetText("infoName", patient.patient_name);
+            safeSetText("infoMobile", patient.mobile_number);
 
-// ==========================================
-// 2. VIP DATA (SABHI LOGIC SAME RAKHA HAI)
-// ==========================================
-async function fetchVipData() {
-    const tableBody = document.getElementById("vipsTableBody");
-    const loader = document.getElementById("loader");
-    tableBody.innerHTML = ""; loader.style.display = "block"; 
+            // 🌟 FIX: Withdraw Button Visibility 🌟
+            if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
+                document.getElementById('btn-withdraw').style.display = 'block';
+            } else {
+                document.getElementById('btn-withdraw').style.display = 'none';
+            }
 
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", body: JSON.stringify({ action: "getVipApplications" }) 
-        });
-        const result = await response.json();
-        loader.style.display = "none";
-        if (result.status === "success") {
-            result.data.forEach(v => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${v.user_id}</td>
-                        <td>${v.member1}</td>
-                        <td>${v.payment_mode}<br><small>${v.payment_id}</small></td>
-                        <td>₹${v.amount}</td>
-                        <td><span class="badge-btn status-pending">${v.status}</span></td>
-                        <td>${v.start_date} to ${v.end_date}</td>
-                        <td><button class="badge-btn status-primary" onclick="alert('Use VIP Tab Action')">Action</button></td>
-                    </tr>`;
-            });
-        }
-    } catch (e) { loader.innerText = "Error loading VIPs."; }
-}
+            const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
+            isUserVip = (planName === "vip"); 
+            safeSetText("vipStatus", patient.plan ? patient.plan.toUpperCase() : "BASIC");
+            
+            const vipBtn = document.getElementById("btn-vip-action");
+            const vipSubText = document.getElementById("vipSubText");
+            const vipAlert = document.getElementById("vipPackageAlert");
 
-// ==========================================
-// 3. PATIENT BOOKING (ORDERS) LOGIC
-// ==========================================
-async function fetchBookingOrders() {
-    const tableBody = document.getElementById("bookingTableBody");
-    const loader = document.getElementById("loader");
-    tableBody.innerHTML = ""; loader.style.display = "block"; 
+            if (isUserVip) {
+                if (vipBtn) vipBtn.style.display = "none";
+                if (vipSubText) vipSubText.innerHTML = "Enjoying VIP Benefits ✨ <br><small style='color:#0056b3;'>Click card to view details</small>"; 
+                
+                if (patient.vip_package_status === "pending") {
+                    if (vipAlert) vipAlert.style.display = "block";
+                } else {
+                    if (vipAlert) vipAlert.style.display = "none";
+                }
 
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", body: JSON.stringify({ action: "getLabOrders" }) 
-        });
-        const result = await response.json();
-        loader.style.display = "none";
+                if (patient.vip_details) {
+                    safeSetText("vd-start", patient.vip_details.start_date || "N/A");
+                    safeSetText("vd-end", patient.vip_details.end_date || "N/A");
+                    document.getElementById("vd-mem1").innerHTML = `<span><strong>${patient.vip_details.member1_name || 'N/A'}</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member1_id || '-'}</span>`;
+                    
+                    if (patient.vip_details.member2_name) {
+                        document.getElementById("vd-mem2").innerHTML = `<span><strong>${patient.vip_details.member2_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member2_id || '-'}</span>`;
+                        document.getElementById("vd-mem2").style.display = "flex";
+                    } else { document.getElementById("vd-mem2").style.display = "none"; }
 
-        if (result.status === "success" && result.data.length > 0) {
-            result.data.forEach(order => {
-                let items = "";
-                try { items = JSON.parse(order.cart_items_json).map(i => `• ${i.service_name}`).join("<br>"); } catch(e) { items = "N/A"; }
+                    if (patient.vip_details.member3_name) {
+                        document.getElementById("vd-mem3").innerHTML = `<span><strong>${patient.vip_details.member3_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member3_id || '-'}</span>`;
+                        document.getElementById("vd-mem3").style.display = "flex";
+                    } else { document.getElementById("vd-mem3").style.display = "none"; }
+                }
+            } else {
+                if (vipBtn) vipBtn.style.display = "block";
+                if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
+                if (vipAlert) vipAlert.style.display = "none";
+            }
+            
+            const banner = document.getElementById("profileBanner");
+            const profileImages = document.querySelectorAll(".profile-img");
+            const editPreview = document.getElementById("editProfilePreview");
+            const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.patient_name)}&background=e6f0fa&color=0056b3&bold=true`;
 
-                let sClass = order.status.toLowerCase() === 'confirmed' ? 'status-active' : (order.status.toLowerCase() === 'cancelled' ? 'status-inactive' : 'status-pending');
+            if (patient.extra_details) {
+                if (banner) banner.style.display = "none";
+                safeSetValue("infoEmail", patient.extra_details.email);
+                safeSetValue("infoAddress", patient.extra_details.address);
+                safeSetValue("infoCity", patient.extra_details.city);
+                safeSetValue("infoDistrict", patient.extra_details.district);
+                safeSetValue("infoState", patient.extra_details.state);
+                safeSetValue("infoPincode", patient.extra_details.pincode);
+                
+                if (patient.extra_details.image && patient.extra_details.image.startsWith("data:image")) {
+                    profileImages.forEach(img => img.src = patient.extra_details.image);
+                    if(editPreview) editPreview.src = patient.extra_details.image;
+                } else {
+                    profileImages.forEach(img => img.src = fallbackUrl);
+                    if(editPreview) editPreview.src = fallbackUrl;
+                }
+            } else {
+                if (banner) banner.style.display = "block"; 
+                profileImages.forEach(img => img.src = fallbackUrl);
+                if(editPreview) editPreview.src = fallbackUrl;
+            }
 
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><strong>${order.order_id}</strong><br><small>${order.date.split("T")[0]}</small></td>
-                        <td><strong>${order.patient_name}</strong><br><small>UID: ${order.user_id}</small></td>
-                        <td><span style="color:#0056b3; font-weight:bold;">${order.lab_id}</span><br><small>${order.slot}</small></td>
-                        <td style="font-size:12px;">${items}</td>
-                        <td><small>Sub: ₹${order.subtotal}</small><br><strong>Pay: ₹${order.final_payable}</strong></td>
-                        <td><span style="color:blue; font-weight:bold;">[${order.fulfillment.toUpperCase()}]</span><br><small>${order.address}</small></td>
-                        <td style="text-align:center;">
-                            <span class="badge-btn ${sClass}">${order.status}</span><br>
-                            <button class="badge-btn status-primary" onclick="openStatusModal('${order.order_id}', '${order.status}')">Change</button>
-                        </td>
-                        <td style="text-align:center;">
-                            <button class="badge-btn status-active" onclick="openReportModal('${order.order_id}', '${order.report_type}', '${order.report_pdf}')">Reports</button>
-                            ${order.report_pdf ? `<br><a href="${order.report_pdf}" target="_blank" style="font-size:10px;">View PDF</a>` : ''}
-                        </td>
-                    </tr>`;
-            });
+            fetchWalletHistory(userId);
+
         } else {
-            tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No Bookings Found.</td></tr>";
+            alert("Error: " + result.message);
+            if(result.message === "Your account is blocked by Admin.") logoutDashboard();
         }
-    } catch (e) { loader.innerText = "Error loading bookings."; }
+    } catch (error) {
+        console.error("Fetch Error:", error);
+    }
 }
 
-// Modal Handlers
-function openStatusModal(id, current) {
-    document.getElementById('statusOrderId').innerText = id;
-    document.getElementById('newOrderStatus').value = current;
-    document.getElementById('modalOverlay').style.display = 'block';
-    document.getElementById('orderStatusModal').style.display = 'block';
+function handleVipCardClick() {
+    if (isUserVip) { document.getElementById('vip-details-modal').style.display = 'block'; } else { window.location.href = '../vip/vip_member.html'; }
 }
 
-async function submitOrderStatus() {
-    const id = document.getElementById('statusOrderId').innerText;
-    const st = document.getElementById('newOrderStatus').value;
-    if(!confirm("Change status to " + st + "?")) return;
+function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
+function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
+
+function switchTab(tabId) {
+    const contents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+    const links = document.querySelectorAll(".nav-item, .nav-links a");
+    links.forEach(link => link.classList.remove("active"));
+    const selectedTab = document.getElementById(tabId);
+    if(selectedTab) selectedTab.classList.add("active");
+    if(typeof event !== 'undefined' && event && event.currentTarget) { event.currentTarget.classList.add("active"); } 
+    else { const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`); if(activeNav) activeNav.classList.add("active"); }
+}
+
+function logoutDashboard() { localStorage.clear(); window.location.href = "../index.html"; }
+
+function copyMyReferral() {
+    const code = document.getElementById("refCode").innerText;
+    if (code && code !== "-----") { navigator.clipboard.writeText(code); alert("Referral Code '" + code + "' copied!"); }
+}
+
+const fileInput = document.getElementById("profileImageInput");
+if(fileInput) {
+    fileInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement("canvas");
+                const scaleSize = 200 / img.width;
+                canvas.width = 200; canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); 
+                document.getElementById("editProfilePreview").src = compressedBase64;
+                document.getElementById("infoImageBase64").value = compressedBase64;
+            }
+        }
+    });
+}
+
+async function savePatientProfile() {
+    const btn = document.getElementById("btnSaveProfile");
+    btn.innerText = "Saving Please Wait..."; btn.disabled = true;
     
-    closeModals(); document.getElementById('loader').style.display = 'block';
-    const res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "updateLabOrderStatus", order_id: id, new_status: st }) });
-    const data = await res.json();
-    alert(data.message);
-    fetchBookingOrders();
+    const payload = {
+        action: "savePatientDetails", user_id: localStorage.getItem("bhavya_user_id"),
+        email: document.getElementById("infoEmail").value, address: document.getElementById("infoAddress").value,
+        city: document.getElementById("infoCity").value, district: document.getElementById("infoDistrict").value,
+        state: document.getElementById("infoState").value, pincode: document.getElementById("infoPincode").value,
+        image: document.getElementById("infoImageBase64").value
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        if (result.status === "success") { alert("Profile Details Saved Successfully!"); checkLoginAndFetchData(); switchTab('overview'); } 
+        else { alert("Error: " + result.message); }
+    } catch (error) { alert("Failed to save. Check your connection."); } 
+    finally { btn.innerText = "Save & Update Profile"; btn.disabled = false; }
 }
 
-function openReportModal(id, type, link) {
-    document.getElementById('reportOrderId').innerText = id;
-    document.getElementById('reportTypeSelect').value = type || "";
-    document.getElementById('reportLinkInput').value = link && link !== 'undefined' ? link : "";
-    toggleReportLink();
-    document.getElementById('modalOverlay').style.display = 'block';
-    document.getElementById('orderReportModal').style.display = 'block';
-}
-
-function toggleReportLink() {
-    const type = document.getElementById('reportTypeSelect').value;
-    document.getElementById('reportLinkDiv').style.display = (type === 'online') ? 'block' : 'none';
-}
-
-async function submitOrderReport() {
-    const id = document.getElementById('reportOrderId').innerText;
-    const type = document.getElementById('reportTypeSelect').value;
-    const link = document.getElementById('reportLinkInput').value;
-    
-    closeModals(); document.getElementById('loader').style.display = 'block';
-    const res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "updateOrderReport", order_id: id, report_type: type, report_pdf: link }) });
-    const data = await res.json();
-    alert(data.message);
-    fetchBookingOrders();
+async function fetchWalletHistory(userId) {
+    const container = document.getElementById("walletHistoryContainer");
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getWalletHistory", user_id: userId })
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            const history = result.data;
+            if (history.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-receipt" style="font-size: 40px; margin-bottom: 15px;"></i><p>No recent transactions.</p></div>`;
+                return;
+            }
+            let html = "";
+            history.forEach(txn => {
+                const isCredit = txn.type.toLowerCase() === 'credit';
+                const color = isCredit ? '#2e7d32' : '#d32f2f';
+                const sign = isCredit ? '+' : '-';
+                html += `
+                <div class="list-item" style="align-items: flex-start;">
+                    <div class="list-info">
+                        <h5 style="margin-bottom: 3px;">${txn.description}</h5>
+                        <p><i class="far fa-clock"></i> ${txn.date}</p>
+                    </div>
+                    <div style="font-weight: 800; color: ${color}; font-size: 16px; margin-top: 2px;">
+                        ${sign}₹${txn.amount}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `<p style="color:red; text-align:center;">Failed: ${result.message}</p>`;
+        }
+    } catch(e) {
+        console.error("Wallet Fetch Error:", e);
+        container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`;
+    }
 }

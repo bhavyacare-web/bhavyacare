@@ -151,8 +151,15 @@
       <span class="close-modal" onclick="closeVipPromo()" style="position:absolute; right:20px; top:15px;">&times;</span>
       <img src="../image/BASIC AND VIP PLAN.jpg" alt="VIP Plan" class="promo-img-responsive" style="width:100%; border-radius:12px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/600x300?text=VIP+Family+Plan'">
       <h3 style="font-size:18px; margin-bottom:10px; font-weight:800;">Activate VIP Family Plan?</h3>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Unlock premium discounts for your entire family instantly!</p>
-      <button onclick="handleVipPromoClick()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Unlock premium discounts for your entire family instantly!</p>
+      
+      <div style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0;">
+          <label style="font-size:11px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px; text-align:left;">Check Pincode Availability</label>
+          <input type="number" id="vipPromoPincode" class="form-input" placeholder="Enter 6-digit Pincode" style="text-align:center; font-size:16px; font-weight:bold; letter-spacing:2px; margin-bottom:10px;">
+          <small id="vipPromoPincodeMsg" style="display:none; font-weight:700; font-size:12px; margin-bottom:5px;"></small>
+      </div>
+
+      <button id="vipPromoCheckBtn" onclick="handleVipPromoClick()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:14px 25px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">
         <i class="fas fa-crown"></i> Activate Now
       </button>
     </div>

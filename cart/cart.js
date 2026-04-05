@@ -735,7 +735,7 @@ function processOrderSubmission(userId) {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
             alert(`🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.`);
-            window.location.href = "../patient/dashboard.html"; // Redirects directly to the Patient Dashboard
+            window.location.href = "../patient_dashboard/patient_dashboard.html"; Redirects directly to the Patient Dashboard
         } else {
             alert("Booking Error: " + res.message);
             btn.innerText = "Confirm Booking"; btn.disabled = false;

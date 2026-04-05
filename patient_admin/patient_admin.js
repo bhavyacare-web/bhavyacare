@@ -4,17 +4,17 @@ let currentTab = 'patients';
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
-// 🌟 FIX: Using Optional Chaining (?.) to prevent null classList errors
+// 🌟 NAYA CODE: Safe switch for new tabs
 function switchAdminTab(tabName) {
     currentTab = tabName;
     
     document.getElementById('tab-patients')?.classList.remove('active');
     document.getElementById('tab-vips')?.classList.remove('active');
-    document.getElementById('tab-orders')?.classList.remove('active');
+    document.getElementById('tab-booking')?.classList.remove('active');
     
     document.getElementById('patients-section')?.style.setProperty('display', 'none');
     document.getElementById('vips-section')?.style.setProperty('display', 'none');
-    document.getElementById('orders-section')?.style.setProperty('display', 'none');
+    document.getElementById('booking-section')?.style.setProperty('display', 'none');
 
     document.getElementById(`tab-${tabName}`)?.classList.add('active');
     document.getElementById(`${tabName}-section`)?.style.setProperty('display', 'block');
@@ -25,18 +25,20 @@ function switchAdminTab(tabName) {
 function fetchCurrentTabData() {
     if (currentTab === 'patients') fetchPatientsData();
     else if (currentTab === 'vips') fetchVipData();
-    else if (currentTab === 'orders') fetchOrdersData();
+    else if (currentTab === 'booking') fetchBookingData();
 }
 
+// 🌟 NAYA CODE: Universal Close Modals
 function closeModals() {
     document.getElementById('modalOverlay').style.display = 'none';
-    document.getElementById('vipActionModal').style.display = 'none';
-    document.getElementById('orderStatusModal').style.display = 'none';
-    document.getElementById('orderReportModal').style.display = 'none';
+    if(document.getElementById('vipActionModal')) document.getElementById('vipActionModal').style.display = 'none';
+    if(document.getElementById('orderStatusModal')) document.getElementById('orderStatusModal').style.display = 'none';
+    if(document.getElementById('orderReportModal')) document.getElementById('orderReportModal').style.display = 'none';
 }
+function closeVipModal() { closeModals(); } // Fallback for old HTML button calls
 
 // ==========================================
-// 1. PATIENTS LIST LOGIC 
+// 1. PATIENTS LIST LOGIC (UNTOUCHED)
 // ==========================================
 async function fetchPatientsData() {
     const tableBody = document.getElementById("patientsTableBody");
@@ -105,7 +107,7 @@ async function toggleStatus(userId, field, currentStatus) {
 }
 
 // ==========================================
-// 2. VIP APPLICATIONS LOGIC 
+// 2. VIP APPLICATIONS LOGIC (UNTOUCHED)
 // ==========================================
 async function fetchVipData() {
     const tableBody = document.getElementById("vipsTableBody");
@@ -135,7 +137,7 @@ async function fetchVipData() {
 
                 if (vip.status === 'inactive' || vip.status === '') {
                     statusBadge = `<span class="badge-btn status-pending">Pending</span>`;
-                    actionBtn = `<button class="badge-btn status-primary" onclick="openVipModal('${vip.row_index}', '${vip.user_id}')">Take Action</button>`;
+                    actionBtn = `<button class="badge-btn" style="background:#0056b3; color:white;" onclick="openVipModal('${vip.row_index}', '${vip.user_id}')">Take Action</button>`;
                 } else if (vip.status === 'active') {
                     statusBadge = `<span class="badge-btn status-active">Active</span>`;
                     actionBtn = `<span style="font-size:12px; color:green; font-weight:bold;">Approved</span>`;
@@ -196,7 +198,13 @@ async function submitVipAction(statusValue) {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "processVipAction", row_index: rowIndex, user_id: userId, vip_status: statusValue, remarks: remarks }) 
+            body: JSON.stringify({ 
+                action: "processVipAction", 
+                row_index: rowIndex, 
+                user_id: userId, 
+                vip_status: statusValue, 
+                remarks: remarks 
+            }) 
         });
         const result = await response.json();
         
@@ -206,14 +214,16 @@ async function submitVipAction(statusValue) {
         } else {
             alert("Error: " + result.message);
         }
-    } catch (error) { alert("Action failed to submit."); }
+    } catch (error) {
+        alert("Action failed to submit.");
+    }
 }
 
 // ==========================================
-// 3. LAB ORDERS LOGIC 
+// 3. PATIENT BOOKING (LAB ORDERS) NAYA LOGIC
 // ==========================================
-async function fetchOrdersData() {
-    const tableBody = document.getElementById("ordersTableBody");
+async function fetchBookingData() {
+    const tableBody = document.getElementById("bookingTableBody");
     const loader = document.getElementById("loader");
     tableBody.innerHTML = ""; 
     loader.style.display = "block"; 
@@ -230,19 +240,17 @@ async function fetchOrdersData() {
             loader.style.display = "none";
 
             if (orders.length === 0) {
-                tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No orders found.</td></tr>";
+                tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No bookings found.</td></tr>";
                 return;
             }
 
             orders.forEach(order => {
-                // Formatting Cart Items from JSON to readable text
                 let itemsList = "<i>Invalid Data</i>";
                 try {
                     let itemsArr = JSON.parse(order.cart_items_json);
                     itemsList = itemsArr.map(i => `• ${i.service_name} (x${i.qty || 1})`).join("<br>");
                 } catch(e) {}
 
-                // Status formatting
                 let statusBadge = "";
                 let s = order.status.toLowerCase();
                 if(s === 'pending') statusBadge = `<span class="badge-btn status-pending">Pending</span>`;
@@ -250,11 +258,10 @@ async function fetchOrdersData() {
                 else if(s === 'cancelled') statusBadge = `<span class="badge-btn status-inactive">Cancelled</span>`;
                 else statusBadge = `<span class="badge-btn">${order.status}</span>`;
 
-                // Report Type Formatting
                 let reportBtnClass = "status-primary";
                 let reportText = "Assign Report";
                 if(order.report_type === 'online') {
-                    reportText = "Update Online Link"; reportBtnClass = "status-active";
+                    reportText = "Update Online PDF"; reportBtnClass = "status-active";
                 } else if(order.report_type === 'in hand') {
                     reportText = "In Hand Selected"; reportBtnClass = "status-pending";
                 }
@@ -287,16 +294,13 @@ async function fetchOrdersData() {
     } catch (error) { loader.innerHTML = "❌ Error fetching Orders data."; }
 }
 
-// Modal logic for Status
+// 🌟 Modal logic for Status
 function openOrderStatusModal(orderId, currentStatus) {
     document.getElementById('statusOrderId').innerText = orderId;
-    
     let sel = document.getElementById('newOrderStatus');
-    // Set current value if exists
     for(let i=0; i<sel.options.length; i++) {
         if(sel.options[i].value.toLowerCase() === currentStatus.toLowerCase()) { sel.selectedIndex = i; break; }
     }
-
     document.getElementById('modalOverlay').style.display = 'block';
     document.getElementById('orderStatusModal').style.display = 'block';
 }
@@ -306,7 +310,6 @@ async function submitOrderStatus() {
     const newStatus = document.getElementById('newOrderStatus').value;
 
     if (!confirm(`Change order status to ${newStatus}?`)) return;
-
     closeModals();
     document.getElementById("loader").style.display = "block";
 
@@ -316,50 +319,88 @@ async function submitOrderStatus() {
             body: JSON.stringify({ action: "updateLabOrderStatus", order_id: orderId, new_status: newStatus }) 
         });
         const result = await response.json();
-        
-        if (result.status === "success") { alert("Status Updated Successfully!"); fetchOrdersData(); } 
-        else { alert("Error: " + result.message); fetchOrdersData(); }
+        if (result.status === "success") { alert("Status Updated Successfully!"); fetchBookingData(); } 
+        else { alert("Error: " + result.message); fetchBookingData(); }
     } catch (error) { alert("Action failed."); }
 }
 
-// Modal logic for Reports
+// 🌟 Modal logic for Reports (PDF UPLOAD LOGIC)
 function openReportModal(orderId, currentType, currentLink) {
     document.getElementById('reportOrderId').innerText = orderId;
     document.getElementById('reportTypeSelect').value = currentType || "";
-    document.getElementById('reportLinkInput').value = currentLink !== "undefined" ? currentLink : "";
+    document.getElementById('reportFileInput').value = ""; // Reset File Input
     
-    toggleReportLinkField(); 
+    toggleReportUploadField(); 
 
     document.getElementById('modalOverlay').style.display = 'block';
     document.getElementById('orderReportModal').style.display = 'block';
 }
 
-function toggleReportLinkField() {
+function toggleReportUploadField() {
     const type = document.getElementById('reportTypeSelect').value;
-    const linkDiv = document.getElementById('reportLinkDiv');
-    if (type === 'online') { linkDiv.style.display = 'block'; } 
-    else { linkDiv.style.display = 'none'; }
+    const uploadDiv = document.getElementById('reportUploadDiv');
+    if (type === 'online') { uploadDiv.style.display = 'block'; } 
+    else { uploadDiv.style.display = 'none'; }
 }
 
 async function submitOrderReport() {
     const orderId = document.getElementById('reportOrderId').innerText;
     const reportType = document.getElementById('reportTypeSelect').value;
-    const reportLink = document.getElementById('reportLinkInput').value.trim();
+    const btn = document.getElementById('uploadReportBtn');
 
     if (!reportType) return alert("Please select a report type.");
-    if (reportType === 'online' && !reportLink) return alert("Please provide the Google Drive link.");
 
-    closeModals();
-    document.getElementById("loader").style.display = "block";
+    if (reportType === 'in hand') {
+        // Direct Submit for In Hand
+        processReportBackend(orderId, reportType, "");
+        return;
+    }
 
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "updateOrderReport", order_id: orderId, report_type: reportType, report_pdf: reportLink }) 
-        });
-        const result = await response.json();
+    // PDF Upload Logic
+    const fileInput = document.getElementById('reportFileInput');
+    if (fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
+    
+    const file = fileInput.files[0];
+    if (file.type !== "application/pdf") return alert("Only PDF files are allowed.");
+    
+    btn.innerText = "Uploading... Wait"; btn.disabled = true;
+
+    const reader = new FileReader();
+    reader.onload = async function() {
+        const base64Data = reader.result.split(',')[1];
         
-        if (result.status === "success") { alert("Report info saved!"); fetchOrdersData(); } 
-        else { alert("Error: " + result.message); fetchOrdersData(); }
-    } catch (error) { alert("Action failed."); }
+        const uploadPayload = {
+            action: "uploadOrderReport",
+            order_id: orderId,
+            report_type: reportType,
+            filename: orderId + "_Report.pdf",
+            mimeType: file.type,
+            fileData: base64Data
+        };
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(uploadPayload) 
+            });
+            const result = await response.json();
+            btn.innerText = "Save & Upload"; btn.disabled = false;
+            
+            if (result.status === "success") { 
+                closeModals(); alert("PDF Uploaded & Saved Successfully!"); fetchBookingData(); 
+            } else { alert("Error: " + result.message); }
+        } catch (error) { btn.innerText = "Save & Upload"; btn.disabled = false; alert("Upload failed."); }
+    };
+    reader.readAsDataURL(file);
+}
+
+function processReportBackend(orderId, reportType, reportPdf) {
+    closeModals(); document.getElementById("loader").style.display = "block";
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "uploadOrderReport", order_id: orderId, report_type: reportType, report_pdf: reportPdf }) 
+    }).then(res => res.json()).then(result => {
+        if (result.status === "success") { alert("Report info saved!"); fetchBookingData(); } 
+        else { alert("Error: " + result.message); fetchBookingData(); }
+    });
 }

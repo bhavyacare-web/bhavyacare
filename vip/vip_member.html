@@ -18,7 +18,7 @@
         .form-group { margin-bottom: 15px; }
         .radio-group { display: flex; gap: 15px; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        #vip-form-container, #vip-pending-container, #vip-active-container, #vip-rejected-container { display: none; }
+        #vip-form-container, #vip-pending-container, #vip-active-container, #vip-rejected-container, #vip-pincode-container { display: none; }
     </style>
 </head>
 <body>
@@ -29,6 +29,21 @@
     </div>
 
     <div class="main-content">
+        <div id="vip-pincode-container">
+            <div class="card" style="text-align: center;">
+                <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 26px; color: var(--primary);"></i>
+                </div>
+                <h3 style="margin:0; color: var(--text-main);">Check Availability</h3>
+                <p style="font-size:13px; color:var(--text-light); margin-top:5px; margin-bottom: 20px;">Enter your pincode to get the VIP Plan</p>
+                
+                <div class="form-group">
+                    <input type="number" id="checkPincodeInput" class="input-box" placeholder="Enter 6-digit Pincode">
+                </div>
+                <button id="btnCheckPincode" class="btn-primary" style="margin-top:10px;" onclick="verifyPincodeAndProceed()">Check & Proceed</button>
+            </div>
+        </div>
+
         <div id="vip-pending-container" style="text-align: center; padding: 40px 10px;">
             <i class="fas fa-hourglass-half" style="font-size: 60px; color: #f57c00; margin-bottom: 20px;"></i>
             <h3 style="color: var(--text-main);">Application Under Review</h3>
@@ -53,7 +68,7 @@
             <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
                 <strong>Admin Remarks:</strong> <br><span id="rejectedRemarks"></span>
             </div>
-            <button onclick="showVipForm()" class="btn-primary" style="margin-top: 30px;">Re-Apply</button>
+            <button onclick="showVipPincodeCheck()" class="btn-primary" style="margin-top: 30px;">Re-Apply</button>
         </div>
 
         <div id="vip-form-container">

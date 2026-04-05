@@ -462,9 +462,8 @@ function selectLabTime(labId, timeStr) {
 }
 
 // ==========================================
-// 5. SMART BILLING & GUEST REFERRAL VALIDATION
+// 5. SMART BILLING, VALIDATION & CHECKOUT FLOW
 // ==========================================
-// --- REPLACE 1: applyReferral ---
 function applyReferral() {
     let code = document.getElementById('refCodeInput').value.trim().toUpperCase();
     let msg = document.getElementById('refMessage');
@@ -472,7 +471,6 @@ function applyReferral() {
     
     if(!code) { msg.innerText = "Enter code!"; msg.style.color = "var(--danger)"; return; }
     
-    // --- NAYA LOGIC: Check Applicable Services (Row 8) ---
     let allowedTypesStr = appRules.referral_applicable_services_type || "pathology, profile, package, ct, mri";
     let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
 
@@ -523,10 +521,9 @@ function applyReferral() {
     }).catch(e => { btn.innerText = "Apply"; btn.disabled = false; });
 }
 
-// --- REPLACE 2: calculateFinalBill ---
 function calculateFinalBill() {
     let subtotal = 0;
-    let eligibleSubtotal = 0; // Sirf unhi services ka total jispar wallet/referral lag sakta hai
+    let eligibleSubtotal = 0; 
     let isHomeCollection = false;
     
     let allowedTypesStr = appRules.referral_applicable_services_type || "pathology, profile, package, ct, mri";
@@ -552,12 +549,11 @@ function calculateFinalBill() {
         }
     }
 
-    // --- NAYA LOGIC: WALLET RESTRICTION ---
     let walletUsed = 0;
     let walletCb = document.getElementById('useWalletCb');
     if (walletCb && walletCb.checked) {
         if (eligibleSubtotal === 0) {
-            walletCb.checked = false; // Uncheck kar do agar eligible nahi hai
+            walletCb.checked = false; 
             alert(`Wallet can only be used on: ${allowedTypesStr.toUpperCase()}`);
         } else {
             let maxAllowed = bookingData.isVip ? (appRules.vip_max_wallet_use || 200) : (appRules.basic_max_wallet_use || 50);
@@ -565,7 +561,6 @@ function calculateFinalBill() {
         }
     }
 
-    // Ensure referral discount eligible amount se zyada na ho
     let actualRefDiscount = finalBill.refDiscount;
     if(actualRefDiscount > 0 && (eligibleSubtotal - walletUsed) < actualRefDiscount) {
         actualRefDiscount = Math.max(0, eligibleSubtotal - walletUsed);
@@ -593,7 +588,8 @@ function calculateFinalBill() {
 
 function validateCheckout() {
     const btn = document.getElementById('confirmBtn');
-    if (cart.length === 0) { btn.disabled = true; return; }
+    const btnProceed = document.getElementById('btnProceedCheckout'); 
+    if (cart.length === 0) { btn.disabled = true; if(btnProceed) btnProceed.style.display = 'none'; return; }
     
     let uniqueLabIds = [...new Set(cart.map(c => c.selected_lab_id).filter(Boolean))];
     let allLabsAssigned = cart.every(item => item.selected_lab_id);
@@ -602,15 +598,54 @@ function validateCheckout() {
     const s3 = document.getElementById('step3-card');
 
     if(allLabsAssigned && allTimesSelected) {
-        if(s3) { s3.style.display = 'block'; s3.style.opacity = '1'; s3.style.pointerEvents = 'auto'; }
+        if(btnProceed) btnProceed.style.display = 'block';
         calculateFinalBill(); 
         btn.disabled = false;
-        document.getElementById('step3-nav').classList.add('active');
-        if(s3) s3.scrollIntoView({ behavior: 'smooth', block: 'end' });
     } else {
-        if(s3) { s3.style.opacity = '0.5'; s3.style.pointerEvents = 'none'; }
+        if(btnProceed) btnProceed.style.display = 'none';
+        if(s3) { s3.style.display = 'none'; s3.style.opacity = '0.5'; s3.style.pointerEvents = 'none'; }
         btn.disabled = true;
         document.getElementById('step3-nav').classList.remove('active');
+    }
+}
+
+function goToStep3() {
+    document.getElementById('cartItemsContainer').style.display = 'none';
+    document.getElementById('labTimesContainer').style.display = 'none';
+    document.getElementById('btnProceedCheckout').style.display = 'none';
+    
+    let summaryDiv = document.getElementById('servicesSummary');
+    if(summaryDiv) {
+        summaryDiv.style.display = 'block';
+        document.getElementById('sumTotalTests').innerText = `${cart.length} Tests / Packages Selected`;
+    }
+
+    document.getElementById('step2-nav').classList.add('completed');
+    document.getElementById('step3-nav').classList.add('active');
+
+    const s3 = document.getElementById('step3-card');
+    if(s3) { 
+        s3.style.display = 'block'; 
+        s3.style.opacity = '1'; 
+        s3.style.pointerEvents = 'auto'; 
+        s3.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+}
+
+function editServicesInfo() {
+    document.getElementById('servicesSummary').style.display = 'none';
+    document.getElementById('cartItemsContainer').style.display = 'block';
+    document.getElementById('labTimesContainer').style.display = 'block';
+    document.getElementById('btnProceedCheckout').style.display = 'block';
+
+    document.getElementById('step2-nav').classList.remove('completed');
+    document.getElementById('step3-nav').classList.remove('active');
+
+    const s3 = document.getElementById('step3-card');
+    if(s3) { 
+        s3.style.display = 'none'; 
+        s3.style.opacity = '0.5'; 
+        s3.style.pointerEvents = 'none'; 
     }
 }
 
@@ -700,7 +735,7 @@ function processOrderSubmission(userId) {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
             alert(`🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.`);
-            window.location.href = "../index.html"; 
+            window.location.href = "../patient/dashboard.html"; // Redirects directly to the Patient Dashboard
         } else {
             alert("Booking Error: " + res.message);
             btn.innerText = "Confirm Booking"; btn.disabled = false;

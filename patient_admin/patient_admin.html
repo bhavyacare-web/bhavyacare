@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Patients & Bookings</title>
+    <title>Admin Dashboard - Bookings & Patients</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h2 { color: #0056b3; margin: 0; }
         .refresh-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
@@ -40,7 +40,7 @@
     <div class="header">
         <h2>🏥 Manage Dashboard</h2>
         <div>
-            <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back</a>
+            <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back to Home</a>
             <button class="refresh-btn" onclick="fetchCurrentTabData()">🔄 Refresh Data</button>
         </div>
     </div>
@@ -97,8 +97,8 @@
         <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
         <p style="font-size:13px; color:#555;">Reviewing User: <strong id="modalUserId"></strong></p>
         <label style="font-size:12px; font-weight:bold;">Admin Remarks (Reason/Notes):</label>
-        <textarea id="modalRemarks" rows="3" style="width:100%; margin-top:5px; padding:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
-        <div style="margin-top:15px; display:flex; gap:10px;">
+        <textarea id="modalRemarks" rows="3" class="form-input"></textarea>
+        <div style="display:flex; gap:10px;">
             <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
             <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
         </div>

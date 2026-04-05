@@ -28,7 +28,10 @@ async function initVipPage() {
                 document.getElementById("vip-rejected-container").style.display = "block";
                 document.getElementById("rejectedRemarks").innerText = statusData.data.remarks || "No reason provided.";
             } 
-            else { document.getElementById("vip-form-container").style.display = "block"; }
+            else { 
+                // 🌟 Yahan pehle vip-form-container aata tha, ab hum pehle pincode dikhayenge
+                document.getElementById("vip-pincode-container").style.display = "block"; 
+            }
         }
 
         const profileRes = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) });
@@ -43,9 +46,43 @@ async function initVipPage() {
     } catch (err) { console.error("Error:", err); }
 }
 
-function showVipForm() {
+function showVipPincodeCheck() {
     document.getElementById("vip-rejected-container").style.display = "none";
-    document.getElementById("vip-form-container").style.display = "block";
+    document.getElementById("vip-pincode-container").style.display = "block";
+}
+
+// 🌟 Naya Function: Pincode Check karne ke liye 🌟
+async function verifyPincodeAndProceed() {
+    const pincode = document.getElementById("checkPincodeInput").value.trim();
+    if(!pincode || pincode.length !== 6) { 
+        alert("Please enter a valid 6-digit pincode."); 
+        return; 
+    }
+
+    const btn = document.getElementById("btnCheckPincode");
+    btn.innerText = "Checking..."; 
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "checkVipPincode", pincode: pincode })
+        });
+        const result = await response.json();
+
+        if(result.status === "success") {
+            document.getElementById('vip-pincode-container').style.display = 'none';
+            document.getElementById('vip-form-container').style.display = 'block';
+        } else {
+            alert("Currently, this service is not available in your area. Please try again after some time.");
+            document.getElementById('checkPincodeInput').value = '';
+        }
+    } catch(error) {
+        alert("Network error. Please try again.");
+    } finally {
+        btn.innerText = "Check & Proceed"; 
+        btn.disabled = false;
+    }
 }
 
 function updatePayableUI() { document.getElementById("finalPayable").innerText = finalAmount; }

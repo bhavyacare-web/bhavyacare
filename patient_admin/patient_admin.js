@@ -4,18 +4,20 @@ let currentTab = 'patients';
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
+// 🌟 FIX: Using Optional Chaining (?.) to prevent null classList errors
 function switchAdminTab(tabName) {
     currentTab = tabName;
-    document.getElementById('tab-patients').classList.remove('active');
-    document.getElementById('tab-vips').classList.remove('active');
-    document.getElementById('tab-orders').classList.remove('active');
     
-    document.getElementById('patients-section').style.display = 'none';
-    document.getElementById('vips-section').style.display = 'none';
-    document.getElementById('orders-section').style.display = 'none';
+    document.getElementById('tab-patients')?.classList.remove('active');
+    document.getElementById('tab-vips')?.classList.remove('active');
+    document.getElementById('tab-orders')?.classList.remove('active');
+    
+    document.getElementById('patients-section')?.style.setProperty('display', 'none');
+    document.getElementById('vips-section')?.style.setProperty('display', 'none');
+    document.getElementById('orders-section')?.style.setProperty('display', 'none');
 
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    document.getElementById(`${tabName}-section`).style.display = 'block';
+    document.getElementById(`tab-${tabName}`)?.classList.add('active');
+    document.getElementById(`${tabName}-section`)?.style.setProperty('display', 'block');
 
     fetchCurrentTabData();
 }
@@ -208,7 +210,7 @@ async function submitVipAction(statusValue) {
 }
 
 // ==========================================
-// 3. LAB ORDERS LOGIC (NEW)
+// 3. LAB ORDERS LOGIC 
 // ==========================================
 async function fetchOrdersData() {
     const tableBody = document.getElementById("ordersTableBody");
@@ -326,7 +328,7 @@ function openReportModal(orderId, currentType, currentLink) {
     document.getElementById('reportTypeSelect').value = currentType || "";
     document.getElementById('reportLinkInput').value = currentLink !== "undefined" ? currentLink : "";
     
-    toggleReportLinkField(); // Show/hide link input based on type
+    toggleReportLinkField(); 
 
     document.getElementById('modalOverlay').style.display = 'block';
     document.getElementById('orderReportModal').style.display = 'block';

@@ -102,7 +102,7 @@
             <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
             <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
         </div>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
         <input type="hidden" id="modalRowIndex">
     </div>
 
@@ -116,7 +116,7 @@
             <option value="Cancelled">Cancel</option>
         </select>
         <button onclick="submitOrderStatus()" class="action-btn" style="background:#0056b3; width:100%;">Update Status</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
     </div>
 
     <div class="modal" id="orderReportModal">
@@ -132,11 +132,11 @@
 
         <div id="reportUploadDiv" style="display:none; text-align:left;">
             <label style="font-size:12px; font-weight:bold;">Select PDF File:</label>
-            <input type="file" id="reportFileInput" accept="application/pdf" class="form-input">
+            <input type="file" id="reportFileInput" accept="application/pdf" class="form-input" style="padding: 5px;">
         </div>
 
         <button id="uploadReportBtn" onclick="submitOrderReport()" class="action-btn" style="background:#28a745; width:100%;">Save & Upload</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
     </div>
 
     <script src="patient_admin.js"></script>

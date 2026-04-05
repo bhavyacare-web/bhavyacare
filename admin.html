@@ -3,94 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Patients</title>
+    <title>Main Admin Dashboard - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header h2 { color: #0056b3; margin: 0; }
-        .refresh-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .refresh-btn:hover { background-color: #218838; }
+        :root {
+            --primary: #1d4ed8; 
+            --primary-hover: #1e40af;
+            --bg-color: #f4f7fb; 
+            --text-main: #0f172a; 
+            --text-muted: #64748b;
+            --card-bg: #ffffff; 
+            --border: #e2e8f0;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--text-main); 
+        }
         
-        .tabs { margin-bottom: 15px; display: flex; gap: 10px; }
-        .tab-btn { padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: #ddd; color: #333; transition: 0.3s; }
-        .tab-btn.active { background: #0056b3; color: white; }
+        /* 🌟 NAVBAR 🌟 */
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background-color: #ffffff; padding: 15px 30px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo h2 { color: var(--primary); font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;}
+        .logo span { color: #059669; }
+        
+        .logout-btn { 
+            background: #fee2e2; color: #dc2626; border: none; 
+            padding: 10px 18px; border-radius: 8px; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: #fca5a5; }
 
-        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
-        th { background-color: #0056b3; color: white; position: sticky; top: 0; z-index: 10; }
-        tr:hover { background-color: #f1f1f1; }
+        /* 🌟 MAIN DASHBOARD LAYOUT 🌟 */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        .page-title { font-size: 28px; font-weight: 800; margin-bottom: 30px; color: var(--text-main); }
         
-        .badge-btn { padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
-        .status-active { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status-inactive { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .status-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 25px; 
+        }
         
-        .patient-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
-        #loader { text-align: center; font-weight: bold; color: #0056b3; margin-top: 20px; }
+        /* 🌟 DASHBOARD CARDS 🌟 */
+        .dash-card { 
+            background: var(--card-bg); border-radius: 16px; padding: 35px 25px; 
+            text-align: center; text-decoration: none; border: 1px solid var(--border); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .dash-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 15px 30px rgba(29, 78, 216, 0.15); 
+            border-color: var(--primary); 
+        }
         
-        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.3); z-index:1000; width:90%; max-width:400px; }
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; }
-        .action-btn { flex:1; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color:white; }
+        .icon-wrapper { 
+            width: 80px; height: 80px; background: #eff6ff; 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            margin-bottom: 20px; transition: 0.3s; 
+        }
+        .dash-card:hover .icon-wrapper { background: var(--primary); }
+        
+        .icon-wrapper i { font-size: 35px; color: var(--primary); transition: 0.3s; }
+        .dash-card:hover .icon-wrapper i { color: white; }
+        
+        .card-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0; }
+        .card-desc { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>🏥 Manage Dashboard</h2>
-        <div>
-            <a href="https://bhavyacare-web.github.io/bhavyacare/index.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back to Home</a>
-            <button class="refresh-btn" onclick="fetchCurrentTabData()">🔄 Refresh Data</button>
+    <header class="navbar">
+        <div class="logo">
+            <i class="fas fa-user-shield" style="color: var(--primary); font-size: 26px;"></i>
+            <h2>Bhavya<span>Care</span> Admin</h2>
+        </div>
+        <button class="logout-btn" onclick="logoutAdmin()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Welcome, Administrator 👋</h1>
+        
+        <div class="dashboard-grid">
+            
+            <a href="patient_admin/patient_admin.html" class="dash-card">
+                <div class="icon-wrapper">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3 class="card-title">Patient Management</h3>
+                <p class="card-desc">Manage registered patients, VIP applications, lab bookings, and upload PDF reports.</p>
+            </a>
+
+            <a href="#" class="dash-card" onclick="alert('Lab Management Dashboard will be connected here soon!')">
+                <div class="icon-wrapper">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <h3 class="card-title">Lab Management</h3>
+                <p class="card-desc">Add or remove lab partners, update test catalogs, and manage availability.</p>
+            </a>
+            
+            <a href="#" class="dash-card" onclick="alert('Settings panel will be connected here soon!')">
+                <div class="icon-wrapper">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <h3 class="card-title">System Settings</h3>
+                <p class="card-desc">Update app rules, referral bonuses, free collection limits, and wallet policies.</p>
+            </a>
+
         </div>
     </div>
 
-    <div class="tabs">
-        <button id="tab-patients" class="tab-btn active" onclick="switchAdminTab('patients')">Patients List</button>
-        <button id="tab-vips" class="tab-btn" onclick="switchAdminTab('vips')">VIP Applications</button>
-    </div>
-
-    <div id="patients-section" class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Photo</th><th>Date & Time</th><th>User ID</th><th>Name</th>
-                    <th>Contact Info</th><th>Full Address</th><th>Wallet (₹)</th>
-                    <th>Plan</th><th>Withdraw Action</th><th>Account Status</th>
-                </tr>
-            </thead>
-            <tbody id="patientsTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="vips-section" class="table-container" style="display:none;">
-        <table>
-            <thead>
-                <tr>
-                    <th>User ID</th><th>Self Member</th><th>Ref Code</th><th>Payment Mode</th>
-                    <th>Pay Details / SS</th><th>Amount</th><th>Status</th>
-                    <th>Dates (Start - End)</th><th>Admin Remarks</th><th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="vipsTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="loader">Fetching data... Please wait.</div>
-
-    <div class="overlay" id="modalOverlay"></div>
-    <div class="modal" id="vipActionModal">
-        <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
-        <p style="font-size:13px; color:#555;">Reviewing User: <strong id="modalUserId"></strong></p>
-        <label style="font-size:12px; font-weight:bold;">Admin Remarks (Reason/Notes):</label>
-        <textarea id="modalRemarks" rows="3" style="width:100%; margin-top:5px; padding:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
-            <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
-        </div>
-        <button onclick="closeVipModal()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
-        <input type="hidden" id="modalRowIndex">
-    </div>
-
-    <script src="patient_admin/patient_admin.js"></script>
+    <script>
+        function logoutAdmin() {
+            if(confirm("Are you sure you want to logout?")) {
+                // Clear any stored admin session if you have one
+                localStorage.removeItem("admin_logged_in");
+                window.location.href = "index.html"; 
+            }
+        }
+    </script>
 </body>
 </html>

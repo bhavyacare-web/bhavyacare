@@ -393,7 +393,6 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
     let container = document.getElementById(`slots-${labId}`);
     if(!container || !dateStr) return;
 
-    // NAYA UI UPDATE: Grid ko wapas Reset/Show karo agar date change ho
     container.style.maxHeight = "500px";
     container.style.opacity = "1";
     const label = document.getElementById(`selected-time-label-${labId}`);
@@ -424,12 +423,9 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
     validateCheckout();
 }
 
-// 🌟 UI UPDATE: AUTO-CLOSE SLOTS ON SELECTION 🌟
 function selectLabTime(labId, timeStr) {
-    // 1. Logic me time save karo
     labSlots[labId].time = timeStr;
 
-    // 2. UI me active class update karo
     const slotButtons = document.querySelectorAll(`#slots-${labId} .slot-btn`);
     slotButtons.forEach(btn => {
         if (btn.innerText === timeStr) {
@@ -439,7 +435,6 @@ function selectLabTime(labId, timeStr) {
         }
     });
 
-    // 3. AUTO-CLOSE FEATURE
     const slotGrid = document.getElementById(`slots-${labId}`);
     if (slotGrid) {
         setTimeout(() => {
@@ -734,8 +729,8 @@ function processOrderSubmission(userId) {
     .then(res => {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
-            alert(`🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.`);
-            window.location.href = "../patient_dashboard/patient_dashboard.html"; Redirects directly to the Patient Dashboard
+            alert("🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.");
+            window.location.href = "../patient_dashboard/patient_dashboard.html"; // Redirection path updated!
         } else {
             alert("Booking Error: " + res.message);
             btn.innerText = "Confirm Booking"; btn.disabled = false;

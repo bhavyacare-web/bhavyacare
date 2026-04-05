@@ -290,8 +290,16 @@ function openModal(serviceId) {
     }
     document.getElementById("modalBody").innerHTML = formattedDesc; document.getElementById("infoModal").classList.add("active");
 }
+
 function closeModal() { document.getElementById("infoModal").classList.remove("active"); }
-function openVipPromo() { document.getElementById("vipPromoModal").classList.add("active"); }
+
+function openVipPromo() { 
+    document.getElementById("vipPromoModal").classList.add("active"); 
+    // Clear old values when modal opens
+    document.getElementById("vipPromoPincode").value = "";
+    document.getElementById("vipPromoPincodeMsg").style.display = "none";
+}
+
 function closeVipPromo() { document.getElementById("vipPromoModal").classList.remove("active"); }
 
 // ==========================================
@@ -311,13 +319,67 @@ function openVipFormModal() {
 
 function closeVipFormModal() { document.getElementById("vipFormModal").classList.remove("active"); }
 
-function handleVipPromoClick() {
-    const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { closeVipPromo(); openVipFormModal(); } 
-    else {
-        localStorage.setItem("pending_vip_redirect", "true");
-        closeVipPromo();
-        if (typeof openPatientLogin === "function") { openPatientLogin(); } else { alert("Login loading..."); }
+async function handleVipPromoClick() {
+    const pincode = document.getElementById("vipPromoPincode").value.trim();
+    const msg = document.getElementById("vipPromoPincodeMsg");
+    const btn = document.getElementById("vipPromoCheckBtn");
+
+    // 1. Pincode Validation
+    if(pincode.length !== 6) {
+        msg.style.display = "block";
+        msg.style.color = "var(--danger)";
+        msg.innerHTML = "Please enter a valid 6-digit pincode.";
+        return;
+    }
+
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking...`;
+    btn.disabled = true;
+
+    try {
+        // 2. Call your existing checkVipPincode API
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "checkVipPincode", pincode: pincode })
+        });
+        const res = await response.json();
+
+        // 3. Handle Response
+        if (res.status === "success") {
+            msg.style.display = "block";
+            msg.style.color = "var(--success)";
+            msg.innerHTML = "<i class='fas fa-check-circle'></i> Service Available! Proceeding...";
+            
+            // Wait slightly so user can read the success message
+            setTimeout(() => {
+                const userId = localStorage.getItem("bhavya_user_id");
+                if (userId) { 
+                    closeVipPromo(); 
+                    openVipFormModal(); 
+                } else {
+                    localStorage.setItem("pending_vip_redirect", "true");
+                    closeVipPromo();
+                    if (typeof openPatientLogin === "function") { openPatientLogin(); } else { alert("Please login first."); }
+                }
+                
+                // Reset button for next time
+                btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`;
+                btn.disabled = false;
+            }, 800);
+
+        } else {
+            // Pincode not serviceable
+            msg.style.display = "block";
+            msg.style.color = "var(--danger)";
+            msg.innerHTML = `<i class='fas fa-times-circle'></i> ${res.message || "VIP Plan is not available in this pincode yet."}`;
+            btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`;
+            btn.disabled = false;
+        }
+    } catch(err) {
+        msg.style.display = "block";
+        msg.style.color = "var(--danger)";
+        msg.innerHTML = "Network error while checking pincode.";
+        btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`;
+        btn.disabled = false;
     }
 }
 

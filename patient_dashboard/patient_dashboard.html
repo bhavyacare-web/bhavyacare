@@ -117,7 +117,7 @@
                     <h4>Current Plan</h4>
                     <div class="value" id="vipStatus" style="font-size: 22px;">Basic</div>
                     <p class="sub-text" id="vipSubText">Upgrade for free home collection</p>
-                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
+                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px;" onclick="event.stopPropagation(); document.getElementById('pincode-modal').style.display='block'">Upgrade to VIP</button>
                     <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="event.stopPropagation(); alert('Booking system coming soon!')">
                         🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
                     </div>
@@ -188,6 +188,21 @@
                 <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>
         </div>
+    </div>
+
+    <div id="pincode-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('pincode-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                <i class="fas fa-map-marker-alt" style="font-size: 26px; color: var(--primary);"></i>
+            </div>
+            <h3 style="margin:0; color: var(--text-main);">Check Availability</h3>
+            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Enter your pincode to get the VIP Plan</p>
+        </div>
+        <div class="form-group">
+            <input type="number" id="checkPincodeInput" class="input-box" placeholder="Enter 6-digit Pincode">
+        </div>
+        <button id="btnCheckPincode" style="background:var(--primary); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="verifyPincodeAndProceed()">Check & Proceed</button>
     </div>
 
     <div id="vip-details-modal" class="modal-overlay">

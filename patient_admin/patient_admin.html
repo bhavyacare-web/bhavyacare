@@ -17,7 +17,7 @@
         .table-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background-color: #0056b3; color: white; position: sticky; top: 0; }
+        th { background-color: #0056b3; color: white; position: sticky; top: 0; z-index: 10;}
         tr:hover { background-color: #f9f9f9; }
         
         .badge-btn { padding: 6px 12px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; margin-top: 5px; display: inline-block; }
@@ -41,7 +41,7 @@
     <div class="header">
         <h2>🏥 Admin Control Panel</h2>
         <div>
-            <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back</a>
+            <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back to Home</a>
             <button class="refresh-btn" onclick="fetchCurrentTabData()">🔄 Refresh Data</button>
         </div>
     </div>
@@ -56,8 +56,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>Photo</th><th>User ID</th><th>Name</th><th>Mobile & Email</th>
-                    <th>Full Address</th><th>Wallet (₹)</th><th>Plan</th><th>Status</th>
+                    <th>Photo</th><th>Date & Time</th><th>User ID</th><th>Name</th>
+                    <th>Contact Info</th><th>Full Address</th><th>Wallet (₹)</th>
+                    <th>Plan</th><th>Withdraw Action</th><th>Account Status</th>
                 </tr>
             </thead>
             <tbody id="patientsTableBody"></tbody>
@@ -68,8 +69,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>User ID</th><th>Self Member</th><th>Payment</th><th>Amount</th>
-                    <th>Status</th><th>Validity</th><th>Action</th>
+                    <th>User ID</th><th>Self Member</th><th>Ref Code</th><th>Payment Mode</th>
+                    <th>Pay Details / SS</th><th>Amount</th><th>Status</th>
+                    <th>Dates (Start - End)</th><th>Admin Remarks</th><th>Action</th>
                 </tr>
             </thead>
             <tbody id="vipsTableBody"></tbody>
@@ -81,8 +83,8 @@
             <thead>
                 <tr>
                     <th>Order ID & Date</th><th>Patient Details</th><th>Lab & Slot</th>
-                    <th>Tests (Cart)</th><th>Billing (₹)</th><th>Fulfillment</th>
-                    <th>Booking Status</th><th>Reports</th>
+                    <th style="min-width:200px;">Tests (Cart)</th><th>Billing (₹)</th>
+                    <th>Fulfillment & Address</th><th>Booking Status</th><th>Reports</th>
                 </tr>
             </thead>
             <tbody id="bookingTableBody"></tbody>
@@ -92,9 +94,23 @@
     <div id="loader">Processing... Please wait.</div>
     <div class="overlay" id="modalOverlay" onclick="closeModals()"></div>
 
+    <div class="modal" id="vipActionModal">
+        <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
+        <p style="font-size:13px; color:#555;">Reviewing User: <strong id="modalUserId"></strong></p>
+        <label style="font-size:12px; font-weight:bold;">Admin Remarks (Reason/Notes):</label>
+        <textarea id="modalRemarks" rows="3" class="form-input"></textarea>
+        <div style="display:flex; gap:10px;">
+            <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
+            <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
+        </div>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
+        <input type="hidden" id="modalRowIndex">
+    </div>
+
     <div class="modal" id="orderStatusModal">
         <h3 style="margin-top:0;">Update Booking Status</h3>
         <p>Order ID: <strong id="statusOrderId"></strong></p>
+        <label style="font-size:12px; font-weight:bold;">Select New Status:</label>
         <select id="newOrderStatus" class="form-input">
             <option value="Pending">Pending</option>
             <option value="Confirmed">Confirm Booking</option>
@@ -107,14 +123,14 @@
     <div class="modal" id="orderReportModal">
         <h3 style="margin-top:0;">Manage Test Report</h3>
         <p>Order ID: <strong id="reportOrderId"></strong></p>
-        <label>Delivery Type:</label>
+        <label style="font-size:12px; font-weight:bold;">Delivery Type:</label>
         <select id="reportTypeSelect" class="form-input" onchange="toggleReportLink()">
             <option value="">-- Select --</option>
-            <option value="online">Online PDF</option>
+            <option value="online">Online PDF (Drive Link)</option>
             <option value="in hand">In Hand (Physical)</option>
         </select>
         <div id="reportLinkDiv" style="display:none;">
-            <label>Drive Link:</label>
+            <label style="font-size:12px; font-weight:bold;">Drive Link:</label>
             <input type="url" id="reportLinkInput" class="form-input" placeholder="https://drive.google.com/...">
         </div>
         <button onclick="submitOrderReport()" class="action-btn" style="background:#28a745;">Update Report</button>

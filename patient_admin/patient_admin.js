@@ -4,7 +4,7 @@ let currentTab = 'patients';
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
-// 🌟 NAYA CODE: Safe switch for new tabs
+// 🌟 Safe tab switching
 function switchAdminTab(tabName) {
     currentTab = tabName;
     
@@ -28,14 +28,14 @@ function fetchCurrentTabData() {
     else if (currentTab === 'booking') fetchBookingData();
 }
 
-// 🌟 NAYA CODE: Universal Close Modals
+// 🌟 Universal Modal Closer
 function closeModals() {
     document.getElementById('modalOverlay').style.display = 'none';
     if(document.getElementById('vipActionModal')) document.getElementById('vipActionModal').style.display = 'none';
     if(document.getElementById('orderStatusModal')) document.getElementById('orderStatusModal').style.display = 'none';
     if(document.getElementById('orderReportModal')) document.getElementById('orderReportModal').style.display = 'none';
 }
-function closeVipModal() { closeModals(); } // Fallback for old HTML button calls
+function closeVipModal() { closeModals(); } // Fallback for old code
 
 // ==========================================
 // 1. PATIENTS LIST LOGIC (UNTOUCHED)
@@ -261,13 +261,13 @@ async function fetchBookingData() {
                 let reportBtnClass = "status-primary";
                 let reportText = "Assign Report";
                 if(order.report_type === 'online') {
-                    reportText = "Update Online PDF"; reportBtnClass = "status-active";
+                    reportText = "Update PDF"; reportBtnClass = "status-active";
                 } else if(order.report_type === 'in hand') {
                     reportText = "In Hand Selected"; reportBtnClass = "status-pending";
                 }
 
                 let viewReportLink = (order.report_type === 'online' && order.report_pdf) 
-                    ? `<br><a href="${order.report_pdf}" target="_blank" style="font-size:11px; color:#0056b3; font-weight:bold;">View Uploaded File</a>` 
+                    ? `<br><a href="${order.report_pdf}" target="_blank" style="font-size:11px; color:#0056b3; font-weight:bold;">View PDF</a>` 
                     : "";
 
                 const row = `
@@ -324,7 +324,7 @@ async function submitOrderStatus() {
     } catch (error) { alert("Action failed."); }
 }
 
-// 🌟 Modal logic for Reports (PDF UPLOAD LOGIC)
+// 🌟 Modal logic for Reports (DIRECT PDF UPLOAD)
 function openReportModal(orderId, currentType, currentLink) {
     document.getElementById('reportOrderId').innerText = orderId;
     document.getElementById('reportTypeSelect').value = currentType || "";
@@ -351,20 +351,29 @@ async function submitOrderReport() {
     if (!reportType) return alert("Please select a report type.");
 
     if (reportType === 'in hand') {
-        // Direct Submit for In Hand
-        processReportBackend(orderId, reportType, "");
+        // Direct Submit for In Hand (Koi file upload nahi karni)
+        closeModals(); document.getElementById("loader").style.display = "block";
+        try {
+            const res = await fetch(GOOGLE_SCRIPT_URL, { 
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "uploadOrderReport", order_id: orderId, report_type: reportType }) 
+            });
+            const data = await res.json();
+            alert(data.message); fetchBookingData();
+        } catch(e) { alert("Action Failed"); fetchBookingData(); }
         return;
     }
 
-    // PDF Upload Logic
+    // ONLINE PDF UPLOAD LOGIC
     const fileInput = document.getElementById('reportFileInput');
     if (fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
     
     const file = fileInput.files[0];
     if (file.type !== "application/pdf") return alert("Only PDF files are allowed.");
     
-    btn.innerText = "Uploading... Wait"; btn.disabled = true;
+    btn.innerText = "Uploading PDF... Please wait"; btn.disabled = true;
 
+    // File ko Base64 mein convert karna Google Script ko bhejne ke liye
     const reader = new FileReader();
     reader.onload = async function() {
         const base64Data = reader.result.split(',')[1];
@@ -392,15 +401,4 @@ async function submitOrderReport() {
         } catch (error) { btn.innerText = "Save & Upload"; btn.disabled = false; alert("Upload failed."); }
     };
     reader.readAsDataURL(file);
-}
-
-function processReportBackend(orderId, reportType, reportPdf) {
-    closeModals(); document.getElementById("loader").style.display = "block";
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "uploadOrderReport", order_id: orderId, report_type: reportType, report_pdf: reportPdf }) 
-    }).then(res => res.json()).then(result => {
-        if (result.status === "success") { alert("Report info saved!"); fetchBookingData(); } 
-        else { alert("Error: " + result.message); fetchBookingData(); }
-    });
 }

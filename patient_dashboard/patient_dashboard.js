@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; // <-- YAHAN APNA URL UPDATE KAREIN
 let isUserVip = false;
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
@@ -26,7 +26,7 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // Withdraw Button Visibility
+            // 🌟 FIX: Withdraw Button Visibility 🌟
             if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
                 document.getElementById('btn-withdraw').style.display = 'block';
             } else {
@@ -110,47 +110,8 @@ async function checkLoginAndFetchData() {
     }
 }
 
-// 🌟 Updated Function for VIP Click 🌟
 function handleVipCardClick() {
-    if (isUserVip) { 
-        document.getElementById('vip-details-modal').style.display = 'block'; 
-    } else { 
-        document.getElementById('pincode-modal').style.display = 'block'; 
-    }
-}
-
-// 🌟 New Function to Verify Pincode 🌟
-async function verifyPincodeAndProceed() {
-    const pincode = document.getElementById("checkPincodeInput").value.trim();
-    if(!pincode || pincode.length !== 6) { 
-        alert("Please enter a valid 6-digit pincode."); 
-        return; 
-    }
-
-    const btn = document.getElementById("btnCheckPincode");
-    btn.innerText = "Checking..."; 
-    btn.disabled = true;
-
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "checkVipPincode", pincode: pincode })
-        });
-        const result = await response.json();
-
-        if(result.status === "success") {
-            window.location.href = '../vip/vip_member.html';
-        } else {
-            alert("Currently, this service is not available in your area. Please try again after some time.");
-            document.getElementById('pincode-modal').style.display = 'none';
-            document.getElementById('checkPincodeInput').value = '';
-        }
-    } catch(error) {
-        alert("Network error. Please try again.");
-    } finally {
-        btn.innerText = "Check & Proceed"; 
-        btn.disabled = false;
-    }
+    if (isUserVip) { document.getElementById('vip-details-modal').style.display = 'block'; } else { window.location.href = '../vip/vip_member.html'; }
 }
 
 function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }

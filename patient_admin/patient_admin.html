@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Patients</title>
+    <title>Admin Dashboard - Patients & Bookings</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h2 { color: #0056b3; margin: 0; }
         .refresh-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        .tabs { margin-bottom: 15px; display: flex; gap: 10px; }
+        .tabs { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;}
         .tab-btn { padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: #ddd; color: #333; transition: 0.3s; }
         .tab-btn.active { background: #0056b3; color: white; }
 
@@ -102,7 +102,7 @@
             <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
             <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
         </div>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
         <input type="hidden" id="modalRowIndex">
     </div>
 
@@ -116,11 +116,11 @@
             <option value="Cancelled">Cancel</option>
         </select>
         <button onclick="submitOrderStatus()" class="action-btn" style="background:#0056b3; width:100%;">Update Status</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
     </div>
 
     <div class="modal" id="orderReportModal">
-        <h3 style="margin-top:0; color:#0056b3;">Upload / Update Report</h3>
+        <h3 style="margin-top:0; color:#0056b3;">Upload PDF Report</h3>
         <p style="font-size:13px; color:#555;">Order ID: <strong id="reportOrderId"></strong></p>
         
         <label style="font-size:12px; font-weight:bold;">Report Delivery Type:</label>
@@ -136,7 +136,7 @@
         </div>
 
         <button id="uploadReportBtn" onclick="submitOrderReport()" class="action-btn" style="background:#28a745; width:100%;">Save & Upload</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Cancel</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
     </div>
 
     <script src="patient_admin.js"></script>

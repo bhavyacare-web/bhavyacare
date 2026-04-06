@@ -81,6 +81,13 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
+            // 🌟 NAYA: VIP Package Banner Logic 🌟
+            if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
+                document.getElementById("vipClaimBanner").style.display = "block";
+            } else {
+                document.getElementById("vipClaimBanner").style.display = "none";
+            }
+            
             localStorage.setItem("bhavya_services_cache", JSON.stringify(allServices));
             localStorage.setItem("bhavya_plan_cache", userPlanStatus);
             
@@ -120,6 +127,10 @@ function startVipPolling() {
                     userPlanStatus = "vip"; 
                     localStorage.setItem("bhavya_plan_cache", "vip");
                     handleBannerDisplay(); 
+                    
+                    // Re-fetch booking data to correctly show/hide claim banner
+                    fetchBookingData(); 
+                    
                     renderServices(); 
                     clearInterval(pollingInterval);
                 } else if (status === "rejected") {
@@ -141,8 +152,9 @@ function renderCategories() {
     let mainHtml = "";
     let sliderHtml = "";
     
-    // Backend se aane wali saari unique categories
-    const existingTypes = [...new Set(allServices.map(s => String(s.service_type || '').toLowerCase().trim()))];
+    // Backend se aane wali saari unique categories, 'VIP-FREE-001' hide karna hai agar list me aaya to (optional)
+    let filteredTypes = allServices.filter(s => s.service_id !== "VIP-FREE-001");
+    const existingTypes = [...new Set(filteredTypes.map(s => String(s.service_type || '').toLowerCase().trim()))];
 
     // --- PART 1: FIXED CATEGORIES (GRID ME DIKHAYENGE) ---
     mainCategoryKeys.forEach(key => {
@@ -150,7 +162,6 @@ function renderCategories() {
         let isPresent = existingTypes.includes(key);
         let isSelected = currentCategory === key ? 'selected' : '';
         
-        // Agar backend me wo test available hai, tabhi grid me dikhao
         if(isPresent) {
             mainHtml += `<div class="cat-card ${isSelected}" onclick="selectCategory('${key}')">
                             <div class="cat-icon">${config.icon}</div>
@@ -164,23 +175,18 @@ function renderCategories() {
     let hasNewCategories = false;
     
     existingTypes.forEach(key => {
-        if (!key) return; // Blank item ko skip karo
-        
-        // Agar category purani fixed list me HAI, toh isko chhod do
+        if (!key) return; 
         if (mainCategoryKeys.includes(key)) return; 
         
-        // Agar category NAYI hai:
         hasNewCategories = true;
         let isActive = currentCategory === key ? 'active' : '';
         let config = categoryConfig[key] || { name: formatText(key), icon: defaultIcon };
         
-        // Naye button ko sub-category wale style me slider me add karo
         sliderHtml += `<button class="sub-cat-btn ${isActive}" onclick="selectCategory('${key}')" style="display:flex; align-items:center; gap:5px;">
                           <span>${config.icon}</span> ${config.name}
                        </button>`;
     });
 
-    // Agar koi nayi category mili, toh slider dikhao, warna chupao
     if (sliderContainer) {
         if (hasNewCategories) {
             sliderContainer.innerHTML = sliderHtml;
@@ -209,7 +215,10 @@ function renderServices(searchQuery = "") {
     const container = document.getElementById("servicesList");
     const subContainer = document.getElementById("subCategoryContainer");
     
-    let filtered = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
+    // Hide special VIP package from standard list
+    let displayServices = allServices.filter(s => s.service_id !== "VIP-FREE-001");
+    
+    let filtered = displayServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
 
     if (currentCategory === 'profile' && !searchQuery) {
         let subCats = ['all', ...new Set(filtered.map(s => String(s.service_category || 'Other').trim()))];
@@ -225,7 +234,7 @@ function renderServices(searchQuery = "") {
     } else { subContainer.innerHTML = ""; }
 
     if (searchQuery) {
-        filtered = allServices.filter(s => 
+        filtered = displayServices.filter(s => 
             String(s.service_name || '').toLowerCase().includes(searchQuery) || 
             String(s.service_id || '').toLowerCase().includes(searchQuery) ||
             String(s.description || '').toLowerCase().includes(searchQuery)
@@ -322,15 +331,24 @@ function updateCartUI() {
 
 function openModal(serviceId) {
     const service = allServices.find(s => s.service_id === serviceId);
-    if (!service) return;
+    if (!service) {
+        alert("Details not loaded yet.");
+        return;
+    }
     document.getElementById("modalTitle").innerText = formatText(service.service_name);
     let descRaw = String(service.description || '');
     let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
     if (descRaw.trim() !== "") {
         let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
         formattedDesc = "<ul>" + items.map(i => `<li style="margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:4px;">${formatText(i.trim())}</li>`).join('') + "</ul>";
+        
+        // Add parameter count if available
+        if (service.number_of_test) {
+            formattedDesc = `<div style="background:#e0f2fe; color:#0284c7; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; margin-bottom:15px; display:inline-block;"><i class="fas fa-microscope"></i> Includes ${service.number_of_test} Parameters</div>` + formattedDesc;
+        }
     }
-    document.getElementById("modalBody").innerHTML = formattedDesc; document.getElementById("infoModal").classList.add("active");
+    document.getElementById("modalBody").innerHTML = formattedDesc; 
+    document.getElementById("infoModal").classList.add("active");
 }
 
 function closeModal() { document.getElementById("infoModal").classList.remove("active"); }
@@ -366,7 +384,6 @@ async function handleVipPromoClick() {
     const msg = document.getElementById("vipPromoPincodeMsg");
     const btn = document.getElementById("vipPromoCheckBtn");
 
-    // 1. Pincode Validation
     if(pincode.length !== 6) {
         msg.style.display = "block";
         msg.style.color = "var(--danger)";
@@ -378,20 +395,17 @@ async function handleVipPromoClick() {
     btn.disabled = true;
 
     try {
-        // 2. Call your existing checkVipPincode API
         const response = await fetch(GAS_URL, {
             method: 'POST',
             body: JSON.stringify({ action: "checkVipPincode", pincode: pincode })
         });
         const res = await response.json();
 
-        // 3. Handle Response
         if (res.status === "success") {
             msg.style.display = "block";
             msg.style.color = "var(--success)";
             msg.innerHTML = "<i class='fas fa-check-circle'></i> Service Available! Proceeding...";
             
-            // Wait slightly so user can read the success message
             setTimeout(() => {
                 const userId = localStorage.getItem("bhavya_user_id");
                 if (userId) { 
@@ -402,14 +416,11 @@ async function handleVipPromoClick() {
                     closeVipPromo();
                     if (typeof openPatientLogin === "function") { openPatientLogin(); } else { alert("Please login first."); }
                 }
-                
-                // Reset button for next time
                 btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`;
                 btn.disabled = false;
             }, 800);
 
         } else {
-            // Pincode not serviceable
             msg.style.display = "block";
             msg.style.color = "var(--danger)";
             msg.innerHTML = `<i class='fas fa-times-circle'></i> ${res.message || "VIP Plan is not available in this pincode yet."}`;
@@ -518,27 +529,36 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-// 🌟 FIX: DELAYED NAVIGATION TO PREVENT EMPTY CART BUG 🌟
 function openCart() { 
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     setTimeout(() => {
         window.location.href = "../cart/cart.html"; 
-    }, 150); // Small 150ms delay guarantees the browser writes the data first!
+    }, 150); 
 }
-// ==========================================
-// 🌟 SMART HOME NAVIGATION 🌟
-// ==========================================
+
 function handleHomeNavigation() {
-    // Check karte hain ki user_id localStorage me hai ya nahi
     const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
-    
     if (userId) {
-        // Agar user login hai, toh usko Patient Dashboard par bhejo
         window.location.href = '../patient_dashboard/patient_dashboard.html';
     } else {
-        // Agar user login NAHI hai, toh usko Website ke Main Home Page par bhejo
-        // Note: Maine yaha '../index.html' likha hai. Agar aapke main page ka naam kuch aur hai 
-        // (jaise '../home.html' ya '../../index.html'), toh ise apne hisab se change kar lena.
         window.location.href = '../index.html'; 
+    }
+}
+
+// ==========================================
+// 🌟 VIP PACKAGE CLAIM LOGIC 🌟
+// ==========================================
+function claimVipPackage() {
+    const vipPackageId = "VIP-FREE-001"; // <--- Zaroori: Sheet me yahi ID dalna
+    
+    const service = allServices.find(s => String(s.service_id) === vipPackageId);
+    
+    if (service) {
+        // Direct cart me add kar do
+        updateQty(service.service_id, 1, 0, service.service_name, service.service_type);
+        // Add hote hi turant cart page par bhej do
+        openCart();
+    } else {
+        alert("Loading... Please wait a second or contact Admin.");
     }
 }

@@ -121,6 +121,17 @@
       <i class="fas fa-exclamation-triangle"></i> 
       <b>Verification Pending:</b> Your VIP Plan is under review. You can book at VIP rates now, but if any discrepancy is found, your plan will be reverted to the Basic Plan.
     </div>
+    
+    <div id="vipClaimBanner" style="display:none; background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 15px 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 5px;">
+      <h3 style="margin:0 0 5px; font-size:16px; font-weight:800; color:var(--warning); display:flex; justify-content:center; align-items:center; gap:8px;">
+        <i class="fas fa-gift"></i> Congratulations! 
+        <i class="fas fa-info-circle" onclick="openModal('VIP-FREE-001')" style="font-size:14px; color:#cbd5e1; cursor:pointer;"></i>
+      </h3>
+      <p style="margin:0 0 12px; font-size:12px; font-weight:500; color:#cbd5e1;">Claim your complimentary VIP Health Package for ₹0.</p>
+      <button onclick="claimVipPackage()" style="background:var(--warning); color:#1e293b; border:none; padding:8px 20px; border-radius:8px; font-weight:800; font-size:13px; cursor:pointer; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
+        Claim Now <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
   </div>
 
   <div class="search-container">
@@ -240,6 +251,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="../app.js"></script>
-  <script src="booking.js?v=22"></script>
+  <script src="booking.js?v=23"></script>
 </body>
 </html>

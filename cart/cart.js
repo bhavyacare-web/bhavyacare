@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (100% FIXED & FINAL)
+// CART & CHECKOUT LOGIC (WITH CITY & PINCODE LOGIC)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -7,30 +7,19 @@ const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLG
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
 let cart = [];
-let bookingData = { name: "", mobile: "", pincode: "", address: "", isVip: false };
+let bookingData = { name: "", mobile: "", city: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let cartConfirmationResult; 
 
 let appRules = {};
 let userWalletBalance = 0;
 let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 0, totalPayable: 0, refCode: "" };
-let labSlots = {}; // Slots per Lab
+let labSlots = {}; 
 
-// ==========================================
-// 1. AGGRESSIVE LOADER & BF-CACHE FIX
-// ==========================================
 window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-        window.location.reload();
-        return;
-    }
-
+    if (event.persisted) { window.location.reload(); return; }
     loadCartData();
-
-    if(cart.length === 0) {
-        showEmptyCart();
-        return;
-    }
+    if(cart.length === 0) { showEmptyCart(); return; }
 
     let s2 = document.getElementById('step2-card');
     if(s2 && document.getElementById('step1-nav').classList.contains('completed')) {
@@ -50,12 +39,9 @@ function loadCartData() {
         if (stored) {
             let parsed = JSON.parse(stored);
             if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
-            
             if (Array.isArray(parsed) && parsed.length > 0) {
                 cart = parsed.filter(item => item !== null && typeof item === 'object' && item.service_id); 
-            } else {
-                cart = [];
-            }
+            } else { cart = []; }
         } else { cart = []; }
     } catch(e) { cart = []; console.error("Cart Load Error Fixed"); }
 }
@@ -68,7 +54,7 @@ function showEmptyCart() {
                 <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
                 <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
                 <p style="font-size:13px; color:var(--text-muted);">Please add tests from the booking page to proceed.</p>
-                <a href="../booking/booking.html" class="btn-main" style="display: inline-block; margin-top: 15px; width: auto; text-decoration:none;">Browse Services</a>
+                <a href="../index.html" class="btn-main" style="display: inline-block; margin-top: 15px; width: auto; text-decoration:none;">Go to Home</a>
             </div>`;
     }
     let loadingOverlay = document.getElementById('loadingOverlay');
@@ -83,9 +69,6 @@ function showEmptyCart() {
     if(bottomBar) bottomBar.style.display = 'none';
 }
 
-// ==========================================
-// 2. PATIENT PROFILE, RULES & WALLET
-// ==========================================
 function fetchProfile(userId) {
     fetch(GAS_URL_CART, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
@@ -126,16 +109,19 @@ function fetchProfile(userId) {
     });
 }
 
+// 🌟 SAVING CITY AND PINCODE DATA 🌟
 function savePatientInfo() {
     const name = document.getElementById('uName').value.trim();
     const mobile = document.getElementById('uMobile').value.trim();
+    const city = document.getElementById('uCity').value.trim();
     const pin = document.getElementById('uPincode').value.trim();
     const addr = document.getElementById('uAddress').value.trim();
 
-    if(!name || pin.length < 6 || mobile.length < 10) return alert("Please enter valid Name, 10-digit Mobile, and 6-digit Pincode.");
+    if(!name || !city || pin.length < 6 || mobile.length < 10) return alert("Please enter valid Name, 10-digit Mobile, City, and 6-digit Pincode.");
 
     bookingData.name = name;
     bookingData.mobile = mobile;
+    bookingData.city = city.toLowerCase();
     bookingData.pincode = pin;
     bookingData.address = addr;
 
@@ -148,7 +134,8 @@ function savePatientInfo() {
     document.getElementById('step2-nav').classList.add('active');
     document.getElementById('sumName').innerText = bookingData.name;
     document.getElementById('sumMobile').innerText = "+91 " + bookingData.mobile;
-    document.getElementById('sumAddress').innerText = `${bookingData.address} (Pin: ${bookingData.pincode})`;
+    document.getElementById('sumCityPin').innerText = `${city.toUpperCase()} - ${pin}`;
+    document.getElementById('sumAddress').innerText = bookingData.address;
     document.getElementById('infoForm').style.display = 'none';
     document.getElementById('infoSummary').style.display = 'block';
     
@@ -166,9 +153,7 @@ function editPatientInfo() {
     validateCheckout();
 }
 
-// ==========================================
-// 3. SMART GROUPING & LAB SELECTION (UPDATED)
-// ==========================================
+// 🌟 SMART LOGIC FOR GLOBAL REJECT & LAB FETCHING 🌟
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
@@ -180,6 +165,27 @@ function fetchLabs() {
         if (spinner) spinner.style.display = 'none';
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
+
+            // GLOBAL CHECK: Agar User ki city ya pincode kisi bhi service ke liye match na kare
+            let canServiceAnything = false;
+            cart.forEach(item => {
+                let type = (item.service_type || "pathology").toLowerCase().trim();
+                let labsForSvc = allActiveLabsList.filter(l => l.provided_services[type] === true);
+                
+                let matchHome = labsForSvc.some(l => l.pincode === bookingData.pincode || l.available_pincodes.includes(bookingData.pincode));
+                let matchCity = labsForSvc.some(l => l.city === bookingData.city || l.available_cities.includes(bookingData.city));
+
+                if (matchHome || matchCity) {
+                    canServiceAnything = true;
+                }
+            });
+
+            if (!canServiceAnything) {
+                alert("No provider found in your area for service");
+                window.location.href = "../index.html"; 
+                return;
+            }
+
             autoAssignGroupLabs(); 
             renderGroupedCart(); 
         } else alert("Error fetching labs.");
@@ -193,18 +199,25 @@ function autoAssignGroupLabs() {
     let assignedLabs = {}; 
     cart.forEach(item => {
         let type = (item.service_type || "pathology").toLowerCase().trim();
-        let eligibleLabsAll = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-        let eligibleLabs = [...eligibleLabsAll];
+        let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+
+        // Separate lists by Home & City eligibility
+        let homeEligibleLabs = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode) || lab.pincode === bookingData.pincode);
+        let cityEligibleLabs = allLabsForSvc.filter(lab => lab.city === bookingData.city || lab.available_cities.includes(bookingData.city));
+
+        let eligibleLabs = [];
 
         if (item.fulfillment === "home") {
-            let homeEligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
-            
-            // 🌟 NEW LOGIC: Agar pincode match nahi karta to 'center' auto select ho jaye 🌟
-            if (homeEligibleLabs.length === 0 && eligibleLabsAll.length > 0) {
+            // Agar Pincode match nahi karta lekin City match karta hai to center auto-select kardo
+            if (homeEligibleLabs.length === 0 && cityEligibleLabs.length > 0) {
                 item.fulfillment = "center";
-            } else {
+                eligibleLabs = cityEligibleLabs;
+            } else if (homeEligibleLabs.length > 0) {
                 eligibleLabs = homeEligibleLabs;
             }
+        } else {
+            // Agar pehle se Center chuna hai, tab City ko prefer karein, warna Pincode
+            eligibleLabs = cityEligibleLabs.length > 0 ? cityEligibleLabs : homeEligibleLabs;
         }
 
         if (eligibleLabs.length > 0) {
@@ -257,12 +270,15 @@ function renderGroupedCart() {
         let isHomeEligible = homeServiceCategories.includes(type);
         let isHome = group.fulfillment === "home";
         
-        if(isHomeEligible) {
-            // 🌟 NEW LOGIC: Lock Button UI and Error Alert 🌟
-            let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-            let homeLabsForSvc = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
-            let hasHomeProvider = homeLabsForSvc.length > 0;
+        // 🌟 CHECKING ELIGIBILITY 🌟
+        let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
+        let homeLabsForSvc = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode) || lab.pincode === bookingData.pincode);
+        let cityLabsForSvc = allLabsForSvc.filter(lab => lab.city === bookingData.city || lab.available_cities.includes(bookingData.city));
 
+        let hasHomeProvider = homeLabsForSvc.length > 0;
+        let hasCityProvider = cityLabsForSvc.length > 0;
+
+        if(isHomeEligible) {
             let homeClickAction = hasHomeProvider ? `changeGroupFulfill('${type}', 'home')` : `showHomeUnavailableAlert('${type}')`;
             let homeBtnStyle = hasHomeProvider ? "" : "opacity: 0.6; cursor: not-allowed; background: #f8fafc;";
             let lockIcon = hasHomeProvider ? "" : ' <i class="fas fa-lock" style="font-size:11px; margin-left:4px;"></i>';
@@ -276,12 +292,13 @@ function renderGroupedCart() {
             html += `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required for Scans</div>`;
         }
 
-        let eligibleLabs = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
-        if (isHome) eligibleLabs = eligibleLabs.filter(lab => lab.available_pincodes.includes(bookingData.pincode.toString()) || lab.pincode === bookingData.pincode.toString());
-
-        if (eligibleLabs.length > 0) {
+        // Render Labs or Error
+        if (!hasHomeProvider && !hasCityProvider) {
+            html += `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}.</span></div>`;
+        } else {
+            let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
-            eligibleLabs.forEach(lab => {
+            displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
                 let nablBadge = lab.nabl ? `<span class="badge-small">NABL</span>` : "";
                 let nabhBadge = lab.nabh ? `<span class="badge-small" style="background:#dcfce7; color:#065f46;">NABH</span>` : "";
@@ -297,28 +314,28 @@ function renderGroupedCart() {
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
                     </div>`;
             });
-        } else {
-            html += `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}. Please change pincode or visit center.</span></div>`;
         }
         
         html += `</div>`; 
     }
     
     document.getElementById('cartItemsContainer').innerHTML = html;
-    
     renderLabTimeSelectors();
     calculateFinalBill(); 
 }
 
-// 🌟 NEW FUNCTION: To show alert when clicked on locked Home Collection button 🌟
+// 🌟 THE ENGLISH ALERT FOR LOCKED HOME BUTTON 🌟
 function showHomeUnavailableAlert(type) {
-    alert(`No provider found in your area for ${type}. Please change pincode or visit center.`);
+    alert(`No provider found in your area for this service. However, this facility is available in your city, please visit the center.`);
 }
 
 function changeGroupFulfill(type, fulfillment) {
-    if (fulfillment === "home" && !allActiveLabsList.some(l => l.provided_services[type] && (l.pincode === bookingData.pincode || l.available_pincodes.includes(bookingData.pincode)))) {
-        alert(`No provider found in your area for ${type}. Please change pincode or visit center.`);
-        return;
+    if (fulfillment === "home") {
+        let hasHomeProvider = allActiveLabsList.some(l => l.provided_services[type] && (l.pincode === bookingData.pincode || l.available_pincodes.includes(bookingData.pincode)));
+        if (!hasHomeProvider) {
+            showHomeUnavailableAlert(type);
+            return;
+        }
     }
     cart.forEach(item => {
         if ((item.service_type || "pathology").toLowerCase().trim() === type) item.fulfillment = fulfillment;

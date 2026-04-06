@@ -278,7 +278,13 @@ function renderServices(searchQuery = "") {
             pricingHtml = `<div class="mrp-row"><span>Total: <span class="mrp">₹${totalMrp}</span></span></div><div class="final-price">₹${basicPrice} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div><div class="locked-price" onclick="openVipPromo()"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>`;
         }
 
-        if (currentCategory === 'profile' && !searchQuery) {
+        // 🌟 YAHI HAI THE FIX 🌟
+        // Hum check kar rahe hain ki kya is item ka type "profile" ya "package" hai
+        let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
+        let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
+
+        if (isPackageOrProfile) {
+            // AGAR PACKAGE HAI TOH BADA UI DIKHAO (With details & params)
             let descPreviewHtml = "";
             let descRaw = String(service.description || '');
             if (descRaw.trim() !== "") {
@@ -292,8 +298,8 @@ function renderServices(searchQuery = "") {
 
             htmlContent += `<div class="profile-item"><div class="profile-header"><span class="profile-badge">${cleanCat}</span>${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Tests</span>` : ''}</div><div class="service-info"><h3>${cleanName}</h3>${descPreviewHtml}</div><div class="price-action-row"><div class="price-box">${pricingHtml}</div><div class="action-container">${actionBtnHtml}</div></div></div>`;
         } else {
-            let catType = String(service.service_type || '').toLowerCase().trim();
-            let catIcon = categoryConfig[catType]?.icon || defaultIcon;
+            // AGAR NORMAL TEST HAI TOH CHHOTA UI DIKHAO
+            let catIcon = categoryConfig[sTypeLowerCase]?.icon || defaultIcon;
             let imgStr = service.service_image ? String(service.service_image).trim() : "";
             let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
 

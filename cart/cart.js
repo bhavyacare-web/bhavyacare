@@ -494,13 +494,36 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
         let o = parseTime(lab.timings[dayName].open) || parseTime("09:00 AM");
         let c = parseTime(lab.timings[dayName].close) || parseTime("08:00 PM");
         
+        // 🌟 DYNAMIC BUFFER LOGIC 🌟
+        let now = new Date();
+        let isToday = (dateObj.toDateString() === now.toDateString());
+        let currentMins = (now.getHours() * 60) + now.getMinutes();
+        
+        // Check karte hain ki kya patient VIP pending state mein hai ya usne abhi VIP pack add kiya hai
+        let planCache = localStorage.getItem("bhavya_plan_cache") || "basic";
+        let hasVipPackageInCart = cart.some(item => item.service_id === "VIP-FREE-001");
+        
+        // Agar VIP pending/new hai toh 120 mins (2 ghante) ka buffer, warna normal 30 mins ka buffer
+        let bufferMins = (planCache === "pending" || hasVipPackageInCart) ? 120 : 30;
+        
         if (o >= c - 30) {
             html = `<p style="color:var(--danger); font-size:12px; font-weight:700;">Provider is closed on this day.</p>`;
         } else {
+            let slotsAdded = 0;
             for(let t = o; t <= c - 30; t += 30) {
+                // Buffer time condition check
+                if (isToday && t < (currentMins + bufferMins)) {
+                    continue; // Is time slot ko skip kar do
+                }
+
                 let slotStr = formatTime(t);
                 let sel = labSlots[labId].time === slotStr ? "selected" : "";
                 html += `<button class="slot-btn ${sel}" onclick="selectLabTime('${labId}', '${slotStr}')">${slotStr}</button>`;
+                slotsAdded++;
+            }
+            
+            if (slotsAdded === 0) {
+                html = `<p style="color:var(--danger); font-size:12px; font-weight:700;">No more slots available for today. Please select tomorrow.</p>`;
             }
         }
     }

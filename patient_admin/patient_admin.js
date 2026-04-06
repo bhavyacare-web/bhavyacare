@@ -205,14 +205,27 @@ async function fetchBookingData() {
                 if(s === 'pending') statusBadge = `<span class="badge-btn status-pending">Pending</span>`;
                 else if(s === 'confirmed') statusBadge = `<span class="badge-btn status-active">Confirmed</span>`;
                 else if(s === 'cancelled') statusBadge = `<span class="badge-btn status-inactive">Cancelled</span>`;
+                else if(s === 'completed') statusBadge = `<span class="badge-btn" style="background:#17a2b8; color:white;">Completed</span>`; // Added Completed badge
                 else statusBadge = `<span class="badge-btn">${order.status}</span>`;
 
-                // 🌟 LOGIC: Report Button disabled until order is confirmed
+                // Display cancel reason if available
+                let cancelReasonHtml = "";
+                if(s === 'cancelled' && order.cancel_reason) {
+                    cancelReasonHtml = `<div style="font-size:11px; color:#dc3545; margin-top:4px;"><b>Reason:</b> ${order.cancel_reason}</div>`;
+                }
+                
+                // Display Admin Note / VIP status if available
+                let adminNoteHtml = "";
+                if (order.admin_note) {
+                    adminNoteHtml = `<div style="font-size:11px; background:#fff3cd; color:#856404; padding:2px 4px; border-radius:4px; margin-top:4px; display:inline-block;"><b>Note:</b> ${order.admin_note}</div>`;
+                }
+
+                // Report Button Logic
                 let reportBtnClass = "status-primary";
                 let reportText = "Assign Report";
                 let reportAction = `onclick="openReportModal('${order.order_id}', '${order.report_type}', '${order.report_pdf}')"`;
 
-                if (s !== 'confirmed') {
+                if (s !== 'confirmed' && s !== 'completed') {
                     reportBtnClass = "status-inactive";
                     reportText = "Confirm First";
                     reportAction = `onclick="alert('Please confirm the booking first before assigning a report.')"`;
@@ -237,7 +250,9 @@ async function fetchBookingData() {
                         <td style="font-size: 12px; max-width: 200px;"><span style="text-transform:uppercase; font-weight:bold; color:#17a2b8;">[${order.fulfillment}]</span><br>${order.address}</td>
                         <td style="text-align: center;">
                             ${statusBadge}<br>
-                            <button class="badge-btn status-primary" onclick="openOrderStatusModal('${order.order_id}', '${order.status}')">Change Status</button>
+                            ${cancelReasonHtml}
+                            ${adminNoteHtml}<br>
+                            <button class="badge-btn status-primary" onclick="openOrderStatusModal('${order.order_id}', '${order.status}')" style="margin-top:4px;">Change Status</button>
                         </td>
                         <td style="text-align: center;">
                             <button class="badge-btn ${reportBtnClass}" ${reportAction}>${reportText}</button>
@@ -259,22 +274,48 @@ function openOrderStatusModal(orderId, currentStatus) {
     document.getElementById('orderStatusModal').style.display = 'block';
 }
 
+// 🌟 UPDATED: Prompt for mandatory cancel reason 🌟
 async function submitOrderStatus() {
     const orderId = document.getElementById('statusOrderId').innerText;
     const newStatus = document.getElementById('newOrderStatus').value;
 
-    if (!confirm(`Change order status to ${newStatus}?`)) return;
+    let payload = { 
+        action: "updateLabOrderStatus", 
+        order_id: orderId, 
+        new_status: newStatus 
+    };
+
+    if (newStatus.toLowerCase() === "cancelled") {
+        let reason = prompt("Mandatory: Please enter the reason for cancellation:");
+        if (!reason || reason.trim() === "") {
+            alert("Status update failed. You must provide a reason to cancel an order.");
+            return;
+        }
+        payload.cancel_reason = reason.trim();
+    } else {
+        if (!confirm(`Change order status to ${newStatus}?`)) return;
+    }
+
     closeModals(); document.getElementById("loader").style.display = "block";
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "updateLabOrderStatus", order_id: orderId, new_status: newStatus }) 
+            body: JSON.stringify(payload) 
         });
         const result = await response.json();
-        alert(result.message || "Status Updated Successfully!"); 
-        fetchBookingData(); 
-    } catch (error) { alert("Action failed."); }
+        
+        if (result.status === "success") {
+            alert(result.message || "Status Updated Successfully!"); 
+            fetchBookingData(); 
+        } else {
+            alert("Error: " + result.message);
+            document.getElementById("loader").style.display = "none";
+        }
+    } catch (error) { 
+        alert("Action failed. Please try again.");
+        document.getElementById("loader").style.display = "none";
+    }
 }
 
 function openReportModal(orderId, currentType, currentLink) {

@@ -525,3 +525,20 @@ function openCart() {
         window.location.href = "../cart/cart.html"; 
     }, 150); // Small 150ms delay guarantees the browser writes the data first!
 }
+// ==========================================
+// 🌟 SMART HOME NAVIGATION 🌟
+// ==========================================
+function handleHomeNavigation() {
+    // Check karte hain ki user_id localStorage me hai ya nahi
+    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
+    
+    if (userId) {
+        // Agar user login hai, toh usko Patient Dashboard par bhejo
+        window.location.href = '../patient_dashboard/patient_dashboard.html';
+    } else {
+        // Agar user login NAHI hai, toh usko Website ke Main Home Page par bhejo
+        // Note: Maine yaha '../index.html' likha hai. Agar aapke main page ka naam kuch aur hai 
+        // (jaise '../home.html' ya '../../index.html'), toh ise apne hisab se change kar lena.
+        window.location.href = '../index.html'; 
+    }
+}

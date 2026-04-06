@@ -1,5 +1,5 @@
 // ==========================================
-// CART & CHECKOUT LOGIC (WITH CITY & PINCODE LOGIC)
+// CART & CHECKOUT LOGIC (WITH VIP AUTO-ASSIGN)
 // ==========================================
 
 const GAS_URL_CART = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
@@ -109,7 +109,6 @@ function fetchProfile(userId) {
     });
 }
 
-// 🌟 SAVING CITY AND PINCODE DATA 🌟
 function savePatientInfo() {
     const name = document.getElementById('uName').value.trim();
     const mobile = document.getElementById('uMobile').value.trim();
@@ -153,7 +152,6 @@ function editPatientInfo() {
     validateCheckout();
 }
 
-// 🌟 SMART LOGIC FOR GLOBAL REJECT & LAB FETCHING 🌟
 function fetchLabs() {
     let spinner = document.getElementById('loadingLabsSpinner');
     if (spinner) spinner.style.display = 'block';
@@ -166,9 +164,17 @@ function fetchLabs() {
         if(res.status === "success") {
             allActiveLabsList = res.data.labs;
 
-            // GLOBAL CHECK: Agar User ki city ya pincode kisi bhi service ke liye match na kare
             let canServiceAnything = false;
+            let containsVipOnly = true;
+
             cart.forEach(item => {
+                // 🌟 VIP PACKAGE CHECK: Skip region validation for VIP Package 🌟
+                if (item.service_id === "VIP-FREE-001") {
+                    canServiceAnything = true;
+                    return; 
+                }
+                
+                containsVipOnly = false;
                 let type = (item.service_type || "pathology").toLowerCase().trim();
                 let labsForSvc = allActiveLabsList.filter(l => l.provided_services[type] === true);
                 
@@ -180,7 +186,7 @@ function fetchLabs() {
                 }
             });
 
-            if (!canServiceAnything) {
+            if (!canServiceAnything && !containsVipOnly) {
                 alert("No provider found in your area for service");
                 window.location.href = "../index.html"; 
                 return;
@@ -198,17 +204,22 @@ function fetchLabs() {
 function autoAssignGroupLabs() {
     let assignedLabs = {}; 
     cart.forEach(item => {
+        // 🌟 VIP PACKAGE AUTO-ASSIGN 🌟
+        if (item.service_id === "VIP-FREE-001") {
+            item.selected_lab_id = "BHAVYACARE-INTERNAL";
+            item.fulfillment = "home"; // Default free home collection
+            return;
+        }
+
         let type = (item.service_type || "pathology").toLowerCase().trim();
         let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
 
-        // Separate lists by Home & City eligibility
         let homeEligibleLabs = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode) || lab.pincode === bookingData.pincode);
         let cityEligibleLabs = allLabsForSvc.filter(lab => lab.city === bookingData.city || lab.available_cities.includes(bookingData.city));
 
         let eligibleLabs = [];
 
         if (item.fulfillment === "home") {
-            // Agar Pincode match nahi karta lekin City match karta hai to center auto-select kardo
             if (homeEligibleLabs.length === 0 && cityEligibleLabs.length > 0) {
                 item.fulfillment = "center";
                 eligibleLabs = cityEligibleLabs;
@@ -216,7 +227,6 @@ function autoAssignGroupLabs() {
                 eligibleLabs = homeEligibleLabs;
             }
         } else {
-            // Agar pehle se Center chuna hai, tab City ko prefer karein, warna Pincode
             eligibleLabs = cityEligibleLabs.length > 0 ? cityEligibleLabs : homeEligibleLabs;
         }
 
@@ -238,20 +248,28 @@ function renderGroupedCart() {
     let groupedCart = {};
 
     cart.forEach((item, index) => {
+        // 🌟 ISOLATE VIP PACKAGE INTO ITS OWN GROUP 🌟
         let type = (item.service_type || "pathology").toLowerCase().trim();
+        if (item.service_id === "VIP-FREE-001") {
+            type = "vip sponsored"; // Creates a separate UI group
+        }
+
         if(!groupedCart[type]) {
             groupedCart[type] = {
                 items: [],
-                fulfillment: item.fulfillment || (homeServiceCategories.includes(type) ? "home" : "center"),
-                selected_lab_id: item.selected_lab_id
+                fulfillment: item.fulfillment || (homeServiceCategories.includes(type) || type === "vip sponsored" ? "home" : "center"),
+                selected_lab_id: item.service_id === "VIP-FREE-001" ? "BHAVYACARE-INTERNAL" : item.selected_lab_id
             };
         }
         groupedCart[type].items.push({ ...item, originalIndex: index });
     });
 
     for (const [type, group] of Object.entries(groupedCart)) {
+        let isVipGroup = type === "vip sponsored";
+        let groupTitle = isVipGroup ? '<i class="fas fa-gift" style="color:var(--warning);"></i> VIP Package' : `<i class="fas fa-notes-medical"></i> ${type} Booking`;
+
         html += `<div class="group-container">
-                    <div class="group-header"><i class="fas fa-notes-medical"></i> ${type} Booking</div>`;
+                    <div class="group-header">${groupTitle}</div>`;
 
         group.items.forEach(item => {
             let itemPrice = Number(item.price || item.service_price || item.basic_price || 0);
@@ -267,10 +285,28 @@ function renderGroupedCart() {
                 </div>`;
         });
 
+        // 🌟 CUSTOM UI FOR VIP SPONSORED PACKAGE (No dropdowns) 🌟
+        if (isVipGroup) {
+            html += `
+            <div style="background: var(--primary-soft); border: 1px solid #bfdbfe; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                <p style="font-size:12px; font-weight:800; color:var(--primary); margin: 0 0 10px 0; text-transform:uppercase;"><i class="fas fa-star" style="color:var(--warning);"></i> Handled Internally</p>
+                <div class="lab-card selected" style="border-color: var(--primary); background: #ffffff; margin-bottom: 0; cursor: default;">
+                    <div class="lab-img" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="lab-info">
+                        <h4 class="lab-name" style="color: var(--primary);">BhavyaCare Nodal Center <span class="badge-small" style="background:var(--warning); color:white;">SPONSORED</span></h4>
+                        <p class="lab-addr" style="color: var(--text-muted);"><i class="fas fa-check-circle" style="color:var(--success);"></i> Free Home Collection Included</p>
+                    </div>
+                </div>
+            </div></div>`;
+            continue; // Skip normal lab rendering
+        }
+
+        // 🌟 NORMAL LAB UI 🌟
         let isHomeEligible = homeServiceCategories.includes(type);
         let isHome = group.fulfillment === "home";
         
-        // 🌟 CHECKING ELIGIBILITY 🌟
         let allLabsForSvc = allActiveLabsList.filter(lab => lab.provided_services[type] === true);
         let homeLabsForSvc = allLabsForSvc.filter(lab => lab.available_pincodes.includes(bookingData.pincode) || lab.pincode === bookingData.pincode);
         let cityLabsForSvc = allLabsForSvc.filter(lab => lab.city === bookingData.city || lab.available_cities.includes(bookingData.city));
@@ -292,7 +328,6 @@ function renderGroupedCart() {
             html += `<div class="center-only-badge"><i class="fas fa-info-circle"></i> Center Visit Required for Scans</div>`;
         }
 
-        // Render Labs or Error
         if (!hasHomeProvider && !hasCityProvider) {
             html += `<div class="item-error-box"><span><i class="fas fa-exclamation-triangle"></i> No provider found in your area for ${type}.</span></div>`;
         } else {
@@ -324,7 +359,6 @@ function renderGroupedCart() {
     calculateFinalBill(); 
 }
 
-// 🌟 THE ENGLISH ALERT FOR LOCKED HOME BUTTON 🌟
 function showHomeUnavailableAlert(type) {
     alert(`No provider found in your area for this service. However, this facility is available in your city, please visit the center.`);
 }
@@ -398,6 +432,9 @@ function renderLabTimeSelectors() {
         let lab = allActiveLabsList.find(l => String(l.lab_id) === String(labId));
         let labName = lab ? lab.lab_name : "Selected Provider";
         
+        // 🌟 Handle Custom VIP Name 🌟
+        if (labId === "BHAVYACARE-INTERNAL") labName = "BhavyaCare Nodal Center";
+        
         let fulfills = cart.filter(c => c.selected_lab_id === labId).map(c => c.fulfillment);
         let fText = fulfills.includes("home") ? "Home Collection" : "Center Visit";
 
@@ -443,6 +480,14 @@ function updateLabDate(labId, dateStr, isRenderCall = false) {
     let dayName = days[dateObj.getDay()];
 
     let lab = allActiveLabsList.find(l => String(l.lab_id) === String(labId));
+    
+    // 🌟 MOCK TIMINGS FOR BHAVYACARE INTERNAL 🌟
+    if (labId === "BHAVYACARE-INTERNAL") {
+        lab = { timings: { 
+            [dayName]: { open: "08:00 AM", close: "08:00 PM" } 
+        }};
+    }
+
     let html = "";
 
     if(lab && lab.timings && lab.timings[dayName]) {
@@ -560,11 +605,14 @@ function calculateFinalBill() {
     let subtotal = 0;
     let eligibleSubtotal = 0; 
     let isHomeCollection = false;
+    let hasVipPackage = false; // 🌟 Track if VIP package is in cart 🌟
     
     let allowedTypesStr = appRules.referral_applicable_services_type || "pathology, profile, package, ct, mri";
     let allowedTypes = allowedTypesStr.toLowerCase().split(',').map(s => s.trim());
 
     cart.forEach(item => {
+        if (item.service_id === "VIP-FREE-001") hasVipPackage = true;
+
         let itemPrice = (Number(item.price || item.basic_price || item.service_price || 0) * Number(item.qty || 1));
         subtotal += itemPrice;
 
@@ -578,9 +626,14 @@ function calculateFinalBill() {
 
     let collectionCharge = 0;
     if (isHomeCollection) {
-        let freeLimit = bookingData.isVip ? (appRules.free_collection_limit_vip || 100) : (appRules.free_collection_limit_basic || 300);
-        if (subtotal < freeLimit) {
-            collectionCharge = appRules.home_collection_charge || 50;
+        // 🌟 Make Home Collection FREE if VIP Package is in cart 🌟
+        if (hasVipPackage) {
+            collectionCharge = 0;
+        } else {
+            let freeLimit = bookingData.isVip ? (appRules.free_collection_limit_vip || 100) : (appRules.free_collection_limit_basic || 300);
+            if (subtotal < freeLimit) {
+                collectionCharge = appRules.home_collection_charge || 50;
+            }
         }
     }
 
@@ -770,7 +823,7 @@ function processOrderSubmission(userId) {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
             alert("🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.");
-            window.location.href = "../patient_dashboard/patient_dashboard.html"; // Redirection path updated!
+            window.location.href = "../patient_dashboard/patient_dashboard.html";
         } else {
             alert("Booking Error: " + res.message);
             btn.innerText = "Confirm Booking"; btn.disabled = false;

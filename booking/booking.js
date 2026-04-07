@@ -42,23 +42,24 @@ let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 
 let labSlots = {}; 
 
 // =======================================================
-// 🌟 INITIALIZATION & SMART ROUTER 🌟
+// 🌟 INITIALIZATION & SMART ROUTER (CART EMPTY FIX) 🌟
 // =======================================================
-window.addEventListener('pageshow', function(event) {
-    if (event.persisted) { window.location.reload(); return; }
-    
-    // 1. Load Cart Safely for ALL pages
+document.addEventListener('DOMContentLoaded', function() {
     loadUniversalCart();
 
-    // 2. Identify Page: Is this the BOOKING page?
+    // Booking Page Route
     if (document.getElementById("mainCategories") || document.getElementById("servicesList")) {
         initBookingPage();
     }
 
-    // 3. Identify Page: Is this the CART/CHECKOUT page?
+    // Cart/Checkout Page Route
     if (document.getElementById("cartItemsContainer") || document.getElementById("step1-card")) {
         initCartPage();
     }
+});
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) { window.location.reload(); }
 });
 
 function loadUniversalCart() {
@@ -66,7 +67,7 @@ function loadUniversalCart() {
         let stored = localStorage.getItem('bhavyaCart');
         if (stored) {
             let parsed = JSON.parse(stored);
-            if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Double stringify fix
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
             if (Array.isArray(parsed) && parsed.length > 0) {
                 cart = parsed.filter(item => item !== null && typeof item === 'object' && item.service_id)
                              .map(item => ({...item, qty: item.qty || 1})); 
@@ -389,7 +390,7 @@ function updateCartUI() {
     const cartBar = document.getElementById("bottomCartBar"); 
     const cartText = document.getElementById("bottomCartText");
     
-    if(!topCartBtn || !cartBar || !cartText) return; // Ignore on Cart Page
+    if(!topCartBtn || !cartBar || !cartText) return; 
 
     let totalItems = cart.reduce((sum, item) => sum + item.qty, 0); 
     let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -569,9 +570,10 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
+// 🌟 CART EMPTY FIX: Removed setTimeout to make it save & load instantly
 function openCart() { 
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    setTimeout(() => { window.location.href = "../cart/cart.html"; }, 150); 
+    window.location.href = "../cart/cart.html"; 
 }
 
 function handleHomeNavigation() {

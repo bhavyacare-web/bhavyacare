@@ -40,6 +40,9 @@
         .list-info p { margin: 0; font-size: 12px; color: var(--text-light); }
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
         .status-success { background: #e8f5e9; color: #2e7d32; }
+        .status-warning { background: #fff8e1; color: #f57c00; }
+        .status-primary { background: #e6f0fa; color: #0056b3; }
+        .status-danger { background: #ffebee; color: #d32f2f; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 5px 15px 5px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; }
         .nav-item i { font-size: 20px; margin-bottom: 2px; transition: 0.3s;}
@@ -51,7 +54,6 @@
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
         
-        /* NEW STYLES FOR UPDATED DASHBOARD */
         .notification-bell { position: relative; font-size: 20px; color: var(--text-light); cursor: pointer; margin-right: 15px; }
         .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
         .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -183,7 +185,7 @@
 
         <div id="reports" class="tab-content">
             <div class="data-box">
-                <div class="section-title">Medical Records</div>
+                 <div class="section-title">Medical Records</div>
                 <div style="text-align: center; padding: 40px; color: #ddd;">
                     <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i>
                     <p>Your test reports will appear here.</p>
@@ -261,6 +263,20 @@
                 <span><strong>-</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">-</span>
             </div>
         </div>
+    </div>
+
+    <div id="cancel-order-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('cancel-order-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #ffebee; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-ban" style="font-size: 26px; color: #d32f2f;"></i></div>
+            <h3 style="margin:0; color: var(--text-main);">Cancel Order</h3>
+            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Please tell us why you are cancelling.</p>
+        </div>
+        <input type="hidden" id="cancelOrderIdHidden">
+        <div class="form-group">
+            <textarea id="cancelReasonInput" class="input-box" rows="3" placeholder="Enter cancellation reason..." style="resize: none;"></textarea>
+        </div>
+        <button id="btnConfirmCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelOrder()">Confirm Cancellation</button>
     </div>
 
     <script src="patient_dashboard.js"></script>

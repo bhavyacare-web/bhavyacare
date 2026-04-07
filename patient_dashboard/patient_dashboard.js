@@ -1,5 +1,6 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; // <-- YAHAN APNA URL UPDATE KAREIN
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 let isUserVip = false;
+let globalBookingsData = [];
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
@@ -26,7 +27,7 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // 🌟 FIX: Withdraw Button Visibility 🌟
+            // Withdraw Button Visibility 
             if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
                 document.getElementById('btn-withdraw').style.display = 'block';
             } else {
@@ -47,8 +48,10 @@ async function checkLoginAndFetchData() {
                 
                 if (patient.vip_package_status === "pending") {
                     if (vipAlert) vipAlert.style.display = "block";
+                    document.getElementById("notifDot").style.display = "block"; // Notification logic
                 } else {
                     if (vipAlert) vipAlert.style.display = "none";
+                    document.getElementById("notifDot").style.display = "none";
                 }
 
                 if (patient.vip_details) {
@@ -70,6 +73,7 @@ async function checkLoginAndFetchData() {
                 if (vipBtn) vipBtn.style.display = "block";
                 if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
                 if (vipAlert) vipAlert.style.display = "none";
+                document.getElementById("notifDot").style.display = "none";
             }
             
             const banner = document.getElementById("profileBanner");
@@ -89,6 +93,8 @@ async function checkLoginAndFetchData() {
                 if (patient.extra_details.image && patient.extra_details.image.startsWith("data:image")) {
                     profileImages.forEach(img => img.src = patient.extra_details.image);
                     if(editPreview) editPreview.src = patient.extra_details.image;
+                    document.getElementById("mobileProfileImg").src = patient.extra_details.image;
+                    document.getElementById("desktopProfileImg").src = patient.extra_details.image;
                 } else {
                     profileImages.forEach(img => img.src = fallbackUrl);
                     if(editPreview) editPreview.src = fallbackUrl;
@@ -99,7 +105,9 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
+            // Data load hote waqt baaki cheezein bhi fetch ho jayengi
             fetchWalletHistory(userId);
+            fetchPatientBookings(userId);
 
         } else {
             alert("Error: " + result.message);
@@ -218,5 +226,164 @@ async function fetchWalletHistory(userId) {
     } catch(e) {
         console.error("Wallet Fetch Error:", e);
         container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`;
+    }
+}
+
+// ===============================================
+// NEW: BOOKINGS & CANCEL ORDER LOGIC
+// ===============================================
+async function fetchPatientBookings(userId) {
+    const bookingTab = document.querySelector("#bookings .data-box");
+    const reportsTab = document.querySelector("#reports .data-box");
+    const recentActivityContainer = document.getElementById("recentActivityContainer");
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getPatientBookings", user_id: userId })
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            globalBookingsData = result.data;
+            renderBookings(globalBookingsData, bookingTab, reportsTab, recentActivityContainer);
+        } else {
+            console.error("Booking Fetch Error:", result.message);
+        }
+    } catch(e) { console.error("Network error fetching bookings.", e); }
+}
+
+function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
+    let bookingsHtml = `<div class="section-title">My Bookings</div>`;
+    let reportsHtml = `<div class="section-title">Medical Records</div>`;
+    let recentHtml = "";
+    
+    let hasBookings = false;
+    let hasReports = false;
+
+    bookings.forEach((bk, index) => {
+        let testNames = "Tests";
+        if(Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
+            testNames = bk.cart_items.map(t => t.test_name || t.name || 'Test').join(', ');
+        }
+        
+        let badgeClass = "status-warning"; 
+        let statusText = "Pending";
+        if (bk.status === "confirmed") { badgeClass = "status-primary"; statusText = "Confirmed"; }
+        else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
+        else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
+
+        // ----------- 1. BOOKINGS TAB RENDER -----------
+        hasBookings = true;
+        let cancelBtnHtml = "";
+        
+        if (bk.status !== "complete" && !bk.status.includes("cancel")) {
+            cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; margin-top:10px;">Cancel Order</button>`;
+        }
+        
+        let reportStatusHtml = "";
+        if (bk.status === "complete" && bk.report_type === "online" && bk.report_pdf) {
+            reportStatusHtml = `<br><a href="${bk.report_pdf}" target="_blank" style="font-size:12px; color:var(--success); font-weight:bold; display:inline-block; margin-top:5px;"><i class="fas fa-download"></i> Download Report</a>`;
+        }
+
+        bookingsHtml += `
+        <div style="background:#f8f9fa; border:1px solid #eee; border-radius:12px; padding:15px; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:12px; color:#888;">Order ID: <strong>${bk.order_id}</strong></span>
+                <span class="status-badge ${badgeClass}">${statusText}</span>
+            </div>
+            <h5 style="margin:0 0 5px 0; color:var(--text-main); font-size:14px;">${testNames}</h5>
+            <p style="margin:0 0 8px 0; font-size:12px; color:var(--text-light);"><i class="far fa-calendar-alt"></i> ${bk.date} | Slot: ${bk.slot}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #ddd; padding-top:10px;">
+                <div><small style="color:#888;">Paid Amount</small><br><strong style="color:var(--primary);">₹${bk.final_payable}</strong></div>
+                <div style="text-align:right;">
+                    ${cancelBtnHtml}
+                    ${reportStatusHtml}
+                </div>
+            </div>
+        </div>`;
+
+        // ----------- 2. RECENT ACTIVITY RENDER (Top 3) -----------
+        if (index < 3) {
+            recentHtml += `
+            <div class="list-item">
+                <div class="list-info">
+                    <h5 style="font-size:14px; text-transform:capitalize;">${testNames.substring(0, 30)}...</h5>
+                    <p><i class="far fa-calendar-alt"></i> ${bk.date} • ${bk.fulfillment}</p>
+                </div>
+                <div style="text-align:right;">
+                    <span class="status-badge ${badgeClass}" style="margin-bottom:0;">${statusText}</span>
+                </div>
+            </div>`;
+        }
+
+        // ----------- 3. REPORTS TAB RENDER -----------
+        if (bk.status === "complete" && bk.report_type === "online" && bk.report_pdf) {
+            hasReports = true;
+            reportsHtml += `
+            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between;">
+                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Test Report</h5>
+                    <span style="font-size:11px; color:#888;">${bk.date}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-light); margin-bottom:10px; line-height:1.5;">
+                    <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong>Slot:</strong> ${bk.slot} <br>
+                    <strong>Address:</strong> ${bk.address}
+                </div>
+                <a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;">
+                    <i class="fas fa-cloud-download-alt"></i> View & Download PDF
+                </a>
+            </div>`;
+        }
+    });
+
+    if (!hasBookings) bookingsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div>`;
+    if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Your online test reports will appear here.</p></div>`;
+    if (recentHtml === "") recentHtml = `<div style="text-align: center; padding: 20px; color: #aaa; font-size: 13px;">No recent activities yet.</div>`;
+
+    bookingTab.innerHTML = bookingsHtml;
+    reportsTab.innerHTML = reportsHtml;
+    recentContainer.innerHTML = recentHtml;
+}
+
+function openCancelModal(orderId) {
+    document.getElementById("cancelOrderIdHidden").value = orderId;
+    document.getElementById("cancelReasonInput").value = "";
+    document.getElementById("cancel-order-modal").style.display = "block";
+}
+
+async function submitCancelOrder() {
+    const orderId = document.getElementById("cancelOrderIdHidden").value;
+    const reason = document.getElementById("cancelReasonInput").value.trim();
+    const btn = document.getElementById("btnConfirmCancel");
+    
+    if (!reason) { alert("Please enter a reason for cancellation."); return; }
+    
+    btn.innerText = "Processing..."; btn.disabled = true;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "cancelPatientOrder", 
+                user_id: localStorage.getItem("bhavya_user_id"),
+                order_id: orderId,
+                cancel_reason: reason 
+            })
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            alert("Order cancelled successfully.");
+            document.getElementById("cancel-order-modal").style.display = "none";
+            fetchPatientBookings(localStorage.getItem("bhavya_user_id")); 
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch(e) {
+        alert("Failed to cancel. Check your network.");
+    } finally {
+        btn.innerText = "Confirm Cancellation"; btn.disabled = false;
     }
 }

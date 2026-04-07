@@ -262,28 +262,36 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     let hasReports = false;
 
     bookings.forEach((bk, index) => {
-        // G: Cart Items (Test Names)
+        // Test Names
         let testNames = "Tests";
         if(Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
             testNames = bk.cart_items.map(t => t.test_name || t.name || 'Test').join(', ');
         }
         
-        // O: Status Badge Logic
+        // Status Badge Logic
         let badgeClass = "status-warning"; 
         let statusText = "Pending";
         if (bk.status === "confirmed") { badgeClass = "status-primary"; statusText = "Confirmed"; }
         else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
         else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
+        // Mode Display Logic (Home Collection or Lab Visit)
+        let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
+
+        // Payment Status Logic
+        let payStatusText = (bk.payment_status === "complete") ? "Complete" : "Due";
+        let payBadgeClass = (bk.payment_status === "complete") ? "background:#e8f5e9; color:#2e7d32;" : "background:#ffebee; color:#d32f2f;";
+        let paymentBadgeHtml = `<span style="font-size:10px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold; ${payBadgeClass}">${payStatusText}</span>`;
+
         hasBookings = true;
 
-        // O, T: Cancel Logic
+        // Cancel Logic
         let cancelBtnHtml = "";
         if (bk.status !== "complete" && !bk.status.includes("cancel")) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:10px; width:100%;">Cancel Booking</button>`;
         }
         
-        // Q, R: Report Logic (Visible only if status is complete)
+        // Report Logic (Visible only if status is complete)
         let reportSectionHtml = "";
         if (bk.status === "complete") {
             let rType = bk.report_type ? bk.report_type : "in hand";
@@ -292,48 +300,48 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
                 <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;">
                     <i class="fas fa-check-circle"></i> Booking Completed
                 </div>
-                <div style="font-size:11px; color:#555;">Report Mode (Q): <strong style="text-transform:capitalize;">${rType}</strong></div>`;
+                <div style="font-size:11px; color:#555;">Report Mode: <strong style="text-transform:capitalize;">${rType}</strong></div>`;
             
             if (rType === "online" && bk.report_pdf) {
-                reportSectionHtml += `<a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; margin-top:10px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report PDF (R)</a>`;
+                reportSectionHtml += `<a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; margin-top:10px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report PDF</a>`;
             } else if (rType === "in hand") {
-                reportSectionHtml += `<div style="margin-top:8px; font-size:11px; color:#d84315;"><i class="fas fa-info-circle"></i> Please collect your physical report.</div>`;
+                reportSectionHtml += `<div style="margin-top:8px; font-size:11px; color:#d84315;"><i class="fas fa-info-circle"></i> Please collect your physical report from the lab.</div>`;
             }
             reportSectionHtml += `</div>`;
         }
 
-        // ----------- 1. DETAILED BOOKINGS TAB RENDER (A to N) -----------
+        // ----------- 1. DETAILED BOOKINGS TAB RENDER -----------
         bookingsHtml += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
             
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                 <div>
-                    <div style="font-size:11px; color:#888;">Order ID (A)</div>
+                    <div style="font-size:11px; color:#888;">Order ID</div>
                     <strong style="color:var(--text-main); font-size:14px;">${bk.order_id}</strong>
-                    <div style="font-size:10px; color:#aaa; margin-top:2px;">Cart ID (B): ${bk.parent_cart_id || 'N/A'} | Lab (F): ${bk.lab_id}</div>
+                    <div style="font-size:10px; color:#aaa; margin-top:2px;">Cart ID: ${bk.parent_cart_id || 'N/A'} | Lab: ${bk.lab_id}</div>
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}" style="margin-bottom:4px;">${statusText}</span><br>
-                    <span style="font-size:10px; color:#888; font-weight:bold;">${bk.date}</span>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</span>
                 </div>
             </div>
             
             <div style="margin-bottom:12px;">
-                <h5 style="margin:0 0 8px 0; color:var(--primary); font-size:14px;">${testNames}</h5>
+                <h5 style="margin:0 0 8px 0; color:var(--text-main); font-size:14px;">${testNames}</h5>
                 <div style="background:#f9f9f9; padding:10px; border-radius:8px; font-size:12px; color:var(--text-light); line-height:1.6;">
-                    <strong>Patient (E):</strong> ${bk.patient_name} <br>
-                    <strong>Mode (L):</strong> <span style="text-transform:capitalize;">${bk.fulfillment}</span> <br>
-                    <strong>Slot (N):</strong> ${bk.slot} <br>
-                    <strong>Address (M):</strong> ${bk.address}
+                    <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong>Mode:</strong> ${modeDisplay} <br>
+                    <strong>Address:</strong> ${bk.address}
                 </div>
             </div>
 
             <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:10px; font-size:12px; color:#555;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal (H):</span> <span>₹${bk.subtotal}</span></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Collection Charge (I):</span> <span>₹${bk.collection_charge}</span></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#d32f2f;"><span>Discount (J):</span> <span>-₹${bk.discount}</span></div>
-                <div style="display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #ffe0b2; font-weight:bold; font-size:14px; color:#e65100;">
-                    <span>Final Payable (K):</span> <span>₹${bk.final_payable}</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal:</span> <span>₹${bk.subtotal}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Collection Charge:</span> <span>₹${bk.collection_charge}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#d32f2f;"><span>Discount:</span> <span>-₹${bk.discount}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #ffe0b2; font-weight:bold; font-size:14px; color:#e65100; align-items:center;">
+                    <span>Final Payable:</span> 
+                    <span>₹${bk.final_payable} ${paymentBadgeHtml}</span>
                 </div>
             </div>
             
@@ -348,7 +356,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             <div class="list-item">
                 <div class="list-info">
                     <h5 style="font-size:14px; text-transform:capitalize;">${testNames.substring(0, 30)}...</h5>
-                    <p><i class="far fa-calendar-alt"></i> ${bk.date} • ${bk.fulfillment}</p>
+                    <p style="color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</p>
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}" style="margin-bottom:0;">${statusText}</span>
@@ -363,11 +371,10 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between;">
                     <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Test Report</h5>
-                    <span style="font-size:11px; color:#888;">${bk.date}</span>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</span>
                 </div>
                 <div style="font-size:12px; color:var(--text-light); margin-bottom:10px; line-height:1.5;">
                     <strong>Patient:</strong> ${bk.patient_name} <br>
-                    <strong>Slot:</strong> ${bk.slot} <br>
                     <strong>Address:</strong> ${bk.address}
                 </div>
                 <a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;">
@@ -385,7 +392,6 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     reportsTab.innerHTML = reportsHtml;
     recentContainer.innerHTML = recentHtml;
 }
-
 function openCancelModal(orderId) {
     document.getElementById("cancelOrderIdHidden").value = orderId;
     document.getElementById("cancelReasonInput").value = "";

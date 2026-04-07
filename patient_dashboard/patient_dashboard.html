@@ -50,6 +50,16 @@
         .form-group { margin-top: 12px; }
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+        
+        /* NEW STYLES FOR UPDATED DASHBOARD */
+        .notification-bell { position: relative; font-size: 20px; color: var(--text-light); cursor: pointer; margin-right: 15px; }
+        .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
+        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; }
+        .action-btn-main { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .action-btn-main:active { transform: scale(0.96); }
+        .btn-book { background: var(--primary); color: white; }
+        .btn-upload { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); }
+
         @media (min-width: 769px) {
             body { flex-direction: row; }
             .mobile-header { display: none; }
@@ -75,6 +85,7 @@
     </nav>
 
     <div class="main-content">
+        
         <div id="profileBanner" style="display:none; background: #fff3cd; color: #856404; padding: 12px 20px; font-size: 13px; text-align: center; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba;">
             ⚠️ <strong>Complete your profile!</strong> Helpful for home collection & delivery.
             <button onclick="switchTab('profile')" style="background: #856404; color: white; border: none; padding: 5px 12px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: bold;">Fill Now</button>
@@ -82,9 +93,15 @@
 
         <div class="mobile-header">
             <div class="brand"><h2>Bhavya<span>Care</span></h2></div>
-            <div class="user-profile-mini" onclick="switchTab('profile')">
-                <div class="greeting"><p style="margin:0; font-size:11px;">Welcome,</p><p class="name" id="userNameMobile">Loading...</p></div>
-                <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img">
+            <div style="display: flex; align-items: center;">
+                <div class="notification-bell" onclick="alert('No new notifications')">
+                    <i class="far fa-bell"></i>
+                    <div class="notification-dot" id="notifDot" style="display: none;"></div>
+                </div>
+                <div class="user-profile-mini" onclick="switchTab('profile')">
+                    <div class="greeting"><p style="margin:0; font-size:11px;">Welcome,</p><p class="name" id="userNameMobile">Loading...</p></div>
+                    <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img" id="mobileProfileImg">
+                </div>
             </div>
         </div>
 
@@ -93,19 +110,33 @@
                 <h3 style="margin: 0; font-size: 24px; color: var(--text-main);">Welcome back, <span id="userNameDesktop" style="color: var(--primary);">Patient</span>!</h3>
                 <p style="margin: 5px 0 0 0; color: var(--text-light);">Here is your health summary.</p>
             </div>
-            <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
-                <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img">
-                <span style="font-weight: bold; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
+            <div style="display: flex; align-items: center;">
+                <div class="notification-bell" onclick="alert('No new notifications')" style="margin-right: 25px;">
+                    <i class="far fa-bell" style="font-size: 24px;"></i>
+                </div>
+                <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
+                    <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img" id="desktopProfileImg">
+                    <span style="font-weight: bold; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
+                </div>
             </div>
         </div>
 
         <div id="overview" class="tab-content active">
+            
+            <div class="quick-actions-container">
+                <button class="action-btn-main btn-book" onclick="window.location.href='../booking/cart.html'">
+                    <i class="fas fa-microscope"></i> Book Test
+                </button>
+                <button class="action-btn-main btn-upload" onclick="alert('Prescription upload module loading...')">
+                    <i class="fas fa-file-upload"></i> Upload Rx
+                </button>
+            </div>
+
             <div class="dashboard-grid">
-                
                 <div class="dash-card card-wallet" onclick="switchTab('wallet')" style="cursor: pointer;">
                     <i class="fas fa-wallet icon-bg"></i>
                     <h4>Wallet Balance</h4>
-                    <div class="value">₹<span id="walletBal">0</span></div>
+                    <div class="value">₹<span id="walletBal"><i class="fas fa-circle-notch fa-spin" style="font-size: 16px;"></i></span></div>
                     <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 2;">
                         <button class="card-action-btn" style="color: var(--success); flex: 1;" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up</button>
                         <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); alert('Withdraw request page coming soon!')">Withdraw Now</button>
@@ -115,9 +146,9 @@
                 <div class="dash-card card-vip" onclick="handleVipCardClick()" title="Click to view Plan Details">
                     <i class="fas fa-crown icon-bg"></i>
                     <h4>Current Plan</h4>
-                    <div class="value" id="vipStatus" style="font-size: 22px;">Basic</div>
-                    <p class="sub-text" id="vipSubText">Upgrade for free home collection</p>
-                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
+                    <div class="value" id="vipStatus" style="font-size: 22px;">Loading...</div>
+                    <p class="sub-text" id="vipSubText">Checking VIP Status...</p>
+                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px; display: none;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
                     <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="event.stopPropagation(); alert('Booking system coming soon!')">
                         🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
                     </div>
@@ -134,15 +165,32 @@
 
             <div class="data-box">
                 <div class="section-title"><span>Recent Activity</span><a href="#" onclick="switchTab('bookings')">View All</a></div>
-                <div class="list-item">
-                    <div class="list-info"><h5>Complete Blood Count (CBC)</h5><p><i class="far fa-calendar-alt"></i> 12 Mar 2026 • City Lab</p></div>
-                    <div class="list-action"><span class="status-badge status-success">Completed</span><br><a href="#" style="font-size: 12px; color: var(--primary); text-decoration: none; font-weight: bold;">View Report</a></div>
+                <div id="recentActivityContainer">
+                     <div style="text-align: center; padding: 20px; color: #aaa; font-size: 13px;">No recent activities yet.</div>
                 </div>
             </div>
         </div>
 
-        <div id="bookings" class="tab-content"><div class="data-box"><div class="section-title">My Bookings</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div></div></div>
-        <div id="reports" class="tab-content"><div class="data-box"><div class="section-title">Medical Records</div><div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Your test reports will appear here.</p></div></div></div>
+        <div id="bookings" class="tab-content">
+            <div class="data-box">
+                <div class="section-title">My Bookings</div>
+                <div style="text-align: center; padding: 40px; color: #ddd;">
+                    <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i>
+                    <p>No active bookings found.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="reports" class="tab-content">
+            <div class="data-box">
+                <div class="section-title">Medical Records</div>
+                <div style="text-align: center; padding: 40px; color: #ddd;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i>
+                    <p>Your test reports will appear here.</p>
+                </div>
+            </div>
+        </div>
+
         <div id="wallet" class="tab-content">
             <div class="data-box">
                 <div class="section-title">Transaction History</div>
@@ -214,6 +262,7 @@
             </div>
         </div>
     </div>
+
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

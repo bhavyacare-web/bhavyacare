@@ -262,45 +262,84 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     let hasReports = false;
 
     bookings.forEach((bk, index) => {
+        // G: Cart Items (Test Names)
         let testNames = "Tests";
         if(Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
             testNames = bk.cart_items.map(t => t.test_name || t.name || 'Test').join(', ');
         }
         
+        // O: Status Badge Logic
         let badgeClass = "status-warning"; 
         let statusText = "Pending";
         if (bk.status === "confirmed") { badgeClass = "status-primary"; statusText = "Confirmed"; }
         else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
         else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
-        // ----------- 1. BOOKINGS TAB RENDER -----------
         hasBookings = true;
+
+        // O, T: Cancel Logic
         let cancelBtnHtml = "";
-        
         if (bk.status !== "complete" && !bk.status.includes("cancel")) {
-            cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; margin-top:10px;">Cancel Order</button>`;
+            cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:10px; width:100%;">Cancel Booking</button>`;
         }
         
-        let reportStatusHtml = "";
-        if (bk.status === "complete" && bk.report_type === "online" && bk.report_pdf) {
-            reportStatusHtml = `<br><a href="${bk.report_pdf}" target="_blank" style="font-size:12px; color:var(--success); font-weight:bold; display:inline-block; margin-top:5px;"><i class="fas fa-download"></i> Download Report</a>`;
+        // Q, R: Report Logic (Visible only if status is complete)
+        let reportSectionHtml = "";
+        if (bk.status === "complete") {
+            let rType = bk.report_type ? bk.report_type : "in hand";
+            reportSectionHtml = `
+            <div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
+                <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;">
+                    <i class="fas fa-check-circle"></i> Booking Completed
+                </div>
+                <div style="font-size:11px; color:#555;">Report Mode (Q): <strong style="text-transform:capitalize;">${rType}</strong></div>`;
+            
+            if (rType === "online" && bk.report_pdf) {
+                reportSectionHtml += `<a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; margin-top:10px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report PDF (R)</a>`;
+            } else if (rType === "in hand") {
+                reportSectionHtml += `<div style="margin-top:8px; font-size:11px; color:#d84315;"><i class="fas fa-info-circle"></i> Please collect your physical report.</div>`;
+            }
+            reportSectionHtml += `</div>`;
         }
 
+        // ----------- 1. DETAILED BOOKINGS TAB RENDER (A to N) -----------
         bookingsHtml += `
-        <div style="background:#f8f9fa; border:1px solid #eee; border-radius:12px; padding:15px; margin-bottom:15px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                <span style="font-size:12px; color:#888;">Order ID: <strong>${bk.order_id}</strong></span>
-                <span class="status-badge ${badgeClass}">${statusText}</span>
-            </div>
-            <h5 style="margin:0 0 5px 0; color:var(--text-main); font-size:14px;">${testNames}</h5>
-            <p style="margin:0 0 8px 0; font-size:12px; color:var(--text-light);"><i class="far fa-calendar-alt"></i> ${bk.date} | Slot: ${bk.slot}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #ddd; padding-top:10px;">
-                <div><small style="color:#888;">Paid Amount</small><br><strong style="color:var(--primary);">₹${bk.final_payable}</strong></div>
+        <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                <div>
+                    <div style="font-size:11px; color:#888;">Order ID (A)</div>
+                    <strong style="color:var(--text-main); font-size:14px;">${bk.order_id}</strong>
+                    <div style="font-size:10px; color:#aaa; margin-top:2px;">Cart ID (B): ${bk.parent_cart_id || 'N/A'} | Lab (F): ${bk.lab_id}</div>
+                </div>
                 <div style="text-align:right;">
-                    ${cancelBtnHtml}
-                    ${reportStatusHtml}
+                    <span class="status-badge ${badgeClass}" style="margin-bottom:4px;">${statusText}</span><br>
+                    <span style="font-size:10px; color:#888; font-weight:bold;">${bk.date}</span>
                 </div>
             </div>
+            
+            <div style="margin-bottom:12px;">
+                <h5 style="margin:0 0 8px 0; color:var(--primary); font-size:14px;">${testNames}</h5>
+                <div style="background:#f9f9f9; padding:10px; border-radius:8px; font-size:12px; color:var(--text-light); line-height:1.6;">
+                    <strong>Patient (E):</strong> ${bk.patient_name} <br>
+                    <strong>Mode (L):</strong> <span style="text-transform:capitalize;">${bk.fulfillment}</span> <br>
+                    <strong>Slot (N):</strong> ${bk.slot} <br>
+                    <strong>Address (M):</strong> ${bk.address}
+                </div>
+            </div>
+
+            <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:10px; font-size:12px; color:#555;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal (H):</span> <span>₹${bk.subtotal}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Collection Charge (I):</span> <span>₹${bk.collection_charge}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#d32f2f;"><span>Discount (J):</span> <span>-₹${bk.discount}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #ffe0b2; font-weight:bold; font-size:14px; color:#e65100;">
+                    <span>Final Payable (K):</span> <span>₹${bk.final_payable}</span>
+                </div>
+            </div>
+            
+            ${reportSectionHtml}
+            ${cancelBtnHtml}
+            
         </div>`;
 
         // ----------- 2. RECENT ACTIVITY RENDER (Top 3) -----------

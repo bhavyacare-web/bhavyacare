@@ -1,51 +1,58 @@
 // ==========================================
-// Lab.js - Lab Dashboard Authentication & Logic
+// Lab.gs - LAB LOGIN & REGISTRATION LOGIC
 // ==========================================
 
-document.addEventListener("DOMContentLoaded", function() {
-    checkLabAuth();
-    loadLabProfile();
-});
+function processLabLogin(data) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("labs_login");
+    if (!sheet) return { status: "error", message: "labs_login sheet not found!" };
 
-// 1. Verify if the logged-in user is actually a Lab
-function checkLabAuth() {
-    const role = localStorage.getItem("bhavya_role");
-    const uid = localStorage.getItem("bhavya_uid");
+    var uid = data.uid;
+    var mobile = data.mobile;
+    var labName = data.name;
 
-    if (!uid || role !== "lab") {
-        alert("Unauthorized Access! Please login as a Lab Partner.");
-        // Agar aapke main page ka naam index.html hai toh waha redirect karein
-        window.location.href = "../index.html"; 
-    }
-}
-
-// 2. Load Lab Data onto the Dashboard
-function loadLabProfile() {
-    const labName = localStorage.getItem("bhavya_name") || "Lab Partner";
-    const labId = localStorage.getItem("bhavya_user_id") || "N/A"; // Example: APO1234 (Apollo Lab)
-
-    // Update the UI
-    document.getElementById("displayLabName").innerText = labName;
-    document.getElementById("displayLabId").innerText = "Lab ID: " + labId;
-}
-
-// 3. Logout Logic
-function labLogout() {
-    if (confirm("Are you sure you want to logout?")) {
-        // Clear local storage
-        localStorage.clear();
+    var dataRange = sheet.getDataRange().getValues();
+    
+    // 1. Check if Lab is already registered (Old Lab Login)
+    for (var i = 1; i < dataRange.length; i++) {
+      if (dataRange[i][2] === uid) { // Column C (index 2) mein UID check
         
-        // Agar firebase initialize hai toh usse bhi signout karo (optional but recommended)
-        try {
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-                firebase.auth().signOut().then(() => {
-                    window.location.href = "../index.html";
-                });
-            } else {
-                window.location.href = "../index.html";
-            }
-        } catch (e) {
-            window.location.href = "../index.html";
-        }
+        // Update last login timestamp in Column A
+        sheet.getRange(i + 1, 1).setValue(new Date());
+        
+        return {
+          status: "success",
+          message: "Lab login successful",
+          user_id: dataRange[i][1], // Lab ID (e.g., ABC1234 (Test Lab))
+          role: "lab",
+          name: dataRange[i][4]     // Lab Name
+        };
+      }
     }
+
+    // 2. Nayi Lab Registration (Agar UID nahi mila)
+    // Lab ID Generation: First 3 letters + 4 random numbers + (Lab Name)
+    var nameStr = (labName || "LAB").trim();
+    var prefix = nameStr.length >= 3 ? nameStr.substring(0, 3).toUpperCase() : (nameStr + "XXX").substring(0, 3).toUpperCase();
+    var randomNum = Math.floor(1000 + Math.random() * 9000); // Generates 4 digit random number
+    var pureLabId = prefix + randomNum;
+    var displayLabId = pureLabId + " (" + nameStr + ")";
+    
+    var timestamp = new Date();
+    var role = "lab";
+
+    // Sheet mein row append karna: timestamp, Lab ID, udi, mobile_number, lab_name, role
+    sheet.appendRow([timestamp, displayLabId, uid, mobile, nameStr, role]);
+
+    return {
+      status: "success",
+      message: "Lab registered successfully",
+      user_id: displayLabId,
+      role: "lab",
+      name: nameStr
+    };
+
+  } catch (error) {
+    return { status: "error", message: "Lab Login Error: " + error.message };
+  }
 }

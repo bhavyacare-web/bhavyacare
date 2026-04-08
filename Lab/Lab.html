@@ -3,120 +3,445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Dashboard - BhavyaCare</title>
+    <title>Lab Registration - BhavyaCare</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        :root {
-            --primary: #059669; /* Labs ke liye Green Theme */
-            --primary-hover: #047857;
-            --bg-color: #f8fafc; 
-            --text-main: #0f172a; 
-            --text-muted: #64748b;
-            --card-bg: #ffffff; 
-            --border: #e2e8f0;
-        }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-color); 
-            margin: 0; padding: 0; color: var(--text-main); 
-        }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fb; padding: 20px; color: #0f172a; margin: 0;}
+        .form-container { background: white; max-width: 900px; margin: auto; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 28px;}
+        p.subtitle { text-align: center; color: #64748b; margin-bottom: 30px;}
+        h2 { color: #059669; border-bottom: 2px solid #ecfdf5; padding-bottom: 10px; margin-top: 40px; font-size: 20px;}
         
-        /* NAVBAR */
-        .navbar { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background-color: #ffffff; padding: 15px 30px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #334155;}
+        input[type="text"], input[type="email"], input[type="time"], input[type="file"], input[type="number"], select { 
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: border-color 0.3s;
         }
-        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .logo h2 { color: var(--text-main); font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;}
-        .logo span { color: var(--primary); }
+        input:focus, select:focus { border-color: #059669; outline: none; }
         
-        .logout-btn { 
-            background: #fee2e2; color: #dc2626; border: none; 
-            padding: 10px 18px; border-radius: 8px; font-weight: 700; 
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;
-        }
-        .logout-btn:hover { background: #fca5a5; }
+        /* Checkbox styling */
+        .service-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; font-size: 14px; }
+        .service-checkboxes label { display: flex; align-items: center; font-weight: normal; margin: 0; cursor: pointer;}
+        .service-checkboxes input { width: auto; margin-right: 8px; accent-color: #059669; transform: scale(1.1);}
 
-        /* MAIN CONTENT */
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-        .welcome-section { margin-bottom: 30px; }
-        .page-title { font-size: 28px; font-weight: 800; margin: 0 0 10px 0; color: var(--text-main); }
-        .lab-id-badge { display: inline-block; background: #d1fae5; color: #065f46; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 14px; border: 1px solid #a7f3d0; }
+        /* Button Styling */
+        button.submit-btn { width: 100%; padding: 16px; background: #059669; color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 40px; transition: background 0.3s;}
+        button.submit-btn:hover { background: #047857; }
+        button.submit-btn:disabled { background: #9ca3af; cursor: not-allowed;}
         
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 25px; 
-        }
-        
-        /* DASHBOARD CARDS */
-        .dash-card { 
-            background: var(--card-bg); border-radius: 16px; padding: 35px 25px; 
-            text-align: center; text-decoration: none; border: 1px solid var(--border); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
-        .dash-card:hover { 
-            transform: translateY(-8px); 
-            box-shadow: 0 15px 30px rgba(5, 150, 105, 0.15); 
-            border-color: var(--primary); 
-        }
-        
-        .icon-wrapper { 
-            width: 80px; height: 80px; background: #ecfdf5; 
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-            margin-bottom: 20px; transition: 0.3s; 
-        }
-        .dash-card:hover .icon-wrapper { background: var(--primary); }
-        .icon-wrapper i { font-size: 35px; color: var(--primary); transition: 0.3s; }
-        .dash-card:hover .icon-wrapper i { color: white; }
-        
-        .card-title { font-size: 20px; font-weight: 800; margin: 0 0 10px 0; }
-        .card-desc { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+        /* NEW STYLES FOR TAGS & AI BUTTON */
+        .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;}
+        .input-with-button input { flex: 1; margin: 0; min-width: 150px;}
+        .add-btn { background: #1d4ed8; color: white; border: none; border-radius: 6px; padding: 0 15px; height: 42px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .add-btn:hover { background: #1e40af; }
+        .ai-btn { background: #8b5cf6; color: white; border: none; border-radius: 6px; padding: 0 15px; height: 42px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
+        .ai-btn:hover { background: #7c3aed; }
+        .ai-btn:disabled { background: #c4b5fd; cursor: not-allowed;}
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; min-height: 20px;}
+        .tag { background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0;}
+        .tag span { cursor: pointer; color: #ef4444; font-weight: 800; font-size: 15px; transition: 0.2s;}
+        .tag span:hover { color: #b91c1c; transform: scale(1.2);}
     </style>
 </head>
 <body>
 
-    <header class="navbar">
-        <div class="logo">
-            <i class="fas fa-microscope" style="color: var(--primary); font-size: 26px;"></i>
-            <h2>Bhavya<span>Lab</span></h2>
-        </div>
-        <button class="logout-btn" onclick="logoutLab()">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-    </header>
+<div class="form-container">
+    <h1>Complete Your Lab Profile</h1>
+    <p class="subtitle">Please fill all mandatory details to activate your lab on BhavyaCare.</p>
 
-    <div class="container">
-        <div class="welcome-section">
-            <h1 class="page-title" id="welcomeMessage">Welcome, Loading... 👋</h1>
-            <div class="lab-id-badge" id="labIdBadge">Fetching Lab ID...</div>
+    <form id="labRegForm">
+        <h2>1. Basic Details</h2>
+        <div class="grid-2">
+            <div class="form-group"><label>Lab Name *</label><input type="text" id="lab_name" readonly></div>
+            <div class="form-group"><label>Email Address *</label><input type="email" id="lab_email" required></div>
+            <div class="form-group"><label>Lab Registration Document (PDF) *</label><input type="file" id="reg_doc" accept=".pdf" required></div>
         </div>
+        <div class="form-group"><label>Full Address *</label><input type="text" id="lab_address" required></div>
+        <div class="grid-3">
+            <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
+            <div class="form-group"><label>Main Pincode *</label><input type="number" id="pincode" required></div>
+        </div>
+
+        <h2>2. Service Areas</h2>
         
-        <div class="dashboard-grid">
-            <a href="#" class="dash-card">
-                <div class="icon-wrapper"><i class="fas fa-calendar-check"></i></div>
-                <h3 class="card-title">Pending Orders</h3>
-                <p class="card-desc">View new test bookings assigned to your lab.</p>
-            </a>
-            <a href="#" class="dash-card">
-                <div class="icon-wrapper"><i class="fas fa-file-pdf"></i></div>
-                <h3 class="card-title">Upload Reports</h3>
-                <p class="card-desc">Upload patient test results and complete orders.</p>
-            </a>
-            <a href="#" class="dash-card">
-                <div class="icon-wrapper"><i class="fas fa-wallet"></i></div>
-                <h3 class="card-title">Earnings</h3>
-                <p class="card-desc">Track your completed tests and payments.</p>
-            </a>
+        <div class="form-group tag-input-container">
+            <label>Available Pincodes * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press Enter or +)</span></label>
+            <div class="input-with-button">
+                <input type="number" id="pincodeInput" placeholder="Add pincode manually">
+                <button type="button" class="add-btn" onclick="addTag('pincode')" title="Add Pincode">+</button>
+                
+                <select id="radiusSelect" style="width: auto; padding: 10px; margin-left: 10px;">
+                    <option value="5">5 km</option>
+                    <option value="10">10 km</option>
+                    <option value="20">20 km</option>
+                    <option value="30" selected>30 km</option>
+                    <option value="50">50 km</option>
+                </select>
+                
+                <button type="button" class="ai-btn" onclick="aiAutoFillPincodes()"><i class="fas fa-magic"></i> Auto-Fill Area</button>
+            </div>
+            <div id="pincodeTags" class="tags-wrapper"></div>
+            <input type="hidden" id="available_pincode" required> </div>
+
+        <div class="form-group tag-input-container">
+            <label>Available Cities/Localities * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press Enter or +)</span></label>
+            <div class="input-with-button">
+                <input type="text" id="cityInput" placeholder="Add city manually">
+                <button type="button" class="add-btn" onclick="addTag('city')" title="Add City">+</button>
+            </div>
+            <div id="cityTags" class="tags-wrapper"></div>
+            <input type="hidden" id="available_city" required>
         </div>
-    </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="lab.js"></script>
+        <h2>3. Accreditations</h2>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>NABL Approved? *</label>
+                <select id="nabl" onchange="toggleCert('nabl')" required>
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+                <input type="file" id="nabl_cert" accept=".pdf" style="display:none; margin-top:10px;">
+            </div>
+            <div class="form-group">
+                <label>NABH Approved? *</label>
+                <select id="nabh" onchange="toggleCert('nabh')" required>
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+                <input type="file" id="nabh_cert" accept=".pdf" style="display:none; margin-top:10px;">
+            </div>
+        </div>
 
+        <h2>4. Services Offered (Check if available)</h2>
+        <div class="service-checkboxes" id="servicesContainer">
+            </div>
+
+        <h2>5. Working Timings</h2>
+        <div id="timingsContainer">
+            </div>
+
+        <h2>6. Lab Images</h2>
+        <div class="grid-3">
+            <div class="form-group"><label>Lab Image 1 (Required) *</label><input type="file" id="lab_img1" accept="image/*" required></div>
+            <div class="form-group"><label>Lab Image 2</label><input type="file" id="lab_img2" accept="image/*"></div>
+            <div class="form-group"><label>Lab Image 3</label><input type="file" id="lab_img3" accept="image/*"></div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Submit Profile for Verification</button>
+    </form>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0YBo69ZZ-5HxWOSC-6W06jsk9I9_N4Ds&libraries=places"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script>
+    // ==========================================
+    // GLOBAL CONFIG & VARIABLES
+    // ==========================================
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+    
+    const services = [
+        "pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", 
+        "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", 
+        "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"
+    ];
+    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    
+    let pincodeList = [];
+    let cityList = [];
+
+    // ==========================================
+    // INITIALIZATION ON PAGE LOAD
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", () => {
+        
+        // 1. Check Access & Auto Fill Name
+        const labName = localStorage.getItem("bhavya_name");
+        const userId = localStorage.getItem("bhavya_user_id");
+        
+        if (!userId || localStorage.getItem("bhavya_role") !== "lab") {
+            alert("Unauthorized Access! Please login first."); 
+            window.location.href = "../index.html"; 
+            return;
+        }
+        document.getElementById("lab_name").value = labName;
+
+        // 2. Generate Service Checkboxes Dynamically
+        const servDiv = document.getElementById("servicesContainer");
+        services.forEach(srv => {
+            let displayName = srv.replace("_", " ").toUpperCase();
+            servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
+        });
+
+        // 3. Generate Timings Dynamically
+        const timeDiv = document.getElementById("timingsContainer");
+        days.forEach(day => {
+            let dayName = day.charAt(0).toUpperCase() + day.slice(1);
+            timeDiv.innerHTML += `
+            <div class="grid-2" style="margin-bottom:12px;">
+                <div><label>${dayName} Opening Time</label><input type="time" id="${day}_open" required></div>
+                <div><label>${dayName} Closing Time</label><input type="time" id="${day}_close" required></div>
+            </div>`;
+        });
+
+        // 4. Listeners for Tag Inputs (Enter Key)
+        document.getElementById("pincodeInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); }
+        });
+        document.getElementById("cityInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") { e.preventDefault(); addTag('city'); }
+        });
+
+        // 5. Form Submit Listener
+        document.getElementById("labRegForm").addEventListener("submit", handleFormSubmit);
+    });
+
+    // ==========================================
+    // TAG SYSTEM LOGIC (Manual & Auto)
+    // ==========================================
+    function addTag(type, aiValue = null) {
+        let inputElem = document.getElementById(type + "Input");
+        let val = aiValue ? aiValue : inputElem.value.trim();
+
+        if (!val) return;
+
+        if (type === 'pincode' && !pincodeList.includes(val)) {
+            pincodeList.push(val);
+            updateTagsUI('pincode');
+        } else if (type === 'city' && !cityList.includes(val)) {
+            // Capitalize first letter for visual neatness
+            val = val.charAt(0).toUpperCase() + val.slice(1);
+            cityList.push(val);
+            updateTagsUI('city');
+        }
+        
+        if(!aiValue) inputElem.value = ""; // clear input
+    }
+
+    function removeTag(type, index) {
+        if (type === 'pincode') pincodeList.splice(index, 1);
+        else cityList.splice(index, 1);
+        updateTagsUI(type);
+    }
+
+    function updateTagsUI(type) {
+        let wrapper = document.getElementById(type + "Tags");
+        let hiddenInput = document.getElementById("available_" + type);
+        let list = type === 'pincode' ? pincodeList : cityList;
+        
+        wrapper.innerHTML = "";
+        list.forEach((item, index) => {
+            let tag = document.createElement("div");
+            tag.className = "tag";
+            tag.innerHTML = `${item} <span onclick="removeTag('${type}', ${index})" title="Remove">×</span>`;
+            wrapper.appendChild(tag);
+        });
+
+        // Update hidden input for form validation and submission
+        hiddenInput.value = list.join(',');
+    }
+
+    // ==========================================
+    // GOOGLE MAPS AI AUTO FILL
+    // ==========================================
+    function aiAutoFillPincodes() {
+        const basePincode = document.getElementById("pincode").value.trim();
+        const city = document.getElementById("city").value.trim();
+        
+        // Read selected Radius
+        const radiusKm = parseInt(document.getElementById("radiusSelect").value);
+        const radiusMeters = radiusKm * 1000; 
+
+        if (!basePincode || !city) {
+            alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first.");
+            return;
+        }
+
+        const btn = document.querySelector(".ai-btn");
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Searching Maps...";
+        btn.disabled = true;
+
+        const geocoder = new google.maps.Geocoder();
+        const addressStr = `${city}, ${basePincode}, India`;
+
+        geocoder.geocode({ address: addressStr }, function(results, status) {
+            if (status === 'OK') {
+                const labLocation = results[0].geometry.location;
+
+                // Hidden map div required by Places API
+                const mapObj = new google.maps.Map(document.createElement('div')); 
+                const service = new google.maps.places.PlacesService(mapObj);
+                
+                const request = {
+                    location: labLocation,
+                    radius: radiusMeters, 
+                    type: ['locality', 'sublocality', 'neighborhood'] 
+                };
+
+                service.nearbySearch(request, function(nearbyResults, nearbyStatus) {
+                    if (nearbyStatus === google.maps.places.PlacesServiceStatus.OK) {
+                        
+                        let foundCities = 0;
+                        
+                        nearbyResults.forEach(place => {
+                            if (place.name) {
+                                let pName = place.name.toLowerCase();
+                                if (pName !== "india" && pName !== city.toLowerCase()) {
+                                    addTag('city', place.name);
+                                    foundCities++;
+                                }
+                            }
+                        });
+
+                        addTag('pincode', basePincode);
+                        addTag('city', city);
+                        
+                        // Basic pincode variation (since exact pincodes require complex reverse-geocoding loops)
+                        let baseNum = parseInt(basePincode);
+                        if(!isNaN(baseNum)) {
+                            addTag('pincode', (baseNum + 1).toString());
+                            addTag('pincode', (baseNum + 2).toString());
+                        }
+
+                        resetBtn(btn);
+                        alert(`Success! Found ${foundCities} nearby locations within a ${radiusKm}km radius.`);
+
+                    } else {
+                        alert("Google Maps couldn't find nearby places. Area might be too remote or API error: " + nearbyStatus);
+                        resetBtn(btn);
+                    }
+                });
+
+            } else {
+                alert("Could not locate your main Pincode on Google Maps. Please check spelling.");
+                resetBtn(btn);
+            }
+        });
+    }
+
+    function resetBtn(btn) {
+        btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area";
+        btn.disabled = false;
+    }
+
+    // ==========================================
+    // FORM SUBMISSION & FILE HANDLING
+    // ==========================================
+    function toggleCert(type) {
+        const val = document.getElementById(type).value;
+        const fileInput = document.getElementById(type + "_cert");
+        if (val === "Yes") { 
+            fileInput.style.display = "block"; 
+            fileInput.required = true; 
+        } else { 
+            fileInput.style.display = "none"; 
+            fileInput.required = false; 
+        }
+    }
+
+    function getBase64(fileId) {
+        return new Promise((resolve, reject) => {
+            const fileInput = document.getElementById(fileId);
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { 
+                resolve(""); return; 
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); 
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        // Ensure at least one tag exists before submitting
+        if(pincodeList.length === 0 || cityList.length === 0) {
+            alert("Please add at least one Available Pincode and one Available City using the '+' or 'Auto-Fill' button.");
+            return;
+        }
+
+        const btn = document.getElementById("submitBtn");
+        btn.innerText = "Uploading Documents & Saving... Please wait (Do not close tab)";
+        btn.disabled = true;
+
+        try {
+            // Arrays are safely formatted here
+            let available_pincodes_json = JSON.stringify(pincodeList);
+            let available_cities_str = cityList.join(', ');
+
+            // Convert Files to Base64
+            let base64RegDoc = await getBase64("reg_doc");
+            let base64Nabl = await getBase64("nabl_cert");
+            let base64Nabh = await getBase64("nabh_cert");
+            let base64Img1 = await getBase64("lab_img1");
+            let base64Img2 = await getBase64("lab_img2");
+            let base64Img3 = await getBase64("lab_img3");
+
+            // Build JSON Payload
+            let payload = {
+                action: "submitLabProfile",
+                user_id: localStorage.getItem("bhavya_user_id"),
+                lab_name: document.getElementById("lab_name").value,
+                lab_registration_docoment: base64RegDoc,
+                lab_email: document.getElementById("lab_email").value,
+                lab_address: document.getElementById("lab_address").value,
+                city: document.getElementById("city").value,
+                pincode: document.getElementById("pincode").value,
+                available_pincode: available_pincodes_json,
+                nabl: document.getElementById("nabl").value,
+                nabl_certificate: base64Nabl,
+                nabh: document.getElementById("nabh").value,
+                nabh_certificate: base64Nabh,
+                lab_image1: base64Img1,
+                lab_image2: base64Img2,
+                lab_image3: base64Img3,
+                available_city: available_cities_str
+            };
+
+            // Add Checkboxes
+            services.forEach(srv => {
+                let checkbox = document.getElementById("srv_" + srv);
+                payload[srv] = (checkbox && checkbox.checked) ? "Yes" : "No";
+            });
+
+            // Add Timings
+            days.forEach(day => {
+                payload[day + "_opening_time"] = document.getElementById(day + "_open").value;
+                payload[day + "_closing_time"] = document.getElementById(day + "_close").value;
+            });
+
+            // Send via API
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const resData = await response.json();
+
+            if (resData.status === "success") {
+                alert("Success! Profile submitted successfully. Admin will review and activate your account.");
+                window.location.href = "Lab.html"; // Ensure capital 'L' matches your dashboard file name
+            } else {
+                alert("Server Error: " + resData.message);
+                btn.innerText = "Submit Profile for Verification";
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Submission Error:", error);
+            alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
+            btn.innerText = "Submit Profile for Verification";
+            btn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>

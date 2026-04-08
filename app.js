@@ -272,12 +272,12 @@ function goToDashboard() {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
     } 
     // Purana code: 
-// else if (role === "lab") { window.location.href = "lab.html"; }
+// else if (role === "lab") { window.location.href = "Lab.html"; }
 
 // Naya code:
 else if (role === "lab") {
     // Ideal yahi hai ki abhi lab_registration.html par bhejein. 
-    // Jab form bhar jaye tab lab.html par redirect ho.
+    // Jab form bhar jaye tab Lab.html par redirect ho.
     window.location.href = "Lab/lab_registration.html"; 
 }
     else if (role === "doctor" || role === "pharmacy" || role === "hospital" || role === "executive") {

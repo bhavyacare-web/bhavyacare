@@ -263,26 +263,50 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
 
     bookings.forEach((bk, index) => {
         
-        // --- CART ITEMS (G) PARSING LOGIC (Fixed for service_name) ---
+        // ==================================================
+        // 🌟 ULTIMATE JSON PARSER (FIX FOR UNKNOWN TEST) 🌟
+        // ==================================================
         let testsListHtml = "";
         let testNamesSummary = "";
         let items = [];
 
-        if (Array.isArray(bk.cart_items)) {
-            items = bk.cart_items;
-        } else if (typeof bk.cart_items === 'object' && bk.cart_items !== null) {
-            items = bk.cart_items.items || bk.cart_items.cart || [bk.cart_items];
-        } else if (typeof bk.cart_items === 'string' && bk.cart_items.trim() !== "") {
-            items = [{ service_name: bk.cart_items }];
+        let rawCart = bk.cart_items;
+        
+        // 1. Force Parsing (Agar double string ban gaya ho Google Sheets me)
+        if (typeof rawCart === 'string') {
+            try { rawCart = JSON.parse(rawCart); } catch(e) {}
+            // Agar ek baar parse karne ke baad bhi string hai, toh dubara parse karein
+            if (typeof rawCart === 'string') {
+                try { rawCart = JSON.parse(rawCart); } catch(e) {}
+            }
         }
 
+        // 2. Data ko Array mein set karna
+        if (Array.isArray(rawCart)) {
+            items = rawCart;
+        } else if (typeof rawCart === 'object' && rawCart !== null) {
+            items = rawCart.items || rawCart.cart || [rawCart];
+        } else if (typeof rawCart === 'string' && rawCart.trim() !== "") {
+            items = [{ service_name: rawCart }];
+        }
+
+        // 3. Tests ki HTML List banana
         if (items.length > 0) {
             testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #333;">`;
             let namesArr = [];
+            
             items.forEach(item => {
-                // Yahan item.service_name sabse pehle check hoga!
-                let tName = item.service_name || item.test_name || item.name || item.title || (typeof item === 'string' ? item : "Unknown Test");
-                let tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
+                let tName = "Unknown Test";
+                let tPrice = "";
+
+                // Check karein ki item object hai ya nahi
+                if (typeof item === 'object' && item !== null) {
+                    tName = item.service_name || item.test_name || item.name || item.title || "Unknown Test";
+                    tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
+                } else if (typeof item === 'string') {
+                    tName = item; // Agar galti se sirf text aa raha ho
+                }
+
                 testsListHtml += `<li style="margin-bottom:4px;"><strong>${tName}</strong>${tPrice}</li>`;
                 namesArr.push(tName);
             });
@@ -292,6 +316,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             testsListHtml = `<p style="margin: 8px 0; font-size: 12px; color:#888;">No test details found.</p>`;
             testNamesSummary = "No Tests";
         }
+        // ==================================================
 
         // Status Badge Logic
         let badgeClass = "status-warning"; 

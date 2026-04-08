@@ -4,25 +4,35 @@
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-// Services List
-const services = ["pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"];
-// Days List
+// Services List (As per your requirement)
+const services = [
+    "pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", 
+    "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", 
+    "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"
+];
+
+// Days List for Timings
 const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Auto Fill Name & Check Access
+    // 1. Check Access & Auto Fill Name
     const labName = localStorage.getItem("bhavya_name");
     const userId = localStorage.getItem("bhavya_user_id");
     
+    // UPDATE: Agar login nahi hai, toh bahar wale main folder ke index.html par bhejein
     if (!userId || localStorage.getItem("bhavya_role") !== "lab") {
-        alert("Unauthorized Access!"); window.location.href = "index.html"; return;
+        alert("Unauthorized Access! Please login first."); 
+        window.location.href = "../index.html"; 
+        return;
     }
     document.getElementById("lab_name").value = labName;
 
     // 2. Generate Service Checkboxes Dynamically
     const servDiv = document.getElementById("servicesContainer");
     services.forEach(srv => {
-        servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${srv.toUpperCase()}</label>`;
+        // Formatting name to look clean (e.g., "discount_profile" -> "DISCOUNT PROFILE")
+        let displayName = srv.replace("_", " ").toUpperCase();
+        servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
     });
 
     // 3. Generate Timings Dynamically
@@ -39,22 +49,33 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("labRegForm").addEventListener("submit", handleFormSubmit);
 });
 
-// Toggle NABL/NABH file input based on Yes/No
+// Toggle NABL/NABH file input based on Yes/No selection
 function toggleCert(type) {
     const val = document.getElementById(type).value;
     const fileInput = document.getElementById(type + "_cert");
-    if (val === "Yes") { fileInput.style.display = "block"; fileInput.required = true; } 
-    else { fileInput.style.display = "none"; fileInput.required = false; }
+    if (val === "Yes") { 
+        fileInput.style.display = "block"; 
+        fileInput.required = true; 
+    } else { 
+        fileInput.style.display = "none"; 
+        fileInput.required = false; 
+    }
 }
 
-// Convert File to Base64 String
+// Convert File to Base64 String (for sending to Google Script)
 function getBase64(fileId) {
     return new Promise((resolve, reject) => {
-        const file = document.getElementById(fileId).files[0];
-        if (!file) { resolve(""); return; } // Empty if no file
+        const fileInput = document.getElementById(fileId);
+        // Agar file input exist nahi karta ya file select nahi ki gayi
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) { 
+            resolve(""); 
+            return; 
+        }
+        
+        const file = fileInput.files[0];
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]); // Extract base64
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Extract only base64 data
         reader.onerror = error => reject(error);
     });
 }
@@ -68,12 +89,12 @@ async function handleFormSubmit(e) {
 
     try {
         // --- 1. Process Array & String fields ---
-        // Pincode array formatting: Input "124, 125" -> Array ["124", "125"] -> JSON String '["124", "125"]'
+        // Pincode formatting: Input "124507, 124508" -> JSON String '["124507", "124508"]'
         let pinRaw = document.getElementById("available_pincode").value.split(',');
         let pinArray = pinRaw.map(p => p.trim()).filter(p => p !== "");
         let available_pincodes_json = JSON.stringify(pinArray);
 
-        // City formatting: "delhi, noida"
+        // City formatting: Input "Bahadurgarh, Jhajjar" -> "Bahadurgarh, Jhajjar"
         let cityRaw = document.getElementById("available_city").value.split(',');
         let available_cities_str = cityRaw.map(c => c.trim()).join(', ');
 
@@ -106,9 +127,10 @@ async function handleFormSubmit(e) {
             available_city: available_cities_str
         };
 
-        // Add Services
+        // Add Services (Yes/No)
         services.forEach(srv => {
-            payload[srv] = document.getElementById("srv_" + srv).checked ? "Yes" : "No";
+            let checkbox = document.getElementById("srv_" + srv);
+            payload[srv] = (checkbox && checkbox.checked) ? "Yes" : "No";
         });
 
         // Add Timings
@@ -128,7 +150,9 @@ async function handleFormSubmit(e) {
 
         if (resData.status === "success") {
             alert("Success! Profile submitted successfully. Our admin will review and activate your account.");
-            window.location.href = "lab.html"; // Redirect to main lab dashboard
+            
+            // UPDATE: Dono files same 'lab' folder me hain, toh path change nahi hoga.
+            window.location.href = "lab.html"; 
         } else {
             alert("Error: " + resData.message);
             btn.innerText = "Submit Profile for Verification";

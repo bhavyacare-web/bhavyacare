@@ -271,9 +271,15 @@ function goToDashboard() {
     if (role === "patient") {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
     } 
-    else if (role === "lab") {
-        window.location.href = "lab.html"; // Lab ko lab.html par bhejein
-    } 
+    // Purana code: 
+// else if (role === "lab") { window.location.href = "lab.html"; }
+
+// Naya code:
+else if (role === "lab") {
+    // Ideal yahi hai ki abhi lab_registration.html par bhejein. 
+    // Jab form bhar jaye tab lab.html par redirect ho.
+    window.location.href = "lab_registration.html"; 
+}
     else if (role === "doctor" || role === "pharmacy" || role === "hospital" || role === "executive") {
         alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
     } 

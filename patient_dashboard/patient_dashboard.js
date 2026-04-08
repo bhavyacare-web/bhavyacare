@@ -263,29 +263,50 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
 
     bookings.forEach((bk, index) => {
         
-        // --- CART ITEMS (JSON) VISUALIZATION (G) ---
+        // ==================================================
+        // 🌟 NEW: SUPER ROBUST CART ITEMS (JSON) PARSER 🌟
+        // ==================================================
         let testsListHtml = "";
         let testNamesSummary = "Medical Tests";
-        
-        if (Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
-            // Bulleted list banayenge JSON tests ke liye
+        let rawCart = bk.cart_items;
+        let itemsArr = [];
+
+        // 1. Agar data string format me hai, to usko wapas JSON me convert karne ki koshish karein
+        if (typeof rawCart === 'string') {
+            try { rawCart = JSON.parse(rawCart); } catch(e) { }
+        }
+
+        // 2. Data ko ek pakke Array me set karein
+        if (Array.isArray(rawCart)) {
+            itemsArr = rawCart;
+        } else if (rawCart !== null && typeof rawCart === 'object') {
+            // Agar sheet me format { items: [...] } jaisa kuch hai
+            if (Array.isArray(rawCart.items)) itemsArr = rawCart.items;
+            else if (Array.isArray(rawCart.cart)) itemsArr = rawCart.cart;
+            else itemsArr = [rawCart]; // Agar normal single object hai
+        } else if (typeof rawCart === 'string' && rawCart.trim() !== "") {
+            itemsArr = [{ test_name: rawCart }]; // Agar bina JSON ka normal text hai
+        }
+
+        // 3. Array se List (HTML) generate karein
+        if (itemsArr.length > 0) {
             testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-main);">`;
             let namesArr = [];
-            bk.cart_items.forEach(item => {
-                let tName = item.test_name || item.name || item.title || item.item_name || 'Test';
+            itemsArr.forEach(item => {
+                // Har tarah ki keys check karein jo test ke naam ke liye use ho sakti hain
+                let tName = item.test_name || item.name || item.title || item.item_name || item.test || "Unknown Test";
+                if (typeof item === 'string') tName = item; // Agar list me sirf string naam ho
+                
                 let tPrice = item.price ? `<span style="color:#888; font-size:11px;"> (₹${item.price})</span>` : '';
                 testsListHtml += `<li style="margin-bottom:3px;"><strong>${tName}</strong> ${tPrice}</li>`;
                 namesArr.push(tName);
             });
             testsListHtml += `</ul>`;
             testNamesSummary = namesArr.join(', ');
-        } else if (typeof bk.cart_items === 'string' && bk.cart_items.trim() !== "") {
-            // Agar normal text hai
-            testsListHtml = `<p style="margin: 8px 0; font-size: 13px; font-weight:bold; color:var(--text-main);">${bk.cart_items}</p>`;
-            testNamesSummary = bk.cart_items;
         } else {
-            testsListHtml = `<p style="margin: 8px 0; font-size: 13px; color:#888;">No test details available</p>`;
+            testsListHtml = `<p style="margin: 8px 0; font-size: 13px; color:#888;">No test details available.</p>`;
         }
+        // ==================================================
         
         // Status Badge Logic
         let badgeClass = "status-warning"; 
@@ -294,7 +315,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
         else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
         else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
-        // Mode Display Logic 
+        // Mode Display Logic
         let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
 
         // Payment Status Logic

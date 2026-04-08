@@ -263,25 +263,17 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
 
     bookings.forEach((bk, index) => {
         
-        // ==================================================
-        // 🌟 ULTIMATE JSON PARSER (FIX FOR UNKNOWN TEST) 🌟
-        // ==================================================
+        // --- CART ITEMS (G) PARSING LOGIC ---
         let testsListHtml = "";
         let testNamesSummary = "";
         let items = [];
-
         let rawCart = bk.cart_items;
         
-        // 1. Force Parsing (Agar double string ban gaya ho Google Sheets me)
         if (typeof rawCart === 'string') {
             try { rawCart = JSON.parse(rawCart); } catch(e) {}
-            // Agar ek baar parse karne ke baad bhi string hai, toh dubara parse karein
-            if (typeof rawCart === 'string') {
-                try { rawCart = JSON.parse(rawCart); } catch(e) {}
-            }
+            if (typeof rawCart === 'string') { try { rawCart = JSON.parse(rawCart); } catch(e) {} }
         }
 
-        // 2. Data ko Array mein set karna
         if (Array.isArray(rawCart)) {
             items = rawCart;
         } else if (typeof rawCart === 'object' && rawCart !== null) {
@@ -290,23 +282,16 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             items = [{ service_name: rawCart }];
         }
 
-        // 3. Tests ki HTML List banana
         if (items.length > 0) {
             testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #333;">`;
             let namesArr = [];
-            
             items.forEach(item => {
                 let tName = "Unknown Test";
                 let tPrice = "";
-
-                // Check karein ki item object hai ya nahi
                 if (typeof item === 'object' && item !== null) {
                     tName = item.service_name || item.test_name || item.name || item.title || "Unknown Test";
                     tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
-                } else if (typeof item === 'string') {
-                    tName = item; // Agar galti se sirf text aa raha ho
-                }
-
+                } else if (typeof item === 'string') { tName = item; }
                 testsListHtml += `<li style="margin-bottom:4px;"><strong>${tName}</strong>${tPrice}</li>`;
                 namesArr.push(tName);
             });
@@ -316,42 +301,59 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             testsListHtml = `<p style="margin: 8px 0; font-size: 12px; color:#888;">No test details found.</p>`;
             testNamesSummary = "No Tests";
         }
-        // ==================================================
 
-        // Status Badge Logic
+        // ==================================================
+        // 🌟 "COMPLETED" FIX LOGIC 🌟
+        // ==================================================
+        // Sheet ke word ko lower case karna, space hatana
+        let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
+        let safeReportType = (bk.report_type || "").toString().toLowerCase().trim();
+        let safePayStatus = (bk.payment_status || "due").toString().toLowerCase().trim();
+
         let badgeClass = "status-warning"; 
         let statusText = "Pending";
-        if (bk.status === "confirmed") { badgeClass = "status-primary"; statusText = "Confirmed"; }
-        else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
-        else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
+        let isComplete = false;
 
-        // Mode Display
+        // Ab .includes() ka use kar rahe hain taaki "completed", "complete", " complete " sab chalega!
+        if (safeStatus.includes("confirm")) { 
+            badgeClass = "status-primary"; statusText = "Confirmed"; 
+        } else if (safeStatus.includes("complete") || safeStatus === "completed") { 
+            // 👆 Yahan fix hai! "completed" ko properly catch karega
+            badgeClass = "status-success"; statusText = "Completed"; 
+            isComplete = true; // Report tab dikhane ke liye flag
+        } else if (safeStatus.includes("cancel")) { 
+            badgeClass = "status-danger"; statusText = "Cancelled"; 
+        }
+
         let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
 
-        // Payment Status (Column V)
-        let payStatus = (bk.payment_status === "complete") ? "COMPLETE" : "DUE";
-        let payColor = (bk.payment_status === "complete") ? "#2e7d32" : "#d32f2f";
-        let payBg = (bk.payment_status === "complete") ? "#e8f5e9" : "#ffebee";
+        // Payment Status Fix
+        let payStatus = (safePayStatus.includes("complete")) ? "COMPLETE" : "DUE";
+        let payColor = (payStatus === "COMPLETE") ? "#2e7d32" : "#d32f2f";
+        let payBg = (payStatus === "COMPLETE") ? "#e8f5e9" : "#ffebee";
         let paymentBadge = `<span style="font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px; font-weight:800; background:${payBg}; color:${payColor}; border:1px solid ${payColor}44;">${payStatus}</span>`;
 
         hasBookings = true;
 
-        // Cancel Button Logic
+        // Cancel Button (Complete ya Cancel pe nahi dikhega)
         let cancelBtnHtml = "";
-        if (bk.status !== "complete" && !bk.status.includes("cancel")) {
+        if (!isComplete && !safeStatus.includes("cancel")) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
         }
         
-        // Report Logic
+        // Report Logic (Sirf 'Complete/Completed' par dikhega)
         let reportSectionHtml = "";
-        if (bk.status === "complete") {
-            let rType = bk.report_type || "in hand";
+        if (isComplete) {
+            let rType = safeReportType || "in hand";
             reportSectionHtml = `
             <div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
                 <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;"><i class="fas fa-check-circle"></i> Booking Completed</div>
                 <div style="font-size:11px; color:#555;">Report Mode: <strong>${rType.toUpperCase()}</strong></div>`;
-            if (rType === "online" && bk.report_pdf) {
+            
+            if (rType.includes("online") && bk.report_pdf) {
                 reportSectionHtml += `<a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; margin-top:10px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report PDF</a>`;
+            } else if (rType.includes("hand")) {
+                reportSectionHtml += `<div style="margin-top:8px; font-size:11px; color:#d84315;"><i class="fas fa-info-circle"></i> Please collect your physical report from the lab.</div>`;
             }
             reportSectionHtml += `</div>`;
         }
@@ -412,7 +414,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
         }
 
         // ----------- REPORTS TAB RENDER -----------
-        if (bk.status === "complete" && bk.report_type === "online" && bk.report_pdf) {
+        if (isComplete && safeReportType.includes("online") && bk.report_pdf) {
             hasReports = true;
             reportsHtml += `
             <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">

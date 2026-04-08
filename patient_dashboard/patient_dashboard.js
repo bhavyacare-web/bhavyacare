@@ -263,26 +263,25 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
 
     bookings.forEach((bk, index) => {
         
-        // --- CART ITEMS (G) PARSING LOGIC ---
+        // --- CART ITEMS (G) PARSING LOGIC (Fixed for service_name) ---
         let testsListHtml = "";
         let testNamesSummary = "";
         let items = [];
 
-        // Data ko Array format mein lana
         if (Array.isArray(bk.cart_items)) {
             items = bk.cart_items;
         } else if (typeof bk.cart_items === 'object' && bk.cart_items !== null) {
             items = bk.cart_items.items || bk.cart_items.cart || [bk.cart_items];
         } else if (typeof bk.cart_items === 'string' && bk.cart_items.trim() !== "") {
-            items = [{ test_name: bk.cart_items }];
+            items = [{ service_name: bk.cart_items }];
         }
 
-        // List taiyar karna
         if (items.length > 0) {
             testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #333;">`;
             let namesArr = [];
             items.forEach(item => {
-                let tName = item.test_name || item.name || item.title || (typeof item === 'string' ? item : "Unknown Test");
+                // Yahan item.service_name sabse pehle check hoga!
+                let tName = item.service_name || item.test_name || item.name || item.title || (typeof item === 'string' ? item : "Unknown Test");
                 let tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
                 testsListHtml += `<li style="margin-bottom:4px;"><strong>${tName}</strong>${tPrice}</li>`;
                 namesArr.push(tName);
@@ -344,7 +343,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}" style="margin-bottom:6px;">${statusText.toUpperCase()}</span><br>
-                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="fas fa-clock"></i> ${bk.slot}</span>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-calendar-alt"></i> ${bk.slot}</span>
                 </div>
             </div>
             
@@ -378,17 +377,36 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             recentHtml += `
             <div class="list-item">
                 <div class="list-info">
-                    <h5 style="font-size:14px; margin-bottom:3px;">${testNamesSummary.substring(0, 35)}...</h5>
-                    <p style="color:var(--primary); font-weight:bold;"><i class="fas fa-history"></i> ${bk.slot}</p>
+                    <h5 style="font-size:14px; margin-bottom:3px;">${testNamesSummary.substring(0, 35)}${testNamesSummary.length > 35 ? '...' : ''}</h5>
+                    <p style="color:var(--primary); font-weight:bold; font-size:11px;"><i class="far fa-clock"></i> ${bk.slot}</p>
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}">${statusText}</span>
                 </div>
             </div>`;
         }
+
+        // ----------- REPORTS TAB RENDER -----------
+        if (bk.status === "complete" && bk.report_type === "online" && bk.report_pdf) {
+            hasReports = true;
+            reportsHtml += `
+            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between;">
+                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Test Report</h5>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.slot}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-light); margin-bottom:10px; line-height:1.5;">
+                    <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong><span style="color:var(--text-main);">Lab ID: ${bk.lab_id}</span></strong> <br>
+                    <strong>Address:</strong> ${bk.address}
+                </div>
+                <a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;">
+                    <i class="fas fa-cloud-download-alt"></i> View & Download PDF
+                </a>
+            </div>`;
+        }
     });
 
-    // Empty state handling
     if (!hasBookings) bookingsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div>`;
     if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Reports will appear here once ready.</p></div>`;
     if (recentHtml === "") recentHtml = `<div style="text-align: center; padding: 20px; color: #aaa;">No recent activities.</div>`;

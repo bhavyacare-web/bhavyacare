@@ -230,13 +230,41 @@ async function fetchWalletHistory(userId) {
 }
 
 // ===============================================
-// NEW: BOOKINGS & CANCEL ORDER LOGIC
+// NEW: BOOKINGS & CANCEL ORDER LOGIC (WITH LOADER)
 // ===============================================
 async function fetchPatientBookings(userId) {
     const bookingTab = document.querySelector("#bookings .data-box");
     const reportsTab = document.querySelector("#reports .data-box");
     const recentActivityContainer = document.getElementById("recentActivityContainer");
     
+    // 🌟 1. API CALL SE PEHLE LOADING ANIMATION SET KAREIN 🌟
+    const loaderLarge = `
+        <div class="section-title">My Bookings</div>
+        <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
+            <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
+            <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your bookings...</p>
+        </div>
+    `;
+    const loaderReports = `
+        <div class="section-title">Medical Records</div>
+        <div style="text-align: center; padding: 50px 20px; color: var(--success);">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
+            <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
+        </div>
+    `;
+    const loaderSmall = `
+        <div style="text-align: center; padding: 30px 10px; color: var(--primary);">
+            <i class="fas fa-spinner fa-pulse" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <p style="color: #888; font-size: 12px; font-weight: bold;">Syncing activity...</p>
+        </div>
+    `;
+
+    // Data aane tak UI pe Spinner dikhayen
+    if(bookingTab) bookingTab.innerHTML = loaderLarge;
+    if(reportsTab) reportsTab.innerHTML = loaderReports;
+    if(recentActivityContainer) recentActivityContainer.innerHTML = loaderSmall;
+
+    // 🌟 2. AB DATA FETCH KAREIN 🌟
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -244,13 +272,18 @@ async function fetchPatientBookings(userId) {
         });
         const result = await response.json();
         
+        // 🌟 3. DATA AANE KE BAAD LOADER HATA KAR RENDER KAREIN 🌟
         if (result.status === "success") {
             globalBookingsData = result.data;
             renderBookings(globalBookingsData, bookingTab, reportsTab, recentActivityContainer);
         } else {
             console.error("Booking Fetch Error:", result.message);
+            if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
         }
-    } catch(e) { console.error("Network error fetching bookings.", e); }
+    } catch(e) { 
+        console.error("Network error fetching bookings.", e); 
+        if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
+    }
 }
 
 function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {

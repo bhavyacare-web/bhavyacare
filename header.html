@@ -76,7 +76,7 @@
     <div id="phone-section">
         <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
             <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
-            <select id="partnerRole" class="input-box">
+            <select id="partnerRole" class="input-box" onchange="updateNameLabel()">
                 <option value="doctor" selected>Doctor</option>
                 <option value="lab">Lab</option>
                 <option value="pharmacy">Pharmacy</option>
@@ -85,7 +85,7 @@
             </select>
         </div>
         
-        <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
+        <p id="nameLabel" style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
         <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
 
         <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>

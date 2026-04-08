@@ -247,7 +247,7 @@
     }
 
     // ==========================================
-    // GOOGLE MAPS AI AUTO FILL
+    // GOOGLE MAPS AI AUTO FILL (UPDATED FOR NEW GOOGLE API RULES)
     // ==========================================
     function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
@@ -269,53 +269,57 @@
         const geocoder = new google.maps.Geocoder();
         const addressStr = `${city}, ${basePincode}, India`;
 
-        geocoder.geocode({ address: addressStr }, function(results, status) {
+        geocoder.geocode({ address: addressStr }, async function(results, status) {
             if (status === 'OK') {
                 const labLocation = results[0].geometry.location;
 
-                // Hidden map div required by Places API
-                const mapObj = new google.maps.Map(document.createElement('div')); 
-                const service = new google.maps.places.PlacesService(mapObj);
-                
-                const request = {
-                    location: labLocation,
-                    radius: radiusMeters, 
-                    type: ['locality', 'sublocality', 'neighborhood'] 
-                };
+                try {
+                    // NEW GOOGLE PLACES API (For new accounts after March 2025)
+                    const request = {
+                        fields: ['displayName'],
+                        locationRestriction: {
+                            center: labLocation,
+                            radius: radiusMeters,
+                        },
+                        includedPrimaryTypes: ['locality', 'sublocality', 'neighborhood'],
+                    };
 
-                service.nearbySearch(request, function(nearbyResults, nearbyStatus) {
-                    if (nearbyStatus === google.maps.places.PlacesServiceStatus.OK) {
-                        
-                        let foundCities = 0;
-                        
-                        nearbyResults.forEach(place => {
-                            if (place.name) {
-                                let pName = place.name.toLowerCase();
+                    const { places } = await google.maps.places.Place.searchNearby(request);
+
+                    let foundCities = 0;
+                    
+                    if (places && places.length > 0) {
+                        places.forEach(place => {
+                            // Naye API me naam displayName.text ke andar aata hai
+                            let nameStr = place.displayName ? place.displayName.text : "";
+                            
+                            if (nameStr) {
+                                let pName = nameStr.toLowerCase();
                                 if (pName !== "india" && pName !== city.toLowerCase()) {
-                                    addTag('city', place.name);
+                                    addTag('city', nameStr);
                                     foundCities++;
                                 }
                             }
                         });
-
-                        addTag('pincode', basePincode);
-                        addTag('city', city);
-                        
-                        // Basic pincode variation (since exact pincodes require complex reverse-geocoding loops)
-                        let baseNum = parseInt(basePincode);
-                        if(!isNaN(baseNum)) {
-                            addTag('pincode', (baseNum + 1).toString());
-                            addTag('pincode', (baseNum + 2).toString());
-                        }
-
-                        resetBtn(btn);
-                        alert(`Success! Found ${foundCities} nearby locations within a ${radiusKm}km radius.`);
-
-                    } else {
-                        alert("Google Maps couldn't find nearby places. Area might be too remote or API error: " + nearbyStatus);
-                        resetBtn(btn);
                     }
-                });
+
+                    addTag('pincode', basePincode);
+                    addTag('city', city);
+                    
+                    let baseNum = parseInt(basePincode);
+                    if(!isNaN(baseNum)) {
+                        addTag('pincode', (baseNum + 1).toString());
+                        addTag('pincode', (baseNum + 2).toString());
+                    }
+
+                    resetBtn(btn);
+                    alert(`Success! Found ${foundCities} nearby locations within a ${radiusKm}km radius.`);
+
+                } catch (error) {
+                    console.error("Places API Error:", error);
+                    alert("Google Maps blocked the search. Ensure 'Places API (New)' is Enabled in Google Cloud.");
+                    resetBtn(btn);
+                }
 
             } else {
                 alert("Could not locate your main Pincode on Google Maps. Please check spelling.");

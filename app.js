@@ -96,7 +96,6 @@ function checkLoginState() {
     }
 }
 
-// Naya function: Role ke according Name label aur placeholder update karne ke liye
 function updateNameLabel() {
     const roleElem = document.getElementById('partnerRole');
     const nameLabel = document.getElementById('nameLabel');
@@ -135,7 +134,7 @@ function openPatientLogin() {
     const formTitle = document.getElementById('form-title');
     if(formTitle) formTitle.innerText = "Patient Login / Sign Up";
     
-    updateNameLabel(); // Update to default Patient view
+    updateNameLabel(); 
     showLoginPopup();
 }
 
@@ -146,7 +145,7 @@ function openPartnerLogin() {
     const formTitle = document.getElementById('form-title');
     if(formTitle) formTitle.innerText = "Partner Registration";
     
-    updateNameLabel(); // Update to current dropdown selection
+    updateNameLabel(); 
     toggleMenu(); 
     showLoginPopup();
 }
@@ -225,18 +224,18 @@ async function verifyOTP() {
         localStorage.setItem("bhavya_mobile", user.phoneNumber);
         localStorage.setItem("bhavya_role", finalRole);
         localStorage.setItem("bhavya_user_id", finalUserId);
-        localStorage.setItem("bhavya_name", userName); 
+        localStorage.setItem("bhavya_name", resData.name || userName); 
 
         closeLoginPopup();
         alert("Login Successful! Welcome " + userName);
         
         checkLoginState();
 
-        // VIP REDIRECT LOGIC
+        // VIP OR DASHBOARD REDIRECT LOGIC
         if (localStorage.getItem("pending_vip_redirect") === "true") {
             window.location.reload(); 
         } else {
-            window.location.reload(); 
+            goToDashboard(); // Changed to automatically route to correct dashboard after login
         }
 
     } catch (error) { 
@@ -250,7 +249,7 @@ async function verifyOTP() {
 }
 
 // ==========================================
-// 5. LOGOUT & DASHBOARD NAVIGATION
+// 5. LOGOUT & DASHBOARD NAVIGATION (UPDATED)
 // ==========================================
 function logoutUser() {
     if (typeof firebase !== 'undefined') {
@@ -267,11 +266,18 @@ function logoutUser() {
 
 function goToDashboard() {
     const role = localStorage.getItem("bhavya_role");
+    
+    // --- DASHBOARD ROUTING LOGIC ---
     if (role === "patient") {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
-    } else if (role) {
-        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Coming Soon)");
-    } else {
+    } 
+    else if (role === "lab") {
+        window.location.href = "lab.html"; // Lab ko lab.html par bhejein
+    } 
+    else if (role === "doctor" || role === "pharmacy" || role === "hospital" || role === "executive") {
+        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
+    } 
+    else {
         alert("Role not found. Please log in again.");
     }
 }

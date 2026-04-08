@@ -96,12 +96,46 @@ function checkLoginState() {
     }
 }
 
+// Naya function: Role ke according Name label aur placeholder update karne ke liye
+function updateNameLabel() {
+    const roleElem = document.getElementById('partnerRole');
+    const nameLabel = document.getElementById('nameLabel');
+    const userNameInput = document.getElementById('userName');
+
+    if (!nameLabel || !userNameInput) return;
+
+    if (isPartnerMode && roleElem) {
+        const role = roleElem.value;
+        if (role === 'doctor') {
+            nameLabel.innerText = "Doctor Name:";
+            userNameInput.placeholder = "Enter doctor name";
+        } else if (role === 'lab') {
+            nameLabel.innerText = "Lab Name:";
+            userNameInput.placeholder = "Enter lab name";
+        } else if (role === 'pharmacy') {
+            nameLabel.innerText = "Pharmacy Name:";
+            userNameInput.placeholder = "Enter pharmacy name";
+        } else if (role === 'hospital') {
+            nameLabel.innerText = "Hospital Name:";
+            userNameInput.placeholder = "Enter hospital name";
+        } else if (role === 'executive') {
+            nameLabel.innerText = "Executive Name:";
+            userNameInput.placeholder = "Enter executive name";
+        }
+    } else {
+        nameLabel.innerText = "Full Name:";
+        userNameInput.placeholder = "Enter your full name";
+    }
+}
+
 function openPatientLogin() {
     isPartnerMode = false;
     const partnerRoleContainer = document.getElementById('partner-role-container');
     if(partnerRoleContainer) partnerRoleContainer.style.display = 'none';
     const formTitle = document.getElementById('form-title');
     if(formTitle) formTitle.innerText = "Patient Login / Sign Up";
+    
+    updateNameLabel(); // Update to default Patient view
     showLoginPopup();
 }
 
@@ -111,6 +145,8 @@ function openPartnerLogin() {
     if(partnerRoleContainer) partnerRoleContainer.style.display = 'block';
     const formTitle = document.getElementById('form-title');
     if(formTitle) formTitle.innerText = "Partner Registration";
+    
+    updateNameLabel(); // Update to current dropdown selection
     toggleMenu(); 
     showLoginPopup();
 }
@@ -149,7 +185,7 @@ function sendOTP() {
     const userNameInput = document.getElementById('userName');
     if(!userNameInput) return; // safeguard
     const userName = userNameInput.value.trim();
-    if(!userName) { alert("Please enter your full name!"); return; }
+    if(!userName) { alert("Please enter your name!"); return; }
 
     const userNumberInput = document.getElementById('phoneNumber');
     const userNumber = userNumberInput.value.trim();

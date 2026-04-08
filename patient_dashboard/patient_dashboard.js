@@ -262,10 +262,29 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     let hasReports = false;
 
     bookings.forEach((bk, index) => {
-        // Test Names
-        let testNames = "Tests";
-        if(Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
-            testNames = bk.cart_items.map(t => t.test_name || t.name || 'Test').join(', ');
+        
+        // --- CART ITEMS (JSON) VISUALIZATION (G) ---
+        let testsListHtml = "";
+        let testNamesSummary = "Medical Tests";
+        
+        if (Array.isArray(bk.cart_items) && bk.cart_items.length > 0) {
+            // Bulleted list banayenge JSON tests ke liye
+            testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-main);">`;
+            let namesArr = [];
+            bk.cart_items.forEach(item => {
+                let tName = item.test_name || item.name || item.title || item.item_name || 'Test';
+                let tPrice = item.price ? `<span style="color:#888; font-size:11px;"> (₹${item.price})</span>` : '';
+                testsListHtml += `<li style="margin-bottom:3px;"><strong>${tName}</strong> ${tPrice}</li>`;
+                namesArr.push(tName);
+            });
+            testsListHtml += `</ul>`;
+            testNamesSummary = namesArr.join(', ');
+        } else if (typeof bk.cart_items === 'string' && bk.cart_items.trim() !== "") {
+            // Agar normal text hai
+            testsListHtml = `<p style="margin: 8px 0; font-size: 13px; font-weight:bold; color:var(--text-main);">${bk.cart_items}</p>`;
+            testNamesSummary = bk.cart_items;
+        } else {
+            testsListHtml = `<p style="margin: 8px 0; font-size: 13px; color:#888;">No test details available</p>`;
         }
         
         // Status Badge Logic
@@ -275,7 +294,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
         else if (bk.status === "complete") { badgeClass = "status-success"; statusText = "Completed"; }
         else if (bk.status.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
-        // Mode Display Logic (Home Collection or Lab Visit)
+        // Mode Display Logic 
         let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
 
         // Payment Status Logic
@@ -291,7 +310,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:10px; width:100%;">Cancel Booking</button>`;
         }
         
-        // Report Logic (Visible only if status is complete)
+        // Report Logic 
         let reportSectionHtml = "";
         if (bk.status === "complete") {
             let rType = bk.report_type ? bk.report_type : "in hand";
@@ -318,21 +337,27 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
                 <div>
                     <div style="font-size:11px; color:#888;">Order ID</div>
                     <strong style="color:var(--text-main); font-size:14px;">${bk.order_id}</strong>
-                    <div style="font-size:10px; color:#aaa; margin-top:2px;">Cart ID: ${bk.parent_cart_id || 'N/A'} | Lab: ${bk.lab_id}</div>
+                    <div style="font-size:11px; color:#888; margin-top:4px;">
+                        Cart ID: ${bk.parent_cart_id || 'N/A'} <br>
+                        <strong style="color:var(--text-main); font-size:12px;">Lab ID: ${bk.lab_id}</strong>
+                    </div>
                 </div>
                 <div style="text-align:right;">
-                    <span class="status-badge ${badgeClass}" style="margin-bottom:4px;">${statusText}</span><br>
-                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</span>
+                    <span class="status-badge ${badgeClass}" style="margin-bottom:4px;">${statusText}</span>
                 </div>
             </div>
             
             <div style="margin-bottom:12px;">
-                <h5 style="margin:0 0 8px 0; color:var(--text-main); font-size:14px;">${testNames}</h5>
-                <div style="background:#f9f9f9; padding:10px; border-radius:8px; font-size:12px; color:var(--text-light); line-height:1.6;">
-                    <strong>Patient:</strong> ${bk.patient_name} <br>
-                    <strong>Mode:</strong> ${modeDisplay} <br>
-                    <strong>Address:</strong> ${bk.address}
-                </div>
+                <h5 style="margin:0; color:var(--primary); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Booked Tests</h5>
+                ${testsListHtml}
+            </div>
+
+            <div style="background:#f9f9f9; padding:10px; border-radius:8px; font-size:12px; color:var(--text-light); line-height:1.6; margin-bottom:12px;">
+                <strong>Patient:</strong> ${bk.patient_name} <br>
+                <strong>Mode:</strong> ${modeDisplay} <br>
+                <strong>Date:</strong> <span style="color:var(--text-main);">${bk.date}</span> <br>
+                <strong>Slot:</strong> <span style="color:var(--text-main);">${bk.slot}</span> <br>
+                <strong>Address:</strong> ${bk.address}
             </div>
 
             <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:10px; font-size:12px; color:#555;">
@@ -355,8 +380,8 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             recentHtml += `
             <div class="list-item">
                 <div class="list-info">
-                    <h5 style="font-size:14px; text-transform:capitalize;">${testNames.substring(0, 30)}...</h5>
-                    <p style="color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</p>
+                    <h5 style="font-size:14px; text-transform:capitalize; margin-bottom:3px;">${testNamesSummary.substring(0, 30)}${testNamesSummary.length > 30 ? '...' : ''}</h5>
+                    <p style="color:var(--primary); font-size:11px; font-weight:bold;"><i class="far fa-calendar-check"></i> ${bk.date}</p>
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}" style="margin-bottom:0;">${statusText}</span>
@@ -371,10 +396,11 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between;">
                     <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Test Report</h5>
-                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-clock"></i> ${bk.slot}</span>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.date}</span>
                 </div>
                 <div style="font-size:12px; color:var(--text-light); margin-bottom:10px; line-height:1.5;">
                     <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong><span style="color:var(--text-main);">Lab ID: ${bk.lab_id}</span></strong> <br>
                     <strong>Address:</strong> ${bk.address}
                 </div>
                 <a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;">

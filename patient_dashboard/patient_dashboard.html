@@ -5,21 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Patient Dashboard - BhavyaCare</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
+        /* CSS Variables */
         :root { --primary: #0056b3; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #333333; --text-light: #777777; }
         * { box-sizing: border-box; }
+        
+        /* Basic Layout */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .main-content { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
+        
+        /* Tab Transitions */
+        .tab-content { display: none; animation: slideUp 0.3s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Mobile Header */
         .mobile-header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 100; position: sticky; top: 0; }
         .brand h2 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; }
         .brand span { color: var(--success); }
+        
+        /* Profile Image & User Info */
         .user-profile-mini { display: flex; align-items: center; gap: 10px; cursor: pointer;}
         .user-profile-mini .greeting { font-size: 13px; color: var(--text-light); text-align: right;}
         .user-profile-mini .name { font-size: 15px; font-weight: bold; color: var(--text-main); margin: 0; }
         .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e6f0fa; object-fit: cover;}
-        .main-content { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
-        .tab-content { display: none; animation: slideUp 0.3s ease-out; }
-        .tab-content.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Notification Bell */
+        .notification-bell { position: relative; font-size: 20px; color: var(--text-light); cursor: pointer; margin-right: 15px; }
+        .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
+        
+        /* Quick Actions */
+        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; }
+        .action-btn-main { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .action-btn-main:active { transform: scale(0.96); }
+        .btn-book { background: var(--primary); color: white; }
+        .btn-upload { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); }
+
+        /* Dashboard Cards */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .dash-card { background: var(--card-bg); padding: 20px 15px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; border: 1px solid #f0f0f0; transition: 0.2s; }
         .card-wallet { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: none; }
@@ -31,6 +54,8 @@
         .dash-card .value { font-size: 26px; font-weight: 800; color: var(--text-main); margin: 0; z-index: 1;}
         .dash-card .sub-text { font-size: 12px; color: var(--text-light); margin-top: 5px; z-index: 1;}
         .card-action-btn { background: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 1; transition: 0.2s;}
+        
+        /* Data & List Boxes */
         .data-box { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px;}
         .section-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
         .section-title a { font-size: 13px; color: var(--primary); text-decoration: none; font-weight: normal; }
@@ -38,30 +63,31 @@
         .list-item:last-child { border-bottom: none; padding-bottom: 0; }
         .list-info h5 { margin: 0 0 5px 0; font-size: 15px; color: var(--text-main); }
         .list-info p { margin: 0; font-size: 12px; color: var(--text-light); }
+        
+        /* Status Badges */
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
         .status-success { background: #e8f5e9; color: #2e7d32; }
         .status-warning { background: #fff8e1; color: #f57c00; }
         .status-primary { background: #e6f0fa; color: #0056b3; }
         .status-danger { background: #ffebee; color: #d32f2f; }
+
+        /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 5px 15px 5px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; }
         .nav-item i { font-size: 20px; margin-bottom: 2px; transition: 0.3s;}
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
+        
+        /* Form Inputs */
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
         .input-box:focus { border-color: var(--primary); }
         .form-group { margin-top: 12px; }
+        
+        /* Modals */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
-        
-        .notification-bell { position: relative; font-size: 20px; color: var(--text-light); cursor: pointer; margin-right: 15px; }
-        .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
-        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; }
-        .action-btn-main { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .action-btn-main:active { transform: scale(0.96); }
-        .btn-book { background: var(--primary); color: white; }
-        .btn-upload { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); }
 
+        /* Desktop Adjustments */
         @media (min-width: 769px) {
             body { flex-direction: row; }
             .mobile-header { display: none; }
@@ -75,6 +101,7 @@
     </style>
 </head>
 <body>
+    
     <nav class="bottom-nav" id="sidebar">
         <div class="brand desktop-header" style="padding: 10px 20px 30px 20px; text-align:center;">
             <h2>Bhavya<span>Care</span></h2>
@@ -115,6 +142,7 @@
             <div style="display: flex; align-items: center;">
                 <div class="notification-bell" onclick="alert('No new notifications')" style="margin-right: 25px;">
                     <i class="far fa-bell" style="font-size: 24px;"></i>
+                    <div class="notification-dot" id="notifDotDesktop" style="display: none;"></div>
                 </div>
                 <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
                     <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img" id="desktopProfileImg">
@@ -129,7 +157,7 @@
                 <button class="action-btn-main btn-book" onclick="window.location.href='../booking/cart.html'">
                     <i class="fas fa-microscope"></i> Book Test
                 </button>
-                <button class="action-btn-main btn-upload" onclick="alert('Prescription upload module loading...')">
+                <button class="action-btn-main btn-upload" onclick="alert('Prescription upload module coming soon!')">
                     <i class="fas fa-file-upload"></i> Upload Rx
                 </button>
             </div>
@@ -141,7 +169,7 @@
                     <div class="value">₹<span id="walletBal"><i class="fas fa-circle-notch fa-spin" style="font-size: 16px;"></i></span></div>
                     <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 2;">
                         <button class="card-action-btn" style="color: var(--success); flex: 1;" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up</button>
-                        <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); alert('Withdraw request page coming soon!')">Withdraw Now</button>
+                        <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); alert('Withdraw request page coming soon!')">Withdraw</button>
                     </div>
                 </div>
                 
@@ -167,30 +195,18 @@
 
             <div class="data-box">
                 <div class="section-title"><span>Recent Activity</span><a href="#" onclick="switchTab('bookings')">View All</a></div>
-                <div id="recentActivityContainer">
-                     <div style="text-align: center; padding: 20px; color: #aaa; font-size: 13px;">No recent activities yet.</div>
-                </div>
+                <div id="recentActivityContainer"></div> 
             </div>
         </div>
 
         <div id="bookings" class="tab-content">
             <div class="data-box">
-                <div class="section-title">My Bookings</div>
-                <div style="text-align: center; padding: 40px; color: #ddd;">
-                    <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i>
-                    <p>No active bookings found.</p>
                 </div>
-            </div>
         </div>
 
         <div id="reports" class="tab-content">
             <div class="data-box">
-                 <div class="section-title">Medical Records</div>
-                <div style="text-align: center; padding: 40px; color: #ddd;">
-                    <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i>
-                    <p>Your test reports will appear here.</p>
-                </div>
-            </div>
+                 </div>
         </div>
 
         <div id="wallet" class="tab-content">
@@ -216,6 +232,7 @@
                     <img id="editProfilePreview" src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;"><br>
                     <input type="file" id="profileImageInput" accept="image/*" style="font-size: 12px; max-width: 200px;">
                 </div>
+                
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <h5 style="margin: 0 0 10px 0; color: var(--primary);">Account Details (Non-Editable)</h5>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
@@ -223,17 +240,21 @@
                         <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:#888;">Mobile Number</label><div style="font-weight:bold; font-size:14px;" id="infoMobile">Loading...</div></div>
                     </div>
                 </div>
+                
                 <h5 style="margin: 0 0 10px 0; color: var(--primary);">Personal Details</h5>
                 <div class="form-group"><input type="email" id="infoEmail" class="input-box" placeholder="Email Address"></div>
                 <div class="form-group"><input type="text" id="infoAddress" class="input-box" placeholder="Full Address (House, Street)"></div>
+                
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoCity" class="input-box" placeholder="City/Village"></div>
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoDistrict" class="input-box" placeholder="District"></div>
                 </div>
+                
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoState" class="input-box" placeholder="State"></div>
                     <div class="form-group" style="flex: 1;"><input type="number" id="infoPincode" class="input-box" placeholder="Pincode"></div>
                 </div>
+                
                 <input type="hidden" id="infoImageBase64" value="">
                 <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>

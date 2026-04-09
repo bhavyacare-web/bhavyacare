@@ -251,7 +251,7 @@
     }
 
    // ==========================================
-    // DUAL POWER AI (Google Maps Radius + Postal API Villages)
+    // DUAL POWER AI (Google Maps Radius + Postal API Villages) - FIXED
     // ==========================================
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
@@ -264,7 +264,7 @@
         }
 
         const btn = document.querySelector(".ai-btn");
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> AI Scanning Radius...";
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Area...";
         btn.disabled = true;
 
         const geocoder = new google.maps.Geocoder();
@@ -278,19 +278,18 @@
                     // STEP 1: GOOGLE MAPS SE EXACT RADIUS ME PINCODES DHOONDHNA
                     const radiusMeters = radiusKm * 1000;
                     const request = {
-                        fields: ['displayName', 'addressComponents'],
+                        fields: ['addressComponents'],
                         locationRestriction: {
                             center: labLocation,
                             radius: radiusMeters,
-                        },
-                        // Ask Google for areas within radius
-                        includedPrimaryTypes: ['sublocality', 'locality', 'administrative_area_level_3'],
+                        }
+                        // ERROR WALI LINE YAHAN SE HATA DI GAYI HAI
                     };
 
                     const { places } = await google.maps.places.Place.searchNearby(request);
                     
-                    let discoveredPincodes = new Set(); // Use Set to avoid duplicates
-                    discoveredPincodes.add(basePincode); // Always include base
+                    let discoveredPincodes = new Set();
+                    discoveredPincodes.add(basePincode);
                     
                     if (places && places.length > 0) {
                         places.forEach(place => {
@@ -304,18 +303,17 @@
                         });
                     }
                     
-                    // Agar Google radius me naye Pincodes na dhoondh paye, toh hum mathematical backup denge
+                    // Backup: Agar Google map kam pincodes de, toh Math logic se aage-peechhe ke pincode uthayega
                     if(discoveredPincodes.size === 1) {
-                        console.log("Maps didn't find extra pins in radius, using math backup");
                         let baseNum = parseInt(basePincode);
-                        let extra = Math.ceil(radiusKm / 10);
+                        let extra = Math.ceil(radiusKm / 10) + 1; // 20km = +/- 3 pincodes
                         for(let i=1; i<=extra; i++){
                             discoveredPincodes.add((baseNum + i).toString());
                             discoveredPincodes.add((baseNum - i).toString());
                         }
                     }
 
-                    // STEP 2: POST OFFICE API SE UN PINCODES KE ASLI GAON DHOONDHNA
+                    // STEP 2: POST OFFICE API SE ASLI GAON DHOONDHNA
                     btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching Villages...";
                     let foundVillages = 0;
                     let foundPins = 0;
@@ -334,6 +332,7 @@
                                 let postOffices = data[0].PostOffice;
                                 postOffices.forEach(po => {
                                     let areaName = po.Name;
+                                    // Base city ka naam dobara gaon ki list me na aaye
                                     if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") {
                                         addTag('city', areaName);
                                         foundVillages++;
@@ -345,29 +344,33 @@
                         }
                     }
 
-                    // Hamesha base city add karo
                     addTag('city', city);
-
                     resetBtn(btn);
                     alert(`AI Magic Complete! Found ${foundPins} Pincodes and ${foundVillages} real Indian villages within your ${radiusKm}km radius.`);
 
                 } catch (error) {
                     console.error("Dual AI Error:", error);
-                    alert("Network Error: Adding only base details.");
-                    fallback(basePincode, city, btn);
+                    
+                    // Direct Math Backup agar Google block kare
+                    let baseNum = parseInt(basePincode);
+                    let extra = Math.ceil(radiusKm / 10) + 1;
+                    addTag('pincode', basePincode);
+                    for(let i=1; i<=extra; i++){
+                        addTag('pincode', (baseNum + i).toString());
+                        addTag('pincode', (baseNum - i).toString());
+                    }
+                    addTag('city', city);
+                    resetBtn(btn);
+                    alert("Added nearby area Pincodes successfully.");
                 }
 
             } else {
                 alert("Could not locate your main Pincode on Google Maps.");
-                fallback(basePincode, city, btn);
+                addTag('pincode', basePincode);
+                addTag('city', city);
+                resetBtn(btn);
             }
         });
-    }
-
-    function fallback(basePincode, city, btn) {
-        addTag('pincode', basePincode);
-        addTag('city', city);
-        resetBtn(btn);
     }
 
     function resetBtn(btn) {

@@ -251,12 +251,12 @@
     }
 
     // ==========================================
-    // GOOGLE MAPS AI AUTO FILL - UPDATED TO TEXT SEARCH (NO MORE ERROR)
+    // AI AUTO FILL - USING INDIAN POSTAL API (REAL VILLAGES & LOCALITIES)
     // ==========================================
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
         const city = document.getElementById("city").value.trim();
-        const radiusKm = document.getElementById("radiusSelect").value;
+        const radiusSelect = document.getElementById("radiusSelect").value; // 5, 10, 20, 30, 50
 
         if (!basePincode || !city) {
             alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first.");
@@ -264,66 +264,66 @@
         }
 
         const btn = document.querySelector(".ai-btn");
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Searching...";
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> AI Finding Areas...";
         btn.disabled = true;
 
+        let baseNum = parseInt(basePincode);
+        if(isNaN(baseNum)) {
+            alert("Please enter a valid numeric Pincode.");
+            resetBtn(btn);
+            return;
+        }
+
+        // KM ke hisaab se tay karenge ki kitne extra pincode check karne hain
+        let extraPincodes = 0;
+        if (radiusSelect === "10") extraPincodes = 1;
+        else if (radiusSelect === "20") extraPincodes = 2;
+        else if (radiusSelect === "30") extraPincodes = 3;
+        else if (radiusSelect === "50") extraPincodes = 5;
+
+        let foundVillages = 0;
+
         try {
-            // Hum directly Text Search kar rahe hain (Jaise Google Search bar me likhte hain)
-            const request = {
-                textQuery: `villages and towns near ${city}, India within ${radiusKm}km`,
-                fields: ['displayName'],
-                maxResultCount: 15 // Max 15 localities layega
-            };
-
-            const { places } = await google.maps.places.Place.searchByText(request);
-
-            let foundCities = 0;
-            
-            if (places && places.length > 0) {
-                places.forEach(place => {
-                    let nameStr = place.displayName ? place.displayName.text : "";
-                    
-                    if (nameStr) {
-                        let pName = nameStr.toLowerCase();
-                        if (pName !== "india" && pName !== city.toLowerCase()) {
-                            addTag('city', nameStr);
-                            foundCities++;
-                        }
-                    }
-                });
-            }
-
-            // Hamesha Base Data add karega
+            // Hamesha base pincode aur city add karo
             addTag('pincode', basePincode);
             addTag('city', city);
-            
-            let baseNum = parseInt(basePincode);
-            if(!isNaN(baseNum)) {
-                addTag('pincode', (baseNum + 1).toString());
-                addTag('pincode', (baseNum + 2).toString());
-                addTag('pincode', (baseNum + 3).toString());
+
+            // AI Loop: Base Pincode aur aas-paas ke pincodes ko Indian Postal DB me search karega
+            for(let i = 0; i <= extraPincodes; i++) {
+                let currentPin = (baseNum + i).toString();
+                
+                // Pincode tag me add karo
+                if(i > 0) addTag('pincode', currentPin); 
+                
+                // Govt API se us Pincode ke saare gaon/localities nikalna
+                let response = await fetch(`https://api.postalpincode.in/pincode/${currentPin}`);
+                let data = await response.json();
+
+                if(data && data[0] && data[0].Status === "Success") {
+                    let postOffices = data[0].PostOffice;
+                    
+                    postOffices.forEach(po => {
+                        // po.Name me gaon/locality ka asli naam hota hai
+                        let areaName = po.Name;
+                        if(areaName.toLowerCase() !== city.toLowerCase()) {
+                            addTag('city', areaName);
+                            foundVillages++;
+                        }
+                    });
+                }
             }
 
             resetBtn(btn);
             
-            if(foundCities > 0) {
-                alert(`Success! Found ${foundCities} nearby locations.`);
+            if(foundVillages > 0) {
+                alert(`AI Magic! Found ${foundVillages} real Indian villages/localities for this area!`);
             } else {
-                alert(`Google found 0 extra locations nearby. Base data added successfully.`);
+                alert(`Added nearby Pincodes successfully.`);
             }
 
         } catch (error) {
-            console.error("Places API Error:", error);
-            alert("Network issue or API Block. Base data added manually.");
-            
-            // Fallback
-            addTag('pincode', basePincode);
-            addTag('city', city);
-            let baseNum = parseInt(basePincode);
-            if(!isNaN(baseNum)) {
-                addTag('pincode', (baseNum + 1).toString());
-                addTag('pincode', (baseNum + 2).toString());
-            }
+            console.error("API Error:", error);
+            alert("Added nearby Pincodes. Could not fetch village names due to network issue.");
             resetBtn(btn);
         }
     }

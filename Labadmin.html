@@ -113,7 +113,8 @@
 
     <div id="serviceReqs" class="tab-content">
         <div class="table-container">
-            <h3 style="margin-top: 0; color: #1e293b;">1. Standard Services Update Requests (Main Sheet)</h3>
+            <h3 style="margin-top: 0; color: #1e293b;">1. Standard Services Update Requests (Editable JSON)</h3>
+            <p style="font-size:13px; color:#64748b; margin-top:-10px;">You can directly edit the JSON below (change "Yes" to "No") before clicking Approve.</p>
             <table>
                 <thead>
                     <tr>
@@ -198,7 +199,6 @@
         fetchPendingRequests();
     });
 
-    // --- TAB SWITCH LOGIC ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -206,32 +206,24 @@
         event.currentTarget.classList.add('active');
     }
 
-    // --- 1. MANAGE LABS LOGIC (EXISTING) ---
     function fetchLabs() {
         document.getElementById("loadingMsg").style.display = "block";
         document.getElementById("labsTableBody").innerHTML = "";
 
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "getAdminLabs" })
-        })
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) })
         .then(res => res.json())
         .then(data => {
             document.getElementById("loadingMsg").style.display = "none";
-            if(data.status === "success") {
-                allLabsData = data.data;
-                renderTable();
-            } else { alert("Error fetching labs: " + data.message); }
-        })
-        .catch(err => { document.getElementById("loadingMsg").innerText = "Network Error!"; });
+            if(data.status === "success") { allLabsData = data.data; renderTable(); } 
+            else { alert("Error fetching labs: " + data.message); }
+        }).catch(err => { document.getElementById("loadingMsg").innerText = "Network Error!"; });
     }
 
     function renderTable() {
         const tbody = document.getElementById("labsTableBody");
         tbody.innerHTML = "";
         allLabsData.forEach((lab, index) => {
-            let badgeClass = "status-inactive";
-            let statusText = lab.status.toUpperCase();
+            let badgeClass = "status-inactive"; let statusText = lab.status.toUpperCase();
             if(statusText === "ACTIVE") badgeClass = "status-active";
             else if(statusText === "CANCEL") badgeClass = "status-cancel";
 
@@ -285,9 +277,7 @@
         const statusVal = lab.status.charAt(0).toUpperCase() + lab.status.slice(1).toLowerCase();
         let sel = document.getElementById("modalStatusSelect");
         sel.value = "Inactive"; 
-        for(let i=0; i<sel.options.length; i++){
-            if(sel.options[i].value.toLowerCase() === statusVal.toLowerCase()){ sel.selectedIndex = i; break; }
-        }
+        for(let i=0; i<sel.options.length; i++){ if(sel.options[i].value.toLowerCase() === statusVal.toLowerCase()){ sel.selectedIndex = i; break; } }
 
         const servicesGrid = document.getElementById("modalServicesGrid");
         servicesGrid.innerHTML = "";
@@ -302,10 +292,7 @@
         document.getElementById("editModal").style.display = "flex";
     }
 
-    function closeModal() {
-        document.getElementById("editModal").style.display = "none";
-        currentEditUid = null;
-    }
+    function closeModal() { document.getElementById("editModal").style.display = "none"; currentEditUid = null; }
 
     function saveLabDetails() {
         if(!currentEditUid) return;
@@ -327,7 +314,6 @@
         }).catch(err => { btn.innerText = "Update & Notify Lab"; btn.disabled = false; alert("Network Error!"); });
     }
 
-    // --- 2. SERVICE REQUESTS LOGIC (NEW) ---
     function fetchPendingRequests() {
         document.getElementById("loadingReqMsg").style.display = "block";
         fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) })
@@ -338,15 +324,12 @@
                 pendingStdRequests = data.data.standard;
                 pendingCustomRequests = data.data.custom;
                 
-                // Show badge if there are new requests
                 if(pendingStdRequests.length > 0 || pendingCustomRequests.length > 0) {
                     document.getElementById("reqBadge").style.display = "inline-block";
                 } else {
                     document.getElementById("reqBadge").style.display = "none";
                 }
-
-                renderStdRequests();
-                renderCustomRequests();
+                renderStdRequests(); renderCustomRequests();
             }
         }).catch(err => { document.getElementById("loadingReqMsg").innerText = "Error loading requests!"; });
     }
@@ -363,10 +346,10 @@
             let tr = document.createElement("tr");
             tr.innerHTML = `
                 <td><b>${req.lab_name}</b><br><small style="color:#64748b;">${req.user_id}</small></td>
-                <td><textarea readonly style="width:100%; height:60px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; padding:5px;">${req.requested_services}</textarea></td>
+                <td><textarea id="req_json_${req.user_id}" style="width:100%; height:80px; font-size:13px; font-family: monospace; border:1px solid #cbd5e1; border-radius:4px; padding:5px;">${req.requested_services}</textarea></td>
                 <td>
                     <button class="btn-approve" onclick="handleStdReq('${req.user_id}', 'Approve')"><i class="fas fa-check"></i> Approve</button>
-                    <button class="btn-reject" onclick="handleStdReq('${req.user_id}', 'Reject')"><i class="fas fa-times"></i> Reject</button>
+                    <button class="btn-reject" style="margin-top:5px;" onclick="handleStdReq('${req.user_id}', 'Reject')"><i class="fas fa-times"></i> Reject</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -400,16 +383,32 @@
     function handleStdReq(userId, actionType) {
         if(!confirm(`Are you sure you want to ${actionType.toUpperCase()} this update request?`)) return;
         
-        // Block UI
+        let modifiedJson = "";
+        // 🌟 SAFETY CHECK: Agar Admin ne galti se JSON kharab kar diya hai 🌟
+        if (actionType === 'Approve') {
+            modifiedJson = document.getElementById(`req_json_${userId}`).value;
+            try {
+                JSON.parse(modifiedJson); 
+            } catch (e) {
+                alert("Invalid JSON format! Please check if any commas or quotes (\") are missing.");
+                return;
+            }
+        }
+
         document.body.style.opacity = "0.7"; document.body.style.pointerEvents = "none";
         
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "processStandardServiceRequest", user_id: userId, request_action: actionType })
+            body: JSON.stringify({ 
+                action: "processStandardServiceRequest", 
+                user_id: userId, 
+                request_action: actionType,
+                modified_json: modifiedJson // 🌟 NAYA DATA BACKEND KO BHEJ RAHE HAIN 🌟
+            })
         }).then(res => res.json()).then(data => {
             alert(data.message);
-            fetchPendingRequests(); // Refresh
-            fetchLabs(); // Refresh main table to reflect new services
+            fetchPendingRequests(); 
+            fetchLabs(); 
         }).finally(() => { document.body.style.opacity = "1"; document.body.style.pointerEvents = "auto"; });
     }
 

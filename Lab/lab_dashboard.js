@@ -273,3 +273,18 @@ function callApi(payload) {
     }).catch(err => { alert("Network Error occurred!"); actionArea.innerHTML = originalHTML; })
     .finally(() => { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; });
 }
+
+// ==========================================
+// LOGOUT FUNCTION
+// ==========================================
+function logout() {
+    if(confirm("Are you sure you want to logout from BhavyaCare?")) {
+        // Local storage se Lab ka data clear kar do
+        localStorage.removeItem("bhavya_user_id");
+        localStorage.removeItem("bhavya_name");
+        localStorage.removeItem("bhavya_role");
+        
+        // Wapas main login page par bhej do (Path apne hisaab se adjust kar lena)
+        window.location.href = "../index.html"; 
+    }
+}

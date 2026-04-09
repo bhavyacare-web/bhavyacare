@@ -3,14 +3,12 @@
 // Logic for fetching and managing lab orders
 // ==========================================
 
-// NOTE: Apna Google Script Web App URL yahan daalein
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allOrders = [];
 let currentOrder = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Check Auth
     const labName = localStorage.getItem("bhavya_name");
     const userId = localStorage.getItem("bhavya_user_id");
     
@@ -20,12 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // 2. Set Name and Fetch Data
     document.getElementById("displayLabName").innerText = labName + " (" + userId + ")";
     fetchOrders(userId);
 });
 
-// FETCH ORDERS FROM BACKEND
 function fetchOrders(userId) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -46,7 +42,6 @@ function fetchOrders(userId) {
     });
 }
 
-// RENDER ALL ORDERS IN CARDS
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     
@@ -58,16 +53,15 @@ function renderOrders() {
     grid.innerHTML = "";
     allOrders.forEach((order, index) => {
         let statusClass = "badge-pending";
-        // Default text
         let statusText = order.status ? order.status.toUpperCase() : "PENDING";
         
-        if(statusText === "ACTIVE") statusClass = "badge-active";
+        // 🌟 YAHAN CHANGE KIYA HAI (ACTIVE OR CONFIRMED) 🌟
+        if(statusText === "ACTIVE" || statusText === "CONFIRMED") statusClass = "badge-active";
         else if(statusText === "COMPLETED") statusClass = "badge-completed";
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
 
         let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
 
-        // Format Date safely
         let dtStr = "Date N/A";
         if(order.date) {
              dtStr = new Date(order.date).toLocaleDateString("en-IN", {day:'numeric', month:'short', year:'numeric'});
@@ -95,12 +89,10 @@ function renderOrders() {
     });
 }
 
-// OPEN MODAL FOR SPECIFIC ORDER
 function openOrderModal(index) {
     currentOrder = allOrders[index];
     let o = currentOrder;
     
-    // Status normalization
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
     document.getElementById("mOrderId").innerText = "Order #" + (o.order_id || "N/A");
@@ -109,12 +101,13 @@ function openOrderModal(index) {
     document.getElementById("mAddress").innerText = o.address || "N/A";
     document.getElementById("mFulfill").innerText = o.fulfillment ? o.fulfillment.toUpperCase() : "N/A";
 
-    // Set Status Badges
     let statSpan = document.getElementById("mStatus");
     statSpan.innerText = currentStatus.toUpperCase();
-    statSpan.className = "badge"; // reset classes
+    statSpan.className = "badge"; 
+    
+    // 🌟 YAHAN BHI CHANGE KIYA HAI 🌟
     if(currentStatus === "Pending") statSpan.classList.add("badge-pending");
-    else if(currentStatus === "Active") statSpan.classList.add("badge-active");
+    else if(currentStatus === "Active" || currentStatus === "Confirmed") statSpan.classList.add("badge-active");
     else if(currentStatus === "Completed") statSpan.classList.add("badge-completed");
     else statSpan.classList.add("badge-cancelled");
 
@@ -123,7 +116,6 @@ function openOrderModal(index) {
     paySpan.className = "badge";
     paySpan.classList.add(o.payment_status === "COMPLETED" ? "badge-paid" : "badge-due");
 
-    // Parse Cart Items JSON
     let itemsHTML = "";
     try {
         if(o.cart_items) {
@@ -141,17 +133,14 @@ function openOrderModal(index) {
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     document.getElementById("mItemsList").innerHTML = itemsHTML;
 
-    // Set Billing
     document.getElementById("mSub").innerText = "₹" + (o.subtotal || 0);
     document.getElementById("mColl").innerText = "₹" + (o.collection_charge || 0);
     document.getElementById("mDisc").innerText = "-₹" + (o.discount || 0);
     document.getElementById("mFinal").innerText = "₹" + (o.final_payable || 0);
 
-    // Build Dynamic Action Area based on Order Status
     let actionArea = document.getElementById("mActionArea");
     actionArea.innerHTML = "";
 
-    // IMPORTANT: Checking 'currentStatus' for the flow
     if (currentStatus === "Pending") {
         actionArea.innerHTML = `
             <div class="action-box">
@@ -164,7 +153,8 @@ function openOrderModal(index) {
                 <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:15px;">Confirm Cancellation</button>
             </div>`;
     } 
-    else if (currentStatus === "Active") {
+    // 🌟 MAIN LOGIC FIX YAHAN HAI: "Active" ya "Confirmed" dono par chalega 🌟
+    else if (currentStatus === "Active" || currentStatus === "Confirmed") {
         actionArea.innerHTML = `
             <div class="action-box">
                 <div style="font-weight:600; margin-bottom:10px;">Provide Report & Complete Order:</div>
@@ -194,7 +184,6 @@ function openOrderModal(index) {
             </div>`;
     }
 
-    // Show Modal
     document.getElementById("orderModal").style.display = "flex";
 }
 
@@ -203,8 +192,6 @@ function closeModal() {
     currentOrder = null; 
 }
 
-// TOGGLE CANCEL REASON INPUT
-// Ye function call hoga jab user "Cancel" button (pehla wala) dabayega
 function toggleCancelReason() {
     const reasonInput = document.getElementById("cancelReason");
     const confirmBtn = document.getElementById("finalCancelBtn");
@@ -219,16 +206,11 @@ function toggleCancelReason() {
     }
 }
 
-// TOGGLE PDF UPLOAD INPUT
-// Ye function call hoga jab user dropdown se "Online" select karega
 function togglePdfUpload() {
     let type = document.getElementById("reportType").value;
     document.getElementById("reportPdfFile").style.display = (type === "Online") ? "block" : "none";
 }
 
-// ==========================================
-// API CALLS: ACCEPT / CANCEL ORDER
-// ==========================================
 function submitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: actionType };
     
@@ -241,9 +223,6 @@ function submitAction(actionType) {
     callApi(payload);
 }
 
-// ==========================================
-// API CALLS: UPLOAD REPORT & COMPLETE
-// ==========================================
 async function submitReport() {
     let rType = document.getElementById("reportType").value;
     if(!rType) return alert("Please select a Report Type.");
@@ -271,15 +250,12 @@ async function submitReport() {
     callApi(payload);
 }
 
-// GENERAL API CALLER WITH UI LOCK
 function callApi(payload) {
     let modal = document.querySelector(".modal");
     
-    // UI Lock
     modal.style.opacity = "0.7";
     modal.style.pointerEvents = "none";
 
-    // Adding Loading Text temporarily to the Action Area
     let actionArea = document.getElementById("mActionArea");
     let originalHTML = actionArea.innerHTML;
     actionArea.innerHTML = `<div style="text-align:center; padding:15px; font-weight:bold; color:#3b82f6;"><i class="fas fa-spinner fa-spin"></i> Processing Request...</div>`;
@@ -290,10 +266,10 @@ function callApi(payload) {
         if(data.status === "success") {
             alert(data.message);
             closeModal();
-            fetchOrders(localStorage.getItem("bhavya_user_id")); // Refresh the list
+            fetchOrders(localStorage.getItem("bhavya_user_id"));
         } else { 
             alert("Error: " + data.message); 
-            actionArea.innerHTML = originalHTML; // Restore if failed
+            actionArea.innerHTML = originalHTML; 
         }
     })
     .catch(err => {
@@ -301,7 +277,6 @@ function callApi(payload) {
         actionArea.innerHTML = originalHTML;
     })
     .finally(() => {
-        // Remove UI Lock
         modal.style.opacity = "1";
         modal.style.pointerEvents = "auto";
     });

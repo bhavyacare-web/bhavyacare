@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Lab Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Base Reset & Typography */
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fb; color: #0f172a; margin: 0; padding: 15px;}
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        .header h1 { margin: 0; font-size: 22px; color: #1e293b; display: flex; align-items: center; gap: 10px;}
+        .lab-name-tag { background: #eff6ff; color: #1d4ed8; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;}
+
+        /* Orders Grid */
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;}
+        
+        /* Order Card */
+        .order-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
+        .order-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #cbd5e1;}
+        .order-card-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
+        .order-id { font-weight: 800; color: #3b82f6; font-size: 15px;}
+        .order-date { font-size: 12px; color: #64748b; font-weight: 600;}
+        
+        .patient-name { font-size: 18px; font-weight: 700; margin-bottom: 5px; color: #0f172a;}
+        .order-info { font-size: 14px; color: #475569; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;}
+        .order-info i { width: 16px; color: #94a3b8; text-align: center;}
+        
+        /* Badges */
+        .badges-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;}
+        .badge { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;}
+        .badge-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
+        .badge-active { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;}
+        .badge-completed { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;}
+        .badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;}
+        
+        .badge-due { background: #fee2e2; color: #dc2626;}
+        .badge-paid { background: #dcfce7; color: #16a34a;}
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto;}
+        .modal { background: white; width: 100%; max-width: 700px; border-radius: 16px; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; margin: auto;}
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 24px; cursor: pointer; color: #64748b;}
+        
+        .section-title { font-size: 15px; font-weight: 700; color: #334155; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;}
+        
+        /* Cart Items & Billing */
+        .cart-item { display: flex; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; font-size: 14px; border: 1px solid #e2e8f0;}
+        .item-name { font-weight: 600; color: #0f172a;}
+        .item-price { font-weight: 700; color: #059669;}
+
+        .bill-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #475569;}
+        .bill-total { font-weight: 800; font-size: 18px; color: #0f172a; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #cbd5e1;}
+
+        /* Action Forms inside Modal */
+        .action-box { background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 10px; margin-top: 25px;}
+        .btn-group { display: flex; gap: 10px; margin-top: 15px;}
+        .btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 15px; transition: 0.2s;}
+        .btn-green { background: #10b981; color: white; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px);}
+
+        .input-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Inter'; margin-bottom: 10px; font-size: 14px;}
+        
+        #loadingMsg { text-align: center; padding: 50px; font-size: 18px; color: #64748b; font-weight: 600; width: 100%;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-chart-pie"></i> Lab Dashboard</h1>
+        <div class="lab-name-tag" id="displayLabName">Loading...</div>
+    </div>
+
+    <div class="orders-grid" id="ordersGrid">
+        <div id="loadingMsg"><i class="fas fa-spinner fa-spin"></i> Fetching Orders...</div>
+    </div>
+
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="margin-top:0; color:#0f172a;" id="mOrderId">Order Details</h2>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <span id="mStatus" class="badge">Status</span>
+                <span id="mPayStatus" class="badge">Pay</span>
+                <span id="mFulfill" class="badge" style="background:#f3f4f6; color:#374151;">Fulfill</span>
+            </div>
+
+            <div class="section-title">Patient Info</div>
+            <div style="font-size: 15px; color: #334155; line-height: 1.6;">
+                <strong><i class="fas fa-user"></i> Name:</strong> <span id="mName"></span><br>
+                <strong><i class="fas fa-clock"></i> Slot:</strong> <span id="mSlot"></span><br>
+                <strong><i class="fas fa-map-marker-alt"></i> Address:</strong> <span id="mAddress"></span>
+            </div>
+
+            <div class="section-title">Tests / Services</div>
+            <div id="mItemsList"></div>
+
+            <div class="section-title">Billing Details</div>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div class="bill-row"><span>Subtotal:</span> <span id="mSub">₹0</span></div>
+                <div class="bill-row"><span>Collection Charge:</span> <span id="mColl">₹0</span></div>
+                <div class="bill-row" style="color:#16a34a;"><span>Discount:</span> <span id="mDisc">-₹0</span></div>
+                <div class="bill-row bill-total"><span>Final Payable:</span> <span id="mFinal">₹0</span></div>
+            </div>
+
+            <div id="mActionArea"></div>
+        </div>
+    </div>
+
+    <script src="lab_dashboard.js"></script>
+</body>
+</html>

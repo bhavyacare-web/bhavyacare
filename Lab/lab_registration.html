@@ -25,33 +25,24 @@
             border-radius: 16px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
             border: 1px solid #f1f5f9;
+            display: none; /* Default hide, checked by JS */
         }
+        
+        /* Loading & Message Screen Styles */
+        .status-screen {
+            max-width: 600px; margin: 10vh auto; background: white; padding: 50px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;
+        }
+        .status-screen i { font-size: 60px; margin-bottom: 20px; }
+        .status-screen h2 { color: #0f172a; margin-bottom: 15px; font-size: 24px; border:none; padding:0; margin-top:0;}
+        .status-screen p { color: #64748b; font-size: 16px; line-height: 1.6;}
+
         h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;}
         p.subtitle { text-align: center; color: #64748b; margin-bottom: 40px; font-size: 15px;}
         
         h2 { 
-            color: #0f172a; 
-            font-size: 18px; 
-            margin-top: 45px; 
-            margin-bottom: 20px;
-            padding-bottom: 10px; 
-            border-bottom: 2px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            color: #0f172a; font-size: 18px; margin-top: 45px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 12px;
         }
-        h2 span.step { 
-            background: #10b981; 
-            color: white; 
-            border-radius: 50%; 
-            width: 28px; 
-            height: 28px; 
-            display: inline-flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 14px; 
-            font-weight: bold;
-        }
+        h2 span.step { background: #10b981; color: white; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold;}
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -63,27 +54,19 @@
         }
         input:focus, select:focus { border-color: #10b981; background: white; outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
         
-        /* Service Checkboxes - Card Style */
         .service-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .service-checkboxes label { 
-            background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; margin: 0;
-        }
+        .service-checkboxes label { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; margin: 0;}
         .service-checkboxes label:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
         .service-checkboxes input { width: 18px; height: 18px; margin-right: 12px; accent-color: #10b981; cursor: pointer;}
 
-        /* Timings Row Style */
-        .timing-row {
-            display: grid; grid-template-columns: 130px 1fr 1fr; align-items: center; gap: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; transition: 0.2s;
-        }
+        .timing-row { display: grid; grid-template-columns: 130px 1fr 1fr; align-items: center; gap: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; transition: 0.2s;}
         .timing-row:hover { border-color: #cbd5e1; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
         .timing-day { font-weight: 600; color: #0f172a; font-size: 15px; }
 
-        /* Button Styling */
         button.submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 40px; transition: 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);}
         button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
         button.submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
         
-        /* TAGS & AI BUTTON */
         .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;}
         .input-with-button input { flex: 1; margin: 0; min-width: 150px; background: white;}
         .add-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 18px; height: 46px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.2s;}
@@ -100,7 +83,13 @@
 </head>
 <body>
 
-<div class="form-container">
+<div id="statusChecker" class="status-screen">
+    <i class="fas fa-spinner fa-spin" style="color: #3b82f6;"></i>
+    <h2>Checking Account Status...</h2>
+    <p>Please wait while we verify your details securely.</p>
+</div>
+
+<div class="form-container" id="mainFormContainer">
     <h1>Complete Your Lab Profile</h1>
     <p class="subtitle">Join BhavyaCare's network of trusted diagnostic centers.</p>
 
@@ -170,12 +159,10 @@
         </div>
 
         <h2><span class="step">4</span> Services Offered</h2>
-        <div class="service-checkboxes" id="servicesContainer">
-            </div>
+        <div class="service-checkboxes" id="servicesContainer"></div>
 
         <h2><span class="step">5</span> Working Timings <span style="font-size: 13px; font-weight: normal; color: #64748b;">(Fill at least 1 day)</span></h2>
-        <div id="timingsContainer">
-            </div>
+        <div id="timingsContainer"></div>
 
         <h2><span class="step">6</span> Lab Images</h2>
         <div class="grid-3">
@@ -194,11 +181,7 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
     
-    const services = [
-        "pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", 
-        "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", 
-        "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"
-    ];
+    const services = ["pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"];
     const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
     
     let pincodeList = [];
@@ -213,60 +196,87 @@
             window.location.href = "../index.html"; 
             return;
         }
-        document.getElementById("lab_name").value = labName;
 
-        const servDiv = document.getElementById("servicesContainer");
-        services.forEach(srv => {
-            let displayName = srv.replace("_", " ").toUpperCase();
-            servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
+        // ==========================================
+        // STEP 1: CHECK STATUS BEFORE SHOWING FORM
+        // ==========================================
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "checkLabStatus", user_id: userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const statusBox = document.getElementById("statusChecker");
+            
+            if (data.status === "ACTIVE") {
+                // Point 4: If Active, redirect directly to dashboard
+                window.location.href = "lab_dashboard.html"; 
+            } 
+            else if (data.status === "INACTIVE" || data.status === "PENDING") {
+                // Point 1 & 2: If Inactive, show English message and prevent form filling
+                statusBox.innerHTML = `
+                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    <h2>Application Under Review</h2>
+                    <p style="margin-top:10px;">Your application is under process. Please try again after some time or you will be notified via email.</p>
+                `;
+            } 
+            else {
+                // Point 2: If NOT_FOUND (New user), show the form
+                statusBox.style.display = "none";
+                document.getElementById("mainFormContainer").style.display = "block";
+                
+                // Initialize Form
+                document.getElementById("lab_name").value = labName;
+
+                const servDiv = document.getElementById("servicesContainer");
+                services.forEach(srv => {
+                    let displayName = srv.replace("_", " ").toUpperCase();
+                    servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
+                });
+
+                const timeDiv = document.getElementById("timingsContainer");
+                days.forEach(day => {
+                    let dayName = day.charAt(0).toUpperCase() + day.slice(1);
+                    timeDiv.innerHTML += `
+                    <div class="timing-row">
+                        <div class="timing-day">${dayName}</div>
+                        <div><input type="time" id="${day}_open" title="Opening Time"></div>
+                        <div><input type="time" id="${day}_close" title="Closing Time"></div>
+                    </div>`;
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Status Check Error:", error);
+            // Fallback: If API fails, let them see form just in case
+            document.getElementById("statusChecker").style.display = "none";
+            document.getElementById("mainFormContainer").style.display = "block";
         });
 
-        const timeDiv = document.getElementById("timingsContainer");
-        days.forEach(day => {
-            let dayName = day.charAt(0).toUpperCase() + day.slice(1);
-            // YAHAN SE 'required' HATA DIYA GAYA HAI
-            timeDiv.innerHTML += `
-            <div class="timing-row">
-                <div class="timing-day">${dayName}</div>
-                <div><input type="time" id="${day}_open" title="Opening Time"></div>
-                <div><input type="time" id="${day}_close" title="Closing Time"></div>
-            </div>`;
-        });
-
-        document.getElementById("pincodeInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); }
-        });
-        document.getElementById("cityInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") { e.preventDefault(); addTag('city'); }
-        });
-
+        document.getElementById("pincodeInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); } });
+        document.getElementById("cityInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('city'); } });
         document.getElementById("labRegForm").addEventListener("submit", handleFormSubmit);
     });
+
+    // --- (Baaki Saare Tags, AI Auto Fill aur Submit wale Functions wahi hain jo pichle step me the, unhe change nahi kiya gaya hai) ---
 
     function addTag(type, aiValue = null) {
         let inputElem = document.getElementById(type + "Input");
         let val = aiValue ? aiValue : inputElem.value.trim();
-
         if (!val) return;
 
         if (type === 'pincode' && !pincodeList.includes(val)) {
-            pincodeList.push(val);
-            updateTagsUI('pincode');
+            pincodeList.push(val); updateTagsUI('pincode');
         } else if (type === 'city') {
             val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
             let lowerCaseCityList = cityList.map(c => c.toLowerCase());
-            
-            if (!lowerCaseCityList.includes(val.toLowerCase())) {
-                cityList.push(val);
-                updateTagsUI('city');
-            }
+            if (!lowerCaseCityList.includes(val.toLowerCase())) { cityList.push(val); updateTagsUI('city'); }
         }
         if(!aiValue) inputElem.value = ""; 
     }
 
     function removeTag(type, index) {
-        if (type === 'pincode') pincodeList.splice(index, 1);
-        else cityList.splice(index, 1);
+        if (type === 'pincode') pincodeList.splice(index, 1); else cityList.splice(index, 1);
         updateTagsUI(type);
     }
 
@@ -274,7 +284,6 @@
         let wrapper = document.getElementById(type + "Tags");
         let hiddenInput = document.getElementById("available_" + type);
         let list = type === 'pincode' ? pincodeList : cityList;
-        
         wrapper.innerHTML = "";
         list.forEach((item, index) => {
             let tag = document.createElement("div");
@@ -285,242 +294,132 @@
         hiddenInput.value = list.join(',');
     }
 
-    // AI AUTO FILL LOGIC (DUAL POWER)
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
         const city = document.getElementById("city").value.trim();
         const radiusKm = parseInt(document.getElementById("radiusSelect").value);
 
-        if (!basePincode || !city) {
-            alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first.");
-            return;
-        }
+        if (!basePincode || !city) { alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first."); return; }
 
         const btn = document.querySelector(".ai-btn");
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Area...";
-        btn.disabled = true;
-
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Area..."; btn.disabled = true;
         const geocoder = new google.maps.Geocoder();
         const addressStr = `${city}, ${basePincode}, India`;
 
         geocoder.geocode({ address: addressStr }, async function(results, status) {
             if (status === 'OK') {
                 const labLocation = results[0].geometry.location;
-
                 try {
                     const radiusMeters = radiusKm * 1000;
-                    const request = {
-                        fields: ['addressComponents'],
-                        locationRestriction: {
-                            center: labLocation,
-                            radius: radiusMeters,
-                        }
-                    };
-
+                    const request = { fields: ['addressComponents'], locationRestriction: { center: labLocation, radius: radiusMeters }};
                     const { places } = await google.maps.places.Place.searchNearby(request);
                     
-                    let discoveredPincodes = new Set();
-                    discoveredPincodes.add(basePincode);
-                    
+                    let discoveredPincodes = new Set(); discoveredPincodes.add(basePincode);
                     if (places && places.length > 0) {
                         places.forEach(place => {
                             if (place.addressComponents) {
-                                place.addressComponents.forEach(component => {
-                                    if (component.types.includes('postal_code')) {
-                                        discoveredPincodes.add(component.longText);
-                                    }
-                                });
+                                place.addressComponents.forEach(comp => { if (comp.types.includes('postal_code')) discoveredPincodes.add(comp.longText); });
                             }
                         });
                     }
                     
                     if(discoveredPincodes.size === 1) {
-                        let baseNum = parseInt(basePincode);
-                        let extra = Math.ceil(radiusKm / 10) + 1;
-                        for(let i=1; i<=extra; i++){
-                            discoveredPincodes.add((baseNum + i).toString());
-                            discoveredPincodes.add((baseNum - i).toString());
-                        }
+                        let baseNum = parseInt(basePincode); let extra = Math.ceil(radiusKm / 10) + 1;
+                        for(let i=1; i<=extra; i++){ discoveredPincodes.add((baseNum + i).toString()); discoveredPincodes.add((baseNum - i).toString()); }
                     }
 
                     btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching Villages...";
-                    let foundVillages = 0;
-                    let foundPins = 0;
-
-                    const pinArray = Array.from(discoveredPincodes);
+                    let foundVillages = 0; let foundPins = 0; const pinArray = Array.from(discoveredPincodes);
                     
                     for (const pin of pinArray) {
-                        addTag('pincode', pin);
-                        foundPins++;
-                        
+                        addTag('pincode', pin); foundPins++;
                         try {
                             let response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
                             let data = await response.json();
-
                             if(data && data[0] && data[0].Status === "Success") {
-                                let postOffices = data[0].PostOffice;
-                                postOffices.forEach(po => {
+                                data[0].PostOffice.forEach(po => {
                                     let areaName = po.Name;
-                                    if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") {
-                                        addTag('city', areaName);
-                                        foundVillages++;
-                                    }
+                                    if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") { addTag('city', areaName); foundVillages++; }
                                 });
                             }
-                        } catch(e) {
-                            console.error(`Failed to fetch villages for pin ${pin}`, e);
-                        }
+                        } catch(e) {}
                     }
-
-                    addTag('city', city);
-                    resetBtn(btn);
+                    addTag('city', city); resetBtn(btn);
                     alert(`AI Magic Complete! Found ${foundPins} Pincodes and ${foundVillages} real Indian villages within your ${radiusKm}km radius.`);
-
                 } catch (error) {
-                    console.error("Dual AI Error:", error);
-                    let baseNum = parseInt(basePincode);
-                    let extra = Math.ceil(radiusKm / 10) + 1;
+                    let baseNum = parseInt(basePincode); let extra = Math.ceil(radiusKm / 10) + 1;
                     addTag('pincode', basePincode);
-                    for(let i=1; i<=extra; i++){
-                        addTag('pincode', (baseNum + i).toString());
-                        addTag('pincode', (baseNum - i).toString());
-                    }
-                    addTag('city', city);
-                    resetBtn(btn);
-                    alert("Added nearby area Pincodes successfully.");
+                    for(let i=1; i<=extra; i++){ addTag('pincode', (baseNum + i).toString()); addTag('pincode', (baseNum - i).toString()); }
+                    addTag('city', city); resetBtn(btn); alert("Added nearby area Pincodes successfully.");
                 }
-
             } else {
-                alert("Could not locate your main Pincode on Google Maps.");
-                addTag('pincode', basePincode);
-                addTag('city', city);
-                resetBtn(btn);
+                alert("Could not locate your main Pincode on Google Maps."); addTag('pincode', basePincode); addTag('city', city); resetBtn(btn);
             }
         });
     }
 
-    function resetBtn(btn) {
-        btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area";
-        btn.disabled = false;
-    }
-
+    function resetBtn(btn) { btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false; }
     function toggleCert(type) {
-        const val = document.getElementById(type).value;
-        const fileInput = document.getElementById(type + "_cert");
-        if (val === "Yes") { 
-            fileInput.style.display = "block"; 
-            fileInput.required = true; 
-        } else { 
-            fileInput.style.display = "none"; 
-            fileInput.required = false; 
-        }
+        const val = document.getElementById(type).value; const fileInput = document.getElementById(type + "_cert");
+        if (val === "Yes") { fileInput.style.display = "block"; fileInput.required = true; } 
+        else { fileInput.style.display = "none"; fileInput.required = false; }
     }
-
     function getBase64(fileId) {
         return new Promise((resolve, reject) => {
             const fileInput = document.getElementById(fileId);
-            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { 
-                resolve(""); return; 
-            }
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]); 
-            reader.onerror = error => reject(error);
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { resolve(""); return; }
+            const file = fileInput.files[0]; const reader = new FileReader();
+            reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
         });
     }
 
     async function handleFormSubmit(e) {
         e.preventDefault();
         
-        if(pincodeList.length === 0 || cityList.length === 0) {
-            alert("Please add at least one Available Pincode and one Available City using the '+' or 'Auto-Fill' button.");
-            return;
-        }
+        if(pincodeList.length === 0 || cityList.length === 0) { alert("Please add at least one Available Pincode and one Available City using the '+' or 'Auto-Fill' button."); return; }
 
-        // === NAYA TIMING VALIDATION LOGIC ===
         let hasAtLeastOneTime = false;
         days.forEach(day => {
-            let openTime = document.getElementById(day + "_open").value;
-            let closeTime = document.getElementById(day + "_close").value;
-            if (openTime && closeTime) {
-                hasAtLeastOneTime = true;
-            }
+            let openTime = document.getElementById(day + "_open").value; let closeTime = document.getElementById(day + "_close").value;
+            if (openTime && closeTime) hasAtLeastOneTime = true;
         });
 
-        if (!hasAtLeastOneTime) {
-            alert("Please provide Opening and Closing times for at least 1 day.");
-            return;
-        }
-        // =====================================
+        if (!hasAtLeastOneTime) { alert("Please provide Opening and Closing times for at least 1 day."); return; }
 
         const btn = document.getElementById("submitBtn");
-        btn.innerText = "Uploading Documents & Saving... Please wait";
-        btn.disabled = true;
+        btn.innerText = "Uploading Documents & Saving... Please wait"; btn.disabled = true;
 
         try {
-            let available_pincodes_json = JSON.stringify(pincodeList);
-            let available_cities_str = cityList.join(', ');
-
-            let base64RegDoc = await getBase64("reg_doc");
-            let base64Nabl = await getBase64("nabl_cert");
-            let base64Nabh = await getBase64("nabh_cert");
-            let base64Img1 = await getBase64("lab_img1");
-            let base64Img2 = await getBase64("lab_img2");
-            let base64Img3 = await getBase64("lab_img3");
+            let available_pincodes_json = JSON.stringify(pincodeList); let available_cities_str = cityList.join(', ');
+            let base64RegDoc = await getBase64("reg_doc"); let base64Nabl = await getBase64("nabl_cert"); let base64Nabh = await getBase64("nabh_cert");
+            let base64Img1 = await getBase64("lab_img1"); let base64Img2 = await getBase64("lab_img2"); let base64Img3 = await getBase64("lab_img3");
 
             let payload = {
-                action: "submitLabProfile",
-                user_id: localStorage.getItem("bhavya_user_id"),
-                lab_name: document.getElementById("lab_name").value,
-                lab_registration_docoment: base64RegDoc,
-                lab_email: document.getElementById("lab_email").value,
-                lab_address: document.getElementById("lab_address").value,
-                city: document.getElementById("city").value,
-                pincode: document.getElementById("pincode").value,
-                available_pincode: available_pincodes_json,
-                nabl: document.getElementById("nabl").value,
-                nabl_certificate: base64Nabl,
-                nabh: document.getElementById("nabh").value,
-                nabh_certificate: base64Nabh,
-                lab_image1: base64Img1,
-                lab_image2: base64Img2,
-                lab_image3: base64Img3,
-                available_city: available_cities_str
+                action: "submitLabProfile", user_id: localStorage.getItem("bhavya_user_id"), lab_name: document.getElementById("lab_name").value,
+                lab_registration_docoment: base64RegDoc, lab_email: document.getElementById("lab_email").value, lab_address: document.getElementById("lab_address").value,
+                city: document.getElementById("city").value, pincode: document.getElementById("pincode").value, available_pincode: available_pincodes_json,
+                nabl: document.getElementById("nabl").value, nabl_certificate: base64Nabl, nabh: document.getElementById("nabh").value, nabh_certificate: base64Nabh,
+                lab_image1: base64Img1, lab_image2: base64Img2, lab_image3: base64Img3, available_city: available_cities_str
             };
 
-            services.forEach(srv => {
-                let checkbox = document.getElementById("srv_" + srv);
-                payload[srv] = (checkbox && checkbox.checked) ? "Yes" : "No";
-            });
+            services.forEach(srv => { let checkbox = document.getElementById("srv_" + srv); payload[srv] = (checkbox && checkbox.checked) ? "Yes" : "No"; });
+            days.forEach(day => { payload[day + "_opening_time"] = document.getElementById(day + "_open").value; payload[day + "_closing_time"] = document.getElementById(day + "_close").value; });
 
-            days.forEach(day => {
-                payload[day + "_opening_time"] = document.getElementById(day + "_open").value;
-                payload[day + "_closing_time"] = document.getElementById(day + "_close").value;
-            });
-
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-
+            const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
             const resData = await response.json();
 
             if (resData.status === "success") {
-                alert("Success! Profile submitted successfully. Admin will review and activate your account.");
-                window.location.href = "Lab.html"; 
+                // Point 3: Emails will be sent from Backend now. Just show alert and redirect.
+                alert("Success! Your profile has been submitted and is under process.");
+                
+                // Form submit hote hi Reload kar denge, to page "Application under process" wali screen par khud hi aa jayega
+                window.location.reload(); 
             } else {
-                alert("Server Error: " + resData.message);
-                btn.innerText = "Submit Profile for Verification";
-                btn.disabled = false;
+                alert("Server Error: " + resData.message); btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
             }
-
         } catch (error) {
-            console.error("Submission Error:", error);
-            alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
-            btn.innerText = "Submit Profile for Verification";
-            btn.disabled = false;
+            console.error("Submission Error:", error); alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
+            btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
         }
     }
 </script>

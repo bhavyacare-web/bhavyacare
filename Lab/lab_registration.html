@@ -280,10 +280,9 @@
                         locationRestriction: {
                             center: labLocation,
                             radius: radiusMeters,
-                        },
-                        includedPrimaryTypes: ['locality', 'sublocality', 'neighborhood'],
+                        }
+                        // Humne wo error wali line yahan se hata di hai
                     };
-
                     const { places } = await google.maps.places.Place.searchNearby(request);
 
                     let foundCities = 0;

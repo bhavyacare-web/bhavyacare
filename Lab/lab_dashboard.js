@@ -120,10 +120,16 @@ function openOrderModal(index) {
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     document.getElementById("mItemsList").innerHTML = itemsHTML;
 
+    // PATIENT BILLING
     document.getElementById("mSub").innerText = "₹" + (o.subtotal || 0);
     document.getElementById("mColl").innerText = "₹" + (o.collection_charge || 0);
     document.getElementById("mDisc").innerText = "-₹" + (o.discount || 0);
     document.getElementById("mFinal").innerText = "₹" + (o.final_payable || 0);
+
+    // 🌟 LAB EARNING BREAKDOWN 🌟
+    document.getElementById("mFinalPay").innerText = "₹" + (o.final_payable || 0);
+    document.getElementById("mComm").innerText = "-₹" + (o.bhavya_commission || 0);
+    document.getElementById("mLabEarn").innerText = "₹" + (o.lab_earning || 0);
 
     let onlineArr = [];
     if (o.report_pdf) { try { onlineArr = JSON.parse(o.report_pdf); if (!Array.isArray(onlineArr)) onlineArr = [o.report_pdf]; } catch(e) { onlineArr = [o.report_pdf]; } }
@@ -274,17 +280,11 @@ function callApi(payload) {
     .finally(() => { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; });
 }
 
-// ==========================================
-// LOGOUT FUNCTION
-// ==========================================
 function logout() {
     if(confirm("Are you sure you want to logout from BhavyaCare?")) {
-        // Local storage se Lab ka data clear kar do
         localStorage.removeItem("bhavya_user_id");
         localStorage.removeItem("bhavya_name");
         localStorage.removeItem("bhavya_role");
-        
-        // Wapas main login page par bhej do (Path apne hisaab se adjust kar lena)
         window.location.href = "../index.html"; 
     }
 }

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fb; color: #0f172a; margin: 0; padding: 20px;}
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;}
+        .header h1 { margin: 0; font-size: 22px; color: #1e293b;}
+        .container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;}
+        
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
+        .card-title { font-size: 18px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; margin-top: 0;}
+        
+        .form-group { margin-bottom: 15px; width: 100%;}
+        label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 13px; color: #475569;}
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter'; font-size: 14px;}
+        input[readonly] { background: #f1f5f9; color: #64748b; cursor: not-allowed;}
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px;}
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
+        .tag { background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #bae6fd;}
+        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; padding-left: 5px;}
+        
+        .timing-row { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px;}
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; color: white;}
+        .btn-green { background: #10b981; margin-top: 20px;}
+        .btn-green:hover { background: #059669;}
+        .btn-blue { background: #3b82f6; margin-top: 15px;}
+        
+        .services-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;}
+        .services-grid label { background: #f8fafc; padding: 10px; border-radius: 6px; display: flex; align-items: center; cursor: pointer; margin: 0; border: 1px solid #cbd5e1;}
+        .services-grid input { width: 16px; height: 16px; margin-right: 10px;}
+
+        .req-box { background: #fffbeb; border: 1px solid #fef08a; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .timing-row { grid-template-columns: 1fr 1fr; }
+            .timing-row > div:first-child { grid-column: 1 / -1; font-weight: bold; color: #059669;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-user-md"></i> Lab Profile Settings</h1>
+        <button onclick="window.location.href='lab_dashboard.html'" style="padding:10px 20px; background:#f1f5f9; border:none; border-radius:8px; cursor:pointer; font-weight:bold;"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Basic Information</h2>
+            <form id="profileForm">
+                <div class="grid-2">
+                    <div class="form-group"><label>Lab Name</label><input type="text" id="lab_name" readonly></div>
+                    <div class="form-group"><label>User ID</label><input type="text" id="user_id" readonly></div>
+                    <div class="form-group"><label>Email Address</label><input type="email" id="lab_email" required></div>
+                    <div class="form-group"><label>Lab Status</label>
+                        <select id="status">
+                            <option value="Active">Active (Taking Orders)</option>
+                            <option value="Inactive">Inactive (Paused)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Full Address</label><input type="text" id="lab_address" required></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>City</label><input type="text" id="city" required></div>
+                    <div class="form-group"><label>Main Pincode</label><input type="number" id="pincode" required></div>
+                </div>
+
+                <h2 class="card-title" style="margin-top: 30px;">Service Areas</h2>
+                <div class="form-group">
+                    <label>Available Pincodes <span style="font-weight:normal;">(Comma separated)</span></label>
+                    <input type="text" id="available_pincode" required>
+                    <div id="pinTags" class="tags-wrapper"></div>
+                </div>
+                <div class="form-group">
+                    <label>Available Cities <span style="font-weight:normal;">(Comma separated)</span></label>
+                    <input type="text" id="available_city" required>
+                    <div id="cityTags" class="tags-wrapper"></div>
+                </div>
+
+                <h2 class="card-title" style="margin-top: 30px;">Accreditations & Images</h2>
+                <p style="font-size:12px; color:#ef4444; margin-top:-10px;">Leave file inputs blank if you don't want to change existing documents.</p>
+                <div class="grid-2">
+                    <div class="form-group"><label>NABL Approved?</label><select id="nabl"><option value="No">No</option><option value="Yes">Yes</option></select><input type="file" id="nabl_cert" accept=".pdf" style="margin-top:5px;"></div>
+                    <div class="form-group"><label>NABH Approved?</label><select id="nabh"><option value="No">No</option><option value="Yes">Yes</option></select><input type="file" id="nabh_cert" accept=".pdf" style="margin-top:5px;"></div>
+                    <div class="form-group"><label>Update Lab Image 1</label><input type="file" id="lab_img1" accept="image/*"></div>
+                    <div class="form-group"><label>Update Lab Image 2</label><input type="file" id="lab_img2" accept="image/*"></div>
+                </div>
+
+                <h2 class="card-title" style="margin-top: 30px;">Working Timings</h2>
+                <div id="timingsContainer"></div>
+
+                <button type="button" class="btn btn-green" id="btnUpdateProfile" onclick="saveBasicProfile()">Update Profile Details</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Services Offered</h2>
+            <div class="req-box">
+                <i class="fas fa-info-circle"></i> <b>Note:</b> You cannot change services directly. Modifying checkboxes below will send an approval request to the Admin.
+            </div>
+            
+            <div class="services-grid" id="servicesGrid">
+                <div style="text-align:center; padding:20px; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading Services...</div>
+            </div>
+
+            <button class="btn btn-blue" id="btnRequestService" onclick="requestServiceChange()">Request Services Update</button>
+        </div>
+    </div>
+
+    <script src="lab_profile.js"></script>
+</body>
+</html>

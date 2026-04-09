@@ -250,13 +250,13 @@
         hiddenInput.value = list.join(',');
     }
 
-    // ==========================================
-    // AI AUTO FILL - USING INDIAN POSTAL API (REAL VILLAGES & LOCALITIES)
+   // ==========================================
+    // DUAL POWER AI (Google Maps Radius + Postal API Villages)
     // ==========================================
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
         const city = document.getElementById("city").value.trim();
-        const radiusSelect = document.getElementById("radiusSelect").value; // 5, 10, 20, 30, 50
+        const radiusKm = parseInt(document.getElementById("radiusSelect").value);
 
         if (!basePincode || !city) {
             alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first.");
@@ -264,68 +264,110 @@
         }
 
         const btn = document.querySelector(".ai-btn");
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> AI Finding Areas...";
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> AI Scanning Radius...";
         btn.disabled = true;
 
-        let baseNum = parseInt(basePincode);
-        if(isNaN(baseNum)) {
-            alert("Please enter a valid numeric Pincode.");
-            resetBtn(btn);
-            return;
-        }
+        const geocoder = new google.maps.Geocoder();
+        const addressStr = `${city}, ${basePincode}, India`;
 
-        // KM ke hisaab se tay karenge ki kitne extra pincode check karne hain
-        let extraPincodes = 0;
-        if (radiusSelect === "10") extraPincodes = 1;
-        else if (radiusSelect === "20") extraPincodes = 2;
-        else if (radiusSelect === "30") extraPincodes = 3;
-        else if (radiusSelect === "50") extraPincodes = 5;
+        geocoder.geocode({ address: addressStr }, async function(results, status) {
+            if (status === 'OK') {
+                const labLocation = results[0].geometry.location;
 
-        let foundVillages = 0;
+                try {
+                    // STEP 1: GOOGLE MAPS SE EXACT RADIUS ME PINCODES DHOONDHNA
+                    const radiusMeters = radiusKm * 1000;
+                    const request = {
+                        fields: ['displayName', 'addressComponents'],
+                        locationRestriction: {
+                            center: labLocation,
+                            radius: radiusMeters,
+                        },
+                        // Ask Google for areas within radius
+                        includedPrimaryTypes: ['sublocality', 'locality', 'administrative_area_level_3'],
+                    };
 
-        try {
-            // Hamesha base pincode aur city add karo
-            addTag('pincode', basePincode);
-            addTag('city', city);
-
-            // AI Loop: Base Pincode aur aas-paas ke pincodes ko Indian Postal DB me search karega
-            for(let i = 0; i <= extraPincodes; i++) {
-                let currentPin = (baseNum + i).toString();
-                
-                // Pincode tag me add karo
-                if(i > 0) addTag('pincode', currentPin); 
-                
-                // Govt API se us Pincode ke saare gaon/localities nikalna
-                let response = await fetch(`https://api.postalpincode.in/pincode/${currentPin}`);
-                let data = await response.json();
-
-                if(data && data[0] && data[0].Status === "Success") {
-                    let postOffices = data[0].PostOffice;
+                    const { places } = await google.maps.places.Place.searchNearby(request);
                     
-                    postOffices.forEach(po => {
-                        // po.Name me gaon/locality ka asli naam hota hai
-                        let areaName = po.Name;
-                        if(areaName.toLowerCase() !== city.toLowerCase()) {
-                            addTag('city', areaName);
-                            foundVillages++;
+                    let discoveredPincodes = new Set(); // Use Set to avoid duplicates
+                    discoveredPincodes.add(basePincode); // Always include base
+                    
+                    if (places && places.length > 0) {
+                        places.forEach(place => {
+                            if (place.addressComponents) {
+                                place.addressComponents.forEach(component => {
+                                    if (component.types.includes('postal_code')) {
+                                        discoveredPincodes.add(component.longText);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Agar Google radius me naye Pincodes na dhoondh paye, toh hum mathematical backup denge
+                    if(discoveredPincodes.size === 1) {
+                        console.log("Maps didn't find extra pins in radius, using math backup");
+                        let baseNum = parseInt(basePincode);
+                        let extra = Math.ceil(radiusKm / 10);
+                        for(let i=1; i<=extra; i++){
+                            discoveredPincodes.add((baseNum + i).toString());
+                            discoveredPincodes.add((baseNum - i).toString());
                         }
-                    });
+                    }
+
+                    // STEP 2: POST OFFICE API SE UN PINCODES KE ASLI GAON DHOONDHNA
+                    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching Villages...";
+                    let foundVillages = 0;
+                    let foundPins = 0;
+
+                    const pinArray = Array.from(discoveredPincodes);
+                    
+                    for (const pin of pinArray) {
+                        addTag('pincode', pin);
+                        foundPins++;
+                        
+                        try {
+                            let response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                            let data = await response.json();
+
+                            if(data && data[0] && data[0].Status === "Success") {
+                                let postOffices = data[0].PostOffice;
+                                postOffices.forEach(po => {
+                                    let areaName = po.Name;
+                                    if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") {
+                                        addTag('city', areaName);
+                                        foundVillages++;
+                                    }
+                                });
+                            }
+                        } catch(e) {
+                            console.error(`Failed to fetch villages for pin ${pin}`, e);
+                        }
+                    }
+
+                    // Hamesha base city add karo
+                    addTag('city', city);
+
+                    resetBtn(btn);
+                    alert(`AI Magic Complete! Found ${foundPins} Pincodes and ${foundVillages} real Indian villages within your ${radiusKm}km radius.`);
+
+                } catch (error) {
+                    console.error("Dual AI Error:", error);
+                    alert("Network Error: Adding only base details.");
+                    fallback(basePincode, city, btn);
                 }
-            }
 
-            resetBtn(btn);
-            
-            if(foundVillages > 0) {
-                alert(`AI Magic! Found ${foundVillages} real Indian villages/localities for this area!`);
             } else {
-                alert(`Added nearby Pincodes successfully.`);
+                alert("Could not locate your main Pincode on Google Maps.");
+                fallback(basePincode, city, btn);
             }
+        });
+    }
 
-        } catch (error) {
-            console.error("API Error:", error);
-            alert("Added nearby Pincodes. Could not fetch village names due to network issue.");
-            resetBtn(btn);
-        }
+    function fallback(basePincode, city, btn) {
+        addTag('pincode', basePincode);
+        addTag('city', city);
+        resetBtn(btn);
     }
 
     function resetBtn(btn) {

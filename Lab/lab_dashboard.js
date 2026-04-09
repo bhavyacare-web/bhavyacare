@@ -128,7 +128,14 @@ function openOrderModal(index) {
 
     // 🌟 LAB EARNING BREAKDOWN 🌟
     document.getElementById("mFinalPay").innerText = "₹" + (o.final_payable || 0);
-    document.getElementById("mComm").innerText = "-₹" + (o.bhavya_commission || 0);
+    let bComm = Number(o.bhavya_commission || 0);
+    if (bComm >= 0) {
+        document.getElementById("mComm").innerText = "-₹" + bComm.toFixed(2);
+        document.getElementById("mComm").style.color = "#ef4444"; // red
+    } else {
+        document.getElementById("mComm").innerText = "+₹" + Math.abs(bComm).toFixed(2);
+        document.getElementById("mComm").style.color = "#16a34a"; // green
+    }
     document.getElementById("mLabEarn").innerText = "₹" + (o.lab_earning || 0);
 
     let onlineArr = [];

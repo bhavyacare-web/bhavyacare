@@ -5,16 +5,24 @@
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-const servicesList = ["pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"];
+const servicesList = [
+    "pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", 
+    "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", 
+    "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"
+];
 const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 let currentProfile = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     const userId = localStorage.getItem("bhavya_user_id");
+    
     if (!userId || localStorage.getItem("bhavya_role") !== "lab") {
-        alert("Unauthorized Access!"); window.location.href = "../index.html"; return;
+        alert("Unauthorized Access!"); 
+        window.location.href = "../index.html"; 
+        return;
     }
+    
     document.getElementById("user_id").value = userId;
     fetchProfileData(userId);
 
@@ -31,14 +39,19 @@ function drawTags(containerId, valueStr) {
 }
 
 function fetchProfileData(userId) {
-    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getLabProfileData", user_id: userId }) })
+    fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        body: JSON.stringify({ action: "getLabProfileData", user_id: userId }) 
+    })
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
             currentProfile = data.data;
             populateForm();
-        } else { alert("Error loading profile: " + data.message); }
-    }).catch(err => alert("Network Error!"));
+        } else { 
+            alert("Error loading profile: " + data.message); 
+        }
+    }).catch(err => alert("Network Error while fetching profile!"));
 }
 
 function populateForm() {
@@ -50,7 +63,8 @@ function populateForm() {
     document.getElementById("pincode").value = p.pincode;
     
     // Load Arrays safely
-    let pinStr = ""; try { pinStr = JSON.parse(p.available_pincode).join(", "); } catch(e) { pinStr = p.available_pincode; }
+    let pinStr = ""; 
+    try { pinStr = JSON.parse(p.available_pincode).join(", "); } catch(e) { pinStr = p.available_pincode; }
     document.getElementById("available_pincode").value = pinStr;
     drawTags("pinTags", pinStr);
 
@@ -62,7 +76,8 @@ function populateForm() {
     
     let statSel = document.getElementById("status");
     if(p.status === "Cancel") {
-        statSel.innerHTML = `<option value="Cancel">Cancelled by Admin</option>`; statSel.disabled = true;
+        statSel.innerHTML = `<option value="Cancel">Cancelled by Admin</option>`; 
+        statSel.disabled = true;
     } else {
         statSel.value = p.status === "Active" ? "Active" : "Inactive";
     }
@@ -96,8 +111,11 @@ function getBase64(fileId) {
     return new Promise((resolve, reject) => {
         const fileInput = document.getElementById(fileId);
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) { resolve(""); return; }
-        const file = fileInput.files[0]; const reader = new FileReader();
-        reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
+        const file = fileInput.files[0]; 
+        const reader = new FileReader();
+        reader.readAsDataURL(file); 
+        reader.onload = () => resolve(reader.result.split(',')[1]); 
+        reader.onerror = error => reject(error);
     });
 }
 
@@ -106,7 +124,8 @@ function getBase64(fileId) {
 // ==========================================
 async function saveBasicProfile() {
     const btn = document.getElementById("btnUpdateProfile");
-    btn.innerText = "Saving Profile..."; btn.disabled = true;
+    btn.innerText = "Saving Profile..."; 
+    btn.disabled = true;
 
     try {
         let payload = {
@@ -140,18 +159,26 @@ async function saveBasicProfile() {
         .then(res => res.json())
         .then(data => {
             alert(data.message);
-            btn.innerText = "Update Profile Details"; btn.disabled = false;
-        }).catch(e => { alert("Error!"); btn.disabled = false; });
+            btn.innerText = "Update Profile Details"; 
+            btn.disabled = false;
+        }).catch(e => { 
+            alert("Error while updating profile!"); 
+            btn.disabled = false; 
+        });
 
-    } catch(e) { alert("File processing error"); btn.disabled = false; }
+    } catch(e) { 
+        alert("File processing error"); 
+        btn.disabled = false; 
+    }
 }
 
 // ==========================================
-// 2. REQUEST SERVICE CHANGE
+// 2. REQUEST STANDARD SERVICE CHANGE
 // ==========================================
 function requestServiceChange() {
     const btn = document.getElementById("btnRequestService");
-    btn.innerText = "Sending Request..."; btn.disabled = true;
+    btn.innerText = "Sending Request..."; 
+    btn.disabled = true;
 
     let reqObj = {};
     servicesList.forEach(srv => {
@@ -168,6 +195,47 @@ function requestServiceChange() {
     .then(res => res.json())
     .then(data => {
         alert(data.message);
-        btn.innerText = "Request Services Update"; btn.disabled = false;
-    }).catch(e => { alert("Error!"); btn.disabled = false; });
+        btn.innerText = "Request Services Update"; 
+        btn.disabled = false;
+    }).catch(e => { 
+        alert("Error sending service request!"); 
+        btn.disabled = false; 
+    });
+}
+
+// ==========================================
+// 3. SUBMIT NEW CUSTOM SERVICE REQUEST
+// ==========================================
+function submitCustomRequest() {
+    let sName = document.getElementById("custom_service_name").value.trim();
+    let sPrice = document.getElementById("custom_expected_price").value.trim();
+
+    if(!sName || !sPrice) return alert("Please enter both Service Name and Expected Price.");
+
+    const btn = document.getElementById("btnCustomReq");
+    btn.innerText = "Submitting..."; 
+    btn.disabled = true;
+
+    let payload = {
+        action: "submitCustomServiceRequest",
+        user_id: document.getElementById("user_id").value,
+        lab_name: document.getElementById("lab_name").value,
+        service_name: sName,
+        expected_price: sPrice
+    };
+
+    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        // Clear input boxes after successful submission
+        document.getElementById("custom_service_name").value = "";
+        document.getElementById("custom_expected_price").value = "";
+        
+        btn.innerText = "Submit Custom Request"; 
+        btn.disabled = false;
+    }).catch(e => { 
+        alert("Error sending custom service request!"); 
+        btn.disabled = false; 
+    });
 }

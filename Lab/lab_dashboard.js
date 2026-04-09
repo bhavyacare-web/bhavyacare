@@ -55,7 +55,6 @@ function renderOrders() {
         let statusClass = "badge-pending";
         let statusText = order.status ? order.status.toUpperCase() : "PENDING";
         
-        // 🌟 YAHAN CHANGE KIYA HAI (ACTIVE OR CONFIRMED) 🌟
         if(statusText === "ACTIVE" || statusText === "CONFIRMED") statusClass = "badge-active";
         else if(statusText === "COMPLETED") statusClass = "badge-completed";
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
@@ -105,7 +104,6 @@ function openOrderModal(index) {
     statSpan.innerText = currentStatus.toUpperCase();
     statSpan.className = "badge"; 
     
-    // 🌟 YAHAN BHI CHANGE KIYA HAI 🌟
     if(currentStatus === "Pending") statSpan.classList.add("badge-pending");
     else if(currentStatus === "Active" || currentStatus === "Confirmed") statSpan.classList.add("badge-active");
     else if(currentStatus === "Completed") statSpan.classList.add("badge-completed");
@@ -127,9 +125,7 @@ function openOrderModal(index) {
                     <div class="item-price">₹${item.price}</div>
                 </div>`;
             });
-        } else {
-             itemsHTML = "<i>No items found</i>";
-        }
+        } else { itemsHTML = "<i>No items found</i>"; }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     document.getElementById("mItemsList").innerHTML = itemsHTML;
 
@@ -137,6 +133,33 @@ function openOrderModal(index) {
     document.getElementById("mColl").innerText = "₹" + (o.collection_charge || 0);
     document.getElementById("mDisc").innerText = "-₹" + (o.discount || 0);
     document.getElementById("mFinal").innerText = "₹" + (o.final_payable || 0);
+
+    // ==========================================
+    // REPORTS JSON PARSING LOGIC
+    // ==========================================
+    let reportsArr = [];
+    if (o.report_pdf) {
+        try {
+            reportsArr = JSON.parse(o.report_pdf);
+            if (!Array.isArray(reportsArr)) reportsArr = [o.report_pdf];
+        } catch(e) {
+            reportsArr = [o.report_pdf]; // Agar purani non-JSON link ho
+        }
+    }
+
+    let reportsHTML = "";
+    if (reportsArr.length > 0) {
+        reportsHTML += `<div style="margin-bottom:10px; font-weight:700; color:#166534;"><i class="fas fa-check-circle"></i> Uploaded Reports:</div>`;
+        reportsArr.forEach((url, i) => {
+            if(url.trim() !== "") {
+                reportsHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
+                    <a href="${url}" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;"><i class="fas fa-file-pdf"></i> View Report ${i+1}</a>
+                    <button onclick="deleteReport(${i})" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;"><i class="fas fa-trash"></i> Delete</button>
+                </div>`;
+            }
+        });
+    }
 
     let actionArea = document.getElementById("mActionArea");
     actionArea.innerHTML = "";
@@ -153,11 +176,14 @@ function openOrderModal(index) {
                 <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:15px;">Confirm Cancellation</button>
             </div>`;
     } 
-    // 🌟 MAIN LOGIC FIX YAHAN HAI: "Active" ya "Confirmed" dono par chalega 🌟
-    else if (currentStatus === "Active" || currentStatus === "Confirmed") {
+    // AGAR ORDER ACTIVE HAI YA COMPLETED HAI, TOH REPORT UPLOAD/VIEW KA OPTION AAYEGA
+    else if (currentStatus === "Active" || currentStatus === "Confirmed" || currentStatus === "Completed") {
         actionArea.innerHTML = `
             <div class="action-box">
-                <div style="font-weight:600; margin-bottom:10px;">Provide Report & Complete Order:</div>
+                ${reportsHTML}
+                <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">
+                    ${reportsArr.length > 0 ? 'Add Another Report:' : 'Provide Report & Complete Order:'}
+                </div>
                 <select id="reportType" class="input-box" onchange="togglePdfUpload()" style="margin-bottom: 15px;">
                     <option value="">Select Report Type</option>
                     <option value="Online">Online (Upload PDF)</option>
@@ -165,15 +191,9 @@ function openOrderModal(index) {
                 </select>
                 <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
                 
-                <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="submitReport()"><i class="fas fa-check-double"></i> Mark Completed</button>
-            </div>`;
-    }
-    else if (currentStatus === "Completed") {
-        actionArea.innerHTML = `
-            <div class="action-box" style="background:#dcfce7; border-color:#bbf7d0; color:#166534; text-align:center;">
-                <i class="fas fa-check-circle" style="font-size:30px; margin-bottom:10px;"></i>
-                <div style="font-weight:bold;">Order is Completed</div>
-                <div style="font-size:13px; margin-top:5px;">Report: ${o.report_type || "N/A"} ${o.report_pdf ? `<br><a href="${o.report_pdf}" target="_blank" style="color: #1d4ed8; font-weight: 600; display: inline-block; margin-top: 5px;">View PDF</a>` : ''}</div>
+                <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="submitReport()">
+                    <i class="fas fa-upload"></i> ${reportsArr.length > 0 ? 'Upload Additional Report' : 'Upload & Mark Completed'}
+                </button>
             </div>`;
     }
     else if (currentStatus === "Cancelled") {
@@ -219,8 +239,15 @@ function submitAction(actionType) {
         if(!reason) return alert("Please type a cancellation reason.");
         payload.cancel_reason = reason;
     }
-
     callApi(payload);
+}
+
+// DELETE REPORT API CALL
+function deleteReport(index) {
+    if(confirm("Are you sure you want to delete this report?")) {
+        let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "DeleteReport", file_index: index };
+        callApi(payload);
+    }
 }
 
 async function submitReport() {

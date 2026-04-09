@@ -8,53 +8,104 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f4f7fb; padding: 20px; color: #0f172a; margin: 0;}
-        .form-container { background: white; max-width: 900px; margin: auto; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 28px;}
-        p.subtitle { text-align: center; color: #64748b; margin-bottom: 30px;}
-        h2 { color: #059669; border-bottom: 2px solid #ecfdf5; padding-bottom: 10px; margin-top: 40px; font-size: 20px;}
+        /* === MODERN UI CSS === */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+            padding: 30px 20px; 
+            color: #0f172a; 
+            margin: 0;
+            min-height: 100vh;
+        }
+        .form-container { 
+            background: white; 
+            max-width: 950px; 
+            margin: auto; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            border: 1px solid #f1f5f9;
+        }
+        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;}
+        p.subtitle { text-align: center; color: #64748b; margin-bottom: 40px; font-size: 15px;}
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        h2 { 
+            color: #0f172a; 
+            font-size: 18px; 
+            margin-top: 45px; 
+            margin-bottom: 20px;
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h2 span.step { 
+            background: #10b981; 
+            color: white; 
+            border-radius: 50%; 
+            width: 28px; 
+            height: 28px; 
+            display: inline-flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 14px; 
+            font-weight: bold;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .form-group { margin-bottom: 20px; }
+        
         label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #334155;}
         input[type="text"], input[type="email"], input[type="time"], input[type="file"], input[type="number"], select { 
-            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: border-color 0.3s;
+            width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 15px; transition: all 0.3s ease; background: #f8fafc;
         }
-        input:focus, select:focus { border-color: #059669; outline: none; }
+        input:focus, select:focus { border-color: #10b981; background: white; outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
         
-        /* Checkbox styling */
-        .service-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; font-size: 14px; }
-        .service-checkboxes label { display: flex; align-items: center; font-weight: normal; margin: 0; cursor: pointer;}
-        .service-checkboxes input { width: auto; margin-right: 8px; accent-color: #059669; transform: scale(1.1);}
+        /* Service Checkboxes - Card Style */
+        .service-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .service-checkboxes label { 
+            background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; margin: 0;
+        }
+        .service-checkboxes label:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+        .service-checkboxes input { width: 18px; height: 18px; margin-right: 12px; accent-color: #10b981; cursor: pointer;}
+
+        /* Timings Row Style */
+        .timing-row {
+            display: grid; grid-template-columns: 130px 1fr 1fr; align-items: center; gap: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; transition: 0.2s;
+        }
+        .timing-row:hover { border-color: #cbd5e1; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .timing-day { font-weight: 600; color: #0f172a; font-size: 15px; }
 
         /* Button Styling */
-        button.submit-btn { width: 100%; padding: 16px; background: #059669; color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 40px; transition: background 0.3s;}
-        button.submit-btn:hover { background: #047857; }
-        button.submit-btn:disabled { background: #9ca3af; cursor: not-allowed;}
+        button.submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 40px; transition: 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);}
+        button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        button.submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
         
-        /* NEW STYLES FOR TAGS & AI BUTTON */
+        /* TAGS & AI BUTTON */
         .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;}
-        .input-with-button input { flex: 1; margin: 0; min-width: 150px;}
-        .add-btn { background: #1d4ed8; color: white; border: none; border-radius: 6px; padding: 0 15px; height: 42px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        .add-btn:hover { background: #1e40af; }
-        .ai-btn { background: #8b5cf6; color: white; border: none; border-radius: 6px; padding: 0 15px; height: 42px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
-        .ai-btn:hover { background: #7c3aed; }
-        .ai-btn:disabled { background: #c4b5fd; cursor: not-allowed;}
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; min-height: 20px;}
-        .tag { background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0;}
-        .tag span { cursor: pointer; color: #ef4444; font-weight: 800; font-size: 15px; transition: 0.2s;}
-        .tag span:hover { color: #b91c1c; transform: scale(1.2);}
+        .input-with-button input { flex: 1; margin: 0; min-width: 150px; background: white;}
+        .add-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 18px; height: 46px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .add-btn:hover { background: #1d4ed8; }
+        .ai-btn { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; padding: 0 20px; height: 46px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);}
+        .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.4);}
+        .ai-btn:disabled { background: #c4b5fd; cursor: not-allowed; box-shadow:none;}
+        
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; min-height: 20px;}
+        .tag { background: #e0f2fe; color: #0369a1; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd;}
+        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px; transition: 0.2s;}
+        .tag span:hover { color: #0c4a6e; transform: scale(1.2);}
     </style>
 </head>
 <body>
 
 <div class="form-container">
     <h1>Complete Your Lab Profile</h1>
-    <p class="subtitle">Please fill all mandatory details to activate your lab on BhavyaCare.</p>
+    <p class="subtitle">Join BhavyaCare's network of trusted diagnostic centers.</p>
 
     <form id="labRegForm">
-        <h2>1. Basic Details</h2>
+        <h2><span class="step">1</span> Basic Details</h2>
         <div class="grid-2">
             <div class="form-group"><label>Lab Name *</label><input type="text" id="lab_name" readonly></div>
             <div class="form-group"><label>Email Address *</label><input type="email" id="lab_email" required></div>
@@ -66,7 +117,7 @@
             <div class="form-group"><label>Main Pincode *</label><input type="number" id="pincode" required></div>
         </div>
 
-        <h2>2. Service Areas</h2>
+        <h2><span class="step">2</span> Service Areas</h2>
         
         <div class="form-group tag-input-container">
             <label>Available Pincodes * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press Enter or +)</span></label>
@@ -74,7 +125,7 @@
                 <input type="number" id="pincodeInput" placeholder="Add pincode manually">
                 <button type="button" class="add-btn" onclick="addTag('pincode')" title="Add Pincode">+</button>
                 
-                <select id="radiusSelect" style="width: auto; padding: 10px; margin-left: 10px;">
+                <select id="radiusSelect" style="width: auto; height: 46px; margin-left: 10px; background: white;">
                     <option value="5">5 km</option>
                     <option value="10">10 km</option>
                     <option value="20">20 km</option>
@@ -98,7 +149,7 @@
             <input type="hidden" id="available_city" required>
         </div>
 
-        <h2>3. Accreditations</h2>
+        <h2><span class="step">3</span> Accreditations</h2>
         <div class="grid-2">
             <div class="form-group">
                 <label>NABL Approved? *</label>
@@ -118,15 +169,15 @@
             </div>
         </div>
 
-        <h2>4. Services Offered (Check if available)</h2>
+        <h2><span class="step">4</span> Services Offered</h2>
         <div class="service-checkboxes" id="servicesContainer">
             </div>
 
-        <h2>5. Working Timings</h2>
+        <h2><span class="step">5</span> Working Timings <span style="font-size: 13px; font-weight: normal; color: #64748b;">(Fill at least 1 day)</span></h2>
         <div id="timingsContainer">
             </div>
 
-        <h2>6. Lab Images</h2>
+        <h2><span class="step">6</span> Lab Images</h2>
         <div class="grid-3">
             <div class="form-group"><label>Lab Image 1 (Required) *</label><input type="file" id="lab_img1" accept="image/*" required></div>
             <div class="form-group"><label>Lab Image 2</label><input type="file" id="lab_img2" accept="image/*"></div>
@@ -141,9 +192,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
 <script>
-    // ==========================================
-    // GLOBAL CONFIG & VARIABLES
-    // ==========================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
     
     const services = [
@@ -156,12 +204,7 @@
     let pincodeList = [];
     let cityList = [];
 
-    // ==========================================
-    // INITIALIZATION ON PAGE LOAD
-    // ==========================================
     document.addEventListener("DOMContentLoaded", () => {
-        
-        // 1. Check Access & Auto Fill Name
         const labName = localStorage.getItem("bhavya_name");
         const userId = localStorage.getItem("bhavya_user_id");
         
@@ -172,25 +215,24 @@
         }
         document.getElementById("lab_name").value = labName;
 
-        // 2. Generate Service Checkboxes Dynamically
         const servDiv = document.getElementById("servicesContainer");
         services.forEach(srv => {
             let displayName = srv.replace("_", " ").toUpperCase();
             servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
         });
 
-        // 3. Generate Timings Dynamically
         const timeDiv = document.getElementById("timingsContainer");
         days.forEach(day => {
             let dayName = day.charAt(0).toUpperCase() + day.slice(1);
+            // YAHAN SE 'required' HATA DIYA GAYA HAI
             timeDiv.innerHTML += `
-            <div class="grid-2" style="margin-bottom:12px;">
-                <div><label>${dayName} Opening Time</label><input type="time" id="${day}_open" required></div>
-                <div><label>${dayName} Closing Time</label><input type="time" id="${day}_close" required></div>
+            <div class="timing-row">
+                <div class="timing-day">${dayName}</div>
+                <div><input type="time" id="${day}_open" title="Opening Time"></div>
+                <div><input type="time" id="${day}_close" title="Closing Time"></div>
             </div>`;
         });
 
-        // 4. Listeners for Tag Inputs (Enter Key)
         document.getElementById("pincodeInput").addEventListener("keypress", function(e) {
             if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); }
         });
@@ -198,13 +240,9 @@
             if (e.key === "Enter") { e.preventDefault(); addTag('city'); }
         });
 
-        // 5. Form Submit Listener
         document.getElementById("labRegForm").addEventListener("submit", handleFormSubmit);
     });
 
-    // ==========================================
-    // TAG SYSTEM LOGIC 
-    // ==========================================
     function addTag(type, aiValue = null) {
         let inputElem = document.getElementById(type + "Input");
         let val = aiValue ? aiValue : inputElem.value.trim();
@@ -215,7 +253,6 @@
             pincodeList.push(val);
             updateTagsUI('pincode');
         } else if (type === 'city') {
-            // Capitalize first letter and check for case-insensitive duplicates
             val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
             let lowerCaseCityList = cityList.map(c => c.toLowerCase());
             
@@ -224,7 +261,6 @@
                 updateTagsUI('city');
             }
         }
-        
         if(!aiValue) inputElem.value = ""; 
     }
 
@@ -246,13 +282,10 @@
             tag.innerHTML = `${item} <span onclick="removeTag('${type}', ${index})" title="Remove">×</span>`;
             wrapper.appendChild(tag);
         });
-
         hiddenInput.value = list.join(',');
     }
 
-   // ==========================================
-    // DUAL POWER AI (Google Maps Radius + Postal API Villages) - FIXED
-    // ==========================================
+    // AI AUTO FILL LOGIC (DUAL POWER)
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim();
         const city = document.getElementById("city").value.trim();
@@ -275,7 +308,6 @@
                 const labLocation = results[0].geometry.location;
 
                 try {
-                    // STEP 1: GOOGLE MAPS SE EXACT RADIUS ME PINCODES DHOONDHNA
                     const radiusMeters = radiusKm * 1000;
                     const request = {
                         fields: ['addressComponents'],
@@ -283,7 +315,6 @@
                             center: labLocation,
                             radius: radiusMeters,
                         }
-                        // ERROR WALI LINE YAHAN SE HATA DI GAYI HAI
                     };
 
                     const { places } = await google.maps.places.Place.searchNearby(request);
@@ -303,17 +334,15 @@
                         });
                     }
                     
-                    // Backup: Agar Google map kam pincodes de, toh Math logic se aage-peechhe ke pincode uthayega
                     if(discoveredPincodes.size === 1) {
                         let baseNum = parseInt(basePincode);
-                        let extra = Math.ceil(radiusKm / 10) + 1; // 20km = +/- 3 pincodes
+                        let extra = Math.ceil(radiusKm / 10) + 1;
                         for(let i=1; i<=extra; i++){
                             discoveredPincodes.add((baseNum + i).toString());
                             discoveredPincodes.add((baseNum - i).toString());
                         }
                     }
 
-                    // STEP 2: POST OFFICE API SE ASLI GAON DHOONDHNA
                     btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching Villages...";
                     let foundVillages = 0;
                     let foundPins = 0;
@@ -332,7 +361,6 @@
                                 let postOffices = data[0].PostOffice;
                                 postOffices.forEach(po => {
                                     let areaName = po.Name;
-                                    // Base city ka naam dobara gaon ki list me na aaye
                                     if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") {
                                         addTag('city', areaName);
                                         foundVillages++;
@@ -350,8 +378,6 @@
 
                 } catch (error) {
                     console.error("Dual AI Error:", error);
-                    
-                    // Direct Math Backup agar Google block kare
                     let baseNum = parseInt(basePincode);
                     let extra = Math.ceil(radiusKm / 10) + 1;
                     addTag('pincode', basePincode);
@@ -378,9 +404,6 @@
         btn.disabled = false;
     }
 
-    // ==========================================
-    // FORM SUBMISSION & FILE HANDLING
-    // ==========================================
     function toggleCert(type) {
         const val = document.getElementById(type).value;
         const fileInput = document.getElementById(type + "_cert");
@@ -415,8 +438,24 @@
             return;
         }
 
+        // === NAYA TIMING VALIDATION LOGIC ===
+        let hasAtLeastOneTime = false;
+        days.forEach(day => {
+            let openTime = document.getElementById(day + "_open").value;
+            let closeTime = document.getElementById(day + "_close").value;
+            if (openTime && closeTime) {
+                hasAtLeastOneTime = true;
+            }
+        });
+
+        if (!hasAtLeastOneTime) {
+            alert("Please provide Opening and Closing times for at least 1 day.");
+            return;
+        }
+        // =====================================
+
         const btn = document.getElementById("submitBtn");
-        btn.innerText = "Uploading Documents & Saving... Please wait (Do not close tab)";
+        btn.innerText = "Uploading Documents & Saving... Please wait";
         btn.disabled = true;
 
         try {

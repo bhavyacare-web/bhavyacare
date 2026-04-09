@@ -108,32 +108,23 @@ function openOrderModal(index) {
     paySpan.className = "badge";
     paySpan.classList.add(o.payment_status === "COMPLETED" ? "badge-paid" : "badge-due");
 
-    // PARSE CART ITEMS
     let itemsArr = [];
     let itemsHTML = "";
     try {
         if(o.cart_items) {
             itemsArr = JSON.parse(o.cart_items);
             itemsArr.forEach(item => {
-                itemsHTML += `
-                <div class="cart-item">
-                    <div class="item-name">${item.qty}x ${item.service_name}</div>
-                    <div class="item-price">₹${item.price}</div>
-                </div>`;
+                itemsHTML += `<div class="cart-item"><div class="item-name">${item.qty}x ${item.service_name}</div><div class="item-price">₹${item.price}</div></div>`;
             });
         } else { itemsHTML = "<i>No items found</i>"; }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     document.getElementById("mItemsList").innerHTML = itemsHTML;
 
-    // BILLING
     document.getElementById("mSub").innerText = "₹" + (o.subtotal || 0);
     document.getElementById("mColl").innerText = "₹" + (o.collection_charge || 0);
     document.getElementById("mDisc").innerText = "-₹" + (o.discount || 0);
     document.getElementById("mFinal").innerText = "₹" + (o.final_payable || 0);
 
-    // ==========================================
-    // MULTIPLE REPORTS (ONLINE & IN HAND) UI
-    // ==========================================
     let onlineArr = [];
     if (o.report_pdf) { try { onlineArr = JSON.parse(o.report_pdf); if (!Array.isArray(onlineArr)) onlineArr = [o.report_pdf]; } catch(e) { onlineArr = [o.report_pdf]; } }
 
@@ -143,23 +134,17 @@ function openOrderModal(index) {
     let reportsHTML = "";
     if (onlineArr.length > 0 || handArr.length > 0) {
         reportsHTML += `<div style="margin-bottom:10px; font-weight:700; color:#166534;"><i class="fas fa-check-circle"></i> Uploaded / Given Reports:</div>`;
-        
-        // Render Online PDFs
         onlineArr.forEach((url, i) => {
             if(url.trim() !== "") {
-                reportsHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
+                reportsHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
                     <a href="${url}" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;"><i class="fas fa-file-pdf"></i> Online Report ${i+1}</a>
                     <button onclick="deleteOnlineReport(${i})" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fas fa-trash"></i> Delete</button>
                 </div>`;
             }
         });
-
-        // Render In Hand Services
         handArr.forEach((srv) => {
             if(srv.trim() !== "") {
-                reportsHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#fefce8; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #fef08a;">
+                reportsHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fefce8; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #fef08a;">
                     <span style="color:#854d0e; font-weight:600;"><i class="fas fa-hand-holding-medical"></i> In Hand: ${srv}</span>
                     <button onclick="deleteInHandReport('${srv}')" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fas fa-trash"></i> Delete</button>
                 </div>`;
@@ -167,22 +152,17 @@ function openOrderModal(index) {
         });
     }
 
-    // CHECKBOXES GENERATOR FOR "IN HAND" ADDITION
     let checksHTML = `<div id="inHandCheckboxes" style="display:none; background:white; padding:15px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:15px;">`;
     checksHTML += `<div style="font-weight:600; margin-bottom:10px; color:#475569;">Select services given in hand:</div>`;
     let itemsAvailableForHand = false;
     itemsArr.forEach(item => {
-        // Sirf wahi tests dikhao jo abhi In Hand list me nahi hain
         if(!handArr.includes(item.service_name)) {
             itemsAvailableForHand = true;
-            checksHTML += `<label style="display:block; margin-bottom:8px; cursor:pointer; font-weight:500;">
-                <input type="checkbox" class="in-hand-chk" value="${item.service_name}" style="margin-right:8px; width:16px; height:16px;"> ${item.service_name}
-            </label>`;
+            checksHTML += `<label style="display:block; margin-bottom:8px; cursor:pointer; font-weight:500;"><input type="checkbox" class="in-hand-chk" value="${item.service_name}" style="margin-right:8px; width:16px; height:16px;"> ${item.service_name}</label>`;
         }
     });
     if(!itemsAvailableForHand) checksHTML += `<div style="color:red; font-size:13px;">All services have already been marked as In-Hand.</div>`;
     checksHTML += `</div>`;
-
 
     let actionArea = document.getElementById("mActionArea");
     actionArea.innerHTML = "";
@@ -203,31 +183,19 @@ function openOrderModal(index) {
         actionArea.innerHTML = `
             <div class="action-box">
                 ${reportsHTML}
-                
-                <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">
-                    ${(onlineArr.length > 0 || handArr.length > 0) ? 'Add Another Report:' : 'Provide Report & Complete Order:'}
-                </div>
-                
+                <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">${(onlineArr.length > 0 || handArr.length > 0) ? 'Add Another Report:' : 'Provide Report & Complete Order:'}</div>
                 <select id="reportType" class="input-box" onchange="toggleReportInput()" style="margin-bottom: 15px;">
                     <option value="">Select Report Type</option>
                     <option value="Online">Online (Upload PDF)</option>
                     <option value="In Hand">In Hand (Physical Copy)</option>
                 </select>
-                
                 <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
                 ${checksHTML}
-                
-                <button class="btn btn-blue" style="width:100%; margin-top:5px;" onclick="submitReport()">
-                    <i class="fas fa-save"></i> Save & Mark Completed
-                </button>
+                <button class="btn btn-blue" style="width:100%; margin-top:5px;" onclick="submitReport()"><i class="fas fa-save"></i> Save & Mark Completed</button>
             </div>`;
     }
     else if (currentStatus === "Cancelled") {
-        actionArea.innerHTML = `
-             <div class="action-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b; text-align:center;">
-                <i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i>
-                <div style="font-weight:bold;">Order Cancelled</div>
-            </div>`;
+        actionArea.innerHTML = `<div class="action-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b; text-align:center;"><i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i><div style="font-weight:bold;">Order Cancelled</div></div>`;
     }
 
     document.getElementById("orderModal").style.display = "flex";
@@ -238,18 +206,15 @@ function closeModal() { document.getElementById("orderModal").style.display = "n
 function toggleCancelReason() {
     const r = document.getElementById("cancelReason");
     const b = document.getElementById("finalCancelBtn");
-    if (r.style.display === "none") { r.style.display = "block"; b.style.display = "block"; r.focus(); } 
-    else { r.style.display = "none"; b.style.display = "none"; }
+    if (r.style.display === "none") { r.style.display = "block"; b.style.display = "block"; r.focus(); } else { r.style.display = "none"; b.style.display = "none"; }
 }
 
-// DROPDOWN CHOOSE KARNE PAR INPUTS BADALNA
 function toggleReportInput() {
     let type = document.getElementById("reportType").value;
     document.getElementById("reportPdfFile").style.display = (type === "Online") ? "block" : "none";
     document.getElementById("inHandCheckboxes").style.display = (type === "In Hand") ? "block" : "none";
 }
 
-// ACTIONS: ACCEPT & CANCEL
 function submitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: actionType };
     if(actionType === "Cancel") {
@@ -260,24 +225,17 @@ function submitAction(actionType) {
     callApi(payload);
 }
 
-// DELETE REPORTS
 function deleteOnlineReport(index) {
-    if(confirm("Are you sure you want to delete this PDF report?")) {
-        callApi({ action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "DeleteReport", delete_type: "Online", file_index: index });
-    }
+    if(confirm("Are you sure you want to delete this PDF report?")) callApi({ action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "DeleteReport", delete_type: "Online", file_index: index });
 }
 
 function deleteInHandReport(serviceName) {
-    if(confirm(`Are you sure you want to remove In-Hand status for "${serviceName}"?`)) {
-        callApi({ action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "DeleteReport", delete_type: "InHand", service_name: serviceName });
-    }
+    if(confirm(`Are you sure you want to remove In-Hand status for "${serviceName}"?`)) callApi({ action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "DeleteReport", delete_type: "InHand", service_name: serviceName });
 }
 
-// UPLOAD / SAVE NEW REPORT (MIXED)
 async function submitReport() {
     let rType = document.getElementById("reportType").value;
     if(!rType) return alert("Please select a Report Type.");
-
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "UploadReport", report_type: rType };
 
     if(rType === "Online") {
@@ -285,35 +243,24 @@ async function submitReport() {
         if(fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
         let file = fileInput.files[0];
         if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
-        
         try {
             let base64 = await new Promise((res, rej) => {
-                let reader = new FileReader();
-                reader.onload = () => res(reader.result.split(',')[1]);
-                reader.onerror = e => rej(e);
-                reader.readAsDataURL(file);
+                let reader = new FileReader(); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = e => rej(e); reader.readAsDataURL(file);
             });
             payload.base64Pdf = base64;
         } catch(e) { return alert("Error reading file."); }
-    } 
-    else if (rType === "In Hand") {
-        // Collect checked services
+    } else if (rType === "In Hand") {
         let checkboxes = document.querySelectorAll(".in-hand-chk:checked");
         if(checkboxes.length === 0) return alert("Please select at least one service to mark as In-Hand.");
-        
-        let selectedServices = [];
-        checkboxes.forEach(chk => selectedServices.push(chk.value));
+        let selectedServices = []; checkboxes.forEach(chk => selectedServices.push(chk.value));
         payload.in_hand_services = selectedServices;
     }
-
     callApi(payload);
 }
 
-// API CALLER
 function callApi(payload) {
     let modal = document.querySelector(".modal");
     modal.style.opacity = "0.7"; modal.style.pointerEvents = "none";
-
     let actionArea = document.getElementById("mActionArea");
     let originalHTML = actionArea.innerHTML;
     actionArea.innerHTML = `<div style="text-align:center; padding:15px; font-weight:bold; color:#3b82f6;"><i class="fas fa-spinner fa-spin"></i> Processing...</div>`;
@@ -321,20 +268,8 @@ function callApi(payload) {
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => {
-        if(data.status === "success") {
-            alert(data.message);
-            closeModal();
-            fetchOrders(localStorage.getItem("bhavya_user_id"));
-        } else { 
-            alert("Error: " + data.message); 
-            actionArea.innerHTML = originalHTML; 
-        }
-    })
-    .catch(err => {
-        alert("Network Error occurred!");
-        actionArea.innerHTML = originalHTML;
-    })
-    .finally(() => {
-        modal.style.opacity = "1"; modal.style.pointerEvents = "auto";
-    });
+        if(data.status === "success") { alert(data.message); closeModal(); fetchOrders(localStorage.getItem("bhavya_user_id")); } 
+        else { alert("Error: " + data.message); actionArea.innerHTML = originalHTML; }
+    }).catch(err => { alert("Network Error occurred!"); actionArea.innerHTML = originalHTML; })
+    .finally(() => { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; });
 }

@@ -58,7 +58,8 @@ function renderOrders() {
     grid.innerHTML = "";
     allOrders.forEach((order, index) => {
         let statusClass = "badge-pending";
-        let statusText = order.status.toUpperCase();
+        // Default text
+        let statusText = order.status ? order.status.toUpperCase() : "PENDING";
         
         if(statusText === "ACTIVE") statusClass = "badge-active";
         else if(statusText === "COMPLETED") statusClass = "badge-completed";
@@ -67,7 +68,10 @@ function renderOrders() {
         let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
 
         // Format Date safely
-        let dtStr = new Date(order.date).toLocaleDateString("en-IN", {day:'numeric', month:'short', year:'numeric'});
+        let dtStr = "Date N/A";
+        if(order.date) {
+             dtStr = new Date(order.date).toLocaleDateString("en-IN", {day:'numeric', month:'short', year:'numeric'});
+        }
 
         let card = document.createElement("div");
         card.className = "order-card";
@@ -75,12 +79,12 @@ function renderOrders() {
         
         card.innerHTML = `
             <div class="order-card-header">
-                <div class="order-id">#${order.order_id}</div>
+                <div class="order-id">#${order.order_id || "N/A"}</div>
                 <div class="order-date">${dtStr}</div>
             </div>
-            <div class="patient-name">${order.patient_name}</div>
+            <div class="patient-name">${order.patient_name || "Unknown Patient"}</div>
             <div class="order-info"><i class="fas fa-clock"></i> ${order.slot || "N/A"}</div>
-            <div class="order-info"><i class="fas fa-home"></i> ${order.fulfillment.toUpperCase()}</div>
+            <div class="order-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
             
             <div class="badges-row">
                 <span class="badge ${statusClass}">${statusText}</span>
@@ -95,20 +99,23 @@ function renderOrders() {
 function openOrderModal(index) {
     currentOrder = allOrders[index];
     let o = currentOrder;
+    
+    // Status normalization
+    let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
-    document.getElementById("mOrderId").innerText = "Order #" + o.order_id;
-    document.getElementById("mName").innerText = o.patient_name;
+    document.getElementById("mOrderId").innerText = "Order #" + (o.order_id || "N/A");
+    document.getElementById("mName").innerText = o.patient_name || "N/A";
     document.getElementById("mSlot").innerText = o.slot || "N/A";
     document.getElementById("mAddress").innerText = o.address || "N/A";
-    document.getElementById("mFulfill").innerText = o.fulfillment.toUpperCase();
+    document.getElementById("mFulfill").innerText = o.fulfillment ? o.fulfillment.toUpperCase() : "N/A";
 
     // Set Status Badges
     let statSpan = document.getElementById("mStatus");
-    statSpan.innerText = o.status.toUpperCase();
+    statSpan.innerText = currentStatus.toUpperCase();
     statSpan.className = "badge"; // reset classes
-    if(o.status === "Pending") statSpan.classList.add("badge-pending");
-    else if(o.status === "Active") statSpan.classList.add("badge-active");
-    else if(o.status === "Completed") statSpan.classList.add("badge-completed");
+    if(currentStatus === "Pending") statSpan.classList.add("badge-pending");
+    else if(currentStatus === "Active") statSpan.classList.add("badge-active");
+    else if(currentStatus === "Completed") statSpan.classList.add("badge-completed");
     else statSpan.classList.add("badge-cancelled");
 
     let paySpan = document.getElementById("mPayStatus");
@@ -119,14 +126,18 @@ function openOrderModal(index) {
     // Parse Cart Items JSON
     let itemsHTML = "";
     try {
-        let items = JSON.parse(o.cart_items);
-        items.forEach(item => {
-            itemsHTML += `
-            <div class="cart-item">
-                <div class="item-name">${item.qty}x ${item.service_name}</div>
-                <div class="item-price">₹${item.price}</div>
-            </div>`;
-        });
+        if(o.cart_items) {
+            let items = JSON.parse(o.cart_items);
+            items.forEach(item => {
+                itemsHTML += `
+                <div class="cart-item">
+                    <div class="item-name">${item.qty}x ${item.service_name}</div>
+                    <div class="item-price">₹${item.price}</div>
+                </div>`;
+            });
+        } else {
+             itemsHTML = "<i>No items found</i>";
+        }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     document.getElementById("mItemsList").innerHTML = itemsHTML;
 
@@ -140,38 +151,46 @@ function openOrderModal(index) {
     let actionArea = document.getElementById("mActionArea");
     actionArea.innerHTML = "";
 
-    if (o.status === "Pending") {
+    // IMPORTANT: Checking 'currentStatus' for the flow
+    if (currentStatus === "Pending") {
         actionArea.innerHTML = `
             <div class="action-box">
                 <div style="font-weight:600; margin-bottom:10px;">Pending Actions:</div>
-                <input type="text" id="cancelReason" class="input-box" placeholder="If cancelling, type reason here..." style="display:none;">
+                <input type="text" id="cancelReason" class="input-box" placeholder="If cancelling, type reason here..." style="display:none; margin-bottom: 15px;">
                 <div class="btn-group">
                     <button class="btn btn-green" onclick="submitAction('Confirm')"><i class="fas fa-check"></i> Accept Order</button>
                     <button class="btn btn-red" onclick="toggleCancelReason()"><i class="fas fa-times"></i> Cancel</button>
                 </div>
-                <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:10px;">Confirm Cancellation</button>
+                <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:15px;">Confirm Cancellation</button>
             </div>`;
     } 
-    else if (o.status === "Active") {
+    else if (currentStatus === "Active") {
         actionArea.innerHTML = `
             <div class="action-box">
                 <div style="font-weight:600; margin-bottom:10px;">Provide Report & Complete Order:</div>
-                <select id="reportType" class="input-box" onchange="togglePdfUpload()">
+                <select id="reportType" class="input-box" onchange="togglePdfUpload()" style="margin-bottom: 15px;">
                     <option value="">Select Report Type</option>
                     <option value="Online">Online (Upload PDF)</option>
                     <option value="In Hand">In Hand (Physical Copy)</option>
                 </select>
-                <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none;">
+                <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
                 
                 <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="submitReport()"><i class="fas fa-check-double"></i> Mark Completed</button>
             </div>`;
     }
-    else if (o.status === "Completed") {
+    else if (currentStatus === "Completed") {
         actionArea.innerHTML = `
             <div class="action-box" style="background:#dcfce7; border-color:#bbf7d0; color:#166534; text-align:center;">
                 <i class="fas fa-check-circle" style="font-size:30px; margin-bottom:10px;"></i>
                 <div style="font-weight:bold;">Order is Completed</div>
-                <div style="font-size:13px; margin-top:5px;">Report: ${o.report_type} ${o.report_pdf ? `<br><a href="${o.report_pdf}" target="_blank">View PDF</a>` : ''}</div>
+                <div style="font-size:13px; margin-top:5px;">Report: ${o.report_type || "N/A"} ${o.report_pdf ? `<br><a href="${o.report_pdf}" target="_blank" style="color: #1d4ed8; font-weight: 600; display: inline-block; margin-top: 5px;">View PDF</a>` : ''}</div>
+            </div>`;
+    }
+    else if (currentStatus === "Cancelled") {
+        actionArea.innerHTML = `
+             <div class="action-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b; text-align:center;">
+                <i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i>
+                <div style="font-weight:bold;">Order Cancelled</div>
             </div>`;
     }
 
@@ -184,11 +203,24 @@ function closeModal() {
     currentOrder = null; 
 }
 
+// TOGGLE CANCEL REASON INPUT
+// Ye function call hoga jab user "Cancel" button (pehla wala) dabayega
 function toggleCancelReason() {
-    document.getElementById("cancelReason").style.display = "block";
-    document.getElementById("finalCancelBtn").style.display = "block";
+    const reasonInput = document.getElementById("cancelReason");
+    const confirmBtn = document.getElementById("finalCancelBtn");
+    
+    if (reasonInput.style.display === "none") {
+        reasonInput.style.display = "block";
+        confirmBtn.style.display = "block";
+        reasonInput.focus();
+    } else {
+        reasonInput.style.display = "none";
+        confirmBtn.style.display = "none";
+    }
 }
 
+// TOGGLE PDF UPLOAD INPUT
+// Ye function call hoga jab user dropdown se "Online" select karega
 function togglePdfUpload() {
     let type = document.getElementById("reportType").value;
     document.getElementById("reportPdfFile").style.display = (type === "Online") ? "block" : "none";

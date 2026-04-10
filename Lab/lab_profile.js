@@ -1,8 +1,3 @@
-// ==========================================
-// lab_profile.js
-// Logic for editing profile and requesting services
-// ==========================================
-
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 const servicesList = [
@@ -13,6 +8,10 @@ const servicesList = [
 const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 let currentProfile = null;
+
+// 🌟 NAYA: GLOBAL TAG LISTS 🌟
+let pincodeList = [];
+let cityList = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     const userId = localStorage.getItem("bhavya_user_id");
@@ -26,16 +25,45 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("user_id").value = userId;
     fetchProfileData(userId);
 
-    // Live Tag Generators
-    document.getElementById("available_pincode").addEventListener("input", function() { drawTags("pinTags", this.value); });
-    document.getElementById("available_city").addEventListener("input", function() { drawTags("cityTags", this.value); });
+    // Enter Key Support for Tags
+    document.getElementById("pincodeInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); } });
+    document.getElementById("cityInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('city'); } });
 });
 
-function drawTags(containerId, valueStr) {
-    let arr = valueStr.split(",").map(s => s.trim()).filter(s => s !== "");
-    let html = "";
-    arr.forEach(item => { html += `<div class="tag">${item}</div>`; });
-    document.getElementById(containerId).innerHTML = html;
+// 🌟 NAYA: TAG SYSTEM FUNCTIONS 🌟
+function addTag(type) {
+    let inputElem = document.getElementById(type + "Input");
+    let val = inputElem.value.trim();
+    if (!val) return;
+
+    if (type === 'pincode' && !pincodeList.includes(val)) {
+        pincodeList.push(val); updateTagsUI('pincode');
+    } else if (type === 'city') {
+        val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+        let lowerCaseCityList = cityList.map(c => c.toLowerCase());
+        if (!lowerCaseCityList.includes(val.toLowerCase())) { cityList.push(val); updateTagsUI('city'); }
+    }
+    inputElem.value = ""; 
+}
+
+function removeTag(type, index) {
+    if (type === 'pincode') pincodeList.splice(index, 1); else cityList.splice(index, 1);
+    updateTagsUI(type);
+}
+
+function updateTagsUI(type) {
+    let wrapper = document.getElementById(type + "Tags");
+    let hiddenInput = document.getElementById("available_" + type);
+    let list = type === 'pincode' ? pincodeList : cityList;
+    
+    wrapper.innerHTML = "";
+    list.forEach((item, index) => {
+        let tag = document.createElement("div");
+        tag.className = "tag";
+        tag.innerHTML = `${item} <span onclick="removeTag('${type}', ${index})" title="Remove">×</span>`;
+        wrapper.appendChild(tag);
+    });
+    hiddenInput.value = list.join(',');
 }
 
 function fetchProfileData(userId) {
@@ -62,14 +90,17 @@ function populateForm() {
     document.getElementById("city").value = p.city;
     document.getElementById("pincode").value = p.pincode;
     
-    // Load Arrays safely
-    let pinStr = ""; 
-    try { pinStr = JSON.parse(p.available_pincode).join(", "); } catch(e) { pinStr = p.available_pincode; }
-    document.getElementById("available_pincode").value = pinStr;
-    drawTags("pinTags", pinStr);
+    // Load Arrays safely into Tag System
+    try { 
+        let parsedPins = JSON.parse(p.available_pincode);
+        pincodeList = Array.isArray(parsedPins) ? parsedPins : p.available_pincode.split(",").map(s => s.trim());
+    } catch(e) { pincodeList = (p.available_pincode || "").split(",").map(s => s.trim()).filter(s => s !== ""); }
+    updateTagsUI('pincode');
 
-    document.getElementById("available_city").value = p.available_city || "";
-    drawTags("cityTags", p.available_city || "");
+    if (p.available_city) {
+        cityList = p.available_city.split(",").map(s => s.trim()).filter(s => s !== "");
+    }
+    updateTagsUI('city');
 
     document.getElementById("nabl").value = p.nabl;
     document.getElementById("nabh").value = p.nabh;
@@ -82,13 +113,24 @@ function populateForm() {
         statSel.value = p.status === "Active" ? "Active" : "Inactive";
     }
 
-    // Populate Timings
+    // 🌟 NAYA: IMAGE PREVIEWS (URL aate hi dikhayega) 🌟
+    if(p.nabl_url) document.getElementById("preview_nabl").innerHTML = `<div class="image-preview-box"><i class="fas fa-check-circle" style="color:green;"></i> <a href="${p.nabl_url}" target="_blank">View Uploaded Doc</a></div>`;
+    if(p.nabh_url) document.getElementById("preview_nabh").innerHTML = `<div class="image-preview-box"><i class="fas fa-check-circle" style="color:green;"></i> <a href="${p.nabh_url}" target="_blank">View Uploaded Doc</a></div>`;
+    if(p.img1_url) document.getElementById("preview_img1").innerHTML = `<div class="image-preview-box"><img src="${p.img1_url}"> <a href="${p.img1_url}" target="_blank">View Image</a></div>`;
+    if(p.img2_url) document.getElementById("preview_img2").innerHTML = `<div class="image-preview-box"><img src="${p.img2_url}"> <a href="${p.img2_url}" target="_blank">View Image</a></div>`;
+
+    // 🌟 NAYA: POPULATE TIMINGS PROPERLY 🌟
     let timeContainer = document.getElementById("timingsContainer");
     timeContainer.innerHTML = "";
     daysArr.forEach(day => {
         let dName = day.charAt(0).toUpperCase() + day.slice(1);
-        let openVal = p.timings[day+"_open"] || "";
-        let closeVal = p.timings[day+"_close"] || "";
+        
+        let openVal = ""; let closeVal = "";
+        if (p.timings && p.timings[day]) {
+            openVal = (p.timings[day].open !== "Closed" && p.timings[day].open !== "") ? p.timings[day].open : "";
+            closeVal = (p.timings[day].close !== "Closed" && p.timings[day].close !== "") ? p.timings[day].close : "";
+        }
+        
         timeContainer.innerHTML += `
             <div class="timing-row">
                 <div>${dName}</div>
@@ -136,8 +178,8 @@ async function saveBasicProfile() {
             lab_address: document.getElementById("lab_address").value,
             city: document.getElementById("city").value,
             pincode: document.getElementById("pincode").value,
-            available_pincode: JSON.stringify(document.getElementById("available_pincode").value.split(",").map(s=>s.trim()).filter(s=>s!=="")),
-            available_city: document.getElementById("available_city").value,
+            available_pincode: JSON.stringify(pincodeList), // Uses global list
+            available_city: cityList.join(", "),            // Uses global list
             nabl: document.getElementById("nabl").value,
             nabh: document.getElementById("nabh").value,
             status: document.getElementById("status").value,
@@ -145,8 +187,8 @@ async function saveBasicProfile() {
         };
 
         daysArr.forEach(day => {
-            payload.timings[day+"_open"] = document.getElementById(day+"_open").value;
-            payload.timings[day+"_close"] = document.getElementById(day+"_close").value;
+            payload.timings[day+"_open"] = document.getElementById(day+"_open").value || "Closed";
+            payload.timings[day+"_close"] = document.getElementById(day+"_close").value || "Closed";
         });
 
         payload.nabl_certificate = await getBase64("nabl_cert");

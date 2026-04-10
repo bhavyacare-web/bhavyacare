@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Bookings & Patients</title>
+    <title>Admin Dashboard - Patients</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -13,6 +14,9 @@
         .tabs { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;}
         .tab-btn { padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: #ddd; color: #333; transition: 0.3s; }
         .tab-btn.active { background: #0056b3; color: white; }
+
+        .search-bar { width: 100%; padding: 12px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 15px; box-sizing: border-box; outline: none; }
+        .search-bar:focus { border-color: #0056b3; box-shadow: 0 0 5px rgba(0,86,179,0.3); }
 
         .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; }
@@ -29,16 +33,38 @@
         .patient-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
         #loader { text-align: center; font-weight: bold; color: #0056b3; margin-top: 20px; }
         
-        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.3); z-index:1000; width:90%; max-width:400px; }
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; }
-        .action-btn { flex:1; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color:white; }
+        /* SUPER MODAL STYLES */
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; }
+        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.3); z-index:1000; width:95%; max-width:800px; max-height:90vh; overflow-y:auto; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; font-weight: bold; }
+        .close-modal:hover { color: red; }
+        
+        .modal-header { display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+        .modal-header img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0056b3; }
+        .modal-header-info h3 { margin: 0 0 5px 0; color: #333; }
+        .modal-header-info p { margin: 0; font-size: 13px; color: #666; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; }
+        .info-box span { display: block; font-size: 12px; color: #6c757d; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .info-box div { font-size: 15px; color: #212529; font-weight: 600; word-break: break-word; }
+
+        .section-title { font-size: 16px; font-weight: bold; color: #0056b3; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        .order-history-list { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fff; }
+        .history-card { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .history-card:last-child { border-bottom: none; }
+        .history-card-left { font-size: 13px; color: #333; }
+        .history-card-left strong { color: #0056b3; }
+        
+        .action-btn { flex:1; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color:white; display:flex; align-items:center; justify-content:center; gap:5px;}
         .form-input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;}
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>🏥 Manage Dashboard</h2>
+        <h2>🏥 Patient & VIP Management</h2>
         <div>
             <a href="../admin.html" style="text-decoration: none; color: #0056b3; font-weight: bold; margin-right: 15px;">⬅ Back to Home</a>
             <button class="refresh-btn" onclick="fetchCurrentTabData()">🔄 Refresh Data</button>
@@ -46,22 +72,25 @@
     </div>
 
     <div class="tabs">
-        <button id="tab-patients" class="tab-btn active" onclick="switchAdminTab('patients')">Patients List</button>
+        <button id="tab-patients" class="tab-btn active" onclick="switchAdminTab('patients')">Patients Master List</button>
         <button id="tab-vips" class="tab-btn" onclick="switchAdminTab('vips')">VIP Applications</button>
-        <button id="tab-booking" class="tab-btn" onclick="switchAdminTab('booking')">Patient Booking</button>
     </div>
 
-    <div id="patients-section" class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Photo</th><th>Date & Time</th><th>User ID</th><th>Name</th>
-                    <th>Contact Info</th><th>Full Address</th><th>Wallet (₹)</th>
-                    <th>Plan</th><th>Withdraw Action</th><th>Account Status</th>
-                </tr>
-            </thead>
-            <tbody id="patientsTableBody"></tbody>
-        </table>
+    <div id="patients-section">
+        <input type="text" id="patientSearch" class="search-bar" placeholder="🔍 Search Patient by Name, ID, or Mobile Number..." onkeyup="filterPatients()">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Photo</th><th>User ID</th><th>Name</th>
+                        <th>Contact Info</th><th>Wallet (₹)</th>
+                        <th>Plan</th><th>Status</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="patientsTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="vips-section" class="table-container" style="display:none;">
@@ -77,23 +106,11 @@
         </table>
     </div>
 
-    <div id="booking-section" class="table-container" style="display:none;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Order ID & Date</th><th>Patient & Contact</th><th>Lab ID & Slot</th>
-                    <th style="min-width:200px;">Cart Items</th><th>Billing Info (₹)</th>
-                    <th>Fulfillment & Address</th><th>Order Status</th><th>Report Actions</th>
-                </tr>
-            </thead>
-            <tbody id="bookingTableBody"></tbody>
-        </table>
-    </div>
-
     <div id="loader">Fetching data... Please wait.</div>
     <div class="overlay" id="modalOverlay"></div>
 
-    <div class="modal" id="vipActionModal">
+    <div class="modal" id="vipActionModal" style="max-width: 400px;">
+        <span class="close-modal" onclick="closeModals()">&times;</span>
         <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
         <p style="font-size:13px; color:#555;">Reviewing User: <strong id="modalUserId"></strong></p>
         <label style="font-size:12px; font-weight:bold;">Admin Remarks (Reason/Notes):</label>
@@ -102,41 +119,41 @@
             <button onclick="submitVipAction('active')" class="action-btn" style="background:#28a745;">Approve (Active)</button>
             <button onclick="submitVipAction('rejected')" class="action-btn" style="background:#dc3545;">Reject</button>
         </div>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
         <input type="hidden" id="modalRowIndex">
     </div>
 
-    <div class="modal" id="orderStatusModal">
-        <h3 style="margin-top:0; color:#0056b3;">Update Order Status</h3>
-        <p style="font-size:13px; color:#555;">Order ID: <strong id="statusOrderId"></strong></p>
-        <label style="font-size:12px; font-weight:bold;">Select New Status:</label>
-        <select id="newOrderStatus" class="form-input">
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirm (Active)</option>
-            <option value="Cancelled">Cancel</option>
-        </select>
-        <button onclick="submitOrderStatus()" class="action-btn" style="background:#0056b3; width:100%;">Update Status</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
-    </div>
-
-    <div class="modal" id="orderReportModal">
-        <h3 style="margin-top:0; color:#0056b3;">Upload PDF Report</h3>
-        <p style="font-size:13px; color:#555;">Order ID: <strong id="reportOrderId"></strong></p>
+    <div class="modal" id="patientProfileModal">
+        <span class="close-modal" onclick="closeModals()">&times;</span>
         
-        <label style="font-size:12px; font-weight:bold;">Report Delivery Type:</label>
-        <select id="reportTypeSelect" class="form-input" onchange="toggleReportUploadField()">
-            <option value="">-- Select Type --</option>
-            <option value="online">Online (Upload PDF)</option>
-            <option value="in hand">In Hand (Physical)</option>
-        </select>
-
-        <div id="reportUploadDiv" style="display:none; text-align:left;">
-            <label style="font-size:12px; font-weight:bold;">Select PDF File:</label>
-            <input type="file" id="reportFileInput" accept="application/pdf" class="form-input" style="padding: 5px;">
+        <div class="modal-header">
+            <img id="spImage" src="" alt="Profile">
+            <div class="modal-header-info">
+                <h3 id="spName">Patient Name</h3>
+                <p>ID: <strong id="spId"></strong> | Plan: <strong id="spPlan" style="text-transform: uppercase;"></strong></p>
+            </div>
         </div>
 
-        <button id="uploadReportBtn" onclick="submitOrderReport()" class="action-btn" style="background:#28a745; width:100%;">Save & Upload</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#f1f1f1; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Cancel</button>
+        <div class="info-grid">
+            <div class="info-box"><span>Contact Info</span><div id="spContact"></div></div>
+            <div class="info-box"><span>Full Address</span><div id="spAddress"></div></div>
+            <div class="info-box"><span>Referral Details</span><div id="spReferral"></div></div>
+            <div class="info-box" style="border-color: #28a745; background: #e8f5e9;">
+                <span style="color:#155724;">Wallet Balance</span>
+                <div id="spWallet" style="color:#28a745; font-size:20px;">₹0</div>
+            </div>
+        </div>
+
+        <div class="section-title">Admin Wallet Control</div>
+        <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+            <input type="number" id="walletAdjustAmt" class="form-input" style="margin:0; width:150px;" placeholder="Amount (₹)">
+            <input type="text" id="walletAdjustReason" class="form-input" style="margin:0; flex:1;" placeholder="Reason (e.g. Refund for Order #123)">
+            <button class="action-btn" style="background:#28a745; max-width:120px;" onclick="adjustPatientWallet()">Add Funds</button>
+        </div>
+
+        <div class="section-title">Order History & Reports</div>
+        <div class="order-history-list" id="spOrderHistory">
+            <div style="text-align:center; padding:20px; color:#666;">Loading history...</div>
+        </div>
     </div>
 
     <script src="patient_admin.js"></script>

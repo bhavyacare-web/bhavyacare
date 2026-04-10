@@ -1,7 +1,7 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let currentTab = 'patients';
-let allPatientsData = []; // For local search filtering
+let allPatientsData = []; 
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
@@ -64,10 +64,14 @@ function filterPatients() {
 function renderPatientsTable(data) {
     const tableBody = document.getElementById("patientsTableBody");
     tableBody.innerHTML = "";
-    if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No patients found.</td></tr>"; return; }
+    if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No patients found.</td></tr>"; return; }
     
     data.forEach((p, index) => {
         const sClass = p.status.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+        
+        // 🌟 NAYA: WITHDRAW/WALLET CLASS AUR BUTTON 🌟
+        const wClass = p.withdraw && p.withdraw.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+        const withdrawText = p.withdraw ? p.withdraw.toUpperCase() : "INACTIVE";
         
         tableBody.innerHTML += `
             <tr>
@@ -77,6 +81,9 @@ function renderPatientsTable(data) {
                 <td><strong>📞 ${p.mobile_number}</strong><br><span style="font-size: 11px; color: #555;">📧 ${p.email}</span></td>
                 <td style="color:#28a745; font-weight:bold; font-size:16px;">₹${p.wallet}</td>
                 <td style="text-transform:capitalize; font-weight:bold;">${p.plan}</td>
+                
+                <td><button class="badge-btn ${wClass}" onclick="toggleStatus('${p.user_id}', 'withdraw', '${p.withdraw || 'inactive'}')">${withdrawText}</button></td>
+                
                 <td><button class="badge-btn ${sClass}" onclick="toggleStatus('${p.user_id}', 'status', '${p.status}')">${p.status.toUpperCase()}</button></td>
                 <td><button class="badge-btn status-primary" onclick="openPatientProfile('${p.user_id}')"><i class="fas fa-eye"></i> View Profile</button></td>
             </tr>`;
@@ -85,7 +92,10 @@ function renderPatientsTable(data) {
 
 async function toggleStatus(userId, field, currentStatus) {
     const newValue = currentStatus.toLowerCase() === "active" ? "inactive" : "active";
-    if (!confirm(`Mark account status as '${newValue.toUpperCase()}' for ${userId}?`)) return;
+    // Alert text bhi field ke hisaab se change kar diya gaya hai
+    const fieldName = field === 'withdraw' ? 'WALLET / WITHDRAW' : 'ACCOUNT STATUS';
+    
+    if (!confirm(`Mark ${fieldName} as '${newValue.toUpperCase()}' for ${userId}?`)) return;
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -98,7 +108,7 @@ async function toggleStatus(userId, field, currentStatus) {
 }
 
 // ==========================================
-// 🌟 NAYA: SUPER PATIENT 360 PROFILE LOGIC 🌟
+// SUPER PATIENT 360 PROFILE LOGIC
 // ==========================================
 function openPatientProfile(userId) {
     const p = allPatientsData.find(user => user.user_id === userId);
@@ -114,7 +124,6 @@ function openPatientProfile(userId) {
     document.getElementById("spReferral").innerHTML = `My Code: <b>${p.referral_code}</b>`;
     document.getElementById("spWallet").innerText = `₹${p.wallet}`;
 
-    // Reset wallet adjust fields
     document.getElementById("walletAdjustAmt").value = "";
     document.getElementById("walletAdjustReason").value = "";
 
@@ -197,8 +206,8 @@ async function adjustPatientWallet() {
         btn.innerText = "Add Funds"; btn.disabled = false;
         if (result.status === "success") { 
             alert("Funds added successfully!"); 
-            fetchPatientsData(); // Refresh list to update wallet amount
-            document.getElementById("spWallet").innerText = `₹${result.new_balance}`; // Update live in modal
+            fetchPatientsData(); 
+            document.getElementById("spWallet").innerText = `₹${result.new_balance}`; 
             document.getElementById("walletAdjustAmt").value = "";
             document.getElementById("walletAdjustReason").value = "";
         }
@@ -207,7 +216,7 @@ async function adjustPatientWallet() {
 }
 
 // ==========================================
-// 2. VIP APPLICATIONS LOGIC (Purana Code - Same)
+// 2. VIP APPLICATIONS LOGIC 
 // ==========================================
 async function fetchVipData() {
     const tableBody = document.getElementById("vipsTableBody");

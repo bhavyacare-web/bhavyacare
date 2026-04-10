@@ -22,11 +22,24 @@
         input[readonly] { background: #f1f5f9; color: #64748b; cursor: not-allowed;}
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px;}
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
-        .tag { background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #bae6fd;}
+        
+        /* 🌟 TAG SYSTEM CSS 🌟 */
+        .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: stretch; flex-wrap: wrap;}
+        .input-with-button input { flex: 1; margin: 0; min-width: 130px; background: white;}
+        .add-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 18px; height: 48px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .add-btn:hover { background: #1d4ed8; }
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 20px;}
+        .tag { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd;}
+        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px; transition: 0.2s; display: inline-flex; padding: 2px;}
+        .tag span:hover { color: #0c4a6e; transform: scale(1.2);}
         
         .timing-row { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px;}
         
+        /* 🌟 IMAGE PREVIEW CSS 🌟 */
+        .image-preview-box { display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 8px; font-size: 12px;}
+        .image-preview-box img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0; }
+        .image-preview-box a { color: #3b82f6; text-decoration: none; font-weight: bold;}
+
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; color: white;}
         .btn-green { background: #10b981; margin-top: 20px;}
         .btn-green:hover { background: #059669;}
@@ -78,23 +91,51 @@
 
                 <h2 class="card-title" style="margin-top: 30px;">Service Areas</h2>
                 <div class="form-group">
-                    <label>Available Pincodes <span style="font-weight:normal;">(Comma separated)</span></label>
-                    <input type="text" id="available_pincode" required>
+                    <label>Available Pincodes</label>
+                    <div class="input-with-button">
+                        <input type="number" id="pincodeInput" placeholder="Type a new pincode">
+                        <button type="button" class="add-btn" onclick="addTag('pincode')" title="Add Pincode">+</button>
+                    </div>
                     <div id="pinTags" class="tags-wrapper"></div>
+                    <input type="hidden" id="available_pincode" required>
                 </div>
+                
                 <div class="form-group">
-                    <label>Available Cities <span style="font-weight:normal;">(Comma separated)</span></label>
-                    <input type="text" id="available_city" required>
+                    <label>Available Cities</label>
+                    <div class="input-with-button">
+                        <input type="text" id="cityInput" placeholder="Type a new city">
+                        <button type="button" class="add-btn" onclick="addTag('city')" title="Add City">+</button>
+                    </div>
                     <div id="cityTags" class="tags-wrapper"></div>
+                    <input type="hidden" id="available_city" required>
                 </div>
 
                 <h2 class="card-title" style="margin-top: 30px;">Accreditations & Images</h2>
                 <p style="font-size:12px; color:#ef4444; margin-top:-10px;">Leave file inputs blank if you don't want to change existing documents.</p>
                 <div class="grid-2">
-                    <div class="form-group"><label>NABL Approved?</label><select id="nabl"><option value="No">No</option><option value="Yes">Yes</option></select><input type="file" id="nabl_cert" accept=".pdf" style="margin-top:5px;"></div>
-                    <div class="form-group"><label>NABH Approved?</label><select id="nabh"><option value="No">No</option><option value="Yes">Yes</option></select><input type="file" id="nabh_cert" accept=".pdf" style="margin-top:5px;"></div>
-                    <div class="form-group"><label>Update Lab Image 1</label><input type="file" id="lab_img1" accept="image/*"></div>
-                    <div class="form-group"><label>Update Lab Image 2</label><input type="file" id="lab_img2" accept="image/*"></div>
+                    <div class="form-group">
+                        <label>NABL Approved?</label>
+                        <select id="nabl"><option value="No">No</option><option value="Yes">Yes</option></select>
+                        <input type="file" id="nabl_cert" accept=".pdf" style="margin-top:5px;">
+                        <div id="preview_nabl"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>NABH Approved?</label>
+                        <select id="nabh"><option value="No">No</option><option value="Yes">Yes</option></select>
+                        <input type="file" id="nabh_cert" accept=".pdf" style="margin-top:5px;">
+                        <div id="preview_nabh"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Update Lab Image 1</label>
+                        <input type="file" id="lab_img1" accept="image/*">
+                        <div id="preview_img1"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Update Lab Image 2</label>
+                        <input type="file" id="lab_img2" accept="image/*">
+                        <div id="preview_img2"></div>
+                    </div>
                 </div>
 
                 <h2 class="card-title" style="margin-top: 30px;">Working Timings</h2>

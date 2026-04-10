@@ -18,6 +18,35 @@ function safeSetHTML(id, html) {
     if (el) el.innerHTML = html;
 }
 
+// 🌟 NAYA FORMATTER: Date aur Time ko simple "DD-MM-YYYY hh:mm AM/PM" banane ke liye 🌟
+function formatDateTime(val) {
+    if (!val || val === "N/A" || val.toString().trim() === "") return "N/A";
+    try {
+        let d = new Date(val);
+        if (isNaN(d.getTime())) return val; // Agar simple text hai toh waisa hi return kare
+
+        let day = ("0" + d.getDate()).slice(-2);
+        let month = ("0" + (d.getMonth() + 1)).slice(-2);
+        let year = d.getFullYear();
+
+        // Agar sirf date pass ki gayi hai (jaise booking date)
+        let timeStr = val.toString();
+        if (timeStr.indexOf('T') === -1 && timeStr.indexOf(':') === -1) {
+            return `${day}-${month}-${year}`;
+        }
+
+        let hours = d.getHours();
+        let minutes = ("0" + d.getMinutes()).slice(-2);
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        
+        return `${day}-${month}-${year} ${("0" + hours).slice(-2)}:${minutes} ${ampm}`;
+    } catch(e) {
+        return val;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const labName = localStorage.getItem("bhavya_name");
     const userId = localStorage.getItem("bhavya_user_id");
@@ -86,7 +115,10 @@ function renderOrders() {
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
 
         let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
-        let dtStr = order.date ? new Date(order.date).toLocaleDateString("en-IN", {day:'numeric', month:'short', year:'numeric'}) : "Date N/A";
+        
+        // 🌟 NAYA FORMATTER YAHA LAGA HAI 🌟
+        let dtStr = formatDateTime(order.date);
+        let slotStr = formatDateTime(order.slot);
 
         let card = document.createElement("div");
         card.className = "order-card";
@@ -98,7 +130,7 @@ function renderOrders() {
                 <div class="order-date">${dtStr}</div>
             </div>
             <div class="patient-name">${order.patient_name || "Unknown Patient"}</div>
-            <div class="order-info"><i class="fas fa-clock"></i> ${order.slot || "N/A"}</div>
+            <div class="order-info"><i class="fas fa-clock"></i> ${slotStr}</div>
             <div class="order-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
             
             <div class="badges-row">
@@ -115,10 +147,12 @@ function openOrderModal(index) {
     let o = currentOrder;
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
-    // 🌟 YAHAN SAFE SET TEXT LAGA HAI 🌟
     safeSetText("mOrderId", "Order #" + (o.order_id || "N/A"));
     safeSetText("mName", o.patient_name || "N/A");
-    safeSetText("mSlot", o.slot || "N/A");
+    
+    // 🌟 NAYA FORMATTER YAHA BHI LAGA HAI 🌟
+    safeSetText("mSlot", formatDateTime(o.slot));
+    
     safeSetText("mAddress", o.address || "N/A");
     safeSetText("mFulfill", o.fulfillment ? o.fulfillment.toUpperCase() : "N/A");
 

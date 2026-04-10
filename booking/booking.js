@@ -883,19 +883,21 @@ function renderGroupedCart() {
             let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
             
-            // --------- YAHAN SE REPLACE KAREIN ---------
             displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
                 
-                // 1. NABL / NABH Fix: Sirf 'Yes' hone par hi tag aayega
-                let isNabl = (lab.nabl && lab.nabl.toString().toLowerCase() === "yes");
-                let nablBadge = isNabl ? `<span class="badge-small">NABL</span>` : "";
+                // 🌟 FIX: Checked for "Yes" explicitly. String "No" was evaluating to True earlier! 🌟
+                let isNabl = (lab.nabl && String(lab.nabl).toLowerCase().trim() === "yes");
+                let nablBadge = isNabl ? `<span class="badge-small" style="margin-left:5px; background:#dcfce7; color:#065f46; border:1px solid #bbf7d0;">NABL</span>` : "";
                 
-                let isNabh = (lab.nabh && lab.nabh.toString().toLowerCase() === "yes");
-                let nabhBadge = isNabh ? `<span class="badge-small" style="background:#dcfce7; color:#065f46;">NABH</span>` : "";
+                let isNabh = (lab.nabh && String(lab.nabh).toLowerCase().trim() === "yes");
+                let nabhBadge = isNabh ? `<span class="badge-small" style="margin-left:5px; background:#dcfce7; color:#065f46; border:1px solid #bbf7d0;">NABH</span>` : "";
                 
-                // 2. Image Fix: Sahi variable name (lab_image1) aur working fallback (ui-avatars)
-                let imgSrc = lab.lab_image1 || lab.img1_url || lab.lab_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
+                // 🌟 FIX: Used lab_image1 and changed fallback to UI-Avatars 🌟
+                let imgSrc = lab.lab_image1 || lab.img1_url || lab.lab_image;
+                if (!imgSrc || imgSrc.trim() === "") {
+                     imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
+                }
 
                 html += `
                     <div class="lab-card ${isSelected}" onclick="assignLabToGroup('${type}', '${lab.lab_id}')">

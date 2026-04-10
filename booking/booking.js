@@ -570,7 +570,6 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-// 🌟 CART EMPTY FIX: Removed setTimeout to make it save & load instantly
 function openCart() { 
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     window.location.href = "../cart/cart.html"; 
@@ -797,6 +796,7 @@ function autoAssignGroupLabs() {
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
 }
 
+// 🌟 NAYA: NABL/NABH TAGS AUR IMAGE FIX 🌟
 function renderGroupedCart() {
     let html = ""; 
     let groupedCart = {};
@@ -841,7 +841,7 @@ function renderGroupedCart() {
             <div style="background: var(--primary-soft); border: 1px solid #bfdbfe; border-radius: 12px; padding: 15px; margin-top: 15px;">
                 <p style="font-size:12px; font-weight:800; color:var(--primary); margin: 0 0 10px 0; text-transform:uppercase;"><i class="fas fa-star" style="color:var(--warning);"></i> Handled Internally</p>
                 <div class="lab-card selected" style="border-color: var(--primary); background: #ffffff; margin-bottom: 0; cursor: default;">
-                    <div class="lab-img" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                    <div class="lab-img" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; width:50px; height:50px; border-radius:8px;">
                         <i class="fas fa-heartbeat"></i>
                     </div>
                     <div class="lab-info">
@@ -882,17 +882,25 @@ function renderGroupedCart() {
         } else {
             let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
+            
             displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
-                let nablBadge = lab.nabl ? `<span class="badge-small">NABL</span>` : "";
-                let nabhBadge = lab.nabh ? `<span class="badge-small" style="background:#dcfce7; color:#065f46;">NABH</span>` : "";
-                let imgSrc = lab.lab_image || "https://via.placeholder.com/60?text=LAB";
+                
+                // 🌟 FIX: Checked for "Yes" explicitly. String "No" was evaluating to True earlier! 🌟
+                let isNabl = (lab.nabl && lab.nabl.toString().toLowerCase() === "yes");
+                let nablBadge = isNabl ? `<span style="background:#dcfce7; color:#065f46; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:800; border:1px solid #bbf7d0;">NABL</span>` : "";
+                
+                let isNabh = (lab.nabh && lab.nabh.toString().toLowerCase() === "yes");
+                let nabhBadge = isNabh ? `<span style="background:#dcfce7; color:#065f46; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:800; border:1px solid #bbf7d0;">NABH</span>` : "";
+                
+                // 🌟 FIX: Used lab_image1 and changed fallback to UI-Avatars (Placeholder.com is blocked/down on your network) 🌟
+                let imgSrc = lab.lab_image1 || lab.img1_url || lab.lab_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
 
                 html += `
                     <div class="lab-card ${isSelected}" onclick="assignLabToGroup('${type}', '${lab.lab_id}')">
-                        <img src="${imgSrc}" class="lab-img" onerror="this.src='https://via.placeholder.com/60?text=LAB'">
+                        <img src="${imgSrc}" class="lab-img" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:1px solid #e2e8f0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1'">
                         <div class="lab-info">
-                            <h4 class="lab-name">${lab.lab_name} ${nablBadge} ${nabhBadge}</h4>
+                            <h4 class="lab-name" style="display:flex; align-items:center; flex-wrap:wrap;">${lab.lab_name} ${nablBadge} ${nabhBadge}</h4>
                             <p class="lab-addr"><i class="fas fa-map-marker-alt"></i> ${lab.lab_address}, ${lab.city} - ${lab.pincode}</p>
                         </div>
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}

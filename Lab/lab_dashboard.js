@@ -6,45 +6,24 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allOrders = [];
-let currentFilteredOrders = []; // 🌟 NAYA: Display karne ke liye alag list 🌟
+let currentFilteredOrders = []; 
 let currentOrder = null;
 
 // CRASH-PROOF HELPERS
-function safeSetText(id, text) {
-    let el = document.getElementById(id);
-    if (el) el.innerText = text;
-}
-function safeSetHTML(id, html) {
-    let el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-}
+function safeSetText(id, text) { let el = document.getElementById(id); if (el) el.innerText = text; }
+function safeSetHTML(id, html) { let el = document.getElementById(id); if (el) el.innerHTML = html; }
 
-// DATE FORMATTER
 function formatDateTime(val) {
     if (!val || val === "N/A" || val.toString().trim() === "") return "N/A";
     try {
-        let d = new Date(val);
-        if (isNaN(d.getTime())) return val; 
-
-        let day = ("0" + d.getDate()).slice(-2);
-        let month = ("0" + (d.getMonth() + 1)).slice(-2);
-        let year = d.getFullYear();
-
+        let d = new Date(val); if (isNaN(d.getTime())) return val; 
+        let day = ("0" + d.getDate()).slice(-2); let month = ("0" + (d.getMonth() + 1)).slice(-2); let year = d.getFullYear();
         let timeStr = val.toString();
-        if (timeStr.indexOf('T') === -1 && timeStr.indexOf(':') === -1) {
-            return `${day}-${month}-${year}`;
-        }
-
-        let hours = d.getHours();
-        let minutes = ("0" + d.getMinutes()).slice(-2);
-        let ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; 
-        
+        if (timeStr.indexOf('T') === -1 && timeStr.indexOf(':') === -1) return `${day}-${month}-${year}`;
+        let hours = d.getHours(); let minutes = ("0" + d.getMinutes()).slice(-2); let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12; 
         return `${day}-${month}-${year} ${("0" + hours).slice(-2)}:${minutes} ${ampm}`;
-    } catch(e) {
-        return val;
-    }
+    } catch(e) { return val; }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -81,7 +60,7 @@ function fetchOrders(userId) {
 
         if(data.status === "success") {
             allOrders = data.data;
-            currentFilteredOrders = [...allOrders]; // Pura data copy kar lo shuru me
+            currentFilteredOrders = [...allOrders]; 
             renderOrders();
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
@@ -90,29 +69,18 @@ function fetchOrders(userId) {
         }
     }).catch(err => {
         let lMsg = document.getElementById("loadingMsg");
-        if(lMsg) {
-            lMsg.innerText = "Network Error!";
-            lMsg.style.color = "red";
-        }
+        if(lMsg) { lMsg.innerText = "Network Error!"; lMsg.style.color = "red"; }
     });
 }
 
-// 🌟 NAYA FUNCTION: ONE CLICK FILTER LOGIC 🌟
 function filterOrders(status, btnElement) {
-    // Buttons ka color change karna
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
 
-    // Data filter karna
-    if (status === 'ALL') {
-        currentFilteredOrders = [...allOrders];
-    } else if (status === 'CONFIRMED') {
-        currentFilteredOrders = allOrders.filter(o => o.status && (o.status.toUpperCase() === 'ACTIVE' || o.status.toUpperCase() === 'CONFIRMED'));
-    } else {
-        currentFilteredOrders = allOrders.filter(o => o.status && o.status.toUpperCase() === status);
-    }
+    if (status === 'ALL') { currentFilteredOrders = [...allOrders]; } 
+    else if (status === 'CONFIRMED') { currentFilteredOrders = allOrders.filter(o => o.status && (o.status.toUpperCase() === 'ACTIVE' || o.status.toUpperCase() === 'CONFIRMED')); } 
+    else { currentFilteredOrders = allOrders.filter(o => o.status && o.status.toUpperCase() === status); }
     
-    // Naya data dikhana
     renderOrders();
 }
 
@@ -135,13 +103,12 @@ function renderOrders() {
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
 
         let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
-        
         let dtStr = formatDateTime(order.date);
         let slotStr = formatDateTime(order.slot);
 
         let card = document.createElement("div");
         card.className = "order-card";
-        card.onclick = () => openOrderModal(index); // Yahan index filter array ka hai
+        card.onclick = () => openOrderModal(index);
         
         card.innerHTML = `
             <div class="card-header">
@@ -162,16 +129,13 @@ function renderOrders() {
 }
 
 function openOrderModal(index) {
-    // 🌟 DHYAN DEIN: Ab ye currentFilteredOrders se data uthayega 🌟
     currentOrder = currentFilteredOrders[index];
     let o = currentOrder;
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
     safeSetText("mOrderId", "Order #" + (o.order_id || "N/A"));
     safeSetText("mName", o.patient_name || "N/A");
-    
     safeSetText("mSlot", formatDateTime(o.slot));
-    
     safeSetText("mAddress", o.address || "N/A");
     safeSetText("mFulfill", o.fulfillment ? o.fulfillment.toUpperCase() : "N/A");
 
@@ -208,19 +172,13 @@ function openOrderModal(index) {
     safeSetText("mColl", "₹" + (o.collection_charge || 0));
     safeSetText("mDisc", "-₹" + (o.discount || 0));
     safeSetText("mFinal", "₹" + (o.final_payable || 0));
-
     safeSetText("mFinalPay", "₹" + (o.final_payable || 0));
     
     let commEl = document.getElementById("mComm");
     if (commEl) {
         let bComm = Number(o.bhavya_commission || 0);
-        if (bComm >= 0) {
-            commEl.innerText = "-₹" + bComm.toFixed(2);
-            commEl.style.color = "#ef4444"; 
-        } else {
-            commEl.innerText = "+₹" + Math.abs(bComm).toFixed(2);
-            commEl.style.color = "#16a34a"; 
-        }
+        if (bComm >= 0) { commEl.innerText = "-₹" + bComm.toFixed(2); commEl.style.color = "#ef4444"; } 
+        else { commEl.innerText = "+₹" + Math.abs(bComm).toFixed(2); commEl.style.color = "#16a34a"; }
     }
     
     safeSetText("mLabEarn", "₹" + (o.lab_earning || 0));
@@ -387,7 +345,11 @@ function callApi(payload) {
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => {
-        if(data.status === "success") { alert(data.message); closeModal(); fetchOrders(localStorage.getItem("bhavya_user_id")); } 
+        if(data.status === "success") { 
+            alert(data.message); 
+            // 🌟 NAYA: TURANT REFRESH AFTER ANY ACTION 🌟
+            window.location.reload();
+        } 
         else { alert("Error: " + data.message); if(actionArea) actionArea.innerHTML = originalHTML; }
     }).catch(err => { alert("Network Error occurred!"); if(actionArea) actionArea.innerHTML = originalHTML; })
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
@@ -405,7 +367,6 @@ function logout() {
 // ==========================================
 // 🌟 TABS, LEDGER AUR PDF LOGIC 🌟
 // ==========================================
-
 function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -452,6 +413,17 @@ function calculateLedger() {
             </tr>`;
     });
 
+    // 🌟 NAYA: GRAND TOTAL ROW FOR PDF 🌟
+    if (completedOrders.length > 0) {
+        html += `
+            <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #cbd5e1; font-size:14px;">
+                <td colspan="2" style="padding:12px; text-align:right;">GRAND TOTAL:</td>
+                <td style="padding:12px; text-align:right;">₹${tColl.toFixed(2)}</td>
+                <td style="padding:12px; text-align:right; color:#ef4444;">₹${tFee.toFixed(2)}</td>
+                <td style="padding:12px; text-align:right; font-weight:700; color:#166534;">₹${tNet.toFixed(2)}</td>
+            </tr>`;
+    }
+
     safeSetText("totalCollected", "₹" + tColl.toLocaleString('en-IN'));
     safeSetText("totalWebsiteFee", "₹" + tFee.toLocaleString('en-IN'));
     safeSetText("totalLabNet", "₹" + tNet.toLocaleString('en-IN'));
@@ -460,10 +432,7 @@ function calculateLedger() {
 
 function downloadPDF() {
     const element = document.getElementById('pdf-content');
-    if(!element) {
-        alert("PDF content area missing!");
-        return;
-    }
+    if(!element) { alert("PDF content area missing!"); return; }
     
     const labName = localStorage.getItem("bhavya_name") || "Lab";
     const opt = {
@@ -473,6 +442,5 @@ function downloadPDF() {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    
     html2pdf().set(opt).from(element).save();
 }

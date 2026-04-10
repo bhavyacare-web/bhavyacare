@@ -231,14 +231,22 @@ async function fetchWalletHistory(userId) {
 // 🌟 BOOKINGS, FILTERS & REPORTS LOGIC 🌟
 // ===============================================
 async function fetchPatientBookings(userId) {
-    const reportsTab = document.getElementById("reportsTabContainer");
+    // 🌟 YAHAN FIX KIYA HAI: Ab ye sahi dabbe ko target karega
+    const bookingsContainer = document.getElementById("patientBookingsContainer");
+    const reportsTabContainer = document.getElementById("reportsTabContainer");
     const recentActivityContainer = document.getElementById("recentActivityContainer");
     
     // Loaders
+    const loaderLarge = `
+        <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
+            <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
+            <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your bookings...</p>
+        </div>`;
     const loaderReports = `<div class="section-title">Medical Records</div><div style="text-align: center; padding: 50px 20px; color: var(--success);"><i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i><p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p></div>`;
     const loaderSmall = `<div style="text-align: center; padding: 30px 10px; color: var(--primary);"><i class="fas fa-spinner fa-pulse" style="font-size: 24px; margin-bottom: 10px;"></i><p style="color: #888; font-size: 12px; font-weight: bold;">Syncing activity...</p></div>`;
 
-    if(reportsTab) reportsTab.innerHTML = loaderReports;
+    if(bookingsContainer) bookingsContainer.innerHTML = loaderLarge;
+    if(reportsTabContainer) reportsTabContainer.innerHTML = loaderReports;
     if(recentActivityContainer) recentActivityContainer.innerHTML = loaderSmall;
 
     try {
@@ -253,13 +261,13 @@ async function fetchPatientBookings(userId) {
             processDashboardData(globalBookingsData); 
             renderBookingCards(globalBookingsData);   
         } else {
-            document.getElementById("patientBookingsContainer").innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
+            if(bookingsContainer) bookingsContainer.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
         }
     } catch(e) { 
-        document.getElementById("patientBookingsContainer").innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
+        console.error(e);
+        if(bookingsContainer) bookingsContainer.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
     }
 }
-
 // 🌟 NAYA: FILTER FUNCTIONS 🌟
 function clearBookingFilters() {
     document.getElementById("searchBookingText").value = "";

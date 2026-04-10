@@ -8,6 +8,16 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let allOrders = [];
 let currentOrder = null;
 
+// 🌟 CRASH-PROOF HELPERS 🌟
+function safeSetText(id, text) {
+    let el = document.getElementById(id);
+    if (el) el.innerText = text;
+}
+function safeSetHTML(id, html) {
+    let el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const labName = localStorage.getItem("bhavya_name");
     const userId = localStorage.getItem("bhavya_user_id");
@@ -18,9 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    document.getElementById("displayLabName").innerText = labName + " (" + userId + ")";
+    safeSetText("displayLabName", labName + " (" + userId + ")");
     
-    // 🌟 NAYA CODE: Ledger ke liye default dates set karna (Current Month) 🌟
+    // Ledger ke liye default dates set karna (Current Month)
     if(document.getElementById("endDate") && document.getElementById("startDate")) {
         let today = new Date();
         document.getElementById("endDate").value = today.toISOString().split('T')[0];
@@ -38,10 +48,9 @@ function fetchOrders(userId) {
     })
     .then(res => res.json())
     .then(data => {
-        // Safe Check: Agar loadingMsg ID hai tabhi hide karo
-        let loadMsg = document.getElementById("loadingMsg");
-        if(loadMsg) loadMsg.style.display = "none";
-        
+        let lMsg = document.getElementById("loadingMsg");
+        if(lMsg) lMsg.style.display = "none";
+
         if(data.status === "success") {
             allOrders = data.data;
             renderOrders();
@@ -50,22 +59,19 @@ function fetchOrders(userId) {
         } else {
             let grid = document.getElementById("ordersGrid");
             if(grid) grid.innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
-            else alert("Error: " + data.message);
         }
     }).catch(err => {
-        console.error("Backend/Network Error: ", err);
-        let loadMsg = document.getElementById("loadingMsg");
-        if(loadMsg) {
-            loadMsg.innerText = "Network Error! Please check Google Apps Script Deployment.";
-            loadMsg.style.color = "red";
-        } else {
-            // Agar HTML me loadingMsg nahi hai, toh alert dikha do
-            alert("Network Error! Kya aapne 'New Deployment' karna miss kar diya?");
+        let lMsg = document.getElementById("loadingMsg");
+        if(lMsg) {
+            lMsg.innerText = "Network Error!";
+            lMsg.style.color = "red";
         }
     });
 }
+
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
+    if(!grid) return;
     
     if(allOrders.length === 0) {
         grid.innerHTML = `<div style="padding:40px; text-align:center; width:100%; color:#64748b;">No orders found for your lab.</div>`;
@@ -111,25 +117,28 @@ function openOrderModal(index) {
     let o = currentOrder;
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
-    document.getElementById("mOrderId").innerText = "Order #" + (o.order_id || "N/A");
-    document.getElementById("mName").innerText = o.patient_name || "N/A";
-    document.getElementById("mSlot").innerText = o.slot || "N/A";
-    document.getElementById("mAddress").innerText = o.address || "N/A";
-    document.getElementById("mFulfill").innerText = o.fulfillment ? o.fulfillment.toUpperCase() : "N/A";
+    safeSetText("mOrderId", "Order #" + (o.order_id || "N/A"));
+    safeSetText("mName", o.patient_name || "N/A");
+    safeSetText("mSlot", o.slot || "N/A");
+    safeSetText("mAddress", o.address || "N/A");
+    safeSetText("mFulfill", o.fulfillment ? o.fulfillment.toUpperCase() : "N/A");
 
     let statSpan = document.getElementById("mStatus");
-    statSpan.innerText = currentStatus.toUpperCase();
-    statSpan.className = "badge"; 
-    
-    if(currentStatus === "Pending") statSpan.classList.add("badge-pending");
-    else if(currentStatus === "Active" || currentStatus === "Confirmed") statSpan.classList.add("badge-active");
-    else if(currentStatus === "Completed") statSpan.classList.add("badge-completed");
-    else statSpan.classList.add("badge-cancelled");
+    if(statSpan) {
+        statSpan.innerText = currentStatus.toUpperCase();
+        statSpan.className = "badge"; 
+        if(currentStatus === "Pending") statSpan.classList.add("badge-pending");
+        else if(currentStatus === "Active" || currentStatus === "Confirmed") statSpan.classList.add("badge-active");
+        else if(currentStatus === "Completed") statSpan.classList.add("badge-completed");
+        else statSpan.classList.add("badge-cancelled");
+    }
 
     let paySpan = document.getElementById("mPayStatus");
-    paySpan.innerText = "Payment: " + o.payment_status;
-    paySpan.className = "badge";
-    paySpan.classList.add(o.payment_status === "COMPLETED" ? "badge-paid" : "badge-due");
+    if(paySpan) {
+        paySpan.innerText = "Payment: " + o.payment_status;
+        paySpan.className = "badge";
+        paySpan.classList.add(o.payment_status === "COMPLETED" ? "badge-paid" : "badge-due");
+    }
 
     let itemsArr = [];
     let itemsHTML = "";
@@ -141,25 +150,30 @@ function openOrderModal(index) {
             });
         } else { itemsHTML = "<i>No items found</i>"; }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
-    document.getElementById("mItemsList").innerHTML = itemsHTML;
+    safeSetHTML("mItemsList", itemsHTML);
 
     // PATIENT BILLING
-    document.getElementById("mSub").innerText = "₹" + (o.subtotal || 0);
-    document.getElementById("mColl").innerText = "₹" + (o.collection_charge || 0);
-    document.getElementById("mDisc").innerText = "-₹" + (o.discount || 0);
-    document.getElementById("mFinal").innerText = "₹" + (o.final_payable || 0);
+    safeSetText("mSub", "₹" + (o.subtotal || 0));
+    safeSetText("mColl", "₹" + (o.collection_charge || 0));
+    safeSetText("mDisc", "-₹" + (o.discount || 0));
+    safeSetText("mFinal", "₹" + (o.final_payable || 0));
 
     // 🌟 LAB EARNING BREAKDOWN 🌟
-    document.getElementById("mFinalPay").innerText = "₹" + (o.final_payable || 0);
-    let bComm = Number(o.bhavya_commission || 0);
-    if (bComm >= 0) {
-        document.getElementById("mComm").innerText = "-₹" + bComm.toFixed(2);
-        document.getElementById("mComm").style.color = "#ef4444"; // red
-    } else {
-        document.getElementById("mComm").innerText = "+₹" + Math.abs(bComm).toFixed(2);
-        document.getElementById("mComm").style.color = "#16a34a"; // green
+    safeSetText("mFinalPay", "₹" + (o.final_payable || 0));
+    
+    let commEl = document.getElementById("mComm");
+    if (commEl) {
+        let bComm = Number(o.bhavya_commission || 0);
+        if (bComm >= 0) {
+            commEl.innerText = "-₹" + bComm.toFixed(2);
+            commEl.style.color = "#ef4444"; // red
+        } else {
+            commEl.innerText = "+₹" + Math.abs(bComm).toFixed(2);
+            commEl.style.color = "#16a34a"; // green
+        }
     }
-    document.getElementById("mLabEarn").innerText = "₹" + (o.lab_earning || 0);
+    
+    safeSetText("mLabEarn", "₹" + (o.lab_earning || 0));
 
     let onlineArr = [];
     if (o.report_pdf) { try { onlineArr = JSON.parse(o.report_pdf); if (!Array.isArray(onlineArr)) onlineArr = [o.report_pdf]; } catch(e) { onlineArr = [o.report_pdf]; } }
@@ -201,60 +215,73 @@ function openOrderModal(index) {
     checksHTML += `</div>`;
 
     let actionArea = document.getElementById("mActionArea");
-    actionArea.innerHTML = "";
-
-    if (currentStatus === "Pending") {
-        actionArea.innerHTML = `
-            <div class="action-box">
-                <div style="font-weight:600; margin-bottom:10px;">Pending Actions:</div>
-                <input type="text" id="cancelReason" class="input-box" placeholder="If cancelling, type reason here..." style="display:none; margin-bottom: 15px;">
-                <div class="btn-group">
-                    <button class="btn btn-green" onclick="submitAction('Confirm')"><i class="fas fa-check"></i> Accept Order</button>
-                    <button class="btn btn-red" onclick="toggleCancelReason()"><i class="fas fa-times"></i> Cancel</button>
-                </div>
-                <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:15px;">Confirm Cancellation</button>
-            </div>`;
-    } 
-    else if (currentStatus === "Active" || currentStatus === "Confirmed" || currentStatus === "Completed") {
-        actionArea.innerHTML = `
-            <div class="action-box">
-                ${reportsHTML}
-                <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">${(onlineArr.length > 0 || handArr.length > 0) ? 'Add Another Report:' : 'Provide Report & Complete Order:'}</div>
-                <select id="reportType" class="input-box" onchange="toggleReportInput()" style="margin-bottom: 15px;">
-                    <option value="">Select Report Type</option>
-                    <option value="Online">Online (Upload PDF)</option>
-                    <option value="In Hand">In Hand (Physical Copy)</option>
-                </select>
-                <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
-                ${checksHTML}
-                <button class="btn btn-blue" style="width:100%; margin-top:5px;" onclick="submitReport()"><i class="fas fa-save"></i> Save & Mark Completed</button>
-            </div>`;
+    if(actionArea) {
+        actionArea.innerHTML = "";
+        if (currentStatus === "Pending") {
+            actionArea.innerHTML = `
+                <div class="action-box">
+                    <div style="font-weight:600; margin-bottom:10px;">Pending Actions:</div>
+                    <input type="text" id="cancelReason" class="input-box" placeholder="If cancelling, type reason here..." style="display:none; margin-bottom: 15px;">
+                    <div class="btn-group">
+                        <button class="btn btn-green" onclick="submitAction('Confirm')"><i class="fas fa-check"></i> Accept Order</button>
+                        <button class="btn btn-red" onclick="toggleCancelReason()"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                    <button class="btn btn-red" id="finalCancelBtn" onclick="submitAction('Cancel')" style="display:none; width:100%; margin-top:15px;">Confirm Cancellation</button>
+                </div>`;
+        } 
+        else if (currentStatus === "Active" || currentStatus === "Confirmed" || currentStatus === "Completed") {
+            actionArea.innerHTML = `
+                <div class="action-box">
+                    ${reportsHTML}
+                    <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">${(onlineArr.length > 0 || handArr.length > 0) ? 'Add Another Report:' : 'Provide Report & Complete Order:'}</div>
+                    <select id="reportType" class="input-box" onchange="toggleReportInput()" style="margin-bottom: 15px;">
+                        <option value="">Select Report Type</option>
+                        <option value="Online">Online (Upload PDF)</option>
+                        <option value="In Hand">In Hand (Physical Copy)</option>
+                    </select>
+                    <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
+                    ${checksHTML}
+                    <button class="btn btn-blue" style="width:100%; margin-top:5px;" onclick="submitReport()"><i class="fas fa-save"></i> Save & Mark Completed</button>
+                </div>`;
+        }
+        else if (currentStatus === "Cancelled") {
+            actionArea.innerHTML = `<div class="action-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b; text-align:center;"><i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i><div style="font-weight:bold;">Order Cancelled</div></div>`;
+        }
     }
-    else if (currentStatus === "Cancelled") {
-        actionArea.innerHTML = `<div class="action-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b; text-align:center;"><i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i><div style="font-weight:bold;">Order Cancelled</div></div>`;
-    }
 
-    document.getElementById("orderModal").style.display = "flex";
+    let modal = document.getElementById("orderModal");
+    if(modal) modal.style.display = "flex";
 }
 
-function closeModal() { document.getElementById("orderModal").style.display = "none"; currentOrder = null; }
+function closeModal() { 
+    let modal = document.getElementById("orderModal");
+    if(modal) modal.style.display = "none"; 
+    currentOrder = null; 
+}
 
 function toggleCancelReason() {
     const r = document.getElementById("cancelReason");
     const b = document.getElementById("finalCancelBtn");
+    if(!r || !b) return;
     if (r.style.display === "none") { r.style.display = "block"; b.style.display = "block"; r.focus(); } else { r.style.display = "none"; b.style.display = "none"; }
 }
 
 function toggleReportInput() {
-    let type = document.getElementById("reportType").value;
-    document.getElementById("reportPdfFile").style.display = (type === "Online") ? "block" : "none";
-    document.getElementById("inHandCheckboxes").style.display = (type === "In Hand") ? "block" : "none";
+    let typeEl = document.getElementById("reportType");
+    let pdfEl = document.getElementById("reportPdfFile");
+    let chkEl = document.getElementById("inHandCheckboxes");
+    if(!typeEl) return;
+    let type = typeEl.value;
+    if(pdfEl) pdfEl.style.display = (type === "Online") ? "block" : "none";
+    if(chkEl) chkEl.style.display = (type === "In Hand") ? "block" : "none";
 }
 
 function submitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: actionType };
     if(actionType === "Cancel") {
-        let reason = document.getElementById("cancelReason").value.trim();
+        let reasonEl = document.getElementById("cancelReason");
+        if(!reasonEl) return;
+        let reason = reasonEl.value.trim();
         if(!reason) return alert("Please type a cancellation reason.");
         payload.cancel_reason = reason;
     }
@@ -270,13 +297,15 @@ function deleteInHandReport(serviceName) {
 }
 
 async function submitReport() {
-    let rType = document.getElementById("reportType").value;
+    let typeEl = document.getElementById("reportType");
+    if(!typeEl) return;
+    let rType = typeEl.value;
     if(!rType) return alert("Please select a Report Type.");
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "UploadReport", report_type: rType };
 
     if(rType === "Online") {
         let fileInput = document.getElementById("reportPdfFile");
-        if(fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
+        if(!fileInput || fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
         let file = fileInput.files[0];
         if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
         try {
@@ -295,19 +324,23 @@ async function submitReport() {
 }
 
 function callApi(payload) {
-    let modal = document.querySelector(".modal");
-    modal.style.opacity = "0.7"; modal.style.pointerEvents = "none";
+    let modal = document.querySelector(".modal") || document.getElementById("orderModal");
+    if(modal) { modal.style.opacity = "0.7"; modal.style.pointerEvents = "none"; }
+    
     let actionArea = document.getElementById("mActionArea");
-    let originalHTML = actionArea.innerHTML;
-    actionArea.innerHTML = `<div style="text-align:center; padding:15px; font-weight:bold; color:#3b82f6;"><i class="fas fa-spinner fa-spin"></i> Processing...</div>`;
+    let originalHTML = "";
+    if(actionArea) {
+        originalHTML = actionArea.innerHTML;
+        actionArea.innerHTML = `<div style="text-align:center; padding:15px; font-weight:bold; color:#3b82f6;"><i class="fas fa-spinner fa-spin"></i> Processing...</div>`;
+    }
 
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") { alert(data.message); closeModal(); fetchOrders(localStorage.getItem("bhavya_user_id")); } 
-        else { alert("Error: " + data.message); actionArea.innerHTML = originalHTML; }
-    }).catch(err => { alert("Network Error occurred!"); actionArea.innerHTML = originalHTML; })
-    .finally(() => { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; });
+        else { alert("Error: " + data.message); if(actionArea) actionArea.innerHTML = originalHTML; }
+    }).catch(err => { alert("Network Error occurred!"); if(actionArea) actionArea.innerHTML = originalHTML; })
+    .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
 }
 
 function logout() {
@@ -319,35 +352,33 @@ function logout() {
     }
 }
 
-
 // ==========================================
-// 🌟 NAYA CODE: TABS, LEDGER AUR PDF LOGIC 🌟
+// 🌟 TABS, LEDGER AUR PDF LOGIC 🌟
 // ==========================================
 
 function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
+    let targetTab = document.getElementById(tabId);
+    if(targetTab) targetTab.classList.add('active');
+    if(btn) btn.classList.add('active');
 }
 
 function calculateLedger() {
     let startInput = document.getElementById("startDate");
     let endInput = document.getElementById("endDate");
     
-    // Safety check agar html update nahi hua ho
     if(!startInput || !endInput) return; 
 
     let start = new Date(startInput.value);
     let end = new Date(endInput.value);
-    end.setHours(23, 59, 59); // Din ke aakhri minute tak
+    end.setHours(23, 59, 59);
 
-    document.getElementById("pdfDateRange").innerText = `Period: ${start.toLocaleDateString('en-IN')} to ${end.toLocaleDateString('en-IN')}`;
-    document.getElementById("pdfHeader").innerText = localStorage.getItem("bhavya_name") + " - Settlement Report";
+    safeSetText("pdfDateRange", `Period: ${start.toLocaleDateString('en-IN')} to ${end.toLocaleDateString('en-IN')}`);
+    safeSetText("pdfHeader", localStorage.getItem("bhavya_name") + " - Settlement Report");
 
     let completedOrders = allOrders.filter(o => {
         let oDate = new Date(o.date);
-        // Sirf Completed orders par calculation
         return o.status && o.status.toUpperCase() === "COMPLETED" && oDate >= start && oDate <= end;
     });
 
@@ -371,10 +402,10 @@ function calculateLedger() {
             </tr>`;
     });
 
-    document.getElementById("totalCollected").innerText = "₹" + tColl.toLocaleString('en-IN');
-    document.getElementById("totalWebsiteFee").innerText = "₹" + tFee.toLocaleString('en-IN');
-    document.getElementById("totalLabNet").innerText = "₹" + tNet.toLocaleString('en-IN');
-    document.getElementById("ledgerTableBody").innerHTML = html || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#64748b;'>No completed orders found in this date range.</td></tr>";
+    safeSetText("totalCollected", "₹" + tColl.toLocaleString('en-IN'));
+    safeSetText("totalWebsiteFee", "₹" + tFee.toLocaleString('en-IN'));
+    safeSetText("totalLabNet", "₹" + tNet.toLocaleString('en-IN'));
+    safeSetHTML("ledgerTableBody", html || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#64748b;'>No completed orders found in this date range.</td></tr>");
 }
 
 function downloadPDF() {

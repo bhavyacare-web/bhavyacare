@@ -19,6 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("displayLabName").innerText = labName + " (" + userId + ")";
+    
+    // 🌟 NAYA CODE: Ledger ke liye default dates set karna (Current Month) 🌟
+    if(document.getElementById("endDate") && document.getElementById("startDate")) {
+        let today = new Date();
+        document.getElementById("endDate").value = today.toISOString().split('T')[0];
+        today.setDate(1); // Mahine ki pehli tareekh
+        document.getElementById("startDate").value = today.toISOString().split('T')[0];
+    }
+
     fetchOrders(userId);
 });
 
@@ -33,6 +42,9 @@ function fetchOrders(userId) {
         if(data.status === "success") {
             allOrders = data.data;
             renderOrders();
+            
+            // 🌟 NAYA CODE: Orders aane ke baad Ledger calculate karna 🌟
+            if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
             document.getElementById("ordersGrid").innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
         }
@@ -294,4 +306,81 @@ function logout() {
         localStorage.removeItem("bhavya_role");
         window.location.href = "../index.html"; 
     }
+}
+
+
+// ==========================================
+// 🌟 NAYA CODE: TABS, LEDGER AUR PDF LOGIC 🌟
+// ==========================================
+
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+function calculateLedger() {
+    let startInput = document.getElementById("startDate");
+    let endInput = document.getElementById("endDate");
+    
+    // Safety check agar html update nahi hua ho
+    if(!startInput || !endInput) return; 
+
+    let start = new Date(startInput.value);
+    let end = new Date(endInput.value);
+    end.setHours(23, 59, 59); // Din ke aakhri minute tak
+
+    document.getElementById("pdfDateRange").innerText = `Period: ${start.toLocaleDateString('en-IN')} to ${end.toLocaleDateString('en-IN')}`;
+    document.getElementById("pdfHeader").innerText = localStorage.getItem("bhavya_name") + " - Settlement Report";
+
+    let completedOrders = allOrders.filter(o => {
+        let oDate = new Date(o.date);
+        // Sirf Completed orders par calculation
+        return o.status && o.status.toUpperCase() === "COMPLETED" && oDate >= start && oDate <= end;
+    });
+
+    let tColl = 0, tFee = 0, tNet = 0;
+    let html = "";
+
+    completedOrders.forEach(o => {
+        let coll = Number(o.final_payable || 0);
+        let fee = Number(o.bhavya_commission || 0);
+        let net = Number(o.lab_earning || 0);
+
+        tColl += coll; tFee += fee; tNet += net;
+
+        html += `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:10px;">${new Date(o.date).toLocaleDateString('en-IN')}</td>
+                <td style="padding:10px;">${o.order_id}</td>
+                <td style="padding:10px; text-align:right;">₹${coll.toFixed(2)}</td>
+                <td style="padding:10px; text-align:right; color:#ef4444;">₹${fee.toFixed(2)}</td>
+                <td style="padding:10px; text-align:right; font-weight:700;">₹${net.toFixed(2)}</td>
+            </tr>`;
+    });
+
+    document.getElementById("totalCollected").innerText = "₹" + tColl.toLocaleString('en-IN');
+    document.getElementById("totalWebsiteFee").innerText = "₹" + tFee.toLocaleString('en-IN');
+    document.getElementById("totalLabNet").innerText = "₹" + tNet.toLocaleString('en-IN');
+    document.getElementById("ledgerTableBody").innerHTML = html || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#64748b;'>No completed orders found in this date range.</td></tr>";
+}
+
+function downloadPDF() {
+    const element = document.getElementById('pdf-content');
+    if(!element) {
+        alert("PDF content area missing!");
+        return;
+    }
+    
+    const labName = localStorage.getItem("bhavya_name") || "Lab";
+    const opt = {
+        margin: 10,
+        filename: `Settlement_Report_${labName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
 }

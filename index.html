@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function() {
+            const userId = localStorage.getItem("bhavya_user_id");
+            const role = localStorage.getItem("bhavya_role");
+            
+            // Agar user logged in hai aur wo 'lab' hai
+            if (userId && role === "lab") {
+                // Seedha Lab Dashboard par bhej do (bina Home page dikhaye)
+                window.location.replace("Lab/lab_dashboard.html"); 
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bhavyacare.com - Home</title>
@@ -51,13 +63,12 @@
             })
             .catch(error => console.error('Error loading header:', error));
 
-        // 👇 UPDATED: BOOKING LOGIC (BINA LOGIN KE DIRECT REDIRECT) 👇
+        // BOOKING LOGIC (BINA LOGIN KE DIRECT REDIRECT) 
         function handleBookClick(event) {
             event.preventDefault(); 
             // Seedha booking page par bhejo, koi login check nahi!
             window.location.href = "booking/booking.html";
         }
-        // 👆 ---------------------------- 👆
 
         // 2. VIP Button Logic: Isme login jaruri hai
         function handleVipClick(event) {

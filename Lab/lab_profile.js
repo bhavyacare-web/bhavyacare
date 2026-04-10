@@ -79,7 +79,10 @@ function fetchProfileData(userId) {
         } else { 
             alert("Error loading profile: " + data.message); 
         }
-    }).catch(err => alert("Network Error while fetching profile!"));
+    }).catch(err => {
+        console.error("Fetch Error Detail: ", err); 
+        alert("Client Error: Data load failed midway. Check Console (F12) for details.");
+    });
 }
 
 function populateForm() {
@@ -113,22 +116,24 @@ function populateForm() {
         statSel.value = p.status === "Active" ? "Active" : "Inactive";
     }
 
-    // 🌟 NAYA: IMAGE PREVIEWS (URL aate hi dikhayega) 🌟
+    // 🌟 IMAGE PREVIEWS 🌟
     if(p.nabl_url) document.getElementById("preview_nabl").innerHTML = `<div class="image-preview-box"><i class="fas fa-check-circle" style="color:green;"></i> <a href="${p.nabl_url}" target="_blank">View Uploaded Doc</a></div>`;
     if(p.nabh_url) document.getElementById("preview_nabh").innerHTML = `<div class="image-preview-box"><i class="fas fa-check-circle" style="color:green;"></i> <a href="${p.nabh_url}" target="_blank">View Uploaded Doc</a></div>`;
     if(p.img1_url) document.getElementById("preview_img1").innerHTML = `<div class="image-preview-box"><img src="${p.img1_url}"> <a href="${p.img1_url}" target="_blank">View Image</a></div>`;
     if(p.img2_url) document.getElementById("preview_img2").innerHTML = `<div class="image-preview-box"><img src="${p.img2_url}"> <a href="${p.img2_url}" target="_blank">View Image</a></div>`;
 
-    // 🌟 NAYA: POPULATE TIMINGS PROPERLY 🌟
+    // 🌟 FIX: POPULATE TIMINGS PROPERLY (No Crash Here Now) 🌟
     let timeContainer = document.getElementById("timingsContainer");
     timeContainer.innerHTML = "";
     daysArr.forEach(day => {
         let dName = day.charAt(0).toUpperCase() + day.slice(1);
         
         let openVal = ""; let closeVal = "";
-        if (p.timings && p.timings[day]) {
-            openVal = (p.timings[day].open !== "Closed" && p.timings[day].open !== "") ? p.timings[day].open : "";
-            closeVal = (p.timings[day].close !== "Closed" && p.timings[day].close !== "") ? p.timings[day].close : "";
+        if (p.timings) {
+            let oKey = day + "_open";
+            let cKey = day + "_close";
+            openVal = (p.timings[oKey] && p.timings[oKey] !== "Closed") ? p.timings[oKey] : "";
+            closeVal = (p.timings[cKey] && p.timings[cKey] !== "Closed") ? p.timings[cKey] : "";
         }
         
         timeContainer.innerHTML += `
@@ -178,8 +183,8 @@ async function saveBasicProfile() {
             lab_address: document.getElementById("lab_address").value,
             city: document.getElementById("city").value,
             pincode: document.getElementById("pincode").value,
-            available_pincode: JSON.stringify(pincodeList), // Uses global list
-            available_city: cityList.join(", "),            // Uses global list
+            available_pincode: JSON.stringify(pincodeList), 
+            available_city: cityList.join(", "),            
             nabl: document.getElementById("nabl").value,
             nabh: document.getElementById("nabh").value,
             status: document.getElementById("status").value,

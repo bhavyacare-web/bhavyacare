@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchLabs();
     fetchPendingRequests();
-    fetchAllAdminOrders(); // 🌟 NAYA
+    fetchAllAdminOrders(); 
 });
 
 function switchTab(tabId, btnElement) {
@@ -75,14 +75,12 @@ function populateLabDropdowns() {
     let orderSel = document.getElementById("orderLabFilter");
     let ledgerSel = document.getElementById("ledgerLabFilter");
     
-    // Extract unique labs from orders
     let uniqueLabs = {};
     allAdminOrders.forEach(o => {
         if(o.lab_info && o.lab_info.trim() !== "") {
-            // Lab info format: VED6030 (VED DIAGNOSTICS)
             let match = o.lab_info.match(/\((.*?)\)/);
             let cleanName = match ? match[1] : o.lab_info;
-            uniqueLabs[o.lab_info] = cleanName; // key: full string, value: display name
+            uniqueLabs[o.lab_info] = cleanName; 
         }
     });
 
@@ -207,7 +205,7 @@ function openAdminOrderModal(index) {
     
     let bComm = Number(o.bhavya_commission || 0);
     safeSetText("mComm", (bComm >= 0 ? "+" : "-") + "₹" + Math.abs(bComm).toFixed(2));
-    document.getElementById("mComm").style.color = bComm >= 0 ? "#16a34a" : "#ef4444"; // Admin ke liye ulat (Revenue is Green for Admin)
+    document.getElementById("mComm").style.color = bComm >= 0 ? "#16a34a" : "#ef4444"; 
     
     safeSetText("mLabEarn", "₹" + (o.lab_earning || 0));
 
@@ -216,7 +214,24 @@ function openAdminOrderModal(index) {
     if(actionArea) {
         actionArea.innerHTML = "";
         
-        let reportsHTML = getReportsHTML(o); // Helper function
+        let reportsHTML = getReportsHTML(o); // Helper for existing reports
+
+        // 🌟 CHECKBOX LOGIC (IN-HAND FOR ADMIN) 🌟
+        let handArr = [];
+        if (o.hand_reports) { try { handArr = JSON.parse(o.hand_reports); if (!Array.isArray(handArr)) handArr = [o.hand_reports]; } catch(e) { handArr = [o.hand_reports]; } }
+
+        let checksHTML = `<div id="adminInHandCheckboxes" style="display:none; background:white; padding:15px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:15px;">`;
+        checksHTML += `<div style="font-weight:600; margin-bottom:10px; color:#475569;">Select services given in hand:</div>`;
+        let itemsAvailableForHand = false;
+        itemsArr.forEach(item => {
+            if(!handArr.includes(item.service_name)) {
+                itemsAvailableForHand = true;
+                checksHTML += `<label style="display:block; margin-bottom:8px; cursor:pointer; font-weight:500;"><input type="checkbox" class="admin-in-hand-chk" value="${item.service_name}" style="margin-right:8px; width:16px; height:16px;"> ${item.service_name}</label>`;
+            }
+        });
+        if(!itemsAvailableForHand) checksHTML += `<div style="color:red; font-size:13px;">All services have already been marked as In-Hand.</div>`;
+        checksHTML += `</div>`;
+
 
         if (currentStatus === "Pending") {
             actionArea.innerHTML = `
@@ -234,11 +249,14 @@ function openAdminOrderModal(index) {
                 <div class="action-box">
                     ${reportsHTML}
                     <div style="font-weight:700; margin-top:20px; margin-bottom:10px; color:#1e293b;">Force Upload Report (On behalf of Lab):</div>
-                    <select id="adminReportType" class="search-box" style="width:100%; margin-bottom: 10px;">
+                    <select id="adminReportType" class="search-box" style="width:100%; margin-bottom: 10px;" onchange="toggleAdminReportInput()">
+                        <option value="">Select Report Type</option>
                         <option value="Online">Online (Upload PDF)</option>
+                        <option value="In Hand">In Hand (Physical Copy)</option>
                     </select>
-                    <input type="file" id="adminReportPdfFile" class="search-box" accept=".pdf" style="width:100%; margin-bottom: 10px;">
-                    <button class="btn btn-blue" style="width:100%;" onclick="adminSubmitReport()"><i class="fas fa-upload"></i> Upload & Mark Completed</button>
+                    <input type="file" id="adminReportPdfFile" class="search-box" accept=".pdf" style="display:none; width:100%; margin-bottom: 10px;">
+                    ${checksHTML}
+                    <button class="btn btn-blue" style="width:100%;" onclick="adminSubmitReport()"><i class="fas fa-upload"></i> Save & Mark Completed</button>
                 </div>`;
         }
     }
@@ -249,14 +267,26 @@ function openAdminOrderModal(index) {
 function getReportsHTML(o) {
     let onlineArr = [];
     if (o.report_pdf) { try { onlineArr = JSON.parse(o.report_pdf); if (!Array.isArray(onlineArr)) onlineArr = [o.report_pdf]; } catch(e) { onlineArr = [o.report_pdf]; } }
+    
+    let handArr = [];
+    if (o.hand_reports) { try { handArr = JSON.parse(o.hand_reports); if (!Array.isArray(handArr)) handArr = [o.hand_reports]; } catch(e) { handArr = [o.hand_reports]; } }
+
     let html = "";
-    if (onlineArr.length > 0) {
-        html += `<div style="margin-bottom:10px; font-weight:700; color:#166534;"><i class="fas fa-check-circle"></i> Uploaded Reports:</div>`;
+    if (onlineArr.length > 0 || handArr.length > 0) {
+        html += `<div style="margin-bottom:10px; font-weight:700; color:#166534;"><i class="fas fa-check-circle"></i> Uploaded / Given Reports:</div>`;
         onlineArr.forEach((url, i) => {
             if(url.trim() !== "") {
                 html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #cbd5e1;">
-                    <a href="${url}" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;"><i class="fas fa-file-pdf"></i> Report ${i+1}</a>
+                    <a href="${url}" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;"><i class="fas fa-file-pdf"></i> Online Report ${i+1}</a>
                     <button onclick="adminDeleteReport(${i})" class="btn btn-red" style="padding:4px 8px; font-size:11px;"><i class="fas fa-trash"></i></button>
+                </div>`;
+            }
+        });
+        handArr.forEach((srv) => {
+            if(srv.trim() !== "") {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fefce8; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #fef08a;">
+                    <span style="color:#854d0e; font-weight:600;"><i class="fas fa-hand-holding-medical"></i> In Hand: ${srv}</span>
+                    <button onclick="adminDeleteInHandReport('${srv}')" class="btn btn-red" style="padding:4px 8px; font-size:11px;"><i class="fas fa-trash"></i></button>
                 </div>`;
             }
         });
@@ -264,9 +294,15 @@ function getReportsHTML(o) {
     return html;
 }
 
+function toggleAdminReportInput() {
+    let type = document.getElementById("adminReportType").value;
+    document.getElementById("adminReportPdfFile").style.display = (type === "Online") ? "block" : "none";
+    document.getElementById("adminInHandCheckboxes").style.display = (type === "In Hand") ? "block" : "none";
+}
+
 function closeAdminOrderModal() { document.getElementById("adminOrderModal").style.display = "none"; currentAdminOrder = null; }
 
-// Admin Force API Calls
+// 🌟 ADMIN API CALLS 🌟
 function adminSubmitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: actionType };
     if(actionType === "Cancel") {
@@ -278,23 +314,40 @@ function adminSubmitAction(actionType) {
 }
 
 function adminDeleteReport(index) {
-    if(confirm("Admin: Are you sure you want to force delete this report?")) {
+    if(confirm("Admin: Are you sure you want to force delete this online report?")) {
         adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "DeleteReport", delete_type: "Online", file_index: index });
     }
 }
 
+function adminDeleteInHandReport(serviceName) {
+    if(confirm(`Admin: Are you sure you want to remove In-Hand status for "${serviceName}"?`)) {
+        adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "DeleteReport", delete_type: "InHand", service_name: serviceName });
+    }
+}
+
 async function adminSubmitReport() {
-    let fileInput = document.getElementById("adminReportPdfFile");
-    if(!fileInput || fileInput.files.length === 0) return alert("Please select a PDF file.");
-    let file = fileInput.files[0];
-    if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
+    let rType = document.getElementById("adminReportType").value;
+    if(!rType) return alert("Please select a Report Type.");
     
-    try {
-        let base64 = await new Promise((res, rej) => {
-            let reader = new FileReader(); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = e => rej(e); reader.readAsDataURL(file);
-        });
-        adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "Online", base64Pdf: base64 });
-    } catch(e) { alert("Error reading file."); }
+    if (rType === "Online") {
+        let fileInput = document.getElementById("adminReportPdfFile");
+        if(!fileInput || fileInput.files.length === 0) return alert("Please select a PDF file.");
+        let file = fileInput.files[0];
+        if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
+        
+        try {
+            let base64 = await new Promise((res, rej) => {
+                let reader = new FileReader(); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = e => rej(e); reader.readAsDataURL(file);
+            });
+            adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "Online", base64Pdf: base64 });
+        } catch(e) { alert("Error reading file."); }
+    } 
+    else if (rType === "In Hand") {
+        let checkboxes = document.querySelectorAll(".admin-in-hand-chk:checked");
+        if(checkboxes.length === 0) return alert("Please select at least one service to mark as In-Hand.");
+        let selectedServices = []; checkboxes.forEach(chk => selectedServices.push(chk.value));
+        adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "In Hand", in_hand_services: selectedServices });
+    }
 }
 
 function adminCallOrderApi(payload) {

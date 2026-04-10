@@ -38,21 +38,32 @@ function fetchOrders(userId) {
     })
     .then(res => res.json())
     .then(data => {
-        document.getElementById("loadingMsg").style.display = "none";
+        // Safe Check: Agar loadingMsg ID hai tabhi hide karo
+        let loadMsg = document.getElementById("loadingMsg");
+        if(loadMsg) loadMsg.style.display = "none";
+        
         if(data.status === "success") {
             allOrders = data.data;
             renderOrders();
-            
-            // 🌟 NAYA CODE: Orders aane ke baad Ledger calculate karna 🌟
+            // Ledger tab ke liye auto-calculate
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
-            document.getElementById("ordersGrid").innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
+            let grid = document.getElementById("ordersGrid");
+            if(grid) grid.innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
+            else alert("Error: " + data.message);
         }
     }).catch(err => {
-        document.getElementById("loadingMsg").innerText = "Network Error!";
+        console.error("Backend/Network Error: ", err);
+        let loadMsg = document.getElementById("loadingMsg");
+        if(loadMsg) {
+            loadMsg.innerText = "Network Error! Please check Google Apps Script Deployment.";
+            loadMsg.style.color = "red";
+        } else {
+            // Agar HTML me loadingMsg nahi hai, toh alert dikha do
+            alert("Network Error! Kya aapne 'New Deployment' karna miss kar diya?");
+        }
     });
 }
-
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     

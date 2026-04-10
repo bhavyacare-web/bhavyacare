@@ -3,114 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Lab Panel</title>
+    <title>Lab Dashboard - BhavyaCare</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f4f7fb; color: #0f172a; margin: 0; padding: 15px;}
-        
         .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-        .header h1 { margin: 0; font-size: 22px; color: #1e293b; display: flex; align-items: center; gap: 10px;}
         .lab-name-tag { background: #eff6ff; color: #1d4ed8; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;}
+        
+        /* TABS CSS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 12px 20px; border-radius: 8px; border: none; background: white; color: #64748b; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tab-btn.active { background: #3b82f6; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
+        /* LEDGER BOARD */
+        .ledger-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: 800; margin-top: 5px; }
+        .stat-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+
+        /* REST OF THE CSS (Cards, Modals etc) */
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;}
-        
         .order-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; position: relative;}
-        .order-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #cbd5e1;}
-        .order-card-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
-        .order-id { font-weight: 800; color: #3b82f6; font-size: 15px;}
-        .order-date { font-size: 12px; color: #64748b; font-weight: 600;}
-        
-        .patient-name { font-size: 18px; font-weight: 700; margin-bottom: 5px; color: #0f172a;}
-        .order-info { font-size: 14px; color: #475569; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;}
-        
-        .badges-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;}
         .badge { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;}
-        .badge-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
-        .badge-active { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;}
         .badge-completed { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;}
-        .badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;}
-        .badge-due { background: #fee2e2; color: #dc2626;}
-        .badge-paid { background: #dcfce7; color: #16a34a;}
+        .badge-pending { background: #fef3c7; color: #b45309; }
+        
+        .btn-download { background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 20px; }
+        .date-filter { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border: 1px solid #e2e8f0;}
 
+        /* Modal etc from previous code remains same... */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto;}
-        .modal { background: white; width: 100%; max-width: 700px; border-radius: 16px; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; margin: auto;}
-        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 24px; cursor: pointer; color: #64748b;}
-        
-        .section-title { font-size: 15px; font-weight: 700; color: #334155; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;}
-        
-        .cart-item { display: flex; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; font-size: 14px; border: 1px solid #e2e8f0;}
-        .item-name { font-weight: 600; color: #0f172a;}
-        .item-price { font-weight: 700; color: #059669;}
-
+        .modal { background: white; width: 100%; max-width: 700px; border-radius: 16px; padding: 25px; margin: auto; position: relative;}
+        .section-title { font-size: 15px; font-weight: 700; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9;}
         .bill-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #475569;}
         .bill-total { font-weight: 800; font-size: 18px; color: #0f172a; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #cbd5e1;}
-
-        .action-box { background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 10px; margin-top: 25px;}
-        .btn-group { display: flex; gap: 10px; margin-top: 15px;}
-        .btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 15px; transition: 0.2s;}
-        .btn-green { background: #10b981; color: white; }
-        .btn-red { background: #ef4444; color: white; }
-        .btn-blue { background: #3b82f6; color: white; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px);}
-
-        .input-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Inter'; margin-bottom: 10px; font-size: 14px;}
-        #loadingMsg { text-align: center; padding: 50px; font-size: 18px; color: #64748b; font-weight: 600; width: 100%;}
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1><i class="fas fa-chart-pie"></i> Lab Dashboard</h1>
-        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 10px; align-items: center;">
             <div class="lab-name-tag" id="displayLabName">Loading...</div>
-            <button onclick="window.location.href='lab_profile.html'" style="padding:10px 18px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size: 14px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: 0.2s;"><i class="fas fa-user-edit"></i> My Profile</button>
-            <button onclick="logout()" style="padding:10px 18px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size: 14px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); transition: 0.2s;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button onclick="window.location.href='lab_profile.html'" style="padding:10px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer;"><i class="fas fa-user-edit"></i></button>
+            <button onclick="logout()" style="padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </div>
 
-    <div class="orders-grid" id="ordersGrid">
-        <div id="loadingMsg"><i class="fas fa-spinner fa-spin"></i> Fetching Orders...</div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('ordersTab', this)">My Orders</button>
+        <button class="tab-btn" onclick="switchTab('ledgerTab', this)">Payment Ledger</button>
+    </div>
+
+    <div id="ordersTab" class="tab-content active">
+        <div class="orders-grid" id="ordersGrid">
+            <div style="text-align:center; padding:50px; width:100%;">Fetching Orders...</div>
+        </div>
+    </div>
+
+    <div id="ledgerTab" class="tab-content">
+        <div class="date-filter">
+            <div>From: <input type="date" id="startDate" class="input-box" style="width:150px; margin:0;"></div>
+            <div>To: <input type="date" id="endDate" class="input-box" style="width:150px; margin:0;"></div>
+            <button class="tab-btn" style="background:#3b82f6; color:white; margin:0;" onclick="calculateLedger()">Apply Filter</button>
+        </div>
+
+        <button class="btn-download" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download Settlement Report</button>
+
+        <div id="pdf-content" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <h2 id="pdfHeader" style="margin-top:0; color:#1e293b;">Settlement Report</h2>
+            <p id="pdfDateRange" style="color:#64748b; margin-top:-10px; font-weight:600;"></p>
+
+            <div class="ledger-board">
+                <div class="stat-card">
+                    <div class="stat-label">Patient Collection</div>
+                    <div class="stat-val" id="totalCollected" style="color:#0f172a;">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Payable to Website</div>
+                    <div class="stat-val" id="totalWebsiteFee" style="color:#ef4444;">₹0</div>
+                </div>
+                <div class="stat-card" style="background:#f0fdf4; border-color:#bbf7d0;">
+                    <div class="stat-label">Net Lab Earning</div>
+                    <div class="stat-val" id="totalLabNet" style="color:#166534;">₹0</div>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:20px;">
+                <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                    <tr>
+                        <th style="padding:10px; text-align:left;">Date</th>
+                        <th style="padding:10px; text-align:left;">Order ID</th>
+                        <th style="padding:10px; text-align:right;">Collected</th>
+                        <th style="padding:10px; text-align:right;">Website Fee</th>
+                        <th style="padding:10px; text-align:right;">Net Earning</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div class="modal-overlay" id="orderModal">
         <div class="modal">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h2 style="margin-top:0; color:#0f172a;" id="mOrderId">Order Details</h2>
-            
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <span id="mStatus" class="badge">Status</span>
-                <span id="mPayStatus" class="badge">Pay</span>
-                <span id="mFulfill" class="badge" style="background:#f3f4f6; color:#374151;">Fulfill</span>
-            </div>
-
-            <div class="section-title">Patient Info</div>
-            <div style="font-size: 15px; color: #334155; line-height: 1.6;">
-                <strong><i class="fas fa-user"></i> Name:</strong> <span id="mName"></span><br>
-                <strong><i class="fas fa-clock"></i> Slot:</strong> <span id="mSlot"></span><br>
-                <strong><i class="fas fa-map-marker-alt"></i> Address:</strong> <span id="mAddress"></span>
-            </div>
-
-            <div class="section-title">Tests / Services</div>
+            <span style="position:absolute; top:20px; right:25px; cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
+            <h2 id="mOrderId">Order Details</h2>
             <div id="mItemsList"></div>
-
-            <div class="section-title">Billing to Patient</div>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                <div class="bill-row"><span>Subtotal:</span> <span id="mSub">₹0</span></div>
-                <div class="bill-row"><span>Collection Charge:</span> <span id="mColl">₹0</span></div>
-                <div class="bill-row" style="color:#16a34a;"><span>Discount:</span> <span id="mDisc">-₹0</span></div>
-                <div class="bill-row bill-total"><span>Final Payable (By Patient):</span> <span id="mFinal">₹0</span></div>
-            </div>
-
-            <div class="section-title">Your Earning Breakdown</div>
-            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+            <div class="section-title">Earning Breakdown</div>
+            <div style="background:#f0fdf4; padding:15px; border-radius:8px;">
                 <div class="bill-row"><span>Patient Pays:</span> <span id="mFinalPay">₹0</span></div>
-                <div class="bill-row" style="color:#ef4444; font-weight:600;"><span>BhavyaCare Fee:</span> <span id="mComm">-₹0</span></div>
-                <div class="bill-row bill-total" style="color:#166534; border-top-color:#bbf7d0; font-size:20px;"><span>Net Lab Earning:</span> <span id="mLabEarn">₹0</span></div>
+                <div class="bill-row"><span>BhavyaCare Fee:</span> <span id="mComm">-₹0</span></div>
+                <div class="bill-row bill-total"><span>Net Lab Earning:</span> <span id="mLabEarn">₹0</span></div>
             </div>
-
             <div id="mActionArea"></div>
         </div>
     </div>

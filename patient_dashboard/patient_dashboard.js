@@ -326,12 +326,29 @@ function processDashboardData(bookings) {
             else if (isComplete) { badgeClass = "status-success"; statusText = "Completed"; } 
             else if (safeStatus.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
+            // 🌟 NAYA FIX YAHAN HAI: Bulletproof JSON Parsing 🌟
             let testSummary = "Unknown Test";
-            try {
-                let items = JSON.parse(bk.cart_items);
-                if(!Array.isArray(items)) items = [items];
-                testSummary = items.map(i => (i.service_name || i.name || "")).join(", ");
-            } catch(e) { testSummary = bk.cart_items || "Unknown Test"; }
+            let items = [];
+            let rawCart = bk.cart_items;
+
+            if (typeof rawCart === 'string') {
+                try { rawCart = JSON.parse(rawCart); } catch(e) {}
+                if (typeof rawCart === 'string') { try { rawCart = JSON.parse(rawCart); } catch(e) {} }
+            }
+
+            if (Array.isArray(rawCart)) { items = rawCart; } 
+            else if (typeof rawCart === 'object' && rawCart !== null) { items = rawCart.items || rawCart.cart || [rawCart]; } 
+            else if (typeof rawCart === 'string' && rawCart.trim() !== "") { items = [{ service_name: rawCart }]; }
+
+            if (items.length > 0) {
+                testSummary = items.map(i => {
+                    if (typeof i === 'object' && i !== null) return i.service_name || i.test_name || i.name || i.title || "Unknown Test";
+                    return String(i);
+                }).join(", ");
+            }
+            
+            // Ye line aakhri me ensure karegi ki kisi bhi haal me ye String hi rahe
+            testSummary = String(testSummary); 
 
             recentHtml += `
             <div class="list-item">
@@ -384,7 +401,6 @@ function processDashboardData(bookings) {
     if(reportsTab) reportsTab.innerHTML = reportsHtml;
     if(recentContainer) recentContainer.innerHTML = recentHtml;
 }
-
 // 🌟 SPLIT LOGIC 2: Render Booking Cards (With Filter Support) 🌟
 function renderBookingCards(bookings) {
     const container = document.getElementById("patientBookingsContainer");

@@ -228,35 +228,16 @@ async function fetchWalletHistory(userId) {
 }
 
 // ===============================================
-// BOOKINGS, REPORTS & CANCEL ORDER LOGIC
+// 🌟 BOOKINGS, FILTERS & REPORTS LOGIC 🌟
 // ===============================================
 async function fetchPatientBookings(userId) {
-    const bookingTab = document.querySelector("#bookings .data-box");
-    const reportsTab = document.querySelector("#reports .data-box");
+    const reportsTab = document.getElementById("reportsTabContainer");
     const recentActivityContainer = document.getElementById("recentActivityContainer");
     
-    const loaderLarge = `
-        <div class="section-title">My Bookings</div>
-        <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
-            <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
-            <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your bookings...</p>
-        </div>
-    `;
-    const loaderReports = `
-        <div class="section-title">Medical Records</div>
-        <div style="text-align: center; padding: 50px 20px; color: var(--success);">
-            <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
-            <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
-        </div>
-    `;
-    const loaderSmall = `
-        <div style="text-align: center; padding: 30px 10px; color: var(--primary);">
-            <i class="fas fa-spinner fa-pulse" style="font-size: 24px; margin-bottom: 10px;"></i>
-            <p style="color: #888; font-size: 12px; font-weight: bold;">Syncing activity...</p>
-        </div>
-    `;
+    // Loaders
+    const loaderReports = `<div class="section-title">Medical Records</div><div style="text-align: center; padding: 50px 20px; color: var(--success);"><i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i><p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p></div>`;
+    const loaderSmall = `<div style="text-align: center; padding: 30px 10px; color: var(--primary);"><i class="fas fa-spinner fa-pulse" style="font-size: 24px; margin-bottom: 10px;"></i><p style="color: #888; font-size: 12px; font-weight: bold;">Syncing activity...</p></div>`;
 
-    if(bookingTab) bookingTab.innerHTML = loaderLarge;
     if(reportsTab) reportsTab.innerHTML = loaderReports;
     if(recentActivityContainer) recentActivityContainer.innerHTML = loaderSmall;
 
@@ -269,105 +250,94 @@ async function fetchPatientBookings(userId) {
         
         if (result.status === "success") {
             globalBookingsData = result.data;
-            renderBookings(globalBookingsData, bookingTab, reportsTab, recentActivityContainer);
+            processDashboardData(globalBookingsData); 
+            renderBookingCards(globalBookingsData);   
         } else {
-            if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
+            document.getElementById("patientBookingsContainer").innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
         }
     } catch(e) { 
-        if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
+        document.getElementById("patientBookingsContainer").innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
     }
 }
 
-function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
-    let bookingsHtml = `<div class="section-title">My Bookings</div>`;
+// 🌟 NAYA: FILTER FUNCTIONS 🌟
+function clearBookingFilters() {
+    document.getElementById("searchBookingText").value = "";
+    document.getElementById("searchBookingDate").value = "";
+    renderBookingCards(globalBookingsData);
+}
+
+function filterMyBookings() {
+    const searchText = document.getElementById("searchBookingText").value.toLowerCase().trim();
+    const searchDate = document.getElementById("searchBookingDate").value; 
+
+    const filtered = globalBookingsData.filter(bk => {
+        let matchText = true;
+        if (searchText !== "") {
+            const labName = (bk.lab_id || "").toLowerCase();
+            const orderId = (bk.order_id || "").toLowerCase();
+            let testNames = "";
+            try {
+                let items = JSON.parse(bk.cart_items);
+                if(!Array.isArray(items)) items = [items];
+                testNames = items.map(i => (i.service_name || i.name || "")).join(" ").toLowerCase();
+            } catch(e) { testNames = (bk.cart_items || "").toLowerCase(); }
+            
+            matchText = labName.includes(searchText) || testNames.includes(searchText) || orderId.includes(searchText);
+        }
+
+        let matchDate = true;
+        if (searchDate !== "") {
+            const [year, month, day] = searchDate.split("-");
+            const formattedSearch = `${day}-${month}-${year}`;
+            matchDate = (bk.date || "").includes(formattedSearch);
+        }
+        return matchText && matchDate;
+    });
+
+    renderBookingCards(filtered);
+}
+
+// 🌟 SPLIT LOGIC 1: Overview & Reports Tab 🌟
+function processDashboardData(bookings) {
+    const reportsTab = document.getElementById("reportsTabContainer");
+    const recentContainer = document.getElementById("recentActivityContainer");
+    
     let reportsHtml = `<div class="section-title">Medical Records</div>`;
     let recentHtml = "";
-    
-    let hasBookings = false;
     let hasReports = false;
 
     bookings.forEach((bk, index) => {
-        let testsListHtml = "";
-        let testNamesSummary = "";
-        let items = [];
-        let rawCart = bk.cart_items;
-        
-        if (typeof rawCart === 'string') {
-            try { rawCart = JSON.parse(rawCart); } catch(e) {}
-            if (typeof rawCart === 'string') { try { rawCart = JSON.parse(rawCart); } catch(e) {} }
-        }
-
-        if (Array.isArray(rawCart)) {
-            items = rawCart;
-        } else if (typeof rawCart === 'object' && rawCart !== null) {
-            items = rawCart.items || rawCart.cart || [rawCart];
-        } else if (typeof rawCart === 'string' && rawCart.trim() !== "") {
-            items = [{ service_name: rawCart }];
-        }
-
-        if (items.length > 0) {
-            testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #333;">`;
-            let namesArr = [];
-            items.forEach(item => {
-                let tName = "Unknown Test";
-                let tPrice = "";
-                if (typeof item === 'object' && item !== null) {
-                    tName = item.service_name || item.test_name || item.name || item.title || "Unknown Test";
-                    tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
-                } else if (typeof item === 'string') { tName = item; }
-                testsListHtml += `<li style="margin-bottom:4px;"><strong>${tName}</strong>${tPrice}</li>`;
-                namesArr.push(tName);
-            });
-            testsListHtml += `</ul>`;
-            testNamesSummary = namesArr.join(', ');
-        } else {
-            testsListHtml = `<p style="margin: 8px 0; font-size: 12px; color:#888;">No test details found.</p>`;
-            testNamesSummary = "No Tests";
-        }
-
         let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
-        let safePayStatus = (bk.payment_status || "due").toString().toLowerCase().trim();
+        let isComplete = (safeStatus.includes("complete") || safeStatus === "completed");
 
-        let badgeClass = "status-warning"; 
-        let statusText = "Pending";
-        let isComplete = false;
+        // --- RECENT ACTIVITY (Top 3) ---
+        if (index < 3) {
+            let badgeClass = "status-warning"; let statusText = "Pending";
+            if (safeStatus.includes("confirm")) { badgeClass = "status-primary"; statusText = "Confirmed"; } 
+            else if (isComplete) { badgeClass = "status-success"; statusText = "Completed"; } 
+            else if (safeStatus.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
-        if (safeStatus.includes("confirm")) { 
-            badgeClass = "status-primary"; statusText = "Confirmed"; 
-        } else if (safeStatus.includes("complete") || safeStatus === "completed") { 
-            badgeClass = "status-success"; statusText = "Completed"; 
-            isComplete = true; 
-        } else if (safeStatus.includes("cancel")) { 
-            badgeClass = "status-danger"; statusText = "Cancelled"; 
+            let testSummary = "Unknown Test";
+            try {
+                let items = JSON.parse(bk.cart_items);
+                if(!Array.isArray(items)) items = [items];
+                testSummary = items.map(i => (i.service_name || i.name || "")).join(", ");
+            } catch(e) { testSummary = bk.cart_items || "Unknown Test"; }
+
+            recentHtml += `
+            <div class="list-item">
+                <div class="list-info">
+                    <h5 style="font-size:14px; margin-bottom:3px;">${testSummary.substring(0, 35)}${testSummary.length > 35 ? '...' : ''}</h5>
+                    <p style="color:var(--primary); font-weight:bold; font-size:11px;"><i class="far fa-clock"></i> ${bk.slot}</p>
+                </div>
+                <div style="text-align:right;">
+                    <span class="status-badge ${badgeClass}">${statusText}</span>
+                </div>
+            </div>`;
         }
 
-        let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
-
-        let payStatus = (safePayStatus.includes("complete")) ? "COMPLETE" : "DUE";
-        let payColor = (payStatus === "COMPLETE") ? "#2e7d32" : "#d32f2f";
-        let payBg = (payStatus === "COMPLETE") ? "#e8f5e9" : "#ffebee";
-        let paymentBadge = `<span style="font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px; font-weight:800; background:${payBg}; color:${payColor}; border:1px solid ${payColor}44;">${payStatus}</span>`;
-
-        hasBookings = true;
-
-        let cancelBtnHtml = "";
-        if (!isComplete && !safeStatus.includes("cancel")) {
-            cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
-        }
-        
-        // 🌟 1. MULTIPLE PDF & IN HAND REPORTS FIX LOGIC 🌟
-        let reportSectionHtml = "";
-        
-        // Fetching Hand Reports Safely
-        let handReportsArr = [];
-        if (bk.hand_reports) {
-            try { 
-                handReportsArr = JSON.parse(bk.hand_reports); 
-                if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports];
-            } catch(e) { handReportsArr = [bk.hand_reports]; }
-        }
-
-        // Fetching Online PDFs Safely (JSON Array check)
+        // --- REPORTS TAB RENDER (Multiple PDFs) ---
         let onlinePdfArr = [];
         if (bk.report_pdf) {
             try { 
@@ -376,13 +346,113 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             } catch(e) { onlinePdfArr = [bk.report_pdf]; }
         }
 
-        // Render Reports UI if Complete
+        if (isComplete && onlinePdfArr.length > 0) {
+            hasReports = true;
+            let linksHtml = "";
+            onlinePdfArr.forEach((url, i) => {
+                if(url.trim() !== "") {
+                    linksHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px; margin-top:8px;"><i class="fas fa-cloud-download-alt"></i> Download Report ${i+1}</a>`;
+                }
+            });
+
+            reportsHtml += `
+            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between;">
+                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Order #${bk.order_id}</h5>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.slot}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-light); margin-bottom:5px; line-height:1.5;">
+                    <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong><span style="color:var(--text-main);">Lab: ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'N/A'}</span></strong>
+                </div>
+                ${linksHtml}
+            </div>`;
+        }
+    });
+
+    if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Reports will appear here once ready.</p></div>`;
+    if (recentHtml === "") recentHtml = `<div style="text-align: center; padding: 20px; color: #aaa;">No recent activities.</div>`;
+
+    if(reportsTab) reportsTab.innerHTML = reportsHtml;
+    if(recentContainer) recentContainer.innerHTML = recentHtml;
+}
+
+// 🌟 SPLIT LOGIC 2: Render Booking Cards (With Filter Support) 🌟
+function renderBookingCards(bookings) {
+    const container = document.getElementById("patientBookingsContainer");
+    if (!container) return;
+
+    if (bookings.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No bookings found matching your search.</p></div>`;
+        return;
+    }
+
+    let cardsHtml = "";
+    bookings.forEach(bk => {
+        let testsListHtml = "";
+        let items = [];
+        let rawCart = bk.cart_items;
+        
+        if (typeof rawCart === 'string') {
+            try { rawCart = JSON.parse(rawCart); } catch(e) {}
+            if (typeof rawCart === 'string') { try { rawCart = JSON.parse(rawCart); } catch(e) {} }
+        }
+
+        if (Array.isArray(rawCart)) { items = rawCart; } 
+        else if (typeof rawCart === 'object' && rawCart !== null) { items = rawCart.items || rawCart.cart || [rawCart]; } 
+        else if (typeof rawCart === 'string' && rawCart.trim() !== "") { items = [{ service_name: rawCart }]; }
+
+        if (items.length > 0) {
+            testsListHtml = `<ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #333;">`;
+            items.forEach(item => {
+                let tName = "Unknown Test"; let tPrice = "";
+                if (typeof item === 'object' && item !== null) {
+                    tName = item.service_name || item.test_name || item.name || item.title || "Unknown Test";
+                    tPrice = item.price ? ` <span style="color:#888; font-size:11px;">(₹${item.price})</span>` : '';
+                } else if (typeof item === 'string') { tName = item; }
+                testsListHtml += `<li style="margin-bottom:4px;"><strong>${tName}</strong>${tPrice}</li>`;
+            });
+            testsListHtml += `</ul>`;
+        } else {
+            testsListHtml = `<p style="margin: 8px 0; font-size: 12px; color:#888;">No test details found.</p>`;
+        }
+
+        let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
+        let safePayStatus = (bk.payment_status || "due").toString().toLowerCase().trim();
+        let badgeClass = "status-warning"; let statusText = "Pending";
+        let isComplete = false;
+
+        if (safeStatus.includes("confirm")) { badgeClass = "status-primary"; statusText = "Confirmed"; } 
+        else if (safeStatus.includes("complete") || safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; isComplete = true; } 
+        else if (safeStatus.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
+
+        let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
+
+        let payStatus = (safePayStatus.includes("complete")) ? "COMPLETE" : "DUE";
+        let payColor = (payStatus === "COMPLETE") ? "#2e7d32" : "#d32f2f";
+        let payBg = (payStatus === "COMPLETE") ? "#e8f5e9" : "#ffebee";
+        let paymentBadge = `<span style="font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px; font-weight:800; background:${payBg}; color:${payColor}; border:1px solid ${payColor}44;">${payStatus}</span>`;
+
+        let cancelBtnHtml = "";
+        if (!isComplete && !safeStatus.includes("cancel")) {
+            cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
+        }
+        
+        let reportSectionHtml = "";
+        let handReportsArr = [];
+        if (bk.hand_reports) {
+            try { handReportsArr = JSON.parse(bk.hand_reports); if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports]; } catch(e) { handReportsArr = [bk.hand_reports]; }
+        }
+
+        let onlinePdfArr = [];
+        if (bk.report_pdf) {
+            try { onlinePdfArr = JSON.parse(bk.report_pdf); if(!Array.isArray(onlinePdfArr)) onlinePdfArr = [bk.report_pdf]; } catch(e) { onlinePdfArr = [bk.report_pdf]; }
+        }
+
         if (isComplete && (onlinePdfArr.length > 0 || handReportsArr.length > 0)) {
-            reportSectionHtml = `
-            <div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
+            reportSectionHtml = `<div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
                 <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;"><i class="fas fa-check-circle"></i> Booking Completed</div>`;
             
-            // Render Online PDFs
             if(onlinePdfArr.length > 0) {
                 reportSectionHtml += `<div style="font-size:11px; color:#555; margin-top:8px; margin-bottom:5px; font-weight:bold;">Online Reports:</div>`;
                 onlinePdfArr.forEach((url, i) => {
@@ -391,21 +461,16 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
                     }
                 });
             }
-            
-            // Render In Hand Reports
             if (handReportsArr.length > 0) {
                 reportSectionHtml += `<div style="font-size:11px; color:#d84315; margin-top:10px; font-weight:bold;">To Collect Physically (In-Hand):</div>`;
                 reportSectionHtml += `<ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#d84315;">`;
-                handReportsArr.forEach(srv => {
-                    if(srv.trim() !== "") reportSectionHtml += `<li>${srv}</li>`;
-                });
+                handReportsArr.forEach(srv => { if(srv.trim() !== "") reportSectionHtml += `<li>${srv}</li>`; });
                 reportSectionHtml += `</ul>`;
             }
             reportSectionHtml += `</div>`;
         }
 
-        // ----------- BOOKING CARD RENDER -----------
-        bookingsHtml += `
+        cardsHtml += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                 <div>
@@ -443,55 +508,9 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             ${reportSectionHtml}
             ${cancelBtnHtml}
         </div>`;
-
-        // ----------- RECENT ACTIVITY (TOP 3) -----------
-        if (index < 3) {
-            recentHtml += `
-            <div class="list-item">
-                <div class="list-info">
-                    <h5 style="font-size:14px; margin-bottom:3px;">${testNamesSummary.substring(0, 35)}${testNamesSummary.length > 35 ? '...' : ''}</h5>
-                    <p style="color:var(--primary); font-weight:bold; font-size:11px;"><i class="far fa-clock"></i> ${bk.slot}</p>
-                </div>
-                <div style="text-align:right;">
-                    <span class="status-badge ${badgeClass}">${statusText}</span>
-                </div>
-            </div>`;
-        }
-
-        // 🌟 2. REPORTS TAB RENDER LOGIC (Handles Multiple PDFs) 🌟
-        if (isComplete && onlinePdfArr.length > 0) {
-            hasReports = true;
-            
-            // Multiple PDFs ke liye loop lagaya
-            let linksHtml = "";
-            onlinePdfArr.forEach((url, i) => {
-                if(url.trim() !== "") {
-                    linksHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px; margin-top:8px;"><i class="fas fa-cloud-download-alt"></i> View & Download Report ${i+1}</a>`;
-                }
-            });
-
-            reportsHtml += `
-            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between;">
-                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Order #${bk.order_id}</h5>
-                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.slot}</span>
-                </div>
-                <div style="font-size:12px; color:var(--text-light); margin-bottom:5px; line-height:1.5;">
-                    <strong>Patient:</strong> ${bk.patient_name} <br>
-                    <strong><span style="color:var(--text-main);">Lab: ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'N/A'}</span></strong>
-                </div>
-                ${linksHtml}
-            </div>`;
-        }
     });
 
-    if (!hasBookings) bookingsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No active bookings found.</p></div>`;
-    if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Reports will appear here once ready.</p></div>`;
-    if (recentHtml === "") recentHtml = `<div style="text-align: center; padding: 20px; color: #aaa;">No recent activities.</div>`;
-
-    bookingTab.innerHTML = bookingsHtml;
-    reportsTab.innerHTML = reportsHtml;
-    recentContainer.innerHTML = recentHtml;
+    container.innerHTML = cardsHtml;
 }
 
 function openCancelModal(orderId) {

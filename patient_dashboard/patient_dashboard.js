@@ -285,11 +285,30 @@ function filterMyBookings() {
             const labName = (bk.lab_id || "").toLowerCase();
             const orderId = (bk.order_id || "").toLowerCase();
             let testNames = "";
-            try {
-                let items = JSON.parse(bk.cart_items);
-                if(!Array.isArray(items)) items = [items];
-                testNames = items.map(i => (i.service_name || i.name || "")).join(" ").toLowerCase();
-            } catch(e) { testNames = (bk.cart_items || "").toLowerCase(); }
+            
+            // 🌟 NAYA LOGIC: Bulletproof JSON parsing for Search 🌟
+            let items = [];
+            let rawCart = bk.cart_items;
+
+            // Check and Parse
+            if (typeof rawCart === 'string') {
+                try { rawCart = JSON.parse(rawCart); } catch(e) {}
+                if (typeof rawCart === 'string') { try { rawCart = JSON.parse(rawCart); } catch(e) {} }
+            }
+
+            if (Array.isArray(rawCart)) { items = rawCart; } 
+            else if (typeof rawCart === 'object' && rawCart !== null) { items = rawCart.items || rawCart.cart || [rawCart]; } 
+            else if (typeof rawCart === 'string' && rawCart.trim() !== "") { items = [{ service_name: rawCart }]; }
+
+            // Extract text names safely
+            if (items.length > 0) {
+                testNames = items.map(i => {
+                    if (typeof i === 'object' && i !== null) return i.service_name || i.test_name || i.name || i.title || "";
+                    return String(i);
+                }).join(" ").toLowerCase();
+            } else {
+                testNames = String(bk.cart_items || "").toLowerCase();
+            }
             
             matchText = labName.includes(searchText) || testNames.includes(searchText) || orderId.includes(searchText);
         }

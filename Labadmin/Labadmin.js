@@ -29,7 +29,7 @@ function formatDateTime(val) {
 }
 
 // ==========================================
-// INIT
+// INIT & AUTO REFRESH
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     // Default Dates for Ledger
@@ -43,6 +43,17 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchLabs();
     fetchPendingRequests();
     fetchAllAdminOrders(); 
+
+    // 🌟 NAYA: AUTO REFRESH LOGIC (Every 15 Seconds) 🌟
+    setInterval(() => {
+        const isModalOpen = document.querySelector('.modal-overlay[style*="display: flex"]') || document.querySelector('.modal-overlay[style*="display: block"]');
+        // Agar modal khula hai toh data refresh nahi hoga (taaki type kiya hua delete na ho)
+        if (!isModalOpen) {
+            fetchAllAdminOrders(true);
+            fetchLabs(true);
+            fetchPendingRequests(true);
+        }
+    }, 15000); 
 });
 
 function switchTab(tabId, btnElement) {
@@ -55,8 +66,8 @@ function switchTab(tabId, btnElement) {
 // ==========================================
 // 🌟 1. MASTER ORDERS & FILTERS LOGIC 🌟
 // ==========================================
-function fetchAllAdminOrders() {
-    document.getElementById("loadingOrdersMsg").style.display = "block";
+function fetchAllAdminOrders(silent = false) {
+    if(!silent) document.getElementById("loadingOrdersMsg").style.display = "block";
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAllLabOrdersAdmin" }) })
     .then(res => res.json())
     .then(data => {
@@ -68,12 +79,14 @@ function fetchAllAdminOrders() {
             renderAdminOrders(); 
             calculateAdminLedger();
         }
-    }).catch(err => { document.getElementById("loadingOrdersMsg").innerText = "Error Loading Master Orders!"; });
+    }).catch(err => { if(!silent) document.getElementById("loadingOrdersMsg").innerText = "Error Loading Master Orders!"; });
 }
 
 function populateLabDropdowns() {
     let orderSel = document.getElementById("orderLabFilter");
     let ledgerSel = document.getElementById("ledgerLabFilter");
+    let prevOrderSel = orderSel ? orderSel.value : "ALL";
+    let prevLedgerSel = ledgerSel ? ledgerSel.value : "ALL";
     
     let uniqueLabs = {};
     allAdminOrders.forEach(o => {
@@ -85,12 +98,13 @@ function populateLabDropdowns() {
     });
 
     let optionsHTML = `<option value="ALL">All Registered Labs</option>`;
-    for(let key in uniqueLabs) {
-        optionsHTML += `<option value="${key}">${uniqueLabs[key]}</option>`;
-    }
+    for(let key in uniqueLabs) { optionsHTML += `<option value="${key}">${uniqueLabs[key]}</option>`; }
 
-    if(orderSel) orderSel.innerHTML = optionsHTML;
-    if(ledgerSel) ledgerSel.innerHTML = `<option value="ALL">All Registered Labs (Total Platform Earning)</option>` + optionsHTML.replace(`<option value="ALL">All Registered Labs</option>`, "");
+    if(orderSel) { orderSel.innerHTML = optionsHTML; orderSel.value = prevOrderSel; }
+    if(ledgerSel) { 
+        ledgerSel.innerHTML = `<option value="ALL">All Registered Labs (Total Platform Earning)</option>` + optionsHTML.replace(`<option value="ALL">All Registered Labs</option>`, "");
+        ledgerSel.value = prevLedgerSel;
+    }
 }
 
 function setStatusFilter(status, btnElement) {
@@ -209,14 +223,11 @@ function openAdminOrderModal(index) {
     
     safeSetText("mLabEarn", "₹" + (o.lab_earning || 0));
 
-    // Admin Action Area (Force Actions)
     let actionArea = document.getElementById("mActionArea");
     if(actionArea) {
         actionArea.innerHTML = "";
-        
-        let reportsHTML = getReportsHTML(o); // Helper for existing reports
+        let reportsHTML = getReportsHTML(o); 
 
-        // 🌟 CHECKBOX LOGIC (IN-HAND FOR ADMIN) 🌟
         let handArr = [];
         if (o.hand_reports) { try { handArr = JSON.parse(o.hand_reports); if (!Array.isArray(handArr)) handArr = [o.hand_reports]; } catch(e) { handArr = [o.hand_reports]; } }
 
@@ -231,7 +242,6 @@ function openAdminOrderModal(index) {
         });
         if(!itemsAvailableForHand) checksHTML += `<div style="color:red; font-size:13px;">All services have already been marked as In-Hand.</div>`;
         checksHTML += `</div>`;
-
 
         if (currentStatus === "Pending") {
             actionArea.innerHTML = `
@@ -357,7 +367,7 @@ function adminCallOrderApi(payload) {
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => {
-        if(data.status === "success") { alert("Admin Action Successful!"); closeAdminOrderModal(); fetchAllAdminOrders(); } 
+        if(data.status === "success") { alert("Admin Action Successful!"); closeAdminOrderModal(); fetchAllAdminOrders(true); } 
         else { alert("Error: " + data.message); }
     }).catch(err => { alert("Network Error occurred!"); })
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
@@ -393,7 +403,7 @@ function calculateAdminLedger() {
 
     completedOrders.forEach(o => {
         let coll = Number(o.final_payable || 0);
-        let rev = Number(o.bhavya_commission || 0); // Positive means Bhavya Earning
+        let rev = Number(o.bhavya_commission || 0);
         let net = Number(o.lab_earning || 0);
 
         tColl += coll; tRev += rev; tNet += net;
@@ -410,6 +420,17 @@ function calculateAdminLedger() {
                 <td style="padding:10px; text-align:right; font-weight:700; color:#15803d;">₹${net.toFixed(2)}</td>
             </tr>`;
     });
+
+    // 🌟 NAYA: PDF KE LIYE TOTAL ROW BHI TABLE MEIN ADD KI HAI 🌟
+    if (completedOrders.length > 0) {
+        html += `
+            <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #cbd5e1; font-size:14px;">
+                <td colspan="3" style="padding:12px; text-align:right;">GRAND TOTAL:</td>
+                <td style="padding:12px; text-align:right;">₹${tColl.toFixed(2)}</td>
+                <td style="padding:12px; text-align:right; color:#e11d48;">₹${tRev.toFixed(2)}</td>
+                <td style="padding:12px; text-align:right; color:#15803d;">₹${tNet.toFixed(2)}</td>
+            </tr>`;
+    }
 
     safeSetText("adminTotalColl", "₹" + tColl.toLocaleString('en-IN'));
     safeSetText("adminTotalRev", "₹" + tRev.toLocaleString('en-IN'));
@@ -437,8 +458,8 @@ function downloadAdminPDF() {
 // ==========================================
 // 4. PURANA CODE (MANAGE LABS & REQS)
 // ==========================================
-function fetchLabs() {
-    document.getElementById("loadingLabsMsg").style.display = "block";
+function fetchLabs(silent = false) {
+    if(!silent) document.getElementById("loadingLabsMsg").style.display = "block";
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) })
     .then(res => res.json())
     .then(data => {
@@ -467,6 +488,7 @@ function renderLabsTable() {
     });
 }
 
+// 🌟 NAYA: DOCUMENTS AUR IMAGES POPULATE HO GAYE MODAL MEIN 🌟
 function openLabModal(index) {
     const lab = allLabsData[index];
     currentEditUid = lab.user_id;
@@ -477,12 +499,25 @@ function openLabModal(index) {
     safeSetText("modalAddress", lab.address || "N/A");
     safeSetText("modalCityPin", lab.city + " - " + lab.pincode);
 
+    // Populate Documents & Images
+    const docsDiv = document.getElementById("modalDocs");
+    docsDiv.innerHTML = "";
+    if(lab.reg_doc_url) docsDiv.innerHTML += `<a href="${lab.reg_doc_url}" target="_blank" class="doc-link"><i class="fas fa-file-pdf"></i> Reg Doc</a>`;
+    if(lab.nabl_url) docsDiv.innerHTML += `<a href="${lab.nabl_url}" target="_blank" class="doc-link"><i class="fas fa-check-circle"></i> NABL</a>`;
+    if(lab.nabh_url) docsDiv.innerHTML += `<a href="${lab.nabh_url}" target="_blank" class="doc-link"><i class="fas fa-check-circle"></i> NABH</a>`;
+    if(lab.img1_url) docsDiv.innerHTML += `<a href="${lab.img1_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 1</a>`;
+    if(lab.img2_url) docsDiv.innerHTML += `<a href="${lab.img2_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 2</a>`;
+    if(lab.img3_url) docsDiv.innerHTML += `<a href="${lab.img3_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 3</a>`;
+    
+    if(docsDiv.innerHTML === "") docsDiv.innerHTML = "<span style='color:#94a3b8; font-size:13px; padding:10px;'>No documents uploaded by lab.</span>";
+
     let sel = document.getElementById("modalStatusSelect");
     const statusVal = lab.status.charAt(0).toUpperCase() + lab.status.slice(1).toLowerCase();
     sel.value = "Inactive"; 
     for(let i=0; i<sel.options.length; i++){ if(sel.options[i].value.toLowerCase() === statusVal.toLowerCase()){ sel.selectedIndex = i; break; } }
     document.getElementById("editLabModal").style.display = "flex";
 }
+
 function closeLabModal() { document.getElementById("editLabModal").style.display = "none"; }
 
 function saveLabDetails() {
@@ -495,11 +530,11 @@ function saveLabDetails() {
     .then(res => res.json())
     .then(data => {
         btn.innerText = "Update & Notify Lab"; btn.disabled = false;
-        if(data.status === "success") { alert("Lab updated!"); closeLabModal(); fetchLabs(); } 
+        if(data.status === "success") { alert("Lab updated!"); closeLabModal(); fetchLabs(true); } 
     });
 }
 
-function fetchPendingRequests() {
+function fetchPendingRequests(silent = false) {
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) })
     .then(res => res.json())
     .then(data => {
@@ -538,5 +573,5 @@ function handleStdReq(userId, actionType) {
     }
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST', body: JSON.stringify({ action: "processStandardServiceRequest", user_id: userId, request_action: actionType, modified_json: modifiedJson })
-    }).then(res => res.json()).then(data => { alert(data.message); fetchPendingRequests(); fetchLabs(); });
+    }).then(res => res.json()).then(data => { alert(data.message); fetchPendingRequests(true); fetchLabs(true); });
 }

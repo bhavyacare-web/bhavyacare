@@ -75,6 +75,11 @@
         .info-item label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; margin-bottom: 2px; text-transform: uppercase;}
         .info-item p, .info-item span { margin: 0; font-weight: 600; font-size: 14px; color: #1e293b;}
 
+        /* Docs & Images Links */
+        .doc-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;}
+        .doc-link { display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; color: #1d4ed8; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; border: 1px solid #bfdbfe; transition: 0.2s;}
+        .doc-link:hover { background: #dbeafe; transform: translateY(-2px);}
+
         .action-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 12px; margin-top: 25px;}
         .loadingMsg { text-align: center; padding: 40px; font-size: 18px; color: #64748b; font-weight: 600;}
 
@@ -88,7 +93,8 @@
 
     <div class="header">
         <h1><i class="fas fa-chess-king"></i> Super Admin Panel</h1>
-        <div style="font-weight: 600; color: #475569; display: flex; gap:15px;">
+        <div style="font-weight: 600; color: #475569; display: flex; gap:15px; align-items: center;">
+            <span id="autoRefreshStatus" style="font-size:12px; color:#10b981;"><i class="fas fa-circle" style="font-size:8px; vertical-align:middle;"></i> Auto-Sync On</span>
             <span>BhavyaCare Master Control</span>
         </div>
     </div>
@@ -105,7 +111,7 @@
             <input type="text" id="orderSearchBox" class="search-box" placeholder="Search Order ID, Patient, Lab Name..." onkeyup="filterAdminOrders()">
             <select id="orderLabFilter" class="lab-select" onchange="filterAdminOrders()">
                 <option value="ALL">All Registered Labs</option>
-                </select>
+            </select>
             
             <div class="status-filters">
                 <button class="filter-pill active" onclick="setStatusFilter('ALL', this)">All</button>
@@ -239,8 +245,11 @@
                 <div class="info-item"><label>Full Address</label><p id="modalAddress">-</p></div>
                 <div class="info-item"><label>City / Pincode</label><p id="modalCityPin">-</p></div>
             </div>
+            
             <div class="section-title">Documents & Images</div>
-            <div class="doc-grid" id="modalDocs"></div>
+            <div class="doc-grid" id="modalDocs">
+                </div>
+            
             <div class="section-title">Account Verification</div>
             <select id="modalStatusSelect" style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-weight: 600; margin-bottom: 20px;">
                 <option value="Active">Active (Approve Lab)</option>

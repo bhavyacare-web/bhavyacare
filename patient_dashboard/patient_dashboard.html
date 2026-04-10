@@ -78,15 +78,43 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
         
-        /* Form Inputs & Filters */
+        /* Form Inputs */
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
         .input-box:focus { border-color: var(--primary); }
         .form-group { margin-top: 12px; }
 
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0;}
-        .filter-input { flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; outline: none; }
-        .filter-input:focus { border-color: var(--primary); }
-        .filter-btn { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        /* 🌟 NAYA: MODERN FILTER BAR CSS 🌟 */
+        .filter-bar { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 20px; 
+            background: #ffffff; 
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            border: 1px solid #e2e8f0;
+            align-items: center;
+        }
+        .search-wrapper { flex: 2; position: relative; }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px;}
+        .filter-input { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: 'Segoe UI', sans-serif;}
+        .filter-input.with-icon { padding-left: 42px; }
+        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
+        
+        .filter-actions { display: flex; gap: 10px; flex: 1.5; }
+        .date-input { flex: 1; }
+        .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;}
+        .filter-btn:hover { background: #dbeafe; transform: translateY(-2px); }
+
+        /* 🌟 MOBILE DESIGN MAGIC 🌟 */
+        @media (max-width: 768px) {
+            .filter-bar { flex-direction: column; padding: 12px; gap: 12px; }
+            .search-wrapper { width: 100%; }
+            .filter-actions { width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+            .filter-btn { padding: 10px; font-size: 13px; }
+            .filter-input { font-size: 13px; padding: 10px 12px; }
+            .filter-input.with-icon { padding-left: 38px; }
+        }
         
         /* Modals */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
@@ -209,9 +237,14 @@
                 <div class="section-title">My Bookings</div>
                 
                 <div class="filter-bar">
-                    <input type="text" id="searchBookingText" class="filter-input" placeholder="Search Lab or Test Name..." onkeyup="filterMyBookings()">
-                    <input type="date" id="searchBookingDate" class="filter-input" style="flex: 0.5;" onchange="filterMyBookings()">
-                    <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchBookingText" class="filter-input with-icon" placeholder="Search Lab or Test Name..." onkeyup="filterMyBookings()">
+                    </div>
+                    <div class="filter-actions">
+                        <input type="date" id="searchBookingDate" class="filter-input date-input" onchange="filterMyBookings()">
+                        <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
+                    </div>
                 </div>
 
                 <div id="patientBookingsContainer">

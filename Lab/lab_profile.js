@@ -235,8 +235,13 @@ async function saveBasicProfile() {
         .then(res => res.json())
         .then(data => {
             alert(data.message);
-            btn.innerText = "Update Profile Details"; 
-            btn.disabled = false;
+            if (data.status === "success") {
+                // 🌟 NAYA: Success par turant page reload hoga 🌟
+                window.location.reload();
+            } else {
+                btn.innerText = "Update Profile Details"; 
+                btn.disabled = false;
+            }
         }).catch(e => { 
             alert("Error while updating profile!"); 
             btn.disabled = false; 
@@ -271,8 +276,13 @@ function requestServiceChange() {
     .then(res => res.json())
     .then(data => {
         alert(data.message);
-        btn.innerText = "Request Services Update"; 
-        btn.disabled = false;
+        if (data.status === "success") {
+            // 🌟 NAYA: Success par turant page reload hoga 🌟
+            window.location.reload();
+        } else {
+            btn.innerText = "Request Services Update"; 
+            btn.disabled = false;
+        }
     }).catch(e => { 
         alert("Error sending service request!"); 
         btn.disabled = false; 

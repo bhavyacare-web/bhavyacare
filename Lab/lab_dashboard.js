@@ -30,11 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     safeSetText("displayLabName", labName + " (" + userId + ")");
     
-    // Ledger ke liye default dates set karna (Current Month)
     if(document.getElementById("endDate") && document.getElementById("startDate")) {
         let today = new Date();
         document.getElementById("endDate").value = today.toISOString().split('T')[0];
-        today.setDate(1); // Mahine ki pehli tareekh
+        today.setDate(1); 
         document.getElementById("startDate").value = today.toISOString().split('T')[0];
     }
 
@@ -54,7 +53,6 @@ function fetchOrders(userId) {
         if(data.status === "success") {
             allOrders = data.data;
             renderOrders();
-            // Ledger tab ke liye auto-calculate
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
             let grid = document.getElementById("ordersGrid");
@@ -117,6 +115,7 @@ function openOrderModal(index) {
     let o = currentOrder;
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
+    // 🌟 YAHAN SAFE SET TEXT LAGA HAI 🌟
     safeSetText("mOrderId", "Order #" + (o.order_id || "N/A"));
     safeSetText("mName", o.patient_name || "N/A");
     safeSetText("mSlot", o.slot || "N/A");
@@ -152,13 +151,11 @@ function openOrderModal(index) {
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     safeSetHTML("mItemsList", itemsHTML);
 
-    // PATIENT BILLING
     safeSetText("mSub", "₹" + (o.subtotal || 0));
     safeSetText("mColl", "₹" + (o.collection_charge || 0));
     safeSetText("mDisc", "-₹" + (o.discount || 0));
     safeSetText("mFinal", "₹" + (o.final_payable || 0));
 
-    // 🌟 LAB EARNING BREAKDOWN 🌟
     safeSetText("mFinalPay", "₹" + (o.final_payable || 0));
     
     let commEl = document.getElementById("mComm");
@@ -166,10 +163,10 @@ function openOrderModal(index) {
         let bComm = Number(o.bhavya_commission || 0);
         if (bComm >= 0) {
             commEl.innerText = "-₹" + bComm.toFixed(2);
-            commEl.style.color = "#ef4444"; // red
+            commEl.style.color = "#ef4444"; 
         } else {
             commEl.innerText = "+₹" + Math.abs(bComm).toFixed(2);
-            commEl.style.color = "#16a34a"; // green
+            commEl.style.color = "#16a34a"; 
         }
     }
     

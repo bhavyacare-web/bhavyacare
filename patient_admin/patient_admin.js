@@ -67,11 +67,14 @@ function renderPatientsTable(data) {
     if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No patients found.</td></tr>"; return; }
     
     data.forEach((p, index) => {
-        const sClass = p.status.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+        // Status Formatting
+        const sVal = p.status ? p.status.trim().toLowerCase() : 'inactive';
+        const sClass = sVal === 'active' ? 'status-active' : 'status-inactive';
         
-        // 🌟 NAYA: WITHDRAW/WALLET CLASS AUR BUTTON 🌟
-        const wClass = p.withdraw && p.withdraw.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
-        const withdrawText = p.withdraw ? p.withdraw.toUpperCase() : "INACTIVE";
+        // 🌟 NAYA: WITHDRAW/WALLET SAFE FORMATTING 🌟
+        const wVal = p.withdraw ? p.withdraw.trim().toLowerCase() : 'inactive';
+        const wClass = wVal === 'active' ? 'status-active' : 'status-inactive';
+        const withdrawText = wVal.toUpperCase();
         
         tableBody.innerHTML += `
             <tr>
@@ -82,9 +85,10 @@ function renderPatientsTable(data) {
                 <td style="color:#28a745; font-weight:bold; font-size:16px;">₹${p.wallet}</td>
                 <td style="text-transform:capitalize; font-weight:bold;">${p.plan}</td>
                 
-                <td><button class="badge-btn ${wClass}" onclick="toggleStatus('${p.user_id}', 'withdraw', '${p.withdraw || 'inactive'}')">${withdrawText}</button></td>
+                <td><button class="badge-btn ${wClass}" onclick="toggleStatus('${p.user_id}', 'withdraw', '${wVal}')">${withdrawText}</button></td>
                 
-                <td><button class="badge-btn ${sClass}" onclick="toggleStatus('${p.user_id}', 'status', '${p.status}')">${p.status.toUpperCase()}</button></td>
+                <td><button class="badge-btn ${sClass}" onclick="toggleStatus('${p.user_id}', 'status', '${sVal}')">${sVal.toUpperCase()}</button></td>
+                
                 <td><button class="badge-btn status-primary" onclick="openPatientProfile('${p.user_id}')"><i class="fas fa-eye"></i> View Profile</button></td>
             </tr>`;
     });

@@ -29,7 +29,7 @@ function formatDateTime(val) {
 }
 
 // ==========================================
-// INIT & AUTO REFRESH
+// INIT (NO AUTO-REFRESH)
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     // Default Dates for Ledger
@@ -43,17 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchLabs();
     fetchPendingRequests();
     fetchAllAdminOrders(); 
-
-    // 🌟 NAYA: AUTO REFRESH LOGIC (Every 15 Seconds) 🌟
-    setInterval(() => {
-        const isModalOpen = document.querySelector('.modal-overlay[style*="display: flex"]') || document.querySelector('.modal-overlay[style*="display: block"]');
-        // Agar modal khula hai toh data refresh nahi hoga (taaki type kiya hua delete na ho)
-        if (!isModalOpen) {
-            fetchAllAdminOrders(true);
-            fetchLabs(true);
-            fetchPendingRequests(true);
-        }
-    }, 15000); 
 });
 
 function switchTab(tabId, btnElement) {
@@ -312,7 +301,7 @@ function toggleAdminReportInput() {
 
 function closeAdminOrderModal() { document.getElementById("adminOrderModal").style.display = "none"; currentAdminOrder = null; }
 
-// 🌟 ADMIN API CALLS 🌟
+// 🌟 ADMIN API CALLS (RELOADS ON SUCCESS) 🌟
 function adminSubmitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: actionType };
     if(actionType === "Cancel") {
@@ -367,7 +356,10 @@ function adminCallOrderApi(payload) {
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => {
-        if(data.status === "success") { alert("Admin Action Successful!"); closeAdminOrderModal(); fetchAllAdminOrders(true); } 
+        if(data.status === "success") { 
+            alert("Admin Action Successful!"); 
+            window.location.reload(); // 🌟 RELOAD
+        } 
         else { alert("Error: " + data.message); }
     }).catch(err => { alert("Network Error occurred!"); })
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
@@ -421,7 +413,6 @@ function calculateAdminLedger() {
             </tr>`;
     });
 
-    // 🌟 NAYA: PDF KE LIYE TOTAL ROW BHI TABLE MEIN ADD KI HAI 🌟
     if (completedOrders.length > 0) {
         html += `
             <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #cbd5e1; font-size:14px;">
@@ -488,7 +479,6 @@ function renderLabsTable() {
     });
 }
 
-// 🌟 NAYA: DOCUMENTS AUR IMAGES POPULATE HO GAYE MODAL MEIN 🌟
 function openLabModal(index) {
     const lab = allLabsData[index];
     currentEditUid = lab.user_id;
@@ -530,7 +520,10 @@ function saveLabDetails() {
     .then(res => res.json())
     .then(data => {
         btn.innerText = "Update & Notify Lab"; btn.disabled = false;
-        if(data.status === "success") { alert("Lab updated!"); closeLabModal(); fetchLabs(true); } 
+        if(data.status === "success") { 
+            alert("Lab updated!"); 
+            window.location.reload(); // 🌟 RELOAD
+        } 
     });
 }
 
@@ -573,5 +566,8 @@ function handleStdReq(userId, actionType) {
     }
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST', body: JSON.stringify({ action: "processStandardServiceRequest", user_id: userId, request_action: actionType, modified_json: modifiedJson })
-    }).then(res => res.json()).then(data => { alert(data.message); fetchPendingRequests(true); fetchLabs(true); });
+    }).then(res => res.json()).then(data => { 
+        alert(data.message); 
+        window.location.reload(); // 🌟 RELOAD
+    });
 }

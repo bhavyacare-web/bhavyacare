@@ -1,42 +1,35 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let currentTab = 'patients';
+let allPatientsData = []; // For local search filtering
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
 function switchAdminTab(tabName) {
     currentTab = tabName;
-    
-    document.getElementById('tab-patients')?.classList.remove('active');
-    document.getElementById('tab-vips')?.classList.remove('active');
-    document.getElementById('tab-booking')?.classList.remove('active');
-    
-    document.getElementById('patients-section')?.style.setProperty('display', 'none');
-    document.getElementById('vips-section')?.style.setProperty('display', 'none');
-    document.getElementById('booking-section')?.style.setProperty('display', 'none');
-
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`)?.classList.add('active');
-    document.getElementById(`${tabName}-section`)?.style.setProperty('display', 'block');
+    
+    document.getElementById('patients-section').style.display = 'none';
+    document.getElementById('vips-section').style.display = 'none';
 
+    document.getElementById(`${tabName}-section`).style.display = 'block';
     fetchCurrentTabData();
 }
 
 function fetchCurrentTabData() {
     if (currentTab === 'patients') fetchPatientsData();
     else if (currentTab === 'vips') fetchVipData();
-    else if (currentTab === 'booking') fetchBookingData();
 }
 
 function closeModals() {
     document.getElementById('modalOverlay').style.display = 'none';
     if(document.getElementById('vipActionModal')) document.getElementById('vipActionModal').style.display = 'none';
-    if(document.getElementById('orderStatusModal')) document.getElementById('orderStatusModal').style.display = 'none';
-    if(document.getElementById('orderReportModal')) document.getElementById('orderReportModal').style.display = 'none';
+    if(document.getElementById('patientProfileModal')) document.getElementById('patientProfileModal').style.display = 'none';
 }
-function closeVipModal() { closeModals(); }
 
 // ==========================================
-// 1. PATIENTS LIST LOGIC
+// 1. PATIENTS MASTER LIST LOGIC
 // ==========================================
 async function fetchPatientsData() {
     const tableBody = document.getElementById("patientsTableBody");
@@ -52,31 +45,47 @@ async function fetchPatientsData() {
         loader.style.display = "none";
 
         if (result.status === "success") {
-            if (result.data.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No patients found.</td></tr>"; return; }
-            result.data.forEach(p => {
-                const wClass = p.withdraw.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
-                const sClass = p.status.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
-                tableBody.innerHTML += `
-                    <tr>
-                        <td style="text-align: center;"><img src="${p.image}" class="patient-img" alt="Pic"></td>
-                        <td><span style="font-size: 12px; color: #555;">${p.timestamp.split(" ")[0]}</span></td>
-                        <td><strong>${p.user_id}</strong><br><span style="font-size: 11px; color: #888;">Ref: ${p.referral_code}</span></td>
-                        <td style="font-weight: bold;">${p.patient_name}</td>
-                        <td><strong>📞 ${p.mobile_number}</strong><br><span style="font-size: 11px; color: #555;">📧 ${p.email}</span></td>
-                        <td style="font-size:12px;">${p.address}</td>
-                        <td style="color:#28a745; font-weight:bold;">₹${p.wallet}</td>
-                        <td style="text-transform:capitalize; font-weight:bold;">${p.plan}</td>
-                        <td><button class="badge-btn ${wClass}" onclick="toggleStatus('${p.user_id}', 'withdraw', '${p.withdraw}')">${p.withdraw.toUpperCase()}</button></td>
-                        <td><button class="badge-btn ${sClass}" onclick="toggleStatus('${p.user_id}', 'status', '${p.status}')">${p.status.toUpperCase()}</button></td>
-                    </tr>`;
-            });
+            allPatientsData = result.data;
+            renderPatientsTable(allPatientsData);
         }
     } catch (error) { loader.innerHTML = "❌ Network Error!"; }
 }
 
+function filterPatients() {
+    const query = document.getElementById("patientSearch").value.toLowerCase();
+    const filteredData = allPatientsData.filter(p => 
+        p.patient_name.toLowerCase().includes(query) || 
+        p.user_id.toLowerCase().includes(query) || 
+        p.mobile_number.includes(query)
+    );
+    renderPatientsTable(filteredData);
+}
+
+function renderPatientsTable(data) {
+    const tableBody = document.getElementById("patientsTableBody");
+    tableBody.innerHTML = "";
+    if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No patients found.</td></tr>"; return; }
+    
+    data.forEach((p, index) => {
+        const sClass = p.status.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+        
+        tableBody.innerHTML += `
+            <tr>
+                <td style="text-align: center;"><img src="${p.image}" class="patient-img" alt="Pic"></td>
+                <td><strong>${p.user_id}</strong><br><span style="font-size: 11px; color: #888;">Joined: ${p.timestamp.split(" ")[0]}</span></td>
+                <td style="font-weight: bold;">${p.patient_name}</td>
+                <td><strong>📞 ${p.mobile_number}</strong><br><span style="font-size: 11px; color: #555;">📧 ${p.email}</span></td>
+                <td style="color:#28a745; font-weight:bold; font-size:16px;">₹${p.wallet}</td>
+                <td style="text-transform:capitalize; font-weight:bold;">${p.plan}</td>
+                <td><button class="badge-btn ${sClass}" onclick="toggleStatus('${p.user_id}', 'status', '${p.status}')">${p.status.toUpperCase()}</button></td>
+                <td><button class="badge-btn status-primary" onclick="openPatientProfile('${p.user_id}')"><i class="fas fa-eye"></i> View Profile</button></td>
+            </tr>`;
+    });
+}
+
 async function toggleStatus(userId, field, currentStatus) {
     const newValue = currentStatus.toLowerCase() === "active" ? "inactive" : "active";
-    if (!confirm(`Mark ${field.toUpperCase()} as '${newValue}' for ${userId}?`)) return;
+    if (!confirm(`Mark account status as '${newValue.toUpperCase()}' for ${userId}?`)) return;
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -89,7 +98,116 @@ async function toggleStatus(userId, field, currentStatus) {
 }
 
 // ==========================================
-// 2. VIP APPLICATIONS LOGIC
+// 🌟 NAYA: SUPER PATIENT 360 PROFILE LOGIC 🌟
+// ==========================================
+function openPatientProfile(userId) {
+    const p = allPatientsData.find(user => user.user_id === userId);
+    if(!p) return;
+
+    document.getElementById("spImage").src = p.image;
+    document.getElementById("spName").innerText = p.patient_name;
+    document.getElementById("spId").innerText = p.user_id;
+    document.getElementById("spPlan").innerText = p.plan;
+    
+    document.getElementById("spContact").innerHTML = `📞 ${p.mobile_number}<br>📧 ${p.email}`;
+    document.getElementById("spAddress").innerHTML = p.address;
+    document.getElementById("spReferral").innerHTML = `My Code: <b>${p.referral_code}</b>`;
+    document.getElementById("spWallet").innerText = `₹${p.wallet}`;
+
+    // Reset wallet adjust fields
+    document.getElementById("walletAdjustAmt").value = "";
+    document.getElementById("walletAdjustReason").value = "";
+
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('patientProfileModal').style.display = 'block';
+
+    fetchPatientOrderHistory(userId);
+}
+
+async function fetchPatientOrderHistory(userId) {
+    const historyDiv = document.getElementById("spOrderHistory");
+    historyDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#666;"><i class="fas fa-spinner fa-spin"></i> Fetching order history...</div>`;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getAdminPatientOrderHistory", target_user_id: userId }) 
+        });
+        const result = await response.json();
+
+        if (result.status === "success") {
+            if (result.data.length === 0) {
+                historyDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#666;">No orders found for this patient.</div>`;
+                return;
+            }
+
+            let html = "";
+            result.data.forEach(o => {
+                let badgeColor = o.status.toLowerCase() === 'completed' ? '#28a745' : (o.status.toLowerCase() === 'cancelled' ? '#dc3545' : '#0056b3');
+                
+                let reportLink = "";
+                if(o.report_pdf) {
+                    try {
+                        let urls = JSON.parse(o.report_pdf);
+                        if(Array.isArray(urls) && urls.length > 0) {
+                            reportLink = `<a href="${urls[0]}" target="_blank" style="color:#0056b3; font-size:12px; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View Report</a>`;
+                        }
+                    } catch(e) {
+                        reportLink = `<a href="${o.report_pdf}" target="_blank" style="color:#0056b3; font-size:12px; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View Report</a>`;
+                    }
+                }
+
+                html += `
+                    <div class="history-card">
+                        <div class="history-card-left">
+                            <strong>#${o.order_id}</strong> | <span style="color:#888;">${new Date(o.date).toLocaleDateString('en-IN')}</span><br>
+                            Lab: ${o.lab_id.split('(')[0].trim()}<br>
+                            Bill: ₹${o.final_payable}
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="background:${badgeColor}; color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:bold; display:inline-block; margin-bottom:5px;">${o.status.toUpperCase()}</span><br>
+                            ${reportLink}
+                        </div>
+                    </div>`;
+            });
+            historyDiv.innerHTML = html;
+        }
+    } catch (error) { historyDiv.innerHTML = `<div style="text-align:center; color:red;">Failed to load history.</div>`; }
+}
+
+async function adjustPatientWallet() {
+    const userId = document.getElementById("spId").innerText;
+    const amt = document.getElementById("walletAdjustAmt").value;
+    const reason = document.getElementById("walletAdjustReason").value.trim();
+
+    if(!amt || amt <= 0) return alert("Please enter a valid amount.");
+    if(!reason) return alert("Please provide a reason for adding funds.");
+    if(!confirm(`Add ₹${amt} to ${userId}'s wallet?`)) return;
+
+    const btn = event.currentTarget;
+    btn.innerText = "Adding..."; btn.disabled = true;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "adminAddWalletFunds", target_user_id: userId, amount: amt, reason: reason }) 
+        });
+        const result = await response.json();
+        
+        btn.innerText = "Add Funds"; btn.disabled = false;
+        if (result.status === "success") { 
+            alert("Funds added successfully!"); 
+            fetchPatientsData(); // Refresh list to update wallet amount
+            document.getElementById("spWallet").innerText = `₹${result.new_balance}`; // Update live in modal
+            document.getElementById("walletAdjustAmt").value = "";
+            document.getElementById("walletAdjustReason").value = "";
+        }
+        else alert("Error: " + result.message);
+    } catch (error) { alert("Failed to add funds."); btn.innerText = "Add Funds"; btn.disabled = false; }
+}
+
+// ==========================================
+// 2. VIP APPLICATIONS LOGIC (Purana Code - Same)
 // ==========================================
 async function fetchVipData() {
     const tableBody = document.getElementById("vipsTableBody");
@@ -172,209 +290,4 @@ async function submitVipAction(statusValue) {
         if (result.status === "success") { alert(result.message); fetchVipData(); } 
         else { alert("Error: " + result.message); }
     } catch (error) { alert("Action failed."); }
-}
-
-// ==========================================
-// 3. PATIENT BOOKING LOGIC 
-// ==========================================
-async function fetchBookingData() {
-    const tableBody = document.getElementById("bookingTableBody");
-    const loader = document.getElementById("loader");
-    tableBody.innerHTML = ""; loader.style.display = "block"; 
-
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "getLabOrders" }) 
-        });
-        const result = await response.json();
-        loader.style.display = "none";
-
-        if (result.status === "success") {
-            if (result.data.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No bookings found.</td></tr>"; return; }
-
-            result.data.forEach(order => {
-                let itemsList = "<i>Invalid Data</i>";
-                try {
-                    let itemsArr = JSON.parse(order.cart_items_json);
-                    itemsList = itemsArr.map(i => `• ${i.service_name} (x${i.qty || 1})`).join("<br>");
-                } catch(e) {}
-
-                let statusBadge = "";
-                let s = order.status.toLowerCase();
-                if(s === 'pending') statusBadge = `<span class="badge-btn status-pending">Pending</span>`;
-                else if(s === 'confirmed') statusBadge = `<span class="badge-btn status-active">Confirmed</span>`;
-                else if(s === 'cancelled') statusBadge = `<span class="badge-btn status-inactive">Cancelled</span>`;
-                else if(s === 'completed') statusBadge = `<span class="badge-btn" style="background:#17a2b8; color:white;">Completed</span>`; // Added Completed badge
-                else statusBadge = `<span class="badge-btn">${order.status}</span>`;
-
-                // Display cancel reason if available
-                let cancelReasonHtml = "";
-                if(s === 'cancelled' && order.cancel_reason) {
-                    cancelReasonHtml = `<div style="font-size:11px; color:#dc3545; margin-top:4px;"><b>Reason:</b> ${order.cancel_reason}</div>`;
-                }
-                
-                // Display Admin Note / VIP status if available
-                let adminNoteHtml = "";
-                if (order.admin_note) {
-                    adminNoteHtml = `<div style="font-size:11px; background:#fff3cd; color:#856404; padding:2px 4px; border-radius:4px; margin-top:4px; display:inline-block;"><b>Note:</b> ${order.admin_note}</div>`;
-                }
-
-                // Report Button Logic
-                let reportBtnClass = "status-primary";
-                let reportText = "Assign Report";
-                let reportAction = `onclick="openReportModal('${order.order_id}', '${order.report_type}', '${order.report_pdf}')"`;
-
-                if (s !== 'confirmed' && s !== 'completed') {
-                    reportBtnClass = "status-inactive";
-                    reportText = "Confirm First";
-                    reportAction = `onclick="alert('Please confirm the booking first before assigning a report.')"`;
-                } else {
-                    if(order.report_type === 'online') {
-                        reportText = "Update PDF"; reportBtnClass = "status-active";
-                    } else if(order.report_type === 'in hand') {
-                        reportText = "In Hand Selected"; reportBtnClass = "status-pending";
-                    }
-                }
-
-                let viewReportLink = (order.report_type === 'online' && order.report_pdf) 
-                    ? `<br><a href="${order.report_pdf}" target="_blank" style="font-size:11px; color:#0056b3; font-weight:bold;">View PDF</a>` : "";
-
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><strong>${order.order_id}</strong><br><span style="font-size: 11px; color: #888;">Cart: ${order.parent_cart_id}</span><br><span style="font-size: 12px; color: #555;">${order.date.split("T")[0]}</span></td>
-                        <td><strong>${order.patient_name}</strong><br><span style="font-size: 11px; color: #555;">UID: ${order.user_id}</span></td>
-                        <td><span style="font-weight:bold; color:#0056b3;">${order.lab_id}</span><br><span style="font-size: 12px; color: #d97706;">⏰ ${order.slot}</span></td>
-                        <td style="font-size: 12px; line-height: 1.4;">${itemsList}</td>
-                        <td style="font-size: 12px;">Sub: ₹${order.subtotal}<br>Coll: ₹${order.collection_charge}<br>Disc: -₹${order.discount}<br><strong style="color: #28a745; font-size:14px;">Total: ₹${order.final_payable}</strong></td>
-                        <td style="font-size: 12px; max-width: 200px;"><span style="text-transform:uppercase; font-weight:bold; color:#17a2b8;">[${order.fulfillment}]</span><br>${order.address}</td>
-                        <td style="text-align: center;">
-                            ${statusBadge}<br>
-                            ${cancelReasonHtml}
-                            ${adminNoteHtml}<br>
-                            <button class="badge-btn status-primary" onclick="openOrderStatusModal('${order.order_id}', '${order.status}')" style="margin-top:4px;">Change Status</button>
-                        </td>
-                        <td style="text-align: center;">
-                            <button class="badge-btn ${reportBtnClass}" ${reportAction}>${reportText}</button>
-                            ${viewReportLink}
-                        </td>
-                    </tr>`;
-            });
-        }
-    } catch (error) { loader.innerHTML = "❌ Error fetching Bookings."; }
-}
-
-function openOrderStatusModal(orderId, currentStatus) {
-    document.getElementById('statusOrderId').innerText = orderId;
-    let sel = document.getElementById('newOrderStatus');
-    for(let i=0; i<sel.options.length; i++) {
-        if(sel.options[i].value.toLowerCase() === currentStatus.toLowerCase()) { sel.selectedIndex = i; break; }
-    }
-    document.getElementById('modalOverlay').style.display = 'block';
-    document.getElementById('orderStatusModal').style.display = 'block';
-}
-
-// 🌟 UPDATED: Prompt for mandatory cancel reason 🌟
-async function submitOrderStatus() {
-    const orderId = document.getElementById('statusOrderId').innerText;
-    const newStatus = document.getElementById('newOrderStatus').value;
-
-    let payload = { 
-        action: "updateLabOrderStatus", 
-        order_id: orderId, 
-        new_status: newStatus 
-    };
-
-    if (newStatus.toLowerCase() === "cancelled") {
-        let reason = prompt("Mandatory: Please enter the reason for cancellation:");
-        if (!reason || reason.trim() === "") {
-            alert("Status update failed. You must provide a reason to cancel an order.");
-            return;
-        }
-        payload.cancel_reason = reason.trim();
-    } else {
-        if (!confirm(`Change order status to ${newStatus}?`)) return;
-    }
-
-    closeModals(); document.getElementById("loader").style.display = "block";
-
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload) 
-        });
-        const result = await response.json();
-        
-        if (result.status === "success") {
-            alert(result.message || "Status Updated Successfully!"); 
-            fetchBookingData(); 
-        } else {
-            alert("Error: " + result.message);
-            document.getElementById("loader").style.display = "none";
-        }
-    } catch (error) { 
-        alert("Action failed. Please try again.");
-        document.getElementById("loader").style.display = "none";
-    }
-}
-
-function openReportModal(orderId, currentType, currentLink) {
-    document.getElementById('reportOrderId').innerText = orderId;
-    document.getElementById('reportTypeSelect').value = currentType || "";
-    document.getElementById('reportFileInput').value = ""; 
-    toggleReportUploadField(); 
-    document.getElementById('modalOverlay').style.display = 'block';
-    document.getElementById('orderReportModal').style.display = 'block';
-}
-
-function toggleReportUploadField() {
-    const type = document.getElementById('reportTypeSelect').value;
-    const uploadDiv = document.getElementById('reportUploadDiv');
-    if (type === 'online') { uploadDiv.style.display = 'block'; } 
-    else { uploadDiv.style.display = 'none'; }
-}
-
-async function submitOrderReport() {
-    const orderId = document.getElementById('reportOrderId').innerText;
-    const reportType = document.getElementById('reportTypeSelect').value;
-    const btn = document.getElementById('uploadReportBtn');
-
-    if (!reportType) return alert("Please select a report type.");
-
-    if (reportType === 'in hand') {
-        closeModals(); document.getElementById("loader").style.display = "block";
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "uploadOrderReport", order_id: orderId, report_type: reportType }) 
-        }).then(res => res.json()).then(result => {
-            alert(result.message); fetchBookingData();
-        });
-        return;
-    }
-
-    const fileInput = document.getElementById('reportFileInput');
-    if (fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
-    const file = fileInput.files[0];
-    if (file.type !== "application/pdf") return alert("Only PDF files are allowed.");
-    
-    btn.innerText = "Uploading PDF... Wait"; btn.disabled = true;
-
-    const reader = new FileReader();
-    reader.onload = async function() {
-        const base64Data = reader.result.split(',')[1];
-        try {
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    action: "uploadOrderReport", order_id: orderId, report_type: reportType,
-                    filename: orderId + "_Report.pdf", mimeType: file.type, fileData: base64Data
-                }) 
-            });
-            const result = await response.json();
-            btn.innerText = "Save & Upload"; btn.disabled = false;
-            if (result.status === "success") { closeModals(); alert("PDF Uploaded & Saved!"); fetchBookingData(); } 
-            else { alert("Error: " + result.message); }
-        } catch (error) { btn.innerText = "Save & Upload"; btn.disabled = false; alert("Upload failed."); }
-    };
-    reader.readAsDataURL(file);
 }

@@ -52,10 +52,15 @@ function removeTag(type, index) {
 }
 
 function updateTagsUI(type) {
-    let wrapper = document.getElementById(type + "Tags");
+    // 🌟 FIX: Pincode ke liye sahi HTML ID 'pinTags' use karna hai
+    let wrapperId = (type === 'pincode') ? 'pinTags' : 'cityTags';
+    let wrapper = document.getElementById(wrapperId);
     let hiddenInput = document.getElementById("available_" + type);
     let list = type === 'pincode' ? pincodeList : cityList;
     
+    // Safety check taaki aage kabhi crash na ho
+    if (!wrapper) return; 
+
     wrapper.innerHTML = "";
     list.forEach((item, index) => {
         let tag = document.createElement("div");
@@ -63,9 +68,11 @@ function updateTagsUI(type) {
         tag.innerHTML = `${item} <span onclick="removeTag('${type}', ${index})" title="Remove">×</span>`;
         wrapper.appendChild(tag);
     });
-    hiddenInput.value = list.join(',');
+    
+    if (hiddenInput) {
+        hiddenInput.value = list.join(',');
+    }
 }
-
 function fetchProfileData(userId) {
     fetch(GOOGLE_SCRIPT_URL, { 
         method: 'POST', 

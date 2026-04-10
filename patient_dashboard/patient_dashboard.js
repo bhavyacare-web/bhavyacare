@@ -27,7 +27,6 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // Withdraw Button Visibility 
             if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
                 document.getElementById('btn-withdraw').style.display = 'block';
             } else {
@@ -48,7 +47,7 @@ async function checkLoginAndFetchData() {
                 
                 if (patient.vip_package_status === "pending") {
                     if (vipAlert) vipAlert.style.display = "block";
-                    document.getElementById("notifDot").style.display = "block"; // Notification logic
+                    document.getElementById("notifDot").style.display = "block";
                 } else {
                     if (vipAlert) vipAlert.style.display = "none";
                     document.getElementById("notifDot").style.display = "none";
@@ -105,7 +104,6 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
-            // Data load hote waqt baaki cheezein bhi fetch ho jayengi
             fetchWalletHistory(userId);
             fetchPatientBookings(userId);
 
@@ -230,14 +228,13 @@ async function fetchWalletHistory(userId) {
 }
 
 // ===============================================
-// NEW: BOOKINGS & CANCEL ORDER LOGIC (WITH LOADER)
+// BOOKINGS, REPORTS & CANCEL ORDER LOGIC
 // ===============================================
 async function fetchPatientBookings(userId) {
     const bookingTab = document.querySelector("#bookings .data-box");
     const reportsTab = document.querySelector("#reports .data-box");
     const recentActivityContainer = document.getElementById("recentActivityContainer");
     
-    // 🌟 1. API CALL SE PEHLE LOADING ANIMATION SET KAREIN 🌟
     const loaderLarge = `
         <div class="section-title">My Bookings</div>
         <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
@@ -259,12 +256,10 @@ async function fetchPatientBookings(userId) {
         </div>
     `;
 
-    // Data aane tak UI pe Spinner dikhayen
     if(bookingTab) bookingTab.innerHTML = loaderLarge;
     if(reportsTab) reportsTab.innerHTML = loaderReports;
     if(recentActivityContainer) recentActivityContainer.innerHTML = loaderSmall;
 
-    // 🌟 2. AB DATA FETCH KAREIN 🌟
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -272,16 +267,13 @@ async function fetchPatientBookings(userId) {
         });
         const result = await response.json();
         
-        // 🌟 3. DATA AANE KE BAAD LOADER HATA KAR RENDER KAREIN 🌟
         if (result.status === "success") {
             globalBookingsData = result.data;
             renderBookings(globalBookingsData, bookingTab, reportsTab, recentActivityContainer);
         } else {
-            console.error("Booking Fetch Error:", result.message);
             if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
         }
     } catch(e) { 
-        console.error("Network error fetching bookings.", e); 
         if(bookingTab) bookingTab.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
     }
 }
@@ -295,8 +287,6 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     let hasReports = false;
 
     bookings.forEach((bk, index) => {
-        
-        // --- CART ITEMS (G) PARSING LOGIC ---
         let testsListHtml = "";
         let testNamesSummary = "";
         let items = [];
@@ -335,32 +325,24 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             testNamesSummary = "No Tests";
         }
 
-        // ==================================================
-        // 🌟 "COMPLETED" FIX LOGIC 🌟
-        // ==================================================
-        // Sheet ke word ko lower case karna, space hatana
         let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
-        let safeReportType = (bk.report_type || "").toString().toLowerCase().trim();
         let safePayStatus = (bk.payment_status || "due").toString().toLowerCase().trim();
 
         let badgeClass = "status-warning"; 
         let statusText = "Pending";
         let isComplete = false;
 
-        // Ab .includes() ka use kar rahe hain taaki "completed", "complete", " complete " sab chalega!
         if (safeStatus.includes("confirm")) { 
             badgeClass = "status-primary"; statusText = "Confirmed"; 
         } else if (safeStatus.includes("complete") || safeStatus === "completed") { 
-            // 👆 Yahan fix hai! "completed" ko properly catch karega
             badgeClass = "status-success"; statusText = "Completed"; 
-            isComplete = true; // Report tab dikhane ke liye flag
+            isComplete = true; 
         } else if (safeStatus.includes("cancel")) { 
             badgeClass = "status-danger"; statusText = "Cancelled"; 
         }
 
         let modeDisplay = (bk.fulfillment && bk.fulfillment.toLowerCase().includes('home')) ? "Home Collection" : "Lab Visit";
 
-        // Payment Status Fix
         let payStatus = (safePayStatus.includes("complete")) ? "COMPLETE" : "DUE";
         let payColor = (payStatus === "COMPLETE") ? "#2e7d32" : "#d32f2f";
         let payBg = (payStatus === "COMPLETE") ? "#e8f5e9" : "#ffebee";
@@ -368,25 +350,56 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
 
         hasBookings = true;
 
-        // Cancel Button (Complete ya Cancel pe nahi dikhega)
         let cancelBtnHtml = "";
         if (!isComplete && !safeStatus.includes("cancel")) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
         }
         
-        // Report Logic (Sirf 'Complete/Completed' par dikhega)
+        // 🌟 1. MULTIPLE PDF & IN HAND REPORTS FIX LOGIC 🌟
         let reportSectionHtml = "";
-        if (isComplete) {
-            let rType = safeReportType || "in hand";
+        
+        // Fetching Hand Reports Safely
+        let handReportsArr = [];
+        if (bk.hand_reports) {
+            try { 
+                handReportsArr = JSON.parse(bk.hand_reports); 
+                if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports];
+            } catch(e) { handReportsArr = [bk.hand_reports]; }
+        }
+
+        // Fetching Online PDFs Safely (JSON Array check)
+        let onlinePdfArr = [];
+        if (bk.report_pdf) {
+            try { 
+                onlinePdfArr = JSON.parse(bk.report_pdf); 
+                if(!Array.isArray(onlinePdfArr)) onlinePdfArr = [bk.report_pdf];
+            } catch(e) { onlinePdfArr = [bk.report_pdf]; }
+        }
+
+        // Render Reports UI if Complete
+        if (isComplete && (onlinePdfArr.length > 0 || handReportsArr.length > 0)) {
             reportSectionHtml = `
             <div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
-                <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;"><i class="fas fa-check-circle"></i> Booking Completed</div>
-                <div style="font-size:11px; color:#555;">Report Mode: <strong>${rType.toUpperCase()}</strong></div>`;
+                <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;"><i class="fas fa-check-circle"></i> Booking Completed</div>`;
             
-            if (rType.includes("online") && bk.report_pdf) {
-                reportSectionHtml += `<a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; margin-top:10px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report PDF</a>`;
-            } else if (rType.includes("hand")) {
-                reportSectionHtml += `<div style="margin-top:8px; font-size:11px; color:#d84315;"><i class="fas fa-info-circle"></i> Please collect your physical report from the lab.</div>`;
+            // Render Online PDFs
+            if(onlinePdfArr.length > 0) {
+                reportSectionHtml += `<div style="font-size:11px; color:#555; margin-top:8px; margin-bottom:5px; font-weight:bold;">Online Reports:</div>`;
+                onlinePdfArr.forEach((url, i) => {
+                    if(url.trim() !== "") {
+                        reportSectionHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; margin-bottom:5px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report ${i+1}</a>`;
+                    }
+                });
+            }
+            
+            // Render In Hand Reports
+            if (handReportsArr.length > 0) {
+                reportSectionHtml += `<div style="font-size:11px; color:#d84315; margin-top:10px; font-weight:bold;">To Collect Physically (In-Hand):</div>`;
+                reportSectionHtml += `<ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#d84315;">`;
+                handReportsArr.forEach(srv => {
+                    if(srv.trim() !== "") reportSectionHtml += `<li>${srv}</li>`;
+                });
+                reportSectionHtml += `</ul>`;
             }
             reportSectionHtml += `</div>`;
         }
@@ -394,12 +407,11 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
         // ----------- BOOKING CARD RENDER -----------
         bookingsHtml += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-            
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                 <div>
                     <div style="font-size:11px; color:#888; margin-bottom:2px;">Order ID</div>
                     <strong style="color:#333; font-size:14px;">#${bk.order_id}</strong>
-                    <div style="margin-top:4px;"><strong style="font-size:12px; color:var(--primary);">Lab ID: ${bk.lab_id}</strong></div>
+                    <div style="margin-top:4px;"><strong style="font-size:12px; color:var(--primary);">Lab: ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'Unknown'}</strong></div>
                 </div>
                 <div style="text-align:right;">
                     <span class="status-badge ${badgeClass}" style="margin-bottom:6px;">${statusText.toUpperCase()}</span><br>
@@ -446,23 +458,29 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
             </div>`;
         }
 
-        // ----------- REPORTS TAB RENDER -----------
-        if (isComplete && safeReportType.includes("online") && bk.report_pdf) {
+        // 🌟 2. REPORTS TAB RENDER LOGIC (Handles Multiple PDFs) 🌟
+        if (isComplete && onlinePdfArr.length > 0) {
             hasReports = true;
+            
+            // Multiple PDFs ke liye loop lagaya
+            let linksHtml = "";
+            onlinePdfArr.forEach((url, i) => {
+                if(url.trim() !== "") {
+                    linksHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px; margin-top:8px;"><i class="fas fa-cloud-download-alt"></i> View & Download Report ${i+1}</a>`;
+                }
+            });
+
             reportsHtml += `
             <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between;">
-                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Test Report</h5>
+                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Order #${bk.order_id}</h5>
                     <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.slot}</span>
                 </div>
-                <div style="font-size:12px; color:var(--text-light); margin-bottom:10px; line-height:1.5;">
+                <div style="font-size:12px; color:var(--text-light); margin-bottom:5px; line-height:1.5;">
                     <strong>Patient:</strong> ${bk.patient_name} <br>
-                    <strong><span style="color:var(--text-main);">Lab ID: ${bk.lab_id}</span></strong> <br>
-                    <strong>Address:</strong> ${bk.address}
+                    <strong><span style="color:var(--text-main);">Lab: ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'N/A'}</span></strong>
                 </div>
-                <a href="${bk.report_pdf}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;">
-                    <i class="fas fa-cloud-download-alt"></i> View & Download PDF
-                </a>
+                ${linksHtml}
             </div>`;
         }
     });
@@ -475,6 +493,7 @@ function renderBookings(bookings, bookingTab, reportsTab, recentContainer) {
     reportsTab.innerHTML = reportsHtml;
     recentContainer.innerHTML = recentHtml;
 }
+
 function openCancelModal(orderId) {
     document.getElementById("cancelOrderIdHidden").value = orderId;
     document.getElementById("cancelReasonInput").value = "";

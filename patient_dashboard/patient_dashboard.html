@@ -78,10 +78,15 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
         
-        /* Form Inputs */
+        /* Form Inputs & Filters */
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
         .input-box:focus { border-color: var(--primary); }
         .form-group { margin-top: 12px; }
+
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0;}
+        .filter-input { flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; outline: none; }
+        .filter-input:focus { border-color: var(--primary); }
+        .filter-btn { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         
         /* Modals */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
@@ -201,12 +206,31 @@
 
         <div id="bookings" class="tab-content">
             <div class="data-box">
+                <div class="section-title">My Bookings</div>
+                
+                <div class="filter-bar">
+                    <input type="text" id="searchBookingText" class="filter-input" placeholder="Search Lab or Test Name..." onkeyup="filterMyBookings()">
+                    <input type="date" id="searchBookingDate" class="filter-input" style="flex: 0.5;" onchange="filterMyBookings()">
+                    <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
                 </div>
+
+                <div id="patientBookingsContainer">
+                    <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
+                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your bookings...</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="reports" class="tab-content">
-            <div class="data-box">
-                 </div>
+            <div class="data-box" id="reportsTabContainer">
+                 <div class="section-title">Medical Records</div>
+                 <div style="text-align: center; padding: 50px 20px; color: var(--success);">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
+                    <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
+                </div>
+            </div>
         </div>
 
         <div id="wallet" class="tab-content">

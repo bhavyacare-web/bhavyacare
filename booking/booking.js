@@ -883,28 +883,31 @@ function renderGroupedCart() {
             let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
             
+            // --------- YAHAN SE REPLACE KAREIN ---------
             displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
                 
-                // 🌟 FIX: Checked for "Yes" explicitly. String "No" was evaluating to True earlier! 🌟
+                // 1. NABL / NABH Fix: Sirf 'Yes' hone par hi tag aayega
                 let isNabl = (lab.nabl && lab.nabl.toString().toLowerCase() === "yes");
-                let nablBadge = isNabl ? `<span style="background:#dcfce7; color:#065f46; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:800; border:1px solid #bbf7d0;">NABL</span>` : "";
+                let nablBadge = isNabl ? `<span class="badge-small">NABL</span>` : "";
                 
                 let isNabh = (lab.nabh && lab.nabh.toString().toLowerCase() === "yes");
-                let nabhBadge = isNabh ? `<span style="background:#dcfce7; color:#065f46; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:800; border:1px solid #bbf7d0;">NABH</span>` : "";
+                let nabhBadge = isNabh ? `<span class="badge-small" style="background:#dcfce7; color:#065f46;">NABH</span>` : "";
                 
-                // 🌟 FIX: Used lab_image1 and changed fallback to UI-Avatars (Placeholder.com is blocked/down on your network) 🌟
+                // 2. Image Fix: Sahi variable name (lab_image1) aur working fallback (ui-avatars)
                 let imgSrc = lab.lab_image1 || lab.img1_url || lab.lab_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
 
                 html += `
                     <div class="lab-card ${isSelected}" onclick="assignLabToGroup('${type}', '${lab.lab_id}')">
-                        <img src="${imgSrc}" class="lab-img" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:1px solid #e2e8f0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1'">
+                        <img src="${imgSrc}" class="lab-img" style="width:60px; height:60px; border-radius:10px; object-fit:cover; border:1px solid var(--border);" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1'">
                         <div class="lab-info">
-                            <h4 class="lab-name" style="display:flex; align-items:center; flex-wrap:wrap;">${lab.lab_name} ${nablBadge} ${nabhBadge}</h4>
+                            <h4 class="lab-name">${lab.lab_name} ${nablBadge} ${nabhBadge}</h4>
                             <p class="lab-addr"><i class="fas fa-map-marker-alt"></i> ${lab.lab_address}, ${lab.city} - ${lab.pincode}</p>
                         </div>
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
                     </div>`;
+            });
+            // --------- YAHAN TAK REPLACE KAREIN ---------
             });
         }
         

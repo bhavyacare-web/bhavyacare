@@ -92,6 +92,28 @@ function fetchProfileData(userId) {
     });
 }
 
+// Naya helper function time theek karne ke liye
+function formatTimeForInput(val) {
+    if (!val || val === "Closed") return "";
+    let strVal = String(val).trim();
+    
+    // Agar Google Sheets wala lamba date format hai (1899-12-30T...)
+    if (strVal.includes("T")) {
+        try {
+            let d = new Date(strVal);
+            let h = ("0" + d.getHours()).slice(-2);
+            let m = ("0" + d.getMinutes()).slice(-2);
+            return `${h}:${m}`;
+        } catch(e) { return ""; }
+    }
+    // Agar pehle se hi time format me hai (jaise 14:30)
+    if (strVal.includes(":")) {
+        let parts = strVal.split(":");
+        return `${("0" + parts[0]).slice(-2)}:${("0" + parts[1]).slice(-2)}`;
+    }
+    return strVal;
+}
+
 function populateForm() {
     let p = currentProfile;
     document.getElementById("lab_name").value = p.lab_name;
@@ -129,7 +151,7 @@ function populateForm() {
     if(p.img1_url) document.getElementById("preview_img1").innerHTML = `<div class="image-preview-box"><img src="${p.img1_url}"> <a href="${p.img1_url}" target="_blank">View Image</a></div>`;
     if(p.img2_url) document.getElementById("preview_img2").innerHTML = `<div class="image-preview-box"><img src="${p.img2_url}"> <a href="${p.img2_url}" target="_blank">View Image</a></div>`;
 
-    // 🌟 FIX: POPULATE TIMINGS PROPERLY (No Crash Here Now) 🌟
+    // 🌟 FIX: TIMINGS AB PERFECTLY LOAD HONGI 🌟
     let timeContainer = document.getElementById("timingsContainer");
     timeContainer.innerHTML = "";
     daysArr.forEach(day => {
@@ -139,8 +161,8 @@ function populateForm() {
         if (p.timings) {
             let oKey = day + "_open";
             let cKey = day + "_close";
-            openVal = (p.timings[oKey] && p.timings[oKey] !== "Closed") ? p.timings[oKey] : "";
-            closeVal = (p.timings[cKey] && p.timings[cKey] !== "Closed") ? p.timings[cKey] : "";
+            openVal = formatTimeForInput(p.timings[oKey]);
+            closeVal = formatTimeForInput(p.timings[cKey]);
         }
         
         timeContainer.innerHTML += `

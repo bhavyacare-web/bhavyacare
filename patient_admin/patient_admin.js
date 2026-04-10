@@ -71,7 +71,7 @@ function renderPatientsTable(data) {
         const sVal = p.status ? p.status.trim().toLowerCase() : 'inactive';
         const sClass = sVal === 'active' ? 'status-active' : 'status-inactive';
         
-        // 🌟 NAYA: WITHDRAW/WALLET SAFE FORMATTING 🌟
+        // 🌟 WITHDRAW/WALLET SAFE FORMATTING 🌟
         const wVal = p.withdraw ? p.withdraw.trim().toLowerCase() : 'inactive';
         const wClass = wVal === 'active' ? 'status-active' : 'status-inactive';
         const withdrawText = wVal.toUpperCase();
@@ -96,7 +96,6 @@ function renderPatientsTable(data) {
 
 async function toggleStatus(userId, field, currentStatus) {
     const newValue = currentStatus.toLowerCase() === "active" ? "inactive" : "active";
-    // Alert text bhi field ke hisaab se change kar diya gaya hai
     const fieldName = field === 'withdraw' ? 'WALLET / WITHDRAW' : 'ACCOUNT STATUS';
     
     if (!confirm(`Mark ${fieldName} as '${newValue.toUpperCase()}' for ${userId}?`)) return;
@@ -106,8 +105,12 @@ async function toggleStatus(userId, field, currentStatus) {
             body: JSON.stringify({ action: "updatePatient", target_user_id: userId, field: field, value: newValue }) 
         });
         const result = await response.json();
-        if (result.status === "success") fetchPatientsData();
-        else alert("Error: " + result.message);
+        if (result.status === "success") {
+            // 🌟 NAYA: Turant Refresh Action 🌟
+            window.location.reload(); 
+        } else {
+            alert("Error: " + result.message);
+        }
     } catch (error) { alert("Failed to update."); }
 }
 
@@ -210,10 +213,8 @@ async function adjustPatientWallet() {
         btn.innerText = "Add Funds"; btn.disabled = false;
         if (result.status === "success") { 
             alert("Funds added successfully!"); 
-            fetchPatientsData(); 
-            document.getElementById("spWallet").innerText = `₹${result.new_balance}`; 
-            document.getElementById("walletAdjustAmt").value = "";
-            document.getElementById("walletAdjustReason").value = "";
+            // 🌟 NAYA: Turant Refresh Action 🌟
+            window.location.reload();
         }
         else alert("Error: " + result.message);
     } catch (error) { alert("Failed to add funds."); btn.innerText = "Add Funds"; btn.disabled = false; }
@@ -300,7 +301,11 @@ async function submitVipAction(statusValue) {
             body: JSON.stringify({ action: "processVipAction", row_index: rowIndex, user_id: userId, vip_status: statusValue, remarks: remarks }) 
         });
         const result = await response.json();
-        if (result.status === "success") { alert(result.message); fetchVipData(); } 
-        else { alert("Error: " + result.message); }
-    } catch (error) { alert("Action failed."); }
+        if (result.status === "success") { 
+            alert(result.message); 
+            // 🌟 NAYA: Turant Refresh Action 🌟
+            window.location.reload(); 
+        } 
+        else { alert("Error: " + result.message); document.getElementById("loader").style.display = "none"; }
+    } catch (error) { alert("Action failed."); document.getElementById("loader").style.display = "none"; }
 }

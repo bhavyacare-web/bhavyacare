@@ -907,8 +907,6 @@ function renderGroupedCart() {
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
                     </div>`;
             });
-            // --------- YAHAN TAK REPLACE KAREIN ---------
-            });
         }
         
         html += `</div>`; 

@@ -6,9 +6,10 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allOrders = [];
+let currentFilteredOrders = []; // 🌟 NAYA: Display karne ke liye alag list 🌟
 let currentOrder = null;
 
-// 🌟 CRASH-PROOF HELPERS 🌟
+// CRASH-PROOF HELPERS
 function safeSetText(id, text) {
     let el = document.getElementById(id);
     if (el) el.innerText = text;
@@ -18,18 +19,17 @@ function safeSetHTML(id, html) {
     if (el) el.innerHTML = html;
 }
 
-// 🌟 NAYA FORMATTER: Date aur Time ko simple "DD-MM-YYYY hh:mm AM/PM" banane ke liye 🌟
+// DATE FORMATTER
 function formatDateTime(val) {
     if (!val || val === "N/A" || val.toString().trim() === "") return "N/A";
     try {
         let d = new Date(val);
-        if (isNaN(d.getTime())) return val; // Agar simple text hai toh waisa hi return kare
+        if (isNaN(d.getTime())) return val; 
 
         let day = ("0" + d.getDate()).slice(-2);
         let month = ("0" + (d.getMonth() + 1)).slice(-2);
         let year = d.getFullYear();
 
-        // Agar sirf date pass ki gayi hai (jaise booking date)
         let timeStr = val.toString();
         if (timeStr.indexOf('T') === -1 && timeStr.indexOf(':') === -1) {
             return `${day}-${month}-${year}`;
@@ -81,6 +81,7 @@ function fetchOrders(userId) {
 
         if(data.status === "success") {
             allOrders = data.data;
+            currentFilteredOrders = [...allOrders]; // Pura data copy kar lo shuru me
             renderOrders();
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
@@ -96,17 +97,36 @@ function fetchOrders(userId) {
     });
 }
 
+// 🌟 NAYA FUNCTION: ONE CLICK FILTER LOGIC 🌟
+function filterOrders(status, btnElement) {
+    // Buttons ka color change karna
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    // Data filter karna
+    if (status === 'ALL') {
+        currentFilteredOrders = [...allOrders];
+    } else if (status === 'CONFIRMED') {
+        currentFilteredOrders = allOrders.filter(o => o.status && (o.status.toUpperCase() === 'ACTIVE' || o.status.toUpperCase() === 'CONFIRMED'));
+    } else {
+        currentFilteredOrders = allOrders.filter(o => o.status && o.status.toUpperCase() === status);
+    }
+    
+    // Naya data dikhana
+    renderOrders();
+}
+
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     if(!grid) return;
     
-    if(allOrders.length === 0) {
-        grid.innerHTML = `<div style="padding:40px; text-align:center; width:100%; color:#64748b;">No orders found for your lab.</div>`;
+    if(currentFilteredOrders.length === 0) {
+        grid.innerHTML = `<div style="padding:40px; text-align:center; width:100%; color:#64748b; grid-column: 1/-1;">No orders found in this category.</div>`;
         return;
     }
 
     grid.innerHTML = "";
-    allOrders.forEach((order, index) => {
+    currentFilteredOrders.forEach((order, index) => {
         let statusClass = "badge-pending";
         let statusText = order.status ? order.status.toUpperCase() : "PENDING";
         
@@ -116,22 +136,21 @@ function renderOrders() {
 
         let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
         
-        // 🌟 NAYA FORMATTER YAHA LAGA HAI 🌟
         let dtStr = formatDateTime(order.date);
         let slotStr = formatDateTime(order.slot);
 
         let card = document.createElement("div");
         card.className = "order-card";
-        card.onclick = () => openOrderModal(index);
+        card.onclick = () => openOrderModal(index); // Yahan index filter array ka hai
         
         card.innerHTML = `
-            <div class="order-card-header">
-                <div class="order-id">#${order.order_id || "N/A"}</div>
-                <div class="order-date">${dtStr}</div>
+            <div class="card-header">
+                <div class="card-id">#${order.order_id || "N/A"}</div>
+                <div class="card-date">${dtStr}</div>
             </div>
-            <div class="patient-name">${order.patient_name || "Unknown Patient"}</div>
-            <div class="order-info"><i class="fas fa-clock"></i> ${slotStr}</div>
-            <div class="order-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
+            <div class="card-patient">${order.patient_name || "Unknown Patient"}</div>
+            <div class="card-info"><i class="fas fa-clock"></i> ${slotStr}</div>
+            <div class="card-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
             
             <div class="badges-row">
                 <span class="badge ${statusClass}">${statusText}</span>
@@ -143,14 +162,14 @@ function renderOrders() {
 }
 
 function openOrderModal(index) {
-    currentOrder = allOrders[index];
+    // 🌟 DHYAN DEIN: Ab ye currentFilteredOrders se data uthayega 🌟
+    currentOrder = currentFilteredOrders[index];
     let o = currentOrder;
     let currentStatus = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
 
     safeSetText("mOrderId", "Order #" + (o.order_id || "N/A"));
     safeSetText("mName", o.patient_name || "N/A");
     
-    // 🌟 NAYA FORMATTER YAHA BHI LAGA HAI 🌟
     safeSetText("mSlot", formatDateTime(o.slot));
     
     safeSetText("mAddress", o.address || "N/A");

@@ -211,11 +211,21 @@ async function verifyOTP() {
         const result = await window.confirmationResult.confirm(code);
         const user = result.user;
 
+        // DEBUGGING KE LIYE CONSOLE LOG
+        console.log("Frontend is sending Role:", selectedRole);
+
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
             body: JSON.stringify({ action: "login", uid: user.uid, mobile: user.phoneNumber, role: selectedRole, name: userName })
         });
         const resData = await response.json();
+
+        // DEBUGGING KE LIYE EK AUR LOG
+        console.log("Backend returned Role:", resData.role);
+
+        if(selectedRole === "doctor" && resData.role === "patient") {
+            alert("Backend Error: Script update nahi hui hai. Ye aapko Patient man raha hai.");
+        }
 
         const finalRole = resData.role;
         const finalUserId = resData.user_id;
@@ -235,7 +245,7 @@ async function verifyOTP() {
         if (localStorage.getItem("pending_vip_redirect") === "true") {
             window.location.reload(); 
         } else {
-            goToDashboard(); // Changed to automatically route to correct dashboard after login
+            goToDashboard(); 
         }
 
     } catch (error) { 
@@ -271,22 +281,15 @@ function goToDashboard() {
     if (role === "patient") {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
     } 
-    // Purana code: 
-// else if (role === "lab") { window.location.href = "Lab.html"; }
-
-// Naya code:
-else if (role === "lab") {
-    // Ideal yahi hai ki abhi lab_registration.html par bhejein. 
-    // Jab form bhar jaye tab Lab.html par redirect ho.
-    window.location.href = "Lab/lab_registration.html"; 
-}
+    else if (role === "lab") {
+        window.location.href = "Lab/lab_registration.html"; 
+    }
     else if (role === "doctor") {
-    // Doctor login ke baad form bharne jayega
-    window.location.href = "Doctor/doctor_registration.html";
-}
-else if (role === "pharmacy" || role === "hospital" || role === "executive") {
-    alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
-}
+        window.location.href = "Doctor/doctor_registration.html";
+    }
+    else if (role === "pharmacy" || role === "hospital" || role === "executive") {
+        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
+    }
     else {
         alert("Role not found. Please log in again.");
     }

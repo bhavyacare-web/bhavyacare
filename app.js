@@ -211,7 +211,6 @@ async function verifyOTP() {
         const result = await window.confirmationResult.confirm(code);
         const user = result.user;
 
-        // DEBUGGING KE LIYE CONSOLE LOG
         console.log("Frontend is sending Role:", selectedRole);
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -220,8 +219,7 @@ async function verifyOTP() {
         });
         const resData = await response.json();
 
-        // DEBUGGING KE LIYE EK AUR LOG
-        console.log("Backend returned Role:", resData.role);
+        console.log("Backend returned Data:", resData);
 
         if(selectedRole === "doctor" && resData.role === "patient") {
             alert("Backend Error: Script update nahi hui hai. Ye aapko Patient man raha hai.");
@@ -235,6 +233,8 @@ async function verifyOTP() {
         localStorage.setItem("bhavya_role", finalRole);
         localStorage.setItem("bhavya_user_id", finalUserId);
         localStorage.setItem("bhavya_name", resData.name || userName); 
+        
+        // NEW LOGIC: Doctor ka status bhi save karega
         localStorage.setItem("bhavya_doc_status", resData.doc_status || "not_registered");
 
         closeLoginPopup();
@@ -282,18 +282,32 @@ function goToDashboard() {
     if (role === "patient") {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
     } 
+    else if (role === "lab") {
+        window.location.href = "Lab/lab_registration.html"; 
+    }
     else if (role === "doctor") {
         const docStatus = localStorage.getItem("bhavya_doc_status");
         
         if (docStatus === "not_registered") {
             // Form nahi bhara hai -> Form par bhejo
-            window.location.href = "Doctor/doctor_registration.html";
+            window.location.href = "doctor/doctor_registration.html";
         } 
         else if (docStatus === "Inactive" || docStatus === "Pending") {
             // Form bhar diya par approval baaki hai -> Pending page par bhejo
-            window.location.href = "Doctor/pending_approval.html";
+            window.location.href = "doctor/pending_approval.html";
         } 
         else if (docStatus === "Active") {
             // Approve ho chuka hai -> Dashboard par bhejo
-            window.location.href = "Doctor/doctor_dashboard.html";
+            window.location.href = "doctor/doctor_dashboard.html";
+        } else {
+            // Agar kabhi status undefined ho jaye toh default registration par
+            window.location.href = "doctor/doctor_registration.html";
         }
+    }
+    else if (role === "pharmacy" || role === "hospital" || role === "executive") {
+        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
+    }
+    else {
+        alert("Role not found. Please log in again.");
+    }
+}

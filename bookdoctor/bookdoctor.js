@@ -175,11 +175,16 @@ function attemptBook(index) {
     const role = localStorage.getItem("bhavya_role");
     
     if(!uid || role !== "patient") {
-        alert("Please Login or Sign Up as a Patient to book an appointment.");
-        window.location.href = "../index.html";
+        alert("Please Login as a Patient to book an appointment.");
+        // Ye command app.js ko batayegi ki login ke baad page change mat karna
+        localStorage.setItem("stay_on_page", "true"); 
+        
+        // Popup open karne ka function (app.js se aa raha hai)
+        openPatientLogin(); 
         return;
     }
     
+    // Agar login hai, toh booking form khulega
     selectedDoctor = allDoctors[index];
     document.getElementById("modalDocName").innerText = "Book Dr. " + selectedDoctor.doctor_name;
     

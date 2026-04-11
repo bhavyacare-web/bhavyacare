@@ -1,13 +1,12 @@
 // =======================================================
-// MASTER FRONTEND JS (booking.js & cart.js UNIFIED)
+// MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
 // =======================================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
-// --- SHARED GLOBALS ---
+// --- GLOBALS ---
 let cart = [];
-
-// --- BOOKING PAGE GLOBALS ---
+let currentView = 'booking'; // Tracks SPA state
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
     'profile':   { name: 'Package', icon: '🩺' }, 
@@ -20,19 +19,20 @@ const categoryConfig = {
 };
 const defaultIcon = '🧪';
 const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
+const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
+
 let allServices = [];
 let userPlanStatus = "basic"; 
 let currentCategory = 'profile'; 
 let currentSubCategory = 'all'; 
 let searchTimeout; 
 let pollingInterval; 
+
 let currentVipAmount = 3000;
 let baseVipPrice = 3000;
 let vipDiscount = 500;
 let validReferrerId = "";
 
-// --- CART PAGE GLOBALS ---
-const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 let bookingData = { name: "", mobile: "", city: "", pincode: "", address: "", isVip: false };
 let allActiveLabsList = []; 
 let cartConfirmationResult; 
@@ -42,24 +42,11 @@ let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 
 let labSlots = {}; 
 
 // =======================================================
-// 🌟 INITIALIZATION & SMART ROUTER (CART EMPTY FIX) 🌟
+// 🌟 INITIALIZATION & SPA ROUTER 🌟
 // =======================================================
 document.addEventListener('DOMContentLoaded', function() {
     loadUniversalCart();
-
-    // Booking Page Route
-    if (document.getElementById("mainCategories") || document.getElementById("servicesList")) {
-        initBookingPage();
-    }
-
-    // Cart/Checkout Page Route
-    if (document.getElementById("cartItemsContainer") || document.getElementById("step1-card")) {
-        initCartPage();
-    }
-});
-
-window.addEventListener('pageshow', function(event) {
-    if (event.persisted) { window.location.reload(); }
+    initBookingPage();
 });
 
 function loadUniversalCart() {
@@ -73,9 +60,53 @@ function loadUniversalCart() {
                              .map(item => ({...item, qty: item.qty || 1})); 
             } else { cart = []; }
         } else { cart = []; }
-    } catch (e) { console.error("Cart Load Error", e); cart = []; }
+    } catch (e) { cart = []; }
 }
 
+// 🌟 SPA TOGGLE LOGIC 🌟
+function toggleView(view) {
+    if (view === 'cart') {
+        if (cart.length === 0) {
+            alert("Your cart is empty. Please add items to proceed.");
+            return;
+        }
+        currentView = 'cart';
+        document.getElementById('bookingView').style.display = 'none';
+        document.getElementById('cartView').style.display = 'block';
+        document.getElementById('topCartBtn').style.display = 'none';
+        
+        document.getElementById('navBackText').innerText = "Back to Tests";
+        document.getElementById('pageMainTitle').innerText = "Checkout";
+        window.scrollTo(0, 0);
+        
+        initCartPage();
+    } else {
+        currentView = 'booking';
+        document.getElementById('cartView').style.display = 'none';
+        document.getElementById('bookingView').style.display = 'block';
+        document.getElementById('topCartBtn').style.display = 'inline-block';
+        
+        document.getElementById('navBackText').innerText = "Home";
+        document.getElementById('pageMainTitle').innerText = "Book Services";
+        window.scrollTo(0, 0);
+        
+        updateCartUI();
+    }
+}
+
+function handleHomeNavigation() {
+    if (currentView === 'cart') {
+        toggleView('booking');
+    } else {
+        const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
+        if (userId) { window.location.href = '../patient_dashboard/patient_dashboard.html'; } 
+        else { window.location.href = '../index.html'; }
+    }
+}
+
+// =======================================================
+// 🌟 BOOKING PAGE LOGIC 🌟
+// =======================================================
 function initBookingPage() {
     updateCartUI(); 
     fetchBookingData();
@@ -88,28 +119,6 @@ function initBookingPage() {
     }
 }
 
-function initCartPage() {
-    if(cart.length === 0) { showEmptyCart(); return; }
-
-    let s2 = document.getElementById('step2-card');
-    let step1Nav = document.getElementById('step1-nav');
-    if(s2 && step1Nav && step1Nav.classList.contains('completed')) {
-        s2.style.display = 'block';
-    }
-
-    calculateFinalBill(); 
-
-    const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { fetchProfile(userId); } 
-    else { 
-        let loader = document.getElementById('loadingOverlay');
-        if(loader) loader.style.display = 'none'; 
-    }
-}
-
-// =======================================================
-// 🌟 BOOKING PAGE LOGIC 🌟
-// =======================================================
 function formatText(text) {
     if (!text) return "";
     let cleanText = String(text).replace(/_/g, ' '); 
@@ -362,7 +371,7 @@ function renderServices(searchQuery = "") {
             let imgStr = service.service_image ? String(service.service_image).trim() : "";
             let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
 
-            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal" style="flex-grow:1; min-width:0; padding-right:5px;"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
+            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
         }
     });
     container.innerHTML = htmlContent;
@@ -570,50 +579,33 @@ function submitVipApplicationForm() {
     .finally(() => { btn.innerHTML = `Submit Application <i class="fas fa-arrow-right"></i>`; btn.disabled = false; });
 }
 
-function openCart() { 
-    localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-    window.location.href = "../cart/cart.html"; 
-}
-
-function handleHomeNavigation() {
-    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
-    if (userId) { window.location.href = '../patient_dashboard/patient_dashboard.html'; } 
-    else { window.location.href = '../index.html'; }
-}
-
 function claimVipPackage() {
     const vipPackageId = "VIP-FREE-001"; 
     const service = allServices.find(s => String(s.service_id) === vipPackageId);
     if (service) {
         updateQty(service.service_id, 1, 0, service.service_name, service.service_type);
-        openCart();
+        toggleView('cart');
     } else { alert("Loading... Please wait a second or contact Admin."); }
 }
 
 // =======================================================
 // 🌟 CART & CHECKOUT PAGE LOGIC 🌟
 // =======================================================
-function showEmptyCart() {
-    let container = document.querySelector('.container');
-    if(container) {
-        container.innerHTML = `
-            <div style="text-align:center; padding: 50px 20px;">
-                <i class="fas fa-shopping-cart" style="font-size: 50px; color: var(--border); margin-bottom: 20px;"></i>
-                <h3 style="color: var(--text-main);">Your Cart is Empty</h3>
-                <p style="font-size:13px; color:var(--text-muted);">Please add tests from the booking page to proceed.</p>
-                <a href="../index.html" class="btn-main" style="display: inline-block; margin-top: 15px; width: auto; text-decoration:none;">Go to Home</a>
-            </div>`;
+function initCartPage() {
+    let s2 = document.getElementById('step2-card');
+    let step1Nav = document.getElementById('step1-nav');
+    if(s2 && step1Nav && step1Nav.classList.contains('completed')) {
+        s2.style.display = 'block';
     }
-    let loadingOverlay = document.getElementById('loadingOverlay');
-    if(loadingOverlay) loadingOverlay.style.display = 'none';
-    
-    ['step1-card', 'step2-card', 'step3-card', 'dateTimeSection'].forEach(id => {
-        let el = document.getElementById(id);
-        if(el) el.style.display = 'none';
-    });
 
-    let bottomBar = document.querySelector('.bottom-bar');
-    if(bottomBar) bottomBar.style.display = 'none';
+    calculateFinalBill(); 
+
+    const userId = localStorage.getItem("bhavya_user_id");
+    if (userId) { fetchProfile(userId); } 
+    else { 
+        let loader = document.getElementById('loadingOverlay');
+        if(loader) loader.style.display = 'none'; 
+    }
 }
 
 function fetchProfile(userId) {
@@ -741,8 +733,8 @@ function fetchLabs() {
             });
 
             if (!canServiceAnything && !containsVipOnly) {
-                alert("No provider found in your area for service");
-                window.location.href = "../index.html"; 
+                alert("No provider found in your area for service. Redirecting to Booking list...");
+                toggleView('booking');
                 return;
             }
 
@@ -796,7 +788,6 @@ function autoAssignGroupLabs() {
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
 }
 
-// 🌟 NAYA: NABL/NABH TAGS AUR IMAGE FIX 🌟
 function renderGroupedCart() {
     let html = ""; 
     let groupedCart = {};
@@ -883,7 +874,6 @@ function renderGroupedCart() {
             let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
             
-            // --------- YAHAN SE REPLACE KAREIN ---------
             displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
                 
@@ -893,30 +883,19 @@ function renderGroupedCart() {
                 let isNabh = (lab.nabh && String(lab.nabh).toLowerCase().trim() === "yes");
                 let nabhBadge = isNabh ? `<span class="badge-small" style="margin-left:5px; background:#dcfce7; color:#065f46; border:1px solid #bbf7d0;">NABH</span>` : "";
                 
-                // 🌟 SMART IMAGE FIX: Handle Google Drive Links OR Raw Base64 Data 🌟
                 let rawImg = lab.lab_image1 || lab.img1_url || lab.lab_image || "";
                 let imgSrc = "";
-                
                 if (rawImg.trim() !== "") {
-                    // Agar Google Drive ka link hai
                     if (rawImg.includes("drive.google.com/file/d/")) {
                         let match = rawImg.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
                     } else if (rawImg.includes("drive.google.com/open?id=")) {
                         let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
                         imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
-                    } 
-                    // Agar lamba base64 code hai (bina prefix ke)
-                    else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+                    } else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
                         imgSrc = `data:image/jpeg;base64,${rawImg}`;
-                    } 
-                    // Normal link
-                    else {
-                        imgSrc = rawImg;
-                    }
+                    } else { imgSrc = rawImg; }
                 }
-
-                // Agar sab fail ho jaye tab jakar UI Avatar dikhayega
                 if (imgSrc === "") {
                      imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
                 }
@@ -931,7 +910,6 @@ function renderGroupedCart() {
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
                     </div>`;
             });
-            // --------- YAHAN TAK REPLACE KAREIN ---------
         }
         
         html += `</div>`; 
@@ -970,8 +948,13 @@ function removeCartItem(originalIndex) {
     if(confirm("Remove this item from your cart?")) {
         cart.splice(originalIndex, 1);
         localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-        if(cart.length === 0) showEmptyCart();
-        else { autoAssignGroupLabs(); renderGroupedCart(); }
+        if(cart.length === 0) {
+            alert("Cart is empty. Redirecting to Booking Page.");
+            toggleView('booking');
+        } else { 
+            autoAssignGroupLabs(); 
+            renderGroupedCart(); 
+        }
     }
 }
 
@@ -1329,7 +1312,7 @@ function finalizeBooking() {
     
     if (!userId) {
         document.getElementById("displayOtpMobile").innerText = "+91 " + bookingData.mobile;
-        document.getElementById("cartOtpModal").style.display = "flex";
+        document.getElementById("cartOtpModal").classList.add('active');
         
         if (!window.cartRecaptchaVerifier) {
             window.cartRecaptchaVerifier = new firebase.auth.RecaptchaVerifier('cart-recaptcha-container', { 'size': 'normal' });
@@ -1343,7 +1326,7 @@ function finalizeBooking() {
                 document.getElementById("cartOtpInputSection").style.display = "block";
             }).catch((error) => {
                 alert("Error sending OTP.");
-                document.getElementById("cartOtpModal").style.display = "none";
+                document.getElementById("cartOtpModal").classList.remove('active');
             });
     } else {
         processOrderSubmission(userId);
@@ -1374,7 +1357,7 @@ function proceedWithRegistration(user) {
         if(res.status === "success") {
             const finalUserId = res.user_id || (res.data ? res.data.user_id : null); 
             localStorage.setItem("bhavya_uid", user.uid); localStorage.setItem("bhavya_mobile", user.phoneNumber); localStorage.setItem("bhavya_role", res.role || "patient"); localStorage.setItem("bhavya_user_id", finalUserId); localStorage.setItem("bhavya_name", bookingData.name);
-            document.getElementById('cartOtpModal').style.display = 'none';
+            document.getElementById('cartOtpModal').classList.remove('active');
             processOrderSubmission(finalUserId); 
         } else { alert("Registration failed."); }
     }).catch(e => { alert("Network Error."); });
@@ -1383,6 +1366,7 @@ function proceedWithRegistration(user) {
 function processOrderSubmission(userId) {
     const btn = document.getElementById('confirmBtn');
     btn.innerText = "Processing Order..."; btn.disabled = true;
+    document.getElementById("loadingOverlay").style.display = "flex";
 
     const payload = {
         action: "submitBookingOrder",
@@ -1406,11 +1390,17 @@ function processOrderSubmission(userId) {
     .then(res => {
         if(res.status === "success") {
             localStorage.removeItem('bhavyaCart'); 
+            document.getElementById("loadingOverlay").style.display = "none";
             alert("🎉 Booking Successful!\n\nYour Order is confirmed. You can pay directly via Cash or UPI.");
             window.location.href = "../patient_dashboard/patient_dashboard.html";
         } else {
             alert("Booking Error: " + res.message);
+            document.getElementById("loadingOverlay").style.display = "none";
             btn.innerText = "Confirm Booking"; btn.disabled = false;
         }
-    }).catch(e => { alert("Error during checkout."); btn.innerText = "Confirm Booking"; btn.disabled = false; });
+    }).catch(e => { 
+        alert("Error during checkout."); 
+        document.getElementById("loadingOverlay").style.display = "none";
+        btn.innerText = "Confirm Booking"; btn.disabled = false; 
+    });
 }

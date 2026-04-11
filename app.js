@@ -236,6 +236,7 @@ async function verifyOTP() {
         
         // NEW LOGIC: Doctor ka status bhi save karega
         localStorage.setItem("bhavya_doc_status", resData.doc_status || "not_registered");
+        localStorage.setItem("bhavya_doc_reject_reason", resData.reject_reason || "");
 
         closeLoginPopup();
         alert("Login Successful! Welcome " + userName);
@@ -289,15 +290,13 @@ function goToDashboard() {
         const docStatus = localStorage.getItem("bhavya_doc_status");
         
         if (docStatus === "not_registered") {
-            // Form nahi bhara hai -> Form par bhejo
             window.location.href = "doctor/doctor_registration.html";
         } 
-        else if (docStatus === "Inactive" || docStatus === "Pending") {
-            // Form bhar diya par approval baaki hai -> Pending page par bhejo
+        else if (docStatus === "Inactive" || docStatus === "Pending" || docStatus === "Rejected") {
+            // Rejected wale ko bhi idhar hi bhejna hai
             window.location.href = "doctor/pending_approval.html";
         } 
         else if (docStatus === "Active") {
-            // Approve ho chuka hai -> Dashboard par bhejo
             window.location.href = "doctor/doctor_dashboard.html";
         } else {
             // Agar kabhi status undefined ho jaye toh default registration par

@@ -297,4 +297,3 @@ function goToDashboard() {
             // Approve ho chuka hai -> Dashboard par bhejo
             window.location.href = "Doctor/doctor_dashboard.html";
         }
-    }

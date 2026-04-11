@@ -10,14 +10,33 @@ window.onload = function() {
     fetchDoctors();
 };
 
-// 🌟 HELPER 1: Google Drive URL to Direct Image URL Converter
-function fixDriveUrl(url) {
-    if(!url) return "https://via.placeholder.com/100?text=No+Image";
-    if(url.includes("drive.google.com")) {
-        const idMatch = url.match(/[-\w]{25,}/);
-        if(idMatch) return "https://drive.google.com/uc?id=" + idMatch[0];
+// 🌟 AAPKA MASTER HELPER: Google Drive Thumbnail API (100% Working)
+function fixDriveUrl(rawImg, docName) {
+    let imgSrc = "";
+    
+    if (rawImg && rawImg.trim() !== "") {
+        if (rawImg.includes("drive.google.com/file/d/")) {
+            let match = rawImg.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (rawImg.includes("drive.google.com/open?id=")) {
+            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (rawImg.includes("drive.google.com/uc?id=")) {
+            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+            imgSrc = `data:image/jpeg;base64,${rawImg}`;
+        } else { 
+            imgSrc = rawImg; 
+        }
     }
-    return url;
+    
+    // Agar image empty hai ya nahi mili, to UI Avatar dikhao
+    if (imgSrc === "") {
+        imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0056b3&color=fff&size=100`;
+    }
+    
+    return imgSrc;
 }
 
 // 🌟 HELPER 2: 24-Hour Time to 12-Hour (AM/PM) Converter
@@ -26,7 +45,7 @@ function formatTime12H(time24) {
     let [hours, minutes] = time24.split(":");
     let h = parseInt(hours, 10);
     let ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12; // Converts 0 to 12, 13 to 1 etc.
+    h = h % 12 || 12; 
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
@@ -78,17 +97,12 @@ function applyFilters() {
     container.innerHTML = "";
 
     allDoctors.forEach((doc, index) => {
-        // Search Filter
         if(!doc.doctor_name.toLowerCase().includes(query) && !doc.speciality.toLowerCase().includes(query) && !doc.city.toLowerCase().includes(query)) return;
         
-        // Type Filter (Online / Offline)
         if(filterType === "Online" && doc.online_available !== "Yes") return;
-        if(filterType === "Offline") { /* Offline is default available for all */ }
-
-        // Availability Filter
+        
         let isAvail = checkAvailability(doc, filterDay, filterTime);
         
-        // --- BADGES ---
         let availBadge = isCurrentTimeCheck 
             ? (isAvail ? `<span class="badge avail-yes">🟢 Available Now</span>` : `<span class="badge avail-no">🔴 Not Available Now</span>`)
             : (isAvail ? `<span class="badge avail-yes">🟢 Available at Selected Time</span>` : `<span class="badge avail-no">🔴 Not Available at Selected Time</span>`);
@@ -97,17 +111,21 @@ function applyFilters() {
             ? `<span class="badge type-online">💻 Online Video Consult</span>` 
             : `<span class="badge type-offline">🏥 Clinic Visit Only</span>`;
 
-        let safeImg = fixDriveUrl(doc.imgUrl);
+        // Aapka naya robust function yahan use ho raha hai
+        let safeImg = fixDriveUrl(doc.imgUrl, doc.doctor_name);
+        
+        let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff&size=100`;
         let onlineText = doc.online_available === "Yes" ? ` | Online: ₹${doc.online_fee}` : ``;
 
         const card = document.createElement("div");
         card.className = "doc-card";
+        
         card.innerHTML = `
             <div class="badges-container">
                 ${availBadge} ${onlineBadge}
             </div>
             <div class="img-container">
-                <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.src='https://via.placeholder.com/100?text=Doctor'">
+                <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.onerror=null; this.src='${fallbackAvatar}';">
             </div>
             <h3>Dr. ${doc.doctor_name}</h3>
             <div class="doc-speciality">${doc.speciality} (${doc.qualification})</div>
@@ -135,7 +153,6 @@ function openSchedule(index) {
     for(let i=0; i<7; i++) {
         let d = days[i];
         
-        // Convert times to 12-hour format before displaying
         let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
             ? `${formatTime12H(doc['off_'+d+'_in'])} to ${formatTime12H(doc['off_'+d+'_out'])}` 
             : `<span style="color:#ccc;">Closed</span>`;
@@ -227,11 +244,9 @@ async function submitBooking() {
         let base64Img = ""; let mimeType = "";
         if (ssInput) { base64Img = await getBase64(ssInput); mimeType = ssInput.type; }
 
-        // Date Format theek karne ke liye (YYYY-MM-DD ko DD-MM-YYYY karna)
         let rawDate = document.getElementById("apptDate").value;
         let formattedDate = rawDate.split('-').reverse().join('-');
         
-        // Booking ke liye bhi 12 Hour format bhejna
         let rawTime = document.getElementById("apptTime").value;
         let formattedTime = formatTime12H(rawTime);
 
@@ -242,8 +257,8 @@ async function submitBooking() {
                 doctor_id: selectedDoctor.doctor_id,
                 doctor_name: selectedDoctor.doctor_name,
                 consult_type: consultType,
-                appt_date: formattedDate, // Now sending DD-MM-YYYY
-                appt_time: formattedTime, // Now sending HH:MM AM/PM
+                appt_date: formattedDate, 
+                appt_time: formattedTime, 
                 screenshot_base64: base64Img,
                 screenshot_mime: mimeType
             }

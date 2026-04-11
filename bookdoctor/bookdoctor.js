@@ -29,6 +29,33 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
+// 🌟 NAYA HELPER: Google Sheets ke ajeeb time format ko clean 24-Hour (HH:MM) me badalne ke liye
+function convertTo24Hour(timeData) {
+    if(!timeData) return "";
+    let timeString = String(timeData).trim();
+    if(timeString === "") return "";
+
+    // Agar Google Sheets ne date object (1899-12-30T...) bheja hai
+    if (timeString.includes("T") || timeString.includes("GMT") || timeString.includes("-")) {
+        let d = new Date(timeString);
+        if (!isNaN(d.getTime())) {
+            let h = d.getHours();
+            let m = d.getMinutes();
+            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}`;
+        }
+    }
+
+    // Agar normally HH:MM:SS format me ho
+    let parts = timeString.split(":");
+    if (parts.length >= 2) {
+        let h = parseInt(parts[0], 10);
+        let m = parseInt(parts[1], 10);
+        return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}`;
+    }
+
+    return timeString;
+}
+
 function formatTime12H(time24) {
     if(!time24 || time24.trim() === "") return "";
     let [hours, minutes] = time24.split(":");
@@ -38,11 +65,10 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
-// 🌟 DISCOUNT CALCULATOR 🌟
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
-    return Math.round(original * 0.90); // 10% Off
+    return Math.round(original * 0.90); 
 }
 
 async function fetchDoctors() {
@@ -55,7 +81,17 @@ async function fetchDoctors() {
         document.getElementById("loader").style.display = "none";
         
         if(resData.status === "success") {
-            allDoctors = resData.data;
+            // 🌟 YAHAN HUM SAARE TIMINGS KO CLEAN KAR RAHE HAIN 🌟
+            allDoctors = resData.data.map(doc => {
+                const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+                days.forEach(d => {
+                    doc[`off_${d}_in`] = convertTo24Hour(doc[`off_${d}_in`]);
+                    doc[`off_${d}_out`] = convertTo24Hour(doc[`off_${d}_out`]);
+                    doc[`on_${d}_in`] = convertTo24Hour(doc[`on_${d}_in`]);
+                    doc[`on_${d}_out`] = convertTo24Hour(doc[`on_${d}_out`]);
+                });
+                return doc;
+            });
             applyFilters();
         } else {
             alert("Error: " + resData.message);
@@ -109,7 +145,6 @@ function applyFilters() {
         let safeImg = fixDriveUrl(doc.imgUrl, doc.doctor_name);
         let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff&size=100`;
         
-        // 🌟 DISCOUNT UI FOR CARD 🌟
         let offDiscount = getDiscountedFee(doc.offline_fee);
         let onDiscount = getDiscountedFee(doc.online_fee);
         
@@ -152,9 +187,9 @@ function openSchedule(index) {
     for(let i=0; i<7; i++) {
         let d = days[i];
         let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
-            ? `${formatTime12H(doc['off_'+d+'_in'])} to ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
+            ? `${formatTime12H(doc['off_'+d}_in'])} to ${formatTime12H(doc['off_'+d}_out'])}` : `<span style="color:#ccc;">Closed</span>`;
         let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) 
-            ? `${formatTime12H(doc['on_'+d+'_in'])} to ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
+            ? `${formatTime12H(doc['on_'+d}_in'])} to ${formatTime12H(doc['on_'+d}_out'])}` : `<span style="color:#ccc;">N/A</span>`;
         html += `<tr><td><strong>${dayNames[i]}</strong></td><td>${offStr}</td><td>${onStr}</td></tr>`;
     }
     html += `</table>`;
@@ -163,7 +198,6 @@ function openSchedule(index) {
 }
 function closeSchedule() { document.getElementById("scheduleModal").style.display = "none"; }
 
-// ---- ADVANCED BOOKING LOGIC ----
 function attemptBook(index) {
     const uid = localStorage.getItem("bhavya_user_id");
     const role = localStorage.getItem("bhavya_role");
@@ -188,7 +222,6 @@ function attemptBook(index) {
         typeSelect.innerHTML += `<option value="Online">Online Video/Call (Pay ₹${onDiscount} Now)</option>`;
     }
     
-    // Reset fields
     document.getElementById("apptDate").value = "";
     document.getElementById("apptTime").value = "";
     document.getElementById("apptTime").disabled = true;

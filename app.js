@@ -280,9 +280,13 @@ else if (role === "lab") {
     // Jab form bhar jaye tab Lab.html par redirect ho.
     window.location.href = "Lab/lab_registration.html"; 
 }
-    else if (role === "doctor" || role === "pharmacy" || role === "hospital" || role === "executive") {
-        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
-    } 
+    else if (role === "doctor") {
+    // Doctor login ke baad form bharne jayega
+    window.location.href = "Doctor/doctor_registration.html";
+}
+else if (role === "pharmacy" || role === "hospital" || role === "executive") {
+    alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
+}
     else {
         alert("Role not found. Please log in again.");
     }

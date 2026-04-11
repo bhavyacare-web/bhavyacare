@@ -9,6 +9,7 @@ window.onload = function() {
     fetchDoctors();
 };
 
+// 🌟 HELPER: Google Drive Thumbnail API
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -29,13 +30,12 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
-// 🌟 NAYA HELPER: Google Sheets ke ajeeb time format ko clean 24-Hour (HH:MM) me badalne ke liye
+// 🌟 HELPER: Google Sheets Time Fixer
 function convertTo24Hour(timeData) {
     if(!timeData) return "";
     let timeString = String(timeData).trim();
     if(timeString === "") return "";
 
-    // Agar Google Sheets ne date object (1899-12-30T...) bheja hai
     if (timeString.includes("T") || timeString.includes("GMT") || timeString.includes("-")) {
         let d = new Date(timeString);
         if (!isNaN(d.getTime())) {
@@ -45,7 +45,6 @@ function convertTo24Hour(timeData) {
         }
     }
 
-    // Agar normally HH:MM:SS format me ho
     let parts = timeString.split(":");
     if (parts.length >= 2) {
         let h = parseInt(parts[0], 10);
@@ -56,6 +55,7 @@ function convertTo24Hour(timeData) {
     return timeString;
 }
 
+// 🌟 HELPER: AM/PM Formatter
 function formatTime12H(time24) {
     if(!time24 || time24.trim() === "") return "";
     let [hours, minutes] = time24.split(":");
@@ -65,6 +65,7 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
+// 🌟 HELPER: Discount Calculator
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
@@ -81,7 +82,7 @@ async function fetchDoctors() {
         document.getElementById("loader").style.display = "none";
         
         if(resData.status === "success") {
-            // 🌟 YAHAN HUM SAARE TIMINGS KO CLEAN KAR RAHE HAIN 🌟
+            // Yahan time mapping add kar di gayi hai (time cleaner call ho raha hai)
             allDoctors = resData.data.map(doc => {
                 const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
                 days.forEach(d => {
@@ -176,26 +177,31 @@ function applyFilters() {
     });
 }
 
+// 🌟 ERROR FIXED HERE 🌟
 function openSchedule(index) {
     const doc = allDoctors[index];
     document.getElementById("scheduleDocName").innerText = "Timings - Dr. " + doc.doctor_name;
     
-    let html = `<table class="schedule-table"><tr><th>Day</th><th>Offline (Clinic)</th><th>Online (Video)</th></tr>`;
+    let html = `<table class="schedule-table"><tr><th>Day</th><th>Offline (Clinic)</th><th>Online (Video/Call)</th></tr>`;
     const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     
     for(let i=0; i<7; i++) {
         let d = days[i];
+        
         let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
-            ? `${formatTime12H(doc['off_'+d}_in'])} to ${formatTime12H(doc['off_'+d}_out'])}` : `<span style="color:#ccc;">Closed</span>`;
+            ? `${formatTime12H(doc['off_'+d+'_in'])} to ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
+        
         let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) 
-            ? `${formatTime12H(doc['on_'+d}_in'])} to ${formatTime12H(doc['on_'+d}_out'])}` : `<span style="color:#ccc;">N/A</span>`;
+            ? `${formatTime12H(doc['on_'+d+'_in'])} to ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
+        
         html += `<tr><td><strong>${dayNames[i]}</strong></td><td>${offStr}</td><td>${onStr}</td></tr>`;
     }
     html += `</table>`;
     document.getElementById("scheduleContent").innerHTML = html;
     document.getElementById("scheduleModal").style.display = "flex";
 }
+
 function closeSchedule() { document.getElementById("scheduleModal").style.display = "none"; }
 
 function attemptBook(index) {

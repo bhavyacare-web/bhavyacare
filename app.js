@@ -235,6 +235,7 @@ async function verifyOTP() {
         localStorage.setItem("bhavya_role", finalRole);
         localStorage.setItem("bhavya_user_id", finalUserId);
         localStorage.setItem("bhavya_name", resData.name || userName); 
+        localStorage.setItem("bhavya_doc_status", resData.doc_status || "not_registered");
 
         closeLoginPopup();
         alert("Login Successful! Welcome " + userName);

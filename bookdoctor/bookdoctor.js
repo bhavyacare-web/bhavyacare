@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+// GOOGLE_SCRIPT_URL ab directly app.js se aa jayega, isliye yahan se hata diya hai.
 let allDoctors = [];
 let selectedDoctor = null;
 
@@ -31,7 +31,6 @@ function fixDriveUrl(rawImg, docName) {
         }
     }
     
-    // Agar image empty hai ya nahi mili, to UI Avatar dikhao
     if (imgSrc === "") {
         imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0056b3&color=fff&size=100`;
     }
@@ -111,9 +110,7 @@ function applyFilters() {
             ? `<span class="badge type-online">💻 Online Video Consult</span>` 
             : `<span class="badge type-offline">🏥 Clinic Visit Only</span>`;
 
-        // Aapka naya robust function yahan use ho raha hai
         let safeImg = fixDriveUrl(doc.imgUrl, doc.doctor_name);
-        
         let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff&size=100`;
         let onlineText = doc.online_available === "Yes" ? ` | Online: ₹${doc.online_fee}` : ``;
 
@@ -175,16 +172,12 @@ function attemptBook(index) {
     const role = localStorage.getItem("bhavya_role");
     
     if(!uid || role !== "patient") {
-        alert("Please Login as a Patient to book an appointment.");
-        // Ye command app.js ko batayegi ki login ke baad page change mat karna
+        alert("Please Login or Sign Up as a Patient to book an appointment.");
         localStorage.setItem("stay_on_page", "true"); 
-        
-        // Popup open karne ka function (app.js se aa raha hai)
         openPatientLogin(); 
         return;
     }
     
-    // Agar login hai, toh booking form khulega
     selectedDoctor = allDoctors[index];
     document.getElementById("modalDocName").innerText = "Book Dr. " + selectedDoctor.doctor_name;
     

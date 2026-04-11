@@ -1,4 +1,4 @@
-// GOOGLE_SCRIPT_URL ab directly app.js se aa jayega, isliye yahan se hata diya hai.
+// GOOGLE_SCRIPT_URL ab directly app.js se aa jayega, isliye yahan define nahi kiya hai.
 let allDoctors = [];
 let selectedDoctor = null;
 
@@ -229,7 +229,26 @@ async function submitBooking() {
     if(!form.checkValidity()) { form.reportValidity(); return; }
     
     const consultType = document.getElementById("consultType").value;
+    const rawDate = document.getElementById("apptDate").value;
+    const rawTime = document.getElementById("apptTime").value;
     const ssInput = document.getElementById("paymentScreenshot").files[0];
+
+    // 🌟 NAYA LOGIC: TIME AUR DAY VALIDATION MODAL KE ANDAR 🌟
+    const dateObj = new Date(rawDate);
+    const dayKey = daysMap[dateObj.getDay()];
+    
+    let inTime = consultType === "Offline" ? selectedDoctor[`off_${dayKey}_in`] : selectedDoctor[`on_${dayKey}_in`];
+    let outTime = consultType === "Offline" ? selectedDoctor[`off_${dayKey}_out`] : selectedDoctor[`on_${dayKey}_out`];
+
+    if (!inTime || !outTime) {
+        alert(`Dr. ${selectedDoctor.doctor_name} is not available for ${consultType} consultation on the selected day.`);
+        return;
+    }
+    
+    if (rawTime < inTime || rawTime > outTime) {
+        alert(`Please select a time between ${formatTime12H(inTime)} and ${formatTime12H(outTime)} for the selected date.`);
+        return;
+    }
     
     if(consultType === "Online" && !ssInput) {
         alert("Please upload the payment screenshot for online consultation."); return;
@@ -242,10 +261,7 @@ async function submitBooking() {
         let base64Img = ""; let mimeType = "";
         if (ssInput) { base64Img = await getBase64(ssInput); mimeType = ssInput.type; }
 
-        let rawDate = document.getElementById("apptDate").value;
         let formattedDate = rawDate.split('-').reverse().join('-');
-        
-        let rawTime = document.getElementById("apptTime").value;
         let formattedTime = formatTime12H(rawTime);
 
         const payload = {

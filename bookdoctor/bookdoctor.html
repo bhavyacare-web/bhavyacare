@@ -17,6 +17,7 @@
         .filter-bar { max-width: 1100px; margin: 15px auto 0; display: flex; gap: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
         .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 140px; }
         .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s;}
+        .filter-bar button:hover { background: #218838; }
         
         .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 15px; }
         .doc-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; text-align: center; border: 1px solid #eaeaea; position: relative;}
@@ -35,12 +36,16 @@
         .type-online { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
         .type-offline { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
         
-        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #0056b3; border: 1px dashed #ccc;}
+        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #333; border: 1px dashed #ccc;}
+        .discount-price { color: #28a745; font-size: 16px; margin-left: 5px;}
         
         .action-btns { display: flex; gap: 10px; margin-top: 15px; }
         .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 10px; border-radius: 5px; flex: 1; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-schedule:hover { background: #cbd5e1; }
         .btn-book { background: #0056b3; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-size: 13px; font-weight: bold; cursor: pointer; }
-        
+        .btn-book:hover { background: #004494; }
+
+        /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal { background: white; width: 90%; max-width: 550px; border-radius: 10px; padding: 25px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
@@ -52,12 +57,14 @@
         
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px;}
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;}
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; outline: none;}
+        .form-group input:focus, .form-group select:focus { border-color: #0056b3; }
+        .time-info { font-size: 13px; color: #28a745; margin-top: 5px; font-weight: bold; display: none; }
         
         #paymentSection { display: none; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #28a745; margin-top: 15px; text-align: center; }
         #loader { text-align: center; color: #0056b3; padding: 20px; font-weight: bold; font-size: 18px; }
 
-        /* 🌟 LOGIN POPUP STYLES FOR THIS PAGE 🌟 */
+        /* 🌟 LOGIN POPUP STYLES 🌟 */
         #login-section { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 9999px rgba(0,0,0,0.6); border-radius: 10px; text-align: center; z-index: 9999; }
         #login-section h3 { color: #333; margin-bottom: 20px; }
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; box-sizing: border-box;}
@@ -138,21 +145,34 @@
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
         <form id="bookingForm">
-            <div class="form-group"><label>Consultation Type</label><select id="consultType" onchange="togglePayment()" required></select></div>
-            <div class="form-group"><label>Select Date</label><input type="date" id="apptDate" required></div>
-            <div class="form-group"><label>Expected Time</label><input type="time" id="apptTime" required></div>
+            <div class="form-group">
+                <label>1. Select Consultation Type</label>
+                <select id="consultType" onchange="handleTypeChange()" required></select>
+            </div>
+            
+            <div class="form-group">
+                <label>2. Choose Appointment Date</label>
+                <input type="date" id="apptDate" onchange="checkSchedule()" required>
+                <div id="availabilityMsg" class="time-info"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>3. Select Preferred Time</label>
+                <input type="time" id="apptTime" required disabled>
+            </div>
             
             <div id="paymentSection">
                 <h4 style="margin: 0 0 10px; color: #155724;">Online Payment Required</h4>
                 <p style="margin: 0; font-size: 14px;">UPI ID: <strong id="payUpiId"></strong></p>
-                <p style="margin: 5px 0 15px; font-size: 18px; font-weight: bold; color: #d32f2f;">Amount: ₹<span id="payAmount"></span></p>
+                <p style="margin: 5px 0 15px; font-size: 18px; font-weight: bold; color: #d32f2f;">Pay (10% Off): ₹<span id="payAmount"></span></p>
                 <img id="qrImage" src="" alt="QR Code" style="width:150px; height:150px; border: 5px solid white; border-radius: 8px;">
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
-                    <label>Upload Payment Screenshot *</label><input type="file" id="paymentScreenshot" accept="image/*">
+                    <label>Upload Payment Screenshot *</label>
+                    <input type="file" id="paymentScreenshot" accept="image/*">
                 </div>
             </div>
 
-            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 15px;">Confirm Booking</button>
+            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 15px; padding: 12px; font-size: 16px;">Confirm & Book</button>
             <div id="btnLoader" style="display:none; text-align:center; font-weight:bold; color:#0056b3; margin-top:15px;">Processing... ⏳</div>
         </form>
     </div>

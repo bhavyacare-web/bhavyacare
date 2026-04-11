@@ -2,15 +2,33 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let allDoctors = [];
 let selectedDoctor = null;
 
-// Aaj ka din nikalne ke liye (e.g. "mon", "tue")
 const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 window.onload = function() {
-    // Set min date
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("apptDate").setAttribute('min', today);
     fetchDoctors();
 };
+
+// 🌟 HELPER 1: Google Drive URL to Direct Image URL Converter
+function fixDriveUrl(url) {
+    if(!url) return "https://via.placeholder.com/100?text=No+Image";
+    if(url.includes("drive.google.com")) {
+        const idMatch = url.match(/[-\w]{25,}/);
+        if(idMatch) return "https://drive.google.com/uc?id=" + idMatch[0];
+    }
+    return url;
+}
+
+// 🌟 HELPER 2: 24-Hour Time to 12-Hour (AM/PM) Converter
+function formatTime12H(time24) {
+    if(!time24 || time24.trim() === "") return "";
+    let [hours, minutes] = time24.split(":");
+    let h = parseInt(hours, 10);
+    let ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12; // Converts 0 to 12, 13 to 1 etc.
+    return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
+}
 
 async function fetchDoctors() {
     try {
@@ -23,7 +41,7 @@ async function fetchDoctors() {
         
         if(resData.status === "success") {
             allDoctors = resData.data;
-            applyFilters(); // Pehli baar load hone par current time se filter karega
+            applyFilters();
         } else {
             alert("Error: " + resData.message);
         }
@@ -33,31 +51,26 @@ async function fetchDoctors() {
     }
 }
 
-// Check if doctor is available on a specific day and time
 function checkAvailability(doc, day, time) {
-    if(day === "Any" || !time) return true; // Agar filter select nahi hai toh sab dikhao
-    
+    if(day === "Any" || !time) return true; 
     let offIn = doc[`off_${day}_in`], offOut = doc[`off_${day}_out`];
     let onIn = doc[`on_${day}_in`], onOut = doc[`on_${day}_out`];
-
-    // Helper: Compare 24hr string times ("14:30" >= "10:00")
     let isOffAvail = (offIn && offOut && time >= offIn && time <= offOut);
     let isOnAvail = (onIn && onOut && time >= onIn && time <= onOut);
-
     return isOffAvail || isOnAvail;
 }
 
 function applyFilters() {
     const query = document.getElementById("searchInput").value.toLowerCase();
+    const filterType = document.getElementById("filterType").value;
     let filterDay = document.getElementById("filterDay").value;
     let filterTime = document.getElementById("filterTime").value;
 
-    // Agar user ne day/time select nahi kiya, toh Current Time nikal lo
     let isCurrentTimeCheck = false;
     if (filterDay === "Any" && filterTime === "") {
         const now = new Date();
         filterDay = daysMap[now.getDay()];
-        filterTime = now.toTimeString().substring(0, 5); // Gets "HH:MM"
+        filterTime = now.toTimeString().substring(0, 5);
         isCurrentTimeCheck = true;
     }
 
@@ -65,31 +78,41 @@ function applyFilters() {
     container.innerHTML = "";
 
     allDoctors.forEach((doc, index) => {
-        // Name Search filter
+        // Search Filter
         if(!doc.doctor_name.toLowerCase().includes(query) && !doc.speciality.toLowerCase().includes(query) && !doc.city.toLowerCase().includes(query)) return;
+        
+        // Type Filter (Online / Offline)
+        if(filterType === "Online" && doc.online_available !== "Yes") return;
+        if(filterType === "Offline") { /* Offline is default available for all */ }
 
-        // Availability Check
+        // Availability Filter
         let isAvail = checkAvailability(doc, filterDay, filterTime);
         
-        // UI Text
-        let availBadge = "";
-        if (isCurrentTimeCheck) {
-            availBadge = isAvail ? `<span class="avail-badge avail-yes">🟢 Available Now</span>` : `<span class="avail-badge avail-no">🔴 Currently Not Available</span>`;
-        } else {
-            availBadge = isAvail ? `<span class="avail-badge avail-yes">🟢 Available at Selected Time</span>` : `<span class="avail-badge avail-no">🔴 Not Available at Selected Time</span>`;
-        }
+        // --- BADGES ---
+        let availBadge = isCurrentTimeCheck 
+            ? (isAvail ? `<span class="badge avail-yes">🟢 Available Now</span>` : `<span class="badge avail-no">🔴 Not Available Now</span>`)
+            : (isAvail ? `<span class="badge avail-yes">🟢 Available at Selected Time</span>` : `<span class="badge avail-no">🔴 Not Available at Selected Time</span>`);
+            
+        let onlineBadge = doc.online_available === "Yes" 
+            ? `<span class="badge type-online">💻 Online Video Consult</span>` 
+            : `<span class="badge type-offline">🏥 Clinic Visit Only</span>`;
 
-        const onlineText = doc.online_available === "Yes" ? `| Online: ₹${doc.online_fee}` : `| Offline Only`;
-        
+        let safeImg = fixDriveUrl(doc.imgUrl);
+        let onlineText = doc.online_available === "Yes" ? ` | Online: ₹${doc.online_fee}` : ``;
+
         const card = document.createElement("div");
         card.className = "doc-card";
         card.innerHTML = `
-            ${availBadge}
-            <br>
-            <img src="${doc.imgUrl}" alt="${doc.doctor_name}">
+            <div class="badges-container">
+                ${availBadge} ${onlineBadge}
+            </div>
+            <div class="img-container">
+                <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.src='https://via.placeholder.com/100?text=Doctor'">
+            </div>
             <h3>Dr. ${doc.doctor_name}</h3>
-            <p style="font-weight:bold; color:#e67e22;">${doc.speciality} (${doc.qualification})</p>
-            <p>🏥 ${doc.clinic_name}, ${doc.city}</p>
+            <div class="doc-speciality">${doc.speciality} (${doc.qualification})</div>
+            <div class="doc-exp">⭐ ${doc.experience} Years Experience</div>
+            <p style="margin:5px 0; color:#555; font-size:14px;">🏥 ${doc.clinic_name}, ${doc.city}</p>
             <div class="fees">Clinic Fee: ₹${doc.offline_fee} ${onlineText}</div>
             
             <div class="action-btns">
@@ -101,20 +124,25 @@ function applyFilters() {
     });
 }
 
-// ---- SCHEDULE VIEWER ----
 function openSchedule(index) {
     const doc = allDoctors[index];
     document.getElementById("scheduleDocName").innerText = "Timings - Dr. " + doc.doctor_name;
     
     let html = `<table class="schedule-table"><tr><th>Day</th><th>Offline (Clinic)</th><th>Online (Video/Call)</th></tr>`;
-    
     const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     
     for(let i=0; i<7; i++) {
         let d = days[i];
-        let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) ? `${doc['off_'+d+'_in']} - ${doc['off_'+d+'_out']}` : `<span style="color:#ccc;">Closed</span>`;
-        let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) ? `${doc['on_'+d+'_in']} - ${doc['on_'+d+'_out']}` : `<span style="color:#ccc;">N/A</span>`;
+        
+        // Convert times to 12-hour format before displaying
+        let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
+            ? `${formatTime12H(doc['off_'+d+'_in'])} to ${formatTime12H(doc['off_'+d+'_out'])}` 
+            : `<span style="color:#ccc;">Closed</span>`;
+            
+        let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) 
+            ? `${formatTime12H(doc['on_'+d+'_in'])} to ${formatTime12H(doc['on_'+d+'_out'])}` 
+            : `<span style="color:#ccc;">N/A</span>`;
         
         html += `<tr><td><strong>${dayNames[i]}</strong></td><td>${offStr}</td><td>${onStr}</td></tr>`;
     }
@@ -125,20 +153,16 @@ function openSchedule(index) {
 }
 function closeSchedule() { document.getElementById("scheduleModal").style.display = "none"; }
 
-// ---- BOOKING LOGIC ----
 function attemptBook(index) {
-    // Login Validation sirf Book click karne par!
     const uid = localStorage.getItem("bhavya_user_id");
     const role = localStorage.getItem("bhavya_role");
     
     if(!uid || role !== "patient") {
         alert("Please Login or Sign Up as a Patient to book an appointment.");
-        // Redirect to main page for login
         window.location.href = "../index.html";
         return;
     }
     
-    // Agar logged in hai toh Booking Modal kholo
     selectedDoctor = allDoctors[index];
     document.getElementById("modalDocName").innerText = "Book Dr. " + selectedDoctor.doctor_name;
     
@@ -203,6 +227,14 @@ async function submitBooking() {
         let base64Img = ""; let mimeType = "";
         if (ssInput) { base64Img = await getBase64(ssInput); mimeType = ssInput.type; }
 
+        // Date Format theek karne ke liye (YYYY-MM-DD ko DD-MM-YYYY karna)
+        let rawDate = document.getElementById("apptDate").value;
+        let formattedDate = rawDate.split('-').reverse().join('-');
+        
+        // Booking ke liye bhi 12 Hour format bhejna
+        let rawTime = document.getElementById("apptTime").value;
+        let formattedTime = formatTime12H(rawTime);
+
         const payload = {
             action: "bookAppointment",
             data: {
@@ -210,8 +242,8 @@ async function submitBooking() {
                 doctor_id: selectedDoctor.doctor_id,
                 doctor_name: selectedDoctor.doctor_name,
                 consult_type: consultType,
-                appt_date: document.getElementById("apptDate").value,
-                appt_time: document.getElementById("apptTime").value,
+                appt_date: formattedDate, // Now sending DD-MM-YYYY
+                appt_time: formattedTime, // Now sending HH:MM AM/PM
                 screenshot_base64: base64Img,
                 screenshot_mime: mimeType
             }

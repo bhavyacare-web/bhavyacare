@@ -883,19 +883,41 @@ function renderGroupedCart() {
             let displayLabs = isHome ? homeLabsForSvc : (hasCityProvider ? cityLabsForSvc : homeLabsForSvc);
             html += `<p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Provider for ${type}:</p>`;
             
+            // --------- YAHAN SE REPLACE KAREIN ---------
             displayLabs.forEach(lab => {
                 let isSelected = String(lab.lab_id) === String(group.selected_lab_id) ? "selected" : "";
                 
-                // 🌟 FIX: Checked for "Yes" explicitly. String "No" was evaluating to True earlier! 🌟
                 let isNabl = (lab.nabl && String(lab.nabl).toLowerCase().trim() === "yes");
                 let nablBadge = isNabl ? `<span class="badge-small" style="margin-left:5px; background:#dcfce7; color:#065f46; border:1px solid #bbf7d0;">NABL</span>` : "";
                 
                 let isNabh = (lab.nabh && String(lab.nabh).toLowerCase().trim() === "yes");
                 let nabhBadge = isNabh ? `<span class="badge-small" style="margin-left:5px; background:#dcfce7; color:#065f46; border:1px solid #bbf7d0;">NABH</span>` : "";
                 
-                // 🌟 FIX: Used lab_image1 and changed fallback to UI-Avatars 🌟
-                let imgSrc = lab.lab_image1 || lab.img1_url || lab.lab_image;
-                if (!imgSrc || imgSrc.trim() === "") {
+                // 🌟 SMART IMAGE FIX: Handle Google Drive Links OR Raw Base64 Data 🌟
+                let rawImg = lab.lab_image1 || lab.img1_url || lab.lab_image || "";
+                let imgSrc = "";
+                
+                if (rawImg.trim() !== "") {
+                    // Agar Google Drive ka link hai
+                    if (rawImg.includes("drive.google.com/file/d/")) {
+                        let match = rawImg.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+                    } else if (rawImg.includes("drive.google.com/open?id=")) {
+                        let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
+                        imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+                    } 
+                    // Agar lamba base64 code hai (bina prefix ke)
+                    else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+                        imgSrc = `data:image/jpeg;base64,${rawImg}`;
+                    } 
+                    // Normal link
+                    else {
+                        imgSrc = rawImg;
+                    }
+                }
+
+                // Agar sab fail ho jaye tab jakar UI Avatar dikhayega
+                if (imgSrc === "") {
                      imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(lab.lab_name)}&background=e0f2fe&color=0369a1`;
                 }
 
@@ -909,6 +931,7 @@ function renderGroupedCart() {
                         ${isSelected ? '<i class="fas fa-check-circle" style="color:var(--success); font-size:18px;"></i>' : ''}
                     </div>`;
             });
+            // --------- YAHAN TAK REPLACE KAREIN ---------
         }
         
         html += `</div>`; 

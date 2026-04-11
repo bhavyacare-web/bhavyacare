@@ -285,7 +285,7 @@ function goToDashboard() {
         window.location.href = "Lab/lab_registration.html"; 
     }
     else if (role === "doctor") {
-        window.location.href = "Doctor/doctor_registration.html";
+        window.location.href = "doctor/doctor_registration.html";
     }
     else if (role === "pharmacy" || role === "hospital" || role === "executive") {
         alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");

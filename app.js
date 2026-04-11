@@ -282,16 +282,19 @@ function goToDashboard() {
     if (role === "patient") {
         window.location.href = "patient_dashboard/patient_dashboard.html"; 
     } 
-    else if (role === "lab") {
-        window.location.href = "Lab/lab_registration.html"; 
-    }
     else if (role === "doctor") {
-        window.location.href = "doctor/doctor_registration.html";
+        const docStatus = localStorage.getItem("bhavya_doc_status");
+        
+        if (docStatus === "not_registered") {
+            // Form nahi bhara hai -> Form par bhejo
+            window.location.href = "Doctor/doctor_registration.html";
+        } 
+        else if (docStatus === "Inactive" || docStatus === "Pending") {
+            // Form bhar diya par approval baaki hai -> Pending page par bhejo
+            window.location.href = "Doctor/pending_approval.html";
+        } 
+        else if (docStatus === "Active") {
+            // Approve ho chuka hai -> Dashboard par bhejo
+            window.location.href = "Doctor/doctor_dashboard.html";
+        }
     }
-    else if (role === "pharmacy" || role === "hospital" || role === "executive") {
-        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
-    }
-    else {
-        alert("Role not found. Please log in again.");
-    }
-}

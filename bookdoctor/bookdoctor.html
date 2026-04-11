@@ -5,57 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Doctor | BhavyaCare</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; }
-        .header { background: #0056b3; color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .header h2 { margin: 0; font-size: 24px; }
-        .search-bar { max-width: 600px; margin: 20px auto; display: flex; padding: 0 15px; }
-        .search-bar input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px 0 0 5px; font-size: 16px; outline: none; }
-        .search-bar button { padding: 12px 20px; background: #28a745; color: white; border: none; border-radius: 0 5px 5px 0; font-size: 16px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .header { background: #0056b3; color: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header-top { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; font-size: 22px; }
+        
+        /* Advanced Filter Bar */
+        .filter-bar { max-width: 1100px; margin: 15px auto 0; display: flex; gap: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
+        .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 150px; }
+        .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         
         .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 15px; }
-        .doc-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 20px; text-align: center; transition: transform 0.3s; }
-        .doc-card:hover { transform: translateY(-5px); }
+        .doc-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; text-align: center; border: 1px solid #eaeaea; }
         .doc-card img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #e9ecef; }
         .doc-card h3 { color: #333; margin: 10px 0 5px; font-size: 20px; }
-        .doc-card p { color: #666; margin: 3px 0; font-size: 14px; }
-        .fees { margin: 15px 0; background: #f1f8ff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #0056b3; }
-        .btn-book { background: #0056b3; color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        /* Availability Badge */
+        .avail-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .avail-yes { background: #d4edda; color: #155724; }
+        .avail-no { background: #f8d7da; color: #721c24; }
+        
+        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #0056b3; }
+        
+        .action-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 10px; border-radius: 5px; flex: 1; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-schedule:hover { background: #cbd5e1; }
+        .btn-book { background: #0056b3; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-size: 13px; font-weight: bold; cursor: pointer; }
         .btn-book:hover { background: #004494; }
 
         /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 30px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
+        .modal { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 25px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-        .modal-header h3 { margin: 0; color: #333; }
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
+        
+        /* Schedule Table in Modal */
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .schedule-table th, .schedule-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        .schedule-table th { background: #f4f4f4; }
         
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         
         #paymentSection { display: none; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #28a745; margin-top: 15px; text-align: center; }
-        #qrImage { width: 150px; height: 150px; margin: 10px auto; border: 5px solid white; border-radius: 5px; }
-        
         #loader { text-align: center; color: #0056b3; padding: 20px; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-        <a href="../patient_dashboard/patient_dashboard.html" style="color:white; text-decoration:none; font-weight:bold;">⬅ Back</a>
+    <div class="header-top">
+        <a href="../index.html" style="color:white; text-decoration:none; font-weight:bold;">⬅ Home</a>
         <h2>Find & Book a Doctor</h2>
-        <div style="width: 50px;"></div> </div>
-</div>
-
-<div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search by name, speciality, or city..." onkeyup="filterDoctors()">
-    <button>Search</button>
-</div>
-
-<div id="loader">Fetching available doctors... ⏳</div>
-<div class="doctors-grid" id="doctorsContainer">
+        <div style="width: 50px;"></div>
     </div>
+    
+    <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="Search Doctor, Speciality, City...">
+        <select id="filterDay">
+            <option value="Any">Check Any Day</option>
+            <option value="mon">Monday</option>
+            <option value="tue">Tuesday</option>
+            <option value="wed">Wednesday</option>
+            <option value="thu">Thursday</option>
+            <option value="fri">Friday</option>
+            <option value="sat">Saturday</option>
+            <option value="sun">Sunday</option>
+        </select>
+        <input type="time" id="filterTime">
+        <button onclick="applyFilters()">Apply Filter</button>
+    </div>
+</div>
+
+<div id="loader">Fetching doctors... ⏳</div>
+<div class="doctors-grid" id="doctorsContainer"></div>
+
+<div class="modal-overlay" id="scheduleModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="scheduleDocName">Doctor Schedule</h3>
+            <button class="close-btn" onclick="closeSchedule()">&times;</button>
+        </div>
+        <div id="scheduleContent"></div>
+    </div>
+</div>
 
 <div class="modal-overlay" id="bookingModal">
     <div class="modal">
@@ -63,38 +97,23 @@
             <h3 id="modalDocName">Book Appointment</h3>
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
-        
         <form id="bookingForm">
-            <div class="form-group">
-                <label>Consultation Type</label>
-                <select id="consultType" onchange="togglePayment()" required>
-                    </select>
-            </div>
+            <div class="form-group"><label>Consultation Type</label><select id="consultType" onchange="togglePayment()" required></select></div>
+            <div class="form-group"><label>Select Date</label><input type="date" id="apptDate" required></div>
+            <div class="form-group"><label>Expected Time</label><input type="time" id="apptTime" required></div>
             
-            <div class="form-group">
-                <label>Select Date</label>
-                <input type="date" id="apptDate" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Expected Time</label>
-                <input type="time" id="apptTime" required>
-            </div>
-
             <div id="paymentSection">
                 <h4 style="margin: 0 0 10px; color: #155724;">Online Payment Required</h4>
-                <p style="margin: 0; font-size: 14px;">Scan QR code or use UPI ID to pay: <br><strong id="payUpiId"></strong></p>
+                <p style="margin: 0; font-size: 14px;">UPI ID: <strong id="payUpiId"></strong></p>
                 <p style="margin: 5px 0 15px; font-size: 18px; font-weight: bold; color: #d32f2f;">Amount: ₹<span id="payAmount"></span></p>
-                <img id="qrImage" src="" alt="QR Code">
-                
+                <img id="qrImage" src="" alt="QR Code" style="width:150px; height:150px; border: 5px solid white;">
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
-                    <label>Upload Payment Screenshot *</label>
-                    <input type="file" id="paymentScreenshot" accept="image/*">
+                    <label>Upload Payment Screenshot *</label><input type="file" id="paymentScreenshot" accept="image/*">
                 </div>
             </div>
 
-            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 20px;">Confirm Booking</button>
-            <div id="btnLoader" style="display:none; text-align:center; font-weight:bold; color:#0056b3; margin-top:15px;">Processing Booking... Please Wait ⏳</div>
+            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 15px;">Confirm Booking</button>
+            <div id="btnLoader" style="display:none; text-align:center; font-weight:bold; color:#0056b3; margin-top:15px;">Processing... ⏳</div>
         </form>
     </div>
 </div>

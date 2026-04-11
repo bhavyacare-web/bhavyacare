@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approval Pending - BhavyaCare</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 450px; }
+        h1 { color: #f39c12; margin-bottom: 10px; }
+        p { color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 25px; }
+        .btn { background-color: #0056b3; color: white; border: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.3s; }
+        .btn:hover { background-color: #004494; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⏳ Approval Pending</h1>
+    <p>Aapki profile details BhavyaCare team ke paas aa chuki hain. Humara admin panel jald hi aapki details verify karke aapko <b>Active</b> kar dega.</p>
+    <p>Verification pura hone ke baad aapka Dashboard open ho jayega.</p>
+    
+    <a href="#" onclick="logoutUser()" class="btn">Logout & Go to Home</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="../app.js"></script> </body>
+</html>

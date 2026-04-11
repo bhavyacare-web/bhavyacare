@@ -63,29 +63,38 @@ function renderTable(doctors) {
 }
 
 async function updateStatus(docId, newStatus) {
-    if (!confirm(`Are you sure you want to mark ${docId} as ${newStatus}?`)) return;
+    let reason = "";
     
-    // Temporary loader dikhane ke liye body ko dhundhla karna
+    if (newStatus === "Rejected") {
+        reason = prompt("Please enter the reason for rejection (This will be emailed to the doctor):");
+        if (reason === null || reason.trim() === "") {
+            alert("Action cancelled. Reason is mandatory for rejection!");
+            return;
+        }
+    } else {
+        if (!confirm(`Are you sure you want to mark ${docId} as ${newStatus}?`)) return;
+    }
+    
     document.body.style.opacity = "0.6";
 
     try {
         const payload = {
             action: "updateAdminDoctorStatus",
             doctor_id: docId,
-            status: newStatus
+            status: newStatus,
+            reason: reason // Frontend se reason bheja
         };
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
 
         const resData = await response.json();
         
         if (resData.status === "success") {
-            alert(resData.message);
-            fetchDoctors(); // Table wapas refresh karo updated data ke sath
+            alert("Success! " + resData.message);
+            fetchDoctors();
         } else {
             alert("Error: " + resData.message);
         }

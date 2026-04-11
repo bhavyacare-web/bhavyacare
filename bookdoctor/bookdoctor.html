@@ -12,20 +12,30 @@
         
         /* Advanced Filter Bar */
         .filter-bar { max-width: 1100px; margin: 15px auto 0; display: flex; gap: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
-        .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 150px; }
-        .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 140px; }
+        .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s;}
+        .filter-bar button:hover { background: #218838; }
         
         .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 15px; }
-        .doc-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; text-align: center; border: 1px solid #eaeaea; }
-        .doc-card img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #e9ecef; }
-        .doc-card h3 { color: #333; margin: 10px 0 5px; font-size: 20px; }
+        .doc-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; text-align: center; border: 1px solid #eaeaea; position: relative;}
         
-        /* Availability Badge */
-        .avail-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
-        .avail-yes { background: #d4edda; color: #155724; }
-        .avail-no { background: #f8d7da; color: #721c24; }
+        /* Profile Image */
+        .img-container { width: 100px; height: 100px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; border: 3px solid #0056b3; padding: 2px; }
+        .doc-card img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         
-        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #0056b3; }
+        .doc-card h3 { color: #333; margin: 5px 0; font-size: 20px; }
+        .doc-speciality { font-weight: bold; color: #e67e22; font-size: 14px; margin-bottom: 5px;}
+        .doc-exp { background: #fff3cd; color: #856404; display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; margin-bottom: 10px;}
+        
+        /* Availability & Type Badges */
+        .badges-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .avail-yes { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .avail-no { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .type-online { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+        .type-offline { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+        
+        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #0056b3; border: 1px dashed #ccc;}
         
         .action-btns { display: flex; gap: 10px; margin-top: 15px; }
         .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 10px; border-radius: 5px; flex: 1; cursor: pointer; font-weight: bold; font-size: 13px; }
@@ -35,18 +45,18 @@
 
         /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 25px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
+        .modal { background: white; width: 90%; max-width: 550px; border-radius: 10px; padding: 25px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
         
         /* Schedule Table in Modal */
-        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        .schedule-table th, .schedule-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
-        .schedule-table th { background: #f4f4f4; }
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .schedule-table th, .schedule-table td { padding: 10px 8px; border: 1px solid #ddd; text-align: center; }
+        .schedule-table th { background: #f4f4f4; color: #333;}
         
         .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px;}
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;}
         
         #paymentSection { display: none; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #28a745; margin-top: 15px; text-align: center; }
         #loader { text-align: center; color: #0056b3; padding: 20px; font-weight: bold; font-size: 18px; }
@@ -63,8 +73,15 @@
     
     <div class="filter-bar">
         <input type="text" id="searchInput" placeholder="Search Doctor, Speciality, City...">
+        
+        <select id="filterType">
+            <option value="Any">Consult Type: Any</option>
+            <option value="Offline">Clinic Visit</option>
+            <option value="Online">Online Video/Call</option>
+        </select>
+
         <select id="filterDay">
-            <option value="Any">Check Any Day</option>
+            <option value="Any">Day: Any</option>
             <option value="mon">Monday</option>
             <option value="tue">Tuesday</option>
             <option value="wed">Wednesday</option>
@@ -74,7 +91,7 @@
             <option value="sun">Sunday</option>
         </select>
         <input type="time" id="filterTime">
-        <button onclick="applyFilters()">Apply Filter</button>
+        <button onclick="applyFilters()">Search</button>
     </div>
 </div>
 
@@ -106,7 +123,7 @@
                 <h4 style="margin: 0 0 10px; color: #155724;">Online Payment Required</h4>
                 <p style="margin: 0; font-size: 14px;">UPI ID: <strong id="payUpiId"></strong></p>
                 <p style="margin: 5px 0 15px; font-size: 18px; font-weight: bold; color: #d32f2f;">Amount: ₹<span id="payAmount"></span></p>
-                <img id="qrImage" src="" alt="QR Code" style="width:150px; height:150px; border: 5px solid white;">
+                <img id="qrImage" src="" alt="QR Code" style="width:150px; height:150px; border: 5px solid white; border-radius: 8px;">
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label>Upload Payment Screenshot *</label><input type="file" id="paymentScreenshot" accept="image/*">
                 </div>

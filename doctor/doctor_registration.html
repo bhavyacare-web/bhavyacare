@@ -3,82 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Profile Setup - BhavyaCare</title>
+    <title>Doctor Registration - BhavyaCare</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #0056b3; text-align: center; }
-        label { font-weight: bold; margin-top: 15px; display: block; color: #333; }
-        input[type="text"], input[type="tel"], input[type="number"], select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        input[type="file"] { margin-top: 5px; }
-        .btn-submit { background-color: #28a745; color: white; padding: 12px; width: 100%; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; }
-        .btn-submit:hover { background-color: #218838; }
-        #loader { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        h2 { color: #0056b3; text-align: center; font-size: 28px; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+        
+        .section-title { font-size: 18px; color: #0056b3; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin: 30px 0 15px; font-weight: 600; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: 500; font-size: 14px; margin-bottom: 6px; display: block; color: #4a5568; }
+        input[type="text"], input[type="email"], input[type="number"], select, input[type="time"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: #0056b3; outline: none; box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
+        
+        .schedule-grid { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
+        .schedule-grid span { font-weight: bold; color: #2d3748; }
+        
+        .online-toggle { background: #ebf8ff; border: 1px solid #bee3f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        #onlineSection { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #bee3f8; }
+        
+        .file-upload { border: 2px dashed #cbd5e0; padding: 20px; text-align: center; border-radius: 8px; background: #fafafa; }
+        .file-upload input { margin-top: 10px; }
+        
+        .btn-submit { background-color: #28a745; color: white; padding: 14px; width: 100%; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 35px; transition: 0.3s; }
+        .btn-submit:hover { background-color: #218838; transform: translateY(-1px); }
+        #loader { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 20px; font-size: 16px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Doctor Profile Setup</h2>
-    <p style="text-align:center; color:#666;">Please complete your profile to start accepting appointments.</p>
+    <h2>Doctor Profile Registration</h2>
+    <p class="subtitle">Welcome to BhavyaCare! Please complete your profile to continue.</p>
 
-    <form id="doctorProfileForm">
-        <label>Full Name</label>
-        <input type="text" id="docName" readonly>
-
-        <label>Mobile Number</label>
-        <input type="tel" id="docPhone" readonly>
-
-        <label>Speciality (e.g. Cardiologist, Dermatologist)</label>
-        <input type="text" id="docSpeciality" required>
-
-        <label>Clinic Complete Address (City, Pincode)</label>
-        <input type="text" id="docAddress" required>
-
-        <label>Clinic Visit Fee (₹)</label>
-        <input type="number" id="offlineFee" required>
-
-        <label>Are you available for Online Consultation?</label>
-        <select id="onlineAvailable" onchange="toggleOnlineFields()">
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select>
-
-        <div id="onlineFields">
-            <label>Online Consultation Fee (₹)</label>
-            <input type="number" id="onlineFee" value="0">
-
-            <label>Your UPI ID (For online payments)</label>
-            <input type="text" id="upiId" placeholder="e.g. 9876543210@ybl">
+    <form id="docForm">
+        <div class="section-title">1. Personal Details</div>
+        <div class="grid-2">
+            <div class="form-group"><label>Doctor ID</label><input type="text" id="docId" readonly style="background:#edf2f7;"></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="docName" readonly style="background:#edf2f7;"></div>
+            <div class="form-group"><label>Email Address *</label><input type="email" id="docEmail" required></div>
+            <div class="form-group"><label>Speciality *</label><input type="text" id="speciality" placeholder="e.g. Cardiologist" required></div>
+            <div class="form-group"><label>Highest Qualification *</label><input type="text" id="qualification" placeholder="e.g. MBBS, MD" required></div>
+            <div class="form-group"><label>Years of Experience *</label><input type="number" id="experience" required></div>
         </div>
 
-        <label>Upload Medical Registration Document (PDF/Image)</label>
-        <input type="file" id="regDocument" accept="image/*,.pdf" required>
+        <div class="section-title">2. Clinic & Payment Details</div>
+        <div class="grid-2">
+            <div class="form-group"><label>Clinic Name *</label><input type="text" id="clinicName" required></div>
+            <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
+        </div>
+        <div class="grid-2">
+            <div class="form-group"><label>Complete Address *</label><input type="text" id="clinicAddress" required></div>
+            <div class="form-group"><label>Pincode *</label><input type="number" id="pincode" required></div>
+        </div>
+        <div class="grid-3">
+            <div class="form-group"><label>UPI ID (For Payments) *</label><input type="text" id="upiId" required></div>
+            <div class="form-group"><label>Offline Clinic Fee (₹) *</label><input type="number" id="offlineFee" required></div>
+            <div class="form-group"><label>Slot Duration (Mins) *</label>
+                <select id="slotDuration" required>
+                    <option value="15">15 Mins</option><option value="30">30 Mins</option>
+                    <option value="45">45 Mins</option><option value="60">60 Mins</option>
+                </select>
+            </div>
+        </div>
 
-        <label>Upload Your Profile Photo (Image)</label>
-        <input type="file" id="doctorImage" accept="image/*" required>
+        <div class="section-title">3. Offline Clinic Schedule (Fill at least 1 day)</div>
+        <p style="font-size:13px; color:#e53e3e; margin-top:-10px;">Leave blank if clinic is closed on that day.</p>
+        <div id="offlineSchedule">
+            <div class="schedule-grid"><span>Monday</span><input type="time" id="off_mon_in"><input type="time" id="off_mon_out"></div>
+            <div class="schedule-grid"><span>Tuesday</span><input type="time" id="off_tue_in"><input type="time" id="off_tue_out"></div>
+            <div class="schedule-grid"><span>Wednesday</span><input type="time" id="off_wed_in"><input type="time" id="off_wed_out"></div>
+            <div class="schedule-grid"><span>Thursday</span><input type="time" id="off_thu_in"><input type="time" id="off_thu_out"></div>
+            <div class="schedule-grid"><span>Friday</span><input type="time" id="off_fri_in"><input type="time" id="off_fri_out"></div>
+            <div class="schedule-grid"><span>Saturday</span><input type="time" id="off_sat_in"><input type="time" id="off_sat_out"></div>
+            <div class="schedule-grid"><span>Sunday</span><input type="time" id="off_sun_in"><input type="time" id="off_sun_out"></div>
+        </div>
 
-        <button type="button" class="btn-submit" onclick="submitProfile()">Submit Profile</button>
-        <div id="loader">Uploading Details & Files... Please wait ⏳</div>
+        <div class="section-title">4. Online Video/Call Consultation</div>
+        <div class="online-toggle">
+            <label>Are you available for Online Consultation?</label>
+            <select id="onlineAvailable" onchange="toggleOnline()">
+                <option value="No">No, Offline Only</option>
+                <option value="Yes">Yes, Available Online</option>
+            </select>
+
+            <div id="onlineSection">
+                <div class="form-group" style="width:50%;"><label>Online Consultation Fee (₹) *</label><input type="number" id="onlineFee"></div>
+                <label style="margin-top:15px; color:#0056b3;">Online Availability Schedule (Fill at least 1 day)</label>
+                <div class="schedule-grid"><span>Monday</span><input type="time" id="on_mon_in"><input type="time" id="on_mon_out"></div>
+                <div class="schedule-grid"><span>Tuesday</span><input type="time" id="on_tue_in"><input type="time" id="on_tue_out"></div>
+                <div class="schedule-grid"><span>Wednesday</span><input type="time" id="on_wed_in"><input type="time" id="on_wed_out"></div>
+                <div class="schedule-grid"><span>Thursday</span><input type="time" id="on_thu_in"><input type="time" id="on_thu_out"></div>
+                <div class="schedule-grid"><span>Friday</span><input type="time" id="on_fri_in"><input type="time" id="on_fri_out"></div>
+                <div class="schedule-grid"><span>Saturday</span><input type="time" id="on_sat_in"><input type="time" id="on_sat_out"></div>
+                <div class="schedule-grid"><span>Sunday</span><input type="time" id="on_sun_in"><input type="time" id="on_sun_out"></div>
+            </div>
+        </div>
+
+        <div class="section-title">5. Documents Upload</div>
+        <div class="grid-2">
+            <div class="file-upload">
+                <label>Medical Registration Document (PDF/Image) *</label>
+                <input type="file" id="regDoc" accept="image/*,.pdf" required>
+            </div>
+            <div class="file-upload">
+                <label>Doctor Profile Photo (Image) *</label>
+                <input type="file" id="profilePic" accept="image/*" required>
+            </div>
+        </div>
+
+        <button type="button" class="btn-submit" onclick="submitForm()">Submit Registration</button>
+        <div id="loader">Processing data & Uploading files to Drive... Please wait ⏳</div>
     </form>
 </div>
 
 <script>
-    // URL aapki wahi purani honi chahiye jo app.js me hai
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-    // Page load hote hi Name aur Phone auto-fill karein
     window.onload = function() {
+        const uid = localStorage.getItem("bhavya_user_id");
+        if(!uid) { alert("Session Expired. Please login."); window.location.href="../index.html"; return; }
+        document.getElementById('docId').value = uid;
         document.getElementById('docName').value = localStorage.getItem("bhavya_name") || "";
-        document.getElementById('docPhone').value = localStorage.getItem("bhavya_mobile") || "";
     };
 
-    function toggleOnlineFields() {
-        var status = document.getElementById("onlineAvailable").value;
-        document.getElementById("onlineFields").style.display = (status === "Yes") ? "block" : "none";
+    function toggleOnline() {
+        const val = document.getElementById("onlineAvailable").value;
+        document.getElementById("onlineSection").style.display = (val === "Yes") ? "block" : "none";
     }
 
-    // Helper: File ko Base64 text me convert karne ke liye (Taki script tak bheji ja sake)
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -88,59 +144,94 @@
         });
     }
 
-    async function submitProfile() {
-        const docId = localStorage.getItem("bhavya_user_id");
-        if (!docId) { alert("Session expired! Please login again."); return; }
+    // Check if at least one day has both opening and closing times
+    function checkSchedule(type) {
+        const days = ['mon','tue','wed','thu','fri','sat','sun'];
+        for(let d of days) {
+            let inTime = document.getElementById(`${type}_${d}_in`).value;
+            let outTime = document.getElementById(`${type}_${d}_out`).value;
+            if(inTime && outTime) return true;
+        }
+        return false;
+    }
 
-        const docRegFile = document.getElementById('regDocument').files[0];
-        const docImgFile = document.getElementById('doctorImage').files[0];
+    async function submitForm() {
+        const form = document.getElementById('docForm');
+        if(!form.checkValidity()) { form.reportValidity(); return; }
 
-        if(!docRegFile || !docImgFile || !document.getElementById('docSpeciality').value) {
-            alert("Please fill all required fields and upload both files."); return;
+        if(!checkSchedule('off')) {
+            alert("Please fill opening and closing time for at least ONE Offline day."); return;
+        }
+
+        const isOnline = document.getElementById('onlineAvailable').value === "Yes";
+        if(isOnline) {
+            if(!document.getElementById('onlineFee').value) { alert("Please enter Online Fee."); return; }
+            if(!checkSchedule('on')) { alert("Please fill opening and closing time for at least ONE Online day."); return; }
         }
 
         document.getElementById('loader').style.display = "block";
         document.querySelector('.btn-submit').style.display = "none";
 
         try {
-            // Convert files to Base64
-            const regBase64 = await getBase64(docRegFile);
-            const imgBase64 = await getBase64(docImgFile);
+            const docFile = document.getElementById('regDoc').files[0];
+            const imgFile = document.getElementById('profilePic').files[0];
+            const docB64 = await getBase64(docFile);
+            const imgB64 = await getBase64(imgFile);
 
             const payload = {
-                action: "submitDoctorProfile",
-                doctor_id: docId,
-                name: document.getElementById('docName').value,
-                phone: document.getElementById('docPhone').value,
-                speciality: document.getElementById('docSpeciality').value,
-                clinic_address: document.getElementById('docAddress').value,
-                offline_fee: document.getElementById('offlineFee').value,
-                online_fee: document.getElementById('onlineFee').value || "0",
-                upi_id: document.getElementById('upiId').value || "N/A",
-                online_available: document.getElementById('onlineAvailable').value,
-                reg_document_base64: regBase64,
-                reg_document_mime: docRegFile.type,
-                doctor_image_base64: imgBase64,
-                doctor_image_mime: docImgFile.type
+                action: "submitDoctorRegistration",
+                data: {
+                    doctor_id: document.getElementById('docId').value,
+                    doctor_name: document.getElementById('docName').value,
+                    email: document.getElementById('docEmail').value,
+                    speciality: document.getElementById('speciality').value,
+                    qualification: document.getElementById('qualification').value,
+                    experience: document.getElementById('experience').value,
+                    clinic_name: document.getElementById('clinicName').value,
+                    clinic_address: document.getElementById('clinicAddress').value,
+                    city: document.getElementById('city').value,
+                    pincode: document.getElementById('pincode').value,
+                    upi_id: document.getElementById('upiId').value,
+                    offline_fee: document.getElementById('offlineFee').value,
+                    slot_duration: document.getElementById('slotDuration').value,
+                    // Offline Times
+                    off_mon_in: document.getElementById('off_mon_in').value, off_mon_out: document.getElementById('off_mon_out').value,
+                    off_tue_in: document.getElementById('off_tue_in').value, off_tue_out: document.getElementById('off_tue_out').value,
+                    off_wed_in: document.getElementById('off_wed_in').value, off_wed_out: document.getElementById('off_wed_out').value,
+                    off_thu_in: document.getElementById('off_thu_in').value, off_thu_out: document.getElementById('off_thu_out').value,
+                    off_fri_in: document.getElementById('off_fri_in').value, off_fri_out: document.getElementById('off_fri_out').value,
+                    off_sat_in: document.getElementById('off_sat_in').value, off_sat_out: document.getElementById('off_sat_out').value,
+                    off_sun_in: document.getElementById('off_sun_in').value, off_sun_out: document.getElementById('off_sun_out').value,
+                    // Online 
+                    online_available: document.getElementById('onlineAvailable').value,
+                    online_fee: document.getElementById('onlineFee').value || "",
+                    on_mon_in: document.getElementById('on_mon_in').value, on_mon_out: document.getElementById('on_mon_out').value,
+                    on_tue_in: document.getElementById('on_tue_in').value, on_tue_out: document.getElementById('on_tue_out').value,
+                    on_wed_in: document.getElementById('on_wed_in').value, on_wed_out: document.getElementById('on_wed_out').value,
+                    on_thu_in: document.getElementById('on_thu_in').value, on_thu_out: document.getElementById('on_thu_out').value,
+                    on_fri_in: document.getElementById('on_fri_in').value, on_fri_out: document.getElementById('on_fri_out').value,
+                    on_sat_in: document.getElementById('on_sat_in').value, on_sat_out: document.getElementById('on_sat_out').value,
+                    on_sun_in: document.getElementById('on_sun_in').value, on_sun_out: document.getElementById('on_sun_out').value,
+                    // Files
+                    doc_base64: docB64, doc_mime: docFile.type,
+                    img_base64: imgB64, img_mime: imgFile.type
+                }
             };
 
             const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             });
 
-            const result = await response.json();
-
-            if (result.status === "success") {
-                alert("Profile Submitted Successfully! Awaiting Admin Approval.");
-                // Submit hone ke baad aap inhe dashboard par bhej sakte hain
-                // window.location.href = "doctor_dashboard.html";
+            const resData = await response.json();
+            if (resData.status === "success") {
+                alert("Profile Registered Successfully! Awaiting Admin Approval.");
+                window.location.href = "../index.html"; // Ya dashboard par bhej de
             } else {
-                alert("Error: " + result.message);
+                alert("Error: " + resData.message);
             }
         } catch(e) {
-            alert("Submission failed. Try again.");
+            alert("Network Error. Please try again.");
             console.error(e);
         } finally {
             document.getElementById('loader').style.display = "none";
@@ -148,6 +239,5 @@
         }
     }
 </script>
-
 </body>
 </html>

@@ -106,13 +106,13 @@ async function checkLoginAndFetchData() {
             }
 
             fetchWalletHistory(userId);
-            // Parallel Fetch Both Data
+            // Parallel Fetch
             await Promise.all([
                 fetchPatientBookings(userId),
                 fetchPatientConsults(userId)
             ]);
             
-            // Mix & Update Recent Activity
+            // Mix Activity
             updateRecentActivityMixed();
 
         } else {
@@ -465,7 +465,7 @@ async function submitCancelOrder() {
 }
 
 // ===============================================
-// 🌟 NEW: DOCTOR CONSULTS LOGIC 🌟
+// 🌟 DOCTOR CONSULTS & REVIEW LOGIC 🌟
 // ===============================================
 async function fetchPatientConsults(userId) {
     const container = document.getElementById("patientConsultsContainer");
@@ -479,6 +479,7 @@ async function fetchPatientConsults(userId) {
         if (result.status === "success") {
             globalConsultsData = result.data;
             renderConsultCards(globalConsultsData);
+            renderPrescriptionsTab(globalConsultsData); // New call for Prescriptions Tab
         } else {
             if(container) container.innerHTML = `<p style="color:red; text-align:center;">Failed to load consults: ${result.message}</p>`;
         }
@@ -507,11 +508,12 @@ function renderConsultCards(consults) {
 
         let typeBadge = c.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
 
-        // Jitsi Join Call Logic (Same as Doctor Dashboard)
         let joinBtnHtml = "";
+        let postConsultHtml = "";
+
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             const now = new Date();
-            let cleanDate = c.appt_date.replace(/\//g, '-'); // Ensure DD-MM-YYYY
+            let cleanDate = c.appt_date.replace(/\//g, '-'); 
             const [day, month, year] = cleanDate.split("-");
             let [timePart, modifier] = c.appt_time.split(" ");
             let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
@@ -523,12 +525,19 @@ function renderConsultCards(consults) {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // Buffer: 15 min before, 45 min after
             if (diffInMinutes >= -15 && diffInMinutes <= 45) {
                 joinBtnHtml = `<button onclick="joinJitsiCall('${c.meet_link}')" style="background:#fd7e14; color:white; border:none; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 1.5s infinite;">📹 Join Video Call Now</button>`;
             } else if (diffInMinutes < -15) {
                 joinBtnHtml = `<div style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Call link will activate 15 mins before time.</div>`;
             }
+        } 
+        else if (c.appt_status === "Completed") {
+            // Review and View Rx Buttons
+            let rxHtml = c.prescription_link ? `<button onclick="window.open('${c.prescription_link}', '_blank')" style="flex:1; background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-file-prescription"></i> View Rx</button>` : '';
+            let revHtml = c.review ? `<button disabled style="flex:1; background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:8px; border-radius:6px; font-weight:bold; font-size:12px;"><i class="fas fa-star"></i> Reviewed</button>` 
+                                   : `<button onclick="openReviewModal('${c.appt_id}')" style="flex:1; background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-star"></i> Rate Doctor</button>`;
+            
+            postConsultHtml = `<div style="display:flex; gap:10px; margin-top:10px;">${rxHtml}${revHtml}</div>`;
         }
 
         html += `
@@ -547,16 +556,96 @@ function renderConsultCards(consults) {
             
             <div style="display:flex; justify-content:space-between; font-size:12px; color:#555; background:#f8f9fa; padding:10px; border-radius:8px;">
                 <div><strong>Type:</strong> ${typeBadge}</div>
-                <div><strong>Fee Paid:</strong> ₹${c.total_mrp}</div>
+                <div><strong>Fee Paid:</strong> ₹${c.fee_paid} <del style="font-size:10px; color:#999; margin-left:3px;">₹${c.total_mrp}</del></div>
             </div>
             ${joinBtnHtml}
+            ${postConsultHtml}
         </div>`;
     });
 
     container.innerHTML = html;
 }
 
-// Jitsi Video Call Window
+// 🌟 REVIEW SYSTEM LOGIC 🌟
+let currentRating = 0;
+function openReviewModal(apptId) {
+    document.getElementById("reviewApptIdHidden").value = apptId;
+    document.getElementById("reviewCommentInput").value = "";
+    setRating(0); // Reset stars
+    document.getElementById("review-modal").style.display = "block";
+}
+
+function setRating(stars) {
+    currentRating = stars;
+    const icons = document.getElementById("starRatingContainer").children;
+    for(let i=0; i<icons.length; i++) {
+        if(i < stars) {
+            icons[i].classList.add("active");
+            icons[i].style.color = "#ffc107";
+        } else {
+            icons[i].classList.remove("active");
+            icons[i].style.color = "#ddd";
+        }
+    }
+}
+
+async function submitReview() {
+    const apptId = document.getElementById("reviewApptIdHidden").value;
+    const comment = document.getElementById("reviewCommentInput").value.trim();
+    const btn = document.getElementById("btnSubmitReview");
+
+    if(currentRating === 0) { alert("Please select a star rating."); return; }
+
+    btn.innerText = "Submitting..."; btn.disabled = true;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "submitConsultReview", 
+                user_id: localStorage.getItem("bhavya_user_id"), 
+                appt_id: apptId, 
+                rating: currentRating, 
+                comment: comment 
+            })
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Thank you for your feedback!");
+            document.getElementById("review-modal").style.display = "none";
+            fetchPatientConsults(localStorage.getItem("bhavya_user_id")); 
+        } else { alert("Error: " + result.message); }
+    } catch(e) { alert("Failed to submit review."); } 
+    finally { btn.innerText = "Submit Review"; btn.disabled = false; }
+}
+
+// 🌟 PRESCRIPTIONS TAB RENDER LOGIC 🌟
+function renderPrescriptionsTab(consults) {
+    const container = document.getElementById("prescriptionsTabContainer");
+    if (!container) return;
+
+    let rxConsults = consults.filter(c => c.prescription_link && c.prescription_link !== "");
+
+    if (rxConsults.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-file-excel" style="font-size: 40px; margin-bottom: 15px;"></i><p>No prescriptions available yet.</p></div>`;
+        return;
+    }
+
+    let html = "";
+    rxConsults.forEach(c => {
+        html += `
+        <div class="list-item" style="border-bottom:1px solid #eee; padding:15px 0;">
+            <div style="flex:1;">
+                <h5 style="margin:0 0 5px 0; color:#333; font-size:15px;"><i class="fas fa-file-medical" style="color:#0056b3;"></i> Dr. ${c.doctor_name}</h5>
+                <p style="margin:0; font-size:12px; color:#777;"><i class="far fa-calendar-alt"></i> ${c.appt_date} | ${c.consult_type}</p>
+            </div>
+            <button onclick="window.open('${c.prescription_link}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.05);">Download</button>
+        </div>`;
+    });
+
+    container.innerHTML = `<div style="background:#fff; padding:0 15px; border-radius:12px;">${html}</div>`;
+}
+
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";
@@ -578,7 +667,6 @@ function joinJitsiCall(link) {
 function updateRecentActivityMixed() {
     let allActivity = [];
 
-    // Push Lab Bookings
     globalBookingsData.forEach(bk => {
         let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
         let isComplete = (safeStatus.includes("complete") || safeStatus === "completed");
@@ -598,14 +686,13 @@ function updateRecentActivityMixed() {
 
         allActivity.push({
             type: 'lab', id: bk.order_id, title: testSummary,
-            dateTime: bk.date + " | " + bk.slot.split('-')[0], // Show Date and Time
+            dateTime: bk.date + " | " + bk.slot.split('-')[0], 
             badgeClass: badgeClass, statusText: statusText,
             icon: '<i class="fas fa-microscope" style="color:var(--primary); font-size:18px;"></i>',
             timestamp: new Date(bk.date.split("-").reverse().join("-")).getTime() || 0
         });
     });
 
-    // Push Doctor Consults
     globalConsultsData.forEach(c => {
         let safeStatus = (c.appt_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
@@ -622,7 +709,6 @@ function updateRecentActivityMixed() {
         });
     });
 
-    // Sort combined array (Newest first based on parsed date)
     allActivity.sort((a, b) => b.timestamp - a.timestamp);
 
     let recentHtml = "";

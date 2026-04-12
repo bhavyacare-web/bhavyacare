@@ -231,7 +231,6 @@
         <div id="bookings" class="tab-content">
             <div class="data-box">
                 <div class="section-title">My Lab Tests</div>
-                
                 <div class="filter-bar">
                     <div class="search-wrapper">
                         <i class="fas fa-search search-icon"></i>
@@ -242,7 +241,6 @@
                         <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
                     </div>
                 </div>
-
                 <div id="patientBookingsContainer">
                     <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
                         <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
@@ -398,6 +396,47 @@
             <textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..." style="resize: none;"></textarea>
         </div>
         <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
+    </div>
+
+    <div id="cancel-consult-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('cancel-consult-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #ffebee; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-ban" style="font-size: 26px; color: #d32f2f;"></i></div>
+            <h3 style="margin:0; color: var(--text-main);">Cancel Consultation</h3>
+            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Choose your refund method.</p>
+        </div>
+        <input type="hidden" id="cancelConsultIdHidden">
+
+        <div class="form-group">
+            <textarea id="cancelConsultReason" class="input-box" rows="2" placeholder="Reason for cancellation..." style="resize: none;"></textarea>
+        </div>
+
+        <div style="margin-top:15px; text-align:left;">
+            <label style="font-size:13px; font-weight:bold; color:#555;">Refund Method:</label>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <input type="radio" name="refundMethod" value="Wallet" checked onchange="toggleRefundMethod()">
+                    <div>
+                        <strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong>
+                        <div style="font-size:11px; color:#777;">Refund added immediately.</div>
+                    </div>
+                </label>
+                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <input type="radio" name="refundMethod" value="Bank" onchange="toggleRefundMethod()">
+                    <div>
+                        <strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong>
+                        <div style="font-size:11px; color:#777;">Processed on 1st of next month.</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div id="bankRefundSection" style="display:none; margin-top:15px; background:#fff8e1; padding:10px; border-radius:8px; border:1px solid #ffeeba;">
+            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code. Admin will manually verify and refund on the 1st.</p>
+            <input type="file" id="refundQrInput" class="input-box" accept="image/*" style="font-size:12px; background:white;">
+        </div>
+
+        <button id="btnConfirmConsultCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelConsult()">Confirm Cancellation</button>
     </div>
 
     <script src="patient_dashboard.js"></script>

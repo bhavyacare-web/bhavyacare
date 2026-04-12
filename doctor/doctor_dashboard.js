@@ -1,6 +1,6 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-let allDoctorAppointments = []; // Master list for filtering
+let allDoctorAppointments = []; 
 
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
@@ -15,7 +15,6 @@ window.onload = function() {
 
     document.getElementById("displayDocName").innerText = docName;
     
-    // Set default dates for Ledger (Current Month)
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     document.getElementById("ledgerFrom").value = firstDay.toISOString().split('T')[0];
@@ -76,7 +75,6 @@ async function fetchDoctorAppointments(doctorId) {
         document.getElementById("apptTable").style.display = "table";
 
         if (resData.status === "success") {
-            // Clean Dates and Reverse for latest first
             allDoctorAppointments = resData.data.map(appt => {
                 appt.cleanDate = formatDate(appt.appt_date);
                 appt.cleanTime = formatTime(appt.appt_time);
@@ -84,7 +82,7 @@ async function fetchDoctorAppointments(doctorId) {
             }).reverse();
             
             renderAppointments(allDoctorAppointments);
-            calculateSettlement(); // Auto calculate initial ledger
+            calculateSettlement(); 
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -93,7 +91,6 @@ async function fetchDoctorAppointments(doctorId) {
     }
 }
 
-// 🌟 SEARCH & FILTER LOGIC 🌟
 function filterAppointments() {
     const term = document.getElementById("searchAppt").value.toLowerCase();
     const status = document.getElementById("filterStatus").value;
@@ -154,8 +151,9 @@ function renderAppointments(appointments) {
                 actionHTML += `<button class="btn btn-join" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
             }
 
+            // 🌟 NAYA: Yahan 'complete' button dabane par handleCompleteAction chalega 🌟
             actionHTML += `
-                <button class="btn btn-complete" onclick="updateApptStatus('${appt.appt_id}', 'complete')">✔️ Complete</button>
+                <button class="btn btn-complete" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Complete</button>
                 <button class="btn btn-noshow" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ No-Show</button>
             `;
         } 
@@ -184,9 +182,112 @@ function renderAppointments(appointments) {
     document.getElementById("statEarnings").innerText = totalEarnings;
 }
 
-// 🌟 SETTLEMENT LEDGER LOGIC 🌟
+// 🌟 NAYA: Handle Complete Button Clicks 🌟
+function handleCompleteAction(apptId, consultType) {
+    if (consultType === "Online") {
+        // Online hai toh pehle modal kholo
+        document.getElementById("completeApptIdHidden").value = apptId;
+        document.getElementById("prescriptionFileInput").value = ""; 
+        document.getElementById("prescription-modal").style.display = "block";
+    } else {
+        // Clinic Visit hai toh seedha complete kardo bina file ke
+        updateApptStatus(apptId, 'complete');
+    }
+}
+
+// 🌟 NAYA: File ko Base64 me convert karne wala function 🌟
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]); 
+        reader.onerror = error => reject(error);
+    });
+}
+
+// 🌟 NAYA: Prescription Upload karke complete mark karna 🌟
+async function submitPrescriptionAndComplete() {
+    const apptId = document.getElementById("completeApptIdHidden").value;
+    const fileInput = document.getElementById("prescriptionFileInput");
+    const btn = document.getElementById("btnUploadPrescription");
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a prescription file to complete the online consultation.");
+        return;
+    }
+    
+    if(!confirm("Are you sure you want to mark this as COMPLETED?")) return;
+
+    const file = fileInput.files[0];
+    btn.innerText = "Uploading & Completing...";
+    btn.disabled = true;
+    
+    try {
+        const base64Data = await getBase64(file);
+        const mimeType = file.type;
+        
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("apptTable").style.display = "none";
+        document.getElementById("prescription-modal").style.display = "none";
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "processAppointmentAction", 
+                appt_id: apptId, 
+                appt_action: "complete",
+                prescription_base64: base64Data,
+                prescription_mime: mimeType
+            })
+        });
+        
+        const resData = await response.json();
+        if(resData.status === "success") {
+            alert("Prescription uploaded and appointment completed!");
+            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
+        } else {
+            alert("Error: " + resData.message);
+            location.reload();
+        }
+    } catch(e) {
+        alert("Failed to upload prescription. Check network.");
+        location.reload();
+    } finally {
+        btn.innerText = "Upload & Mark Completed";
+        btn.disabled = false;
+    }
+}
+
+
+// Normal Status Update (Approve, No-Show, Ya Offline ka Complete)
+async function updateApptStatus(apptId, actionType) {
+    if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
+
+    try {
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("apptTable").style.display = "none";
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: actionType })
+        });
+        
+        const resData = await response.json();
+        if(resData.status === "success") {
+            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
+        } else {
+            alert("Error: " + resData.message);
+            location.reload();
+        }
+    } catch (e) {
+        alert("Failed to update status.");
+        location.reload();
+    }
+}
+
+// Settlement Ledger Logic
 function parseDateDDMMYYYY(dateStr) {
-    const parts = dateStr.split("-"); // DD-MM-YYYY
+    const parts = dateStr.split("-"); 
     return new Date(parts[2], parts[1] - 1, parts[0]);
 }
 
@@ -198,7 +299,7 @@ function calculateSettlement() {
     
     const fromDate = new Date(fromStr);
     const toDate = new Date(toStr);
-    toDate.setHours(23, 59, 59); // Include full end day
+    toDate.setHours(23, 59, 59); 
 
     const tbody = document.getElementById("ledgerTableBody");
     tbody.innerHTML = "";
@@ -216,7 +317,7 @@ function calculateSettlement() {
                 count++;
                 let mrp = parseInt(appt.total_mrp) || 0;
                 let earning = parseInt(appt.doctor_earning) || 0;
-                let platformDeduction = mrp - earning; // Commission + Discount given
+                let platformDeduction = mrp - earning; 
 
                 sumCollected += mrp;
                 sumFee += platformDeduction;
@@ -269,14 +370,12 @@ function downloadLedgerCSV() {
         let cols = row.querySelectorAll("td");
         let rowData = [];
         cols.forEach(col => {
-            // Remove the ₹ and -₹ signs for cleaner excel data
             let text = col.innerText.replace(/₹/g, '').replace(/-/g, '').trim();
             rowData.push(text);
         });
         csvContent += rowData.join(",") + "\n";
     });
     
-    // Add Total Row
     csvContent += `GRAND TOTAL,,,${document.getElementById("footCollected").innerText},${document.getElementById("footFee").innerText},${document.getElementById("footNet").innerText}\n`;
 
     const encodedUri = encodeURI(csvContent);
@@ -288,33 +387,6 @@ function downloadLedgerCSV() {
     document.body.removeChild(link);
 }
 
-// Backend Status Update
-async function updateApptStatus(apptId, actionType) {
-    if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
-
-    try {
-        document.getElementById("loader").style.display = "block";
-        document.getElementById("apptTable").style.display = "none";
-
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: actionType })
-        });
-        
-        const resData = await response.json();
-        if(resData.status === "success") {
-            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
-        } else {
-            alert("Error: " + resData.message);
-            location.reload();
-        }
-    } catch (e) {
-        alert("Failed to update status.");
-        location.reload();
-    }
-}
-
-// Jitsi Video Call
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";

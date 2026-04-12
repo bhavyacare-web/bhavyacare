@@ -47,7 +47,7 @@
         
         .dashboard-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
             gap: 25px; 
         }
         
@@ -74,8 +74,8 @@
         .icon-wrapper i { font-size: 35px; color: var(--primary); transition: 0.3s; }
         .dash-card:hover .icon-wrapper i { color: white; }
         
-        .card-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0; }
-        .card-desc { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+        .card-title { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0; }
+        .card-desc { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -96,25 +96,25 @@
         <div class="dashboard-grid">
             
             <a href="patient_admin/patient_admin.html" class="dash-card">
-                <div class="icon-wrapper">
-                    <i class="fas fa-users-cog"></i>
-                </div>
+                <div class="icon-wrapper"><i class="fas fa-users-cog"></i></div>
                 <h3 class="card-title">Patient Management</h3>
                 <p class="card-desc">Manage registered patients, VIP applications, lab bookings, and upload PDF reports.</p>
             </a>
 
             <a href="Labadmin/Labadmin.html" class="dash-card">
-                <div class="icon-wrapper">
-                    <i class="fas fa-flask"></i>
-                </div>
+                <div class="icon-wrapper"><i class="fas fa-flask"></i></div>
                 <h3 class="card-title">Lab Management</h3>
                 <p class="card-desc">Add or remove lab partners, update test catalogs, and manage availability.</p>
             </a>
             
+            <a href="doctoradmin/doctoradmin.html" class="dash-card">
+                <div class="icon-wrapper"><i class="fas fa-user-md"></i></div>
+                <h3 class="card-title">Doctor Management</h3>
+                <p class="card-desc">Approve doctor profiles, track patient consults, manage refunds and view settlement ledgers.</p>
+            </a>
+            
             <a href="#" class="dash-card" onclick="alert('Settings panel will be connected here soon!')">
-                <div class="icon-wrapper">
-                    <i class="fas fa-sliders-h"></i>
-                </div>
+                <div class="icon-wrapper"><i class="fas fa-sliders-h"></i></div>
                 <h3 class="card-title">System Settings</h3>
                 <p class="card-desc">Update app rules, referral bonuses, free collection limits, and wallet policies.</p>
             </a>

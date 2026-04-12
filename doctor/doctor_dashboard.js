@@ -127,9 +127,10 @@ async function updateApptStatus(apptId, actionType) {
         document.getElementById("loader").style.display = "block";
         document.getElementById("apptTable").style.display = "none";
 
+        // 🌟 YAHAN CHANGE KIYA HAI (appt_action use kiya hai) 🌟
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, action: actionType })
+            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: actionType })
         });
         
         const resData = await response.json();

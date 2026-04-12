@@ -1,5 +1,7 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
+let allDoctorAppointments = []; // Master list for filtering
+
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
     const docName = localStorage.getItem("bhavya_name");
@@ -12,10 +14,28 @@ window.onload = function() {
     }
 
     document.getElementById("displayDocName").innerText = docName;
+    
+    // Set default dates for Ledger (Current Month)
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById("ledgerFrom").value = firstDay.toISOString().split('T')[0];
+    document.getElementById("ledgerTo").value = today.toISOString().split('T')[0];
+
     fetchDoctorAppointments(docId);
 };
 
-// 🌟 HELPER: Clean Google Sheet Date
+function switchTab(tabId) {
+    document.getElementById('sec-appt').classList.remove('active');
+    document.getElementById('sec-ledger').classList.remove('active');
+    document.getElementById('tab-appt').classList.remove('active');
+    document.getElementById('tab-ledger').classList.remove('active');
+
+    document.getElementById('sec-' + tabId).classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
+    
+    document.getElementById('pageTitle').innerText = tabId === 'appt' ? 'Manage Appointments' : 'Settlement Ledger';
+}
+
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
     let d = new Date(rawDate);
@@ -23,12 +43,11 @@ function formatDate(rawDate) {
         let day = d.getDate().toString().padStart(2, '0');
         let month = (d.getMonth() + 1).toString().padStart(2, '0');
         let year = d.getFullYear();
-        return `${day}-${month}-${year}`; // Output: 12-04-2026
+        return `${day}-${month}-${year}`; 
     }
     return rawDate;
 }
 
-// 🌟 HELPER: Clean Google Sheet Time
 function formatTime(rawTime) {
     if (!rawTime) return "N/A";
     let timeStr = String(rawTime).trim();
@@ -39,7 +58,7 @@ function formatTime(rawTime) {
             let m = d.getMinutes();
             let ampm = h >= 12 ? 'PM' : 'AM';
             h = h % 12 || 12;
-            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`; // Output: 10:20 AM
+            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`;
         }
     }
     return timeStr;
@@ -57,13 +76,35 @@ async function fetchDoctorAppointments(doctorId) {
         document.getElementById("apptTable").style.display = "table";
 
         if (resData.status === "success") {
-            renderAppointments(resData.data);
+            // Clean Dates and Reverse for latest first
+            allDoctorAppointments = resData.data.map(appt => {
+                appt.cleanDate = formatDate(appt.appt_date);
+                appt.cleanTime = formatTime(appt.appt_time);
+                return appt;
+            }).reverse();
+            
+            renderAppointments(allDoctorAppointments);
+            calculateSettlement(); // Auto calculate initial ledger
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
     } catch(e) {
         document.getElementById("loader").innerText = "Failed to load data. Please refresh.";
     }
+}
+
+// 🌟 SEARCH & FILTER LOGIC 🌟
+function filterAppointments() {
+    const term = document.getElementById("searchAppt").value.toLowerCase();
+    const status = document.getElementById("filterStatus").value;
+    
+    const filtered = allDoctorAppointments.filter(appt => {
+        const matchStatus = (status === "All" || appt.appt_status === status);
+        const matchSearch = (appt.patient_id.toLowerCase().includes(term) || appt.cleanDate.includes(term));
+        return matchStatus && matchSearch;
+    });
+    
+    renderAppointments(filtered);
 }
 
 function renderAppointments(appointments) {
@@ -74,17 +115,15 @@ function renderAppointments(appointments) {
     let approvedCount = 0;
     let totalEarnings = 0;
 
-    appointments.reverse().forEach(appt => {
-        // --- 🌟 CLEAN DATE & TIME ---
-        let cleanDate = formatDate(appt.appt_date);
-        let cleanTime = formatTime(appt.appt_time);
+    if(appointments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No appointments found.</td></tr>`;
+    }
 
-        // Statistics
+    appointments.forEach(appt => {
         if (appt.appt_status === "Pending") pendingCount++;
         if (appt.appt_status === "Approved") approvedCount++;
         if (appt.appt_status === "Completed") totalEarnings += parseInt(appt.doctor_earning || 0);
 
-        // Status Badges
         let statusBadge = "";
         if(appt.appt_status === "Pending") statusBadge = `<span class="badge bg-warning">Pending</span>`;
         else if(appt.appt_status === "Approved") statusBadge = `<span class="badge bg-info">Approved</span>`;
@@ -93,18 +132,15 @@ function renderAppointments(appointments) {
 
         let typeBadge = appt.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
 
-        // --- ACTION BUTTONS & BUFFER LOGIC ---
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
             actionHTML = `<button class="btn btn-approve" onclick="updateApptStatus('${appt.appt_id}', 'approve')">✅ Approve</button>`;
         } 
         else if (appt.appt_status === "Approved") {
-            // Buffer Time Logic (Using Cleaned Date/Time)
             const now = new Date();
-            const [day, month, year] = cleanDate.split("-");
-            
-            let [timePart, modifier] = cleanTime.split(" ");
+            const [day, month, year] = appt.cleanDate.split("-");
+            let [timePart, modifier] = appt.cleanTime.split(" ");
             let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
             
             hours = parseInt(hours, 10);
@@ -114,7 +150,6 @@ function renderAppointments(appointments) {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // Jitsi Call Button (15 min pehle se 45 min baad tak)
             if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
                 actionHTML += `<button class="btn btn-join" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
             }
@@ -132,7 +167,7 @@ function renderAppointments(appointments) {
 
         const row = `
             <tr>
-                <td><strong>${cleanDate}</strong><br><span style="color:#666; font-size:12px;">${cleanTime}</span></td>
+                <td><strong>${appt.cleanDate}</strong><br><span style="color:#666; font-size:12px;">${appt.cleanTime}</span></td>
                 <td>${typeBadge}</td>
                 <td>${appt.patient_id}</td>
                 <td>${statusBadge}</td>
@@ -149,6 +184,111 @@ function renderAppointments(appointments) {
     document.getElementById("statEarnings").innerText = totalEarnings;
 }
 
+// 🌟 SETTLEMENT LEDGER LOGIC 🌟
+function parseDateDDMMYYYY(dateStr) {
+    const parts = dateStr.split("-"); // DD-MM-YYYY
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+}
+
+function calculateSettlement() {
+    const fromStr = document.getElementById("ledgerFrom").value;
+    const toStr = document.getElementById("ledgerTo").value;
+    
+    if(!fromStr || !toStr) return;
+    
+    const fromDate = new Date(fromStr);
+    const toDate = new Date(toStr);
+    toDate.setHours(23, 59, 59); // Include full end day
+
+    const tbody = document.getElementById("ledgerTableBody");
+    tbody.innerHTML = "";
+    
+    let sumCollected = 0;
+    let sumFee = 0;
+    let sumNet = 0;
+    let count = 0;
+
+    allDoctorAppointments.forEach(appt => {
+        if (appt.appt_status === "Completed") {
+            const apptDateObj = parseDateDDMMYYYY(appt.cleanDate);
+            
+            if (apptDateObj >= fromDate && apptDateObj <= toDate) {
+                count++;
+                let mrp = parseInt(appt.total_mrp) || 0;
+                let earning = parseInt(appt.doctor_earning) || 0;
+                let platformDeduction = mrp - earning; // Commission + Discount given
+
+                sumCollected += mrp;
+                sumFee += platformDeduction;
+                sumNet += earning;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${appt.cleanDate}</td>
+                        <td><strong style="color:#0056b3;">${appt.appt_id}</strong></td>
+                        <td>${appt.consult_type}</td>
+                        <td>₹${mrp}</td>
+                        <td style="color:#dc3545;">-₹${platformDeduction}</td>
+                        <td style="color:#28a745; font-weight:bold;">₹${earning}</td>
+                    </tr>
+                `;
+            }
+        }
+    });
+
+    if(count === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">No completed appointments found for selected dates.</td></tr>`;
+        document.getElementById("ledgerTableFoot").style.display = "none";
+    } else {
+        document.getElementById("ledgerTableFoot").style.display = "table-footer-group";
+        document.getElementById("footCollected").innerText = sumCollected;
+        document.getElementById("footFee").innerText = sumFee;
+        document.getElementById("footNet").innerText = sumNet;
+    }
+
+    document.getElementById("ledgTotal").innerText = sumCollected;
+    document.getElementById("ledgFee").innerText = sumFee;
+    document.getElementById("ledgNet").innerText = sumNet;
+}
+
+function downloadLedgerCSV() {
+    const fromStr = document.getElementById("ledgerFrom").value;
+    const toStr = document.getElementById("ledgerTo").value;
+    const tbody = document.getElementById("ledgerTableBody");
+    
+    if (tbody.rows.length === 0 || tbody.innerHTML.includes("No completed appointments")) {
+        alert("No data available to download.");
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Date,Appointment ID,Consult Type,Collected (MRP),BhavyaCare Fee,Doctor Earning\n";
+
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(row => {
+        let cols = row.querySelectorAll("td");
+        let rowData = [];
+        cols.forEach(col => {
+            // Remove the ₹ and -₹ signs for cleaner excel data
+            let text = col.innerText.replace(/₹/g, '').replace(/-/g, '').trim();
+            rowData.push(text);
+        });
+        csvContent += rowData.join(",") + "\n";
+    });
+    
+    // Add Total Row
+    csvContent += `GRAND TOTAL,,,${document.getElementById("footCollected").innerText},${document.getElementById("footFee").innerText},${document.getElementById("footNet").innerText}\n`;
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Settlement_Report_${fromStr}_to_${toStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Backend Status Update
 async function updateApptStatus(apptId, actionType) {
     if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
 
@@ -174,6 +314,7 @@ async function updateApptStatus(apptId, actionType) {
     }
 }
 
+// Jitsi Video Call
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";

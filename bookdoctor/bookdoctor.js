@@ -51,7 +51,6 @@ function convertTo24Hour(timeData) {
         let m = parseInt(parts[1], 10);
         return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}`;
     }
-
     return timeString;
 }
 
@@ -65,7 +64,7 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
-// 🌟 HELPER: Discount Calculator
+// 🌟 HELPER: Discount Calculator (10% Off)
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
@@ -82,7 +81,6 @@ async function fetchDoctors() {
         document.getElementById("loader").style.display = "none";
         
         if(resData.status === "success") {
-            // Yahan time mapping add kar di gayi hai (time cleaner call ho raha hai)
             allDoctors = resData.data.map(doc => {
                 const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
                 days.forEach(d => {
@@ -177,7 +175,6 @@ function applyFilters() {
     });
 }
 
-// 🌟 ERROR FIXED HERE 🌟
 function openSchedule(index) {
     const doc = allDoctors[index];
     document.getElementById("scheduleDocName").innerText = "Timings - Dr. " + doc.doctor_name;
@@ -377,4 +374,49 @@ async function submitBooking() {
         document.getElementById("submitBtn").style.display = "block";
         document.getElementById("btnLoader").style.display = "none";
     }
+}
+
+// ==========================================
+// 🌟 DASHBOARD & JITSI LOGIC (Aage kaam aayega) 🌟
+// ==========================================
+
+function checkBufferAndRenderButton(appt) {
+    const now = new Date();
+    
+    const [day, month, year] = appt.appt_date.split("-");
+    let [time, modifier] = appt.appt_time.split(" ");
+    let [hours, minutes] = time.split(":");
+    if (hours === "12") hours = "00";
+    if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+    
+    const apptDateTime = new Date(year, month - 1, day, hours, minutes);
+    const diffInMinutes = (now - apptDateTime) / (1000 * 60);
+    
+    let html = "";
+    // Show 15 mins before to 45 mins after
+    if (diffInMinutes >= -15 && diffInMinutes <= 45 && appt.appt_status === "Approved") {
+        html += `<button onclick="joinJitsiCall('${appt.meet_link}')" style="background:#28a745; color:white; padding:8px 15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🟢 Join Video Call</button>`;
+    } 
+    
+    // Patient communication if late
+    if (diffInMinutes > 10 && appt.appt_status === "Approved") {
+        html += `<p style="color:#d32f2f; font-size:13px; margin-top:5px; font-weight:bold;">Doctor late? <a href="tel:8950112467" style="color:#0056b3;">Call Clinic</a></p>`;
+    }
+    return html;
+}
+
+// Jitsi Call inside Website (Iframe)
+function joinJitsiCall(link) {
+    const modal = document.createElement('div');
+    modal.id = "jitsi-modal";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
+    
+    modal.innerHTML = `
+        <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
+            <button onclick="document.getElementById('jitsi-modal').remove()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+        </div>
+        <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
+    `;
+    document.body.appendChild(modal);
 }

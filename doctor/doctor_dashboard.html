@@ -13,7 +13,7 @@
         .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-header h2 { margin: 0; font-size: 20px; }
         .sidebar-menu { flex-grow: 1; padding: 20px 0; list-style: none; margin: 0; }
-        .sidebar-menu li { padding: 15px 20px; cursor: pointer; transition: 0.3s; font-size: 16px; border-left: 4px solid transparent; }
+        .sidebar-menu li { padding: 15px 20px; cursor: pointer; transition: 0.3s; font-size: 16px; border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px;}
         .sidebar-menu li:hover, .sidebar-menu li.active { background: rgba(255,255,255,0.1); border-left-color: #28a745; }
         .logout-btn { padding: 15px 20px; background: #dc3545; color: white; text-align: center; cursor: pointer; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); }
         .logout-btn:hover { background: #c82333; }
@@ -41,7 +41,7 @@
         /* Table Area */
         .table-container { background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f8fafc; padding: 15px; color: #555; font-size: 14px; border-bottom: 2px solid #eee; }
+        th { background: #f8fafc; padding: 15px; color: #555; font-size: 13px; text-transform: uppercase; border-bottom: 2px solid #eee; }
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
         tr:hover { background: #fdfdfd; }
 
@@ -58,7 +58,7 @@
         .btn-join { background: #fd7e14; animation: pulse 1.5s infinite; }
         .btn-download { background: #343a40; padding: 10px 20px; font-size: 14px; margin-top: 15px; }
 
-        /* Modal Styles (NEW) */
+        /* Modal Styles */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
@@ -80,8 +80,9 @@
             <p style="font-size: 12px; margin: 5px 0 0; color: #cce5ff;">Doctor Panel</p>
         </div>
         <ul class="sidebar-menu">
-            <li id="tab-appt" class="active" onclick="switchTab('appt')">📅 Appointments</li>
-            <li id="tab-ledger" onclick="switchTab('ledger')">🧾 Settlement Ledger</li>
+            <li id="tab-appt" class="active" onclick="switchTab('appt')"><i class="fas fa-calendar-check"></i> Appointments</li>
+            <li id="tab-ledger" onclick="switchTab('ledger')"><i class="fas fa-file-invoice-dollar"></i> Settlement Ledger</li>
+            <li id="tab-reviews" onclick="switchTab('reviews')"><i class="fas fa-star"></i> Patient Reviews</li>
         </ul>
         <div class="logout-btn" onclick="logoutDoctor()">🚪 Logout</div>
     </div>
@@ -144,13 +145,16 @@
 
             <div class="stats-grid" style="margin-top: 20px;">
                 <div class="stat-card" style="border-color: #333;">
-                    <h3>Total Collection (MRP)</h3><p>₹<span id="ledgTotal">0</span></p>
+                    <h3>Total Collected</h3><p>₹<span id="ledgTotal">0</span></p>
+                </div>
+                <div class="stat-card" style="border-color: #0056b3; background: #f4f8fc;">
+                    <h3 style="color:#0056b3;">BhavyaCare Fee</h3><p style="color:#0056b3;">-₹<span id="ledgFee">0</span></p>
                 </div>
                 <div class="stat-card" style="border-color: #dc3545; background: #fff5f5;">
-                    <h3 style="color:#dc3545;">BhavyaCare Deductions</h3><p style="color:#dc3545;">-₹<span id="ledgFee">0</span></p>
+                    <h3 style="color:#dc3545;">Refunds Deducted</h3><p style="color:#dc3545;">-₹<span id="ledgRefund">0</span></p>
                 </div>
                 <div class="stat-card" style="border-color: #28a745; background: #f6fff8;">
-                    <h3 style="color:#28a745;">Net Doctor Earning</h3><p style="color:#28a745;">₹<span id="ledgNet">0</span></p>
+                    <h3 style="color:#28a745;">Net Payout</h3><p style="color:#28a745;">₹<span id="ledgNet">0</span></p>
                 </div>
             </div>
 
@@ -158,22 +162,29 @@
                 <table id="ledgerTable">
                     <thead>
                         <tr>
-                            <th>Date</th><th>Appt ID</th><th>Consult Type</th>
-                            <th>Collected (MRP)</th><th>BhavyaCare Fee</th><th>Doctor Earning</th>
+                            <th>Date</th><th>Appt ID</th><th>Type</th>
+                            <th>Collected</th><th>Fee (10%)</th><th>Refunded</th><th>Net Earning</th>
                         </tr>
                     </thead>
                     <tbody id="ledgerTableBody">
-                        <tr><td colspan="6" style="text-align:center; color:#888;">Select dates and click Calculate to view ledger.</td></tr>
+                        <tr><td colspan="7" style="text-align:center; color:#888;">Select dates and click Calculate to view ledger.</td></tr>
                     </tbody>
                     <tfoot id="ledgerTableFoot" style="font-weight:bold; background:#f8fafc; display:none;">
                         <tr>
                             <td colspan="3" style="text-align:right;">GRAND TOTAL:</td>
                             <td>₹<span id="footCollected">0</span></td>
-                            <td style="color:#dc3545;">-₹<span id="footFee">0</span></td>
+                            <td style="color:#0056b3;">-₹<span id="footFee">0</span></td>
+                            <td style="color:#dc3545;">-₹<span id="footRefund">0</span></td>
                             <td style="color:#28a745;">₹<span id="footNet">0</span></td>
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+        </div>
+
+        <div id="sec-reviews" class="dashboard-section">
+            <div id="reviewsContainer">
+                <div style="text-align: center; padding: 40px; color: #888;">No reviews yet.</div>
             </div>
         </div>
 

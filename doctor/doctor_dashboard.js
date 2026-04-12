@@ -35,16 +35,25 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = tabId === 'appt' ? 'Manage Appointments' : 'Settlement Ledger';
 }
 
+// 🌟 FIX: Bulletproof Date Formatter 🌟
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
-    let d = new Date(rawDate);
+    let dateStr = String(rawDate).trim();
+    
+    // Agar date pehle se hi DD-MM-YYYY format me hai
+    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+        return dateStr;
+    }
+    
+    // Agar Google Sheet ka lamba time format hai
+    let d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
         let day = d.getDate().toString().padStart(2, '0');
         let month = (d.getMonth() + 1).toString().padStart(2, '0');
         let year = d.getFullYear();
         return `${day}-${month}-${year}`; 
     }
-    return rawDate;
+    return dateStr;
 }
 
 function formatTime(rawTime) {
@@ -82,7 +91,7 @@ async function fetchDoctorAppointments(doctorId) {
             }).reverse();
             
             renderAppointments(allDoctorAppointments);
-            calculateSettlement(); 
+            calculateSettlement(); // 🌟 Auto-calculate ledger after fetching
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -151,12 +160,22 @@ function renderAppointments(appointments) {
                 actionHTML += `<button class="btn btn-join" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
             }
 
-            // 🌟 NAYA: Yahan 'complete' button dabane par handleCompleteAction chalega 🌟
             actionHTML += `
                 <button class="btn btn-complete" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Complete</button>
                 <button class="btn btn-noshow" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ No-Show</button>
             `;
         } 
+        // 🌟 NAYA: PRESCRIPTION DIKHANE KA LOGIC (COMPLETE HONE PAR) 🌟
+        else if (appt.appt_status === "Completed") {
+            actionHTML = `<span style="color:#28a745; font-weight:bold;"><i class="fas fa-check-circle"></i> Done</span>`;
+            
+            if (appt.prescription_link && appt.prescription_link !== "") {
+                actionHTML += `<br><a href="${appt.prescription_link}" target="_blank" style="display:inline-block; margin-top:8px; background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold; border: 1px solid #c8e6c9;">📄 View Rx</a>`;
+            }
+        }
+        else if (appt.appt_status === "Patient No-Show") {
+            actionHTML = `<span style="color:#dc3545; font-weight:bold;"><i class="fas fa-times-circle"></i> No-Show</span>`;
+        }
         else {
             actionHTML = `<span style="color:#888; font-style:italic;">No Actions Required</span>`; 
         }
@@ -182,20 +201,16 @@ function renderAppointments(appointments) {
     document.getElementById("statEarnings").innerText = totalEarnings;
 }
 
-// 🌟 NAYA: Handle Complete Button Clicks 🌟
 function handleCompleteAction(apptId, consultType) {
     if (consultType === "Online") {
-        // Online hai toh pehle modal kholo
         document.getElementById("completeApptIdHidden").value = apptId;
         document.getElementById("prescriptionFileInput").value = ""; 
         document.getElementById("prescription-modal").style.display = "block";
     } else {
-        // Clinic Visit hai toh seedha complete kardo bina file ke
         updateApptStatus(apptId, 'complete');
     }
 }
 
-// 🌟 NAYA: File ko Base64 me convert karne wala function 🌟
 function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -205,7 +220,6 @@ function getBase64(file) {
     });
 }
 
-// 🌟 NAYA: Prescription Upload karke complete mark karna 🌟
 async function submitPrescriptionAndComplete() {
     const apptId = document.getElementById("completeApptIdHidden").value;
     const fileInput = document.getElementById("prescriptionFileInput");
@@ -258,8 +272,6 @@ async function submitPrescriptionAndComplete() {
     }
 }
 
-
-// Normal Status Update (Approve, No-Show, Ya Offline ka Complete)
 async function updateApptStatus(apptId, actionType) {
     if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
 
@@ -285,10 +297,14 @@ async function updateApptStatus(apptId, actionType) {
     }
 }
 
-// Settlement Ledger Logic
+// 🌟 FIX: LEDGER DATE PARSER 🌟
 function parseDateDDMMYYYY(dateStr) {
+    if (!dateStr || dateStr === "N/A") return new Date(0);
     const parts = dateStr.split("-"); 
-    return new Date(parts[2], parts[1] - 1, parts[0]);
+    if(parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
 }
 
 function calculateSettlement() {
@@ -298,8 +314,10 @@ function calculateSettlement() {
     if(!fromStr || !toStr) return;
     
     const fromDate = new Date(fromStr);
+    fromDate.setHours(0,0,0,0);
+    
     const toDate = new Date(toStr);
-    toDate.setHours(23, 59, 59); 
+    toDate.setHours(23, 59, 59, 999); 
 
     const tbody = document.getElementById("ledgerTableBody");
     tbody.innerHTML = "";

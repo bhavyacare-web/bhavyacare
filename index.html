@@ -30,6 +30,22 @@
         .hero-section p { color: #555; font-size: 18px; max-width: 600px; margin: 0 auto 30px auto; line-height: 1.6; }
         
         .action-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        
+        /* Button Styles for smooth hover effects */
+        .btn-home {
+            text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; 
+            font-weight: bold; display: inline-flex; align-items: center; gap: 10px; color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-lab { background: linear-gradient(135deg, #0056b3 0%, #007bff 100%); box-shadow: 0 6px 15px rgba(0, 86, 179, 0.3); }
+        .btn-lab:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0, 86, 179, 0.5); }
+        
+        /* 🌟 NAYA DOCTOR BUTTON STYLE 🌟 */
+        .btn-doctor { background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%); box-shadow: 0 6px 15px rgba(23, 162, 184, 0.3); }
+        .btn-doctor:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(23, 162, 184, 0.5); }
+
+        .btn-vip { background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); }
+        .btn-vip:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(245, 124, 0, 0.6); }
     </style>
 </head>
 <body>
@@ -41,12 +57,16 @@
         <p>Aapki health, humari zimmedari. Book tests, consult doctors, and get medicines easily right at your doorstep.</p>
         
         <div class="action-buttons">
-            <a href="#" onclick="handleBookClick(event)" style="background: linear-gradient(135deg, #0056b3 0%, #007bff 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 15px rgba(0, 86, 179, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(0, 86, 179, 0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 6px 15px rgba(0, 86, 179, 0.3)';">
+            <a href="#" onclick="handleBookClick(event)" class="btn-home btn-lab">
                 <i class="fas fa-microscope"></i> Book Lab Test
             </a>
             
-            <a href="#" onclick="handleVipClick(event)" style="background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(245, 124, 0, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 6px 15px rgba(245, 124, 0, 0.4)';">
-                <i class="fas fa-crown"></i> Upgrade to VIP Family Plan
+            <a href="bookdoctor/bookdoctor.html" class="btn-home btn-doctor">
+                <i class="fas fa-user-md"></i> Consult Doctor
+            </a>
+            
+            <a href="#" onclick="handleVipClick(event)" class="btn-home btn-vip">
+                <i class="fas fa-crown"></i> Upgrade to VIP
             </a>
         </div>
     </div>

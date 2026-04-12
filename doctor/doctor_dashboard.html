@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor Dashboard | BhavyaCare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background-color: #f4f7f6; display: flex; height: 100vh; overflow: hidden; }
         
@@ -56,6 +57,11 @@
         .btn-approve { background: #28a745; } .btn-complete { background: #0056b3; } .btn-noshow { background: #dc3545; }
         .btn-join { background: #fd7e14; animation: pulse 1.5s infinite; }
         .btn-download { background: #343a40; padding: 10px 20px; font-size: 14px; margin-top: 15px; }
+
+        /* Modal Styles (NEW) */
+        .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
+        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+        .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); }
@@ -171,6 +177,21 @@
             </div>
         </div>
 
+    </div>
+
+    <div id="prescription-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('prescription-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-file-prescription" style="font-size: 26px; color: #2e7d32;"></i></div>
+            <h3 style="margin:0; color: #333;">Upload Prescription</h3>
+            <p style="font-size:13px; color:#777; margin-top:5px;">Mandatory to complete Online Consults</p>
+        </div>
+        <input type="hidden" id="completeApptIdHidden">
+        <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Select Prescription File (Image/PDF) *</label>
+            <input type="file" id="prescriptionFileInput" class="input-box" accept=".pdf, image/*">
+        </div>
+        <button id="btnUploadPrescription" style="background:#28a745; width:100%; color:white; border:none; margin-top:10px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPrescriptionAndComplete()">Upload & Mark Completed</button>
     </div>
 
     <script src="doctor_dashboard.js"></script>

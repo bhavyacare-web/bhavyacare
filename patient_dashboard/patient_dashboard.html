@@ -36,12 +36,12 @@
         .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
         
         /* Quick Actions */
-        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; }
-        .action-btn-main { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .action-btn-main { flex: 1; min-width: 30%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .action-btn-main:active { transform: scale(0.96); }
         .btn-book { background: var(--primary); color: white; }
         .btn-consult { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
-        .btn-upload { background: #e6f0fa; color: var(--primary); border: 1px solid var(--primary); }
+        .btn-rx { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
         /* Dashboard Cards */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
@@ -108,6 +108,10 @@
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
 
+        /* Review Stars */
+        .star-rating { display: flex; justify-content: center; gap: 8px; font-size: 30px; color: #ddd; margin: 15px 0; cursor: pointer; }
+        .star-rating i:hover, .star-rating i.active { color: #ffc107; }
+
         /* Desktop Adjustments */
         @media (min-width: 769px) {
             body { flex-direction: row; }
@@ -130,7 +134,7 @@
         <a href="#" class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
         <a href="#" class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Lab Tests</span></a>
         <a href="#" class="nav-item" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> <span>Consults</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('reports')"><i class="fas fa-file-medical-alt"></i> <span>Reports</span></a>
+        <a href="#" class="nav-item" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> <span>Rx</span></a>
         <a href="#" class="nav-item" onclick="switchTab('profile')"><i class="fas fa-user"></i> <span>My Info</span></a>
         <a href="#" class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
     </nav>
@@ -182,8 +186,8 @@
                 <button class="action-btn-main btn-consult" onclick="switchTab('consults')">
                     <i class="fas fa-user-md"></i> Dr Consult
                 </button>
-                <button class="action-btn-main btn-upload" onclick="alert('Prescription upload module coming soon!')">
-                    <i class="fas fa-file-upload"></i> Upload Rx
+                <button class="action-btn-main btn-rx" onclick="switchTab('prescriptions')">
+                    <i class="fas fa-file-prescription"></i> Prescriptions
                 </button>
             </div>
 
@@ -255,6 +259,18 @@
                     <div style="text-align: center; padding: 50px 20px; color: #2e7d32;">
                         <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
                         <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your consults...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="prescriptions" class="tab-content">
+            <div class="data-box">
+                <div class="section-title">My Prescriptions</div>
+                <div id="prescriptionsTabContainer">
+                    <div style="text-align: center; padding: 50px 20px; color: #856404;">
+                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p style="color: #888; font-size: 14px; font-weight: bold;">Loading prescriptions...</p>
                     </div>
                 </div>
             </div>
@@ -359,6 +375,29 @@
             <textarea id="cancelReasonInput" class="input-box" rows="3" placeholder="Enter cancellation reason..." style="resize: none;"></textarea>
         </div>
         <button id="btnConfirmCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelOrder()">Confirm Cancellation</button>
+    </div>
+
+    <div id="review-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('review-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-star" style="font-size: 26px; color: #ffc107;"></i></div>
+            <h3 style="margin:0; color: var(--text-main);">Rate Doctor</h3>
+            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">How was your consultation experience?</p>
+        </div>
+        <input type="hidden" id="reviewApptIdHidden">
+        
+        <div class="star-rating" id="starRatingContainer">
+            <i class="fas fa-star" onclick="setRating(1)"></i>
+            <i class="fas fa-star" onclick="setRating(2)"></i>
+            <i class="fas fa-star" onclick="setRating(3)"></i>
+            <i class="fas fa-star" onclick="setRating(4)"></i>
+            <i class="fas fa-star" onclick="setRating(5)"></i>
+        </div>
+        
+        <div class="form-group">
+            <textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..." style="resize: none;"></textarea>
+        </div>
+        <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
     </div>
 
     <script src="patient_dashboard.js"></script>

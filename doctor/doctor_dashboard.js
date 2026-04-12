@@ -15,10 +15,18 @@ window.onload = function() {
 
     document.getElementById("displayDocName").innerText = docName;
     
+    // 🌟 TIMEZONE BUG FIX & AUTO-MONTH SETTER 🌟
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById("ledgerFrom").value = firstDay.toISOString().split('T')[0];
-    document.getElementById("ledgerTo").value = today.toISOString().split('T')[0];
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Mahine ka aakhri din (e.g. 30 April)
+    
+    // Exact YYYY-MM-DD format banane ka function taaki timezone gadbad na kare
+    const formatForInput = (d) => {
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+    };
+
+    document.getElementById("ledgerFrom").value = formatForInput(firstDay);
+    document.getElementById("ledgerTo").value = formatForInput(lastDay); // Ab ye 30-Apr-2026 set hoga
 
     fetchDoctorAppointments(docId);
 };
@@ -35,17 +43,14 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = tabId === 'appt' ? 'Manage Appointments' : 'Settlement Ledger';
 }
 
-// 🌟 FIX: Bulletproof Date Formatter 🌟
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
     let dateStr = String(rawDate).trim();
     
-    // Agar date pehle se hi DD-MM-YYYY format me hai
     if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
         return dateStr;
     }
     
-    // Agar Google Sheet ka lamba time format hai
     let d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
         let day = d.getDate().toString().padStart(2, '0');
@@ -91,7 +96,7 @@ async function fetchDoctorAppointments(doctorId) {
             }).reverse();
             
             renderAppointments(allDoctorAppointments);
-            calculateSettlement(); // 🌟 Auto-calculate ledger after fetching
+            calculateSettlement(); 
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -165,7 +170,6 @@ function renderAppointments(appointments) {
                 <button class="btn btn-noshow" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ No-Show</button>
             `;
         } 
-        // 🌟 NAYA: PRESCRIPTION DIKHANE KA LOGIC (COMPLETE HONE PAR) 🌟
         else if (appt.appt_status === "Completed") {
             actionHTML = `<span style="color:#28a745; font-weight:bold;"><i class="fas fa-check-circle"></i> Done</span>`;
             
@@ -297,7 +301,6 @@ async function updateApptStatus(apptId, actionType) {
     }
 }
 
-// 🌟 FIX: LEDGER DATE PARSER 🌟
 function parseDateDDMMYYYY(dateStr) {
     if (!dateStr || dateStr === "N/A") return new Date(0);
     const parts = dateStr.split("-"); 

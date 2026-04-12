@@ -5,6 +5,16 @@ let globalConsultsData = [];
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
+// Base64 Converter (Used for multiple files including QR upload)
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+}
+
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
     if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
@@ -479,7 +489,7 @@ async function fetchPatientConsults(userId) {
         if (result.status === "success") {
             globalConsultsData = result.data;
             renderConsultCards(globalConsultsData);
-            renderPrescriptionsTab(globalConsultsData); // New call for Prescriptions Tab
+            renderPrescriptionsTab(globalConsultsData); 
         } else {
             if(container) container.innerHTML = `<p style="color:red; text-align:center;">Failed to load consults: ${result.message}</p>`;
         }
@@ -504,12 +514,18 @@ function renderConsultCards(consults) {
         
         if (safeStatus === "approved") { badgeClass = "status-primary"; statusText = "Approved"; }
         else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; }
-        else if (safeStatus.includes("no-show") || safeStatus.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
+        else if (safeStatus.includes("no-show") || safeStatus.includes("cancel") || safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
         let typeBadge = c.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
 
         let joinBtnHtml = "";
         let postConsultHtml = "";
+        let cancelBtnHtml = "";
+
+        // CANCEL BUTTON LOGIC
+        if (safeStatus === "pending" || safeStatus === "approved") {
+            cancelBtnHtml = `<button onclick="openConsultCancelModal('${c.appt_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Appointment</button>`;
+        }
 
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             const now = new Date();
@@ -532,7 +548,6 @@ function renderConsultCards(consults) {
             }
         } 
         else if (c.appt_status === "Completed") {
-            // Review and View Rx Buttons
             let rxHtml = c.prescription_link ? `<button onclick="window.open('${c.prescription_link}', '_blank')" style="flex:1; background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-file-prescription"></i> View Rx</button>` : '';
             let revHtml = c.review ? `<button disabled style="flex:1; background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:8px; border-radius:6px; font-weight:bold; font-size:12px;"><i class="fas fa-star"></i> Reviewed</button>` 
                                    : `<button onclick="openReviewModal('${c.appt_id}')" style="flex:1; background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-star"></i> Rate Doctor</button>`;
@@ -560,10 +575,94 @@ function renderConsultCards(consults) {
             </div>
             ${joinBtnHtml}
             ${postConsultHtml}
+            ${cancelBtnHtml}
         </div>`;
     });
 
     container.innerHTML = html;
+}
+
+// 🌟 DOCTOR CONSULT CANCEL & REFUND LOGIC 🌟
+function openConsultCancelModal(apptId) {
+    document.getElementById("cancelConsultIdHidden").value = apptId;
+    document.getElementById("cancelConsultReason").value = "";
+    document.getElementById("refundQrInput").value = "";
+    
+    // Default to Wallet
+    document.querySelector('input[name="refundMethod"][value="Wallet"]').checked = true;
+    toggleRefundMethod();
+    
+    document.getElementById("cancel-consult-modal").style.display = "block";
+}
+
+function toggleRefundMethod() {
+    const method = document.querySelector('input[name="refundMethod"]:checked').value;
+    const bankSection = document.getElementById("bankRefundSection");
+    if (method === "Bank") {
+        bankSection.style.display = "block";
+    } else {
+        bankSection.style.display = "none";
+    }
+}
+
+async function submitCancelConsult() {
+    const apptId = document.getElementById("cancelConsultIdHidden").value;
+    const reason = document.getElementById("cancelConsultReason").value.trim();
+    const method = document.querySelector('input[name="refundMethod"]:checked').value;
+    const qrInput = document.getElementById("refundQrInput");
+    const btn = document.getElementById("btnConfirmConsultCancel");
+
+    if (!reason) { alert("Please provide a reason for cancellation."); return; }
+
+    let qrBase64 = "";
+    let qrMime = "";
+
+    if (method === "Bank") {
+        if (!qrInput.files || qrInput.files.length === 0) {
+            alert("Please upload your UPI QR Code for the bank refund.");
+            return;
+        }
+        const file = qrInput.files[0];
+        try {
+            qrBase64 = await getBase64(file);
+            qrMime = file.type;
+        } catch(e) {
+            alert("Failed to process QR image."); return;
+        }
+    }
+
+    btn.innerText = "Processing..."; btn.disabled = true;
+
+    try {
+        const payload = {
+            action: "cancelDoctorConsult",
+            user_id: localStorage.getItem("bhavya_user_id"),
+            appt_id: apptId,
+            cancel_reason: reason,
+            refund_choice: method,
+            qr_base64: qrBase64,
+            qr_mime: qrMime
+        };
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Appointment cancelled successfully. Refund method: " + method);
+            document.getElementById("cancel-consult-modal").style.display = "none";
+            fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
+            checkLoginAndFetchData(); // Sync everything including Wallet Balance
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch(e) {
+        alert("Network error.");
+    } finally {
+        btn.innerText = "Confirm Cancellation"; btn.disabled = false;
+    }
 }
 
 // 🌟 REVIEW SYSTEM LOGIC 🌟
@@ -571,7 +670,7 @@ let currentRating = 0;
 function openReviewModal(apptId) {
     document.getElementById("reviewApptIdHidden").value = apptId;
     document.getElementById("reviewCommentInput").value = "";
-    setRating(0); // Reset stars
+    setRating(0); 
     document.getElementById("review-modal").style.display = "block";
 }
 
@@ -698,7 +797,7 @@ function updateRecentActivityMixed() {
         let badgeClass = "status-warning"; let statusText = "Pending";
         if (safeStatus === "approved") { badgeClass = "status-primary"; statusText = "Approved"; }
         else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; }
-        else if (safeStatus.includes("no-show") || safeStatus.includes("cancel")) { badgeClass = "status-danger"; statusText = "Cancelled"; }
+        else if (safeStatus.includes("no-show") || safeStatus.includes("cancel") || safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
         allActivity.push({
             type: 'doctor', id: c.appt_id, title: "Dr. " + c.doctor_name,

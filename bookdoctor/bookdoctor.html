@@ -46,14 +46,12 @@
         .type-online { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
         .type-offline { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
         
-        /* Fees section in pill shape */
         .fees { margin: 5px 0 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px;}
         .fee-box { flex: 1; background: #f8fafc; padding: 8px 5px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
         .fee-box span.title { color:#64748b; font-size:10px; font-weight:800; text-transform: uppercase; margin-bottom: 2px;}
         .fee-box span.discount-price { color: #28a745; font-size: 15px; font-weight: 800; margin-left: 2px;}
         .fee-box del { color:#a0aec0; font-size:11px;}
         
-        /* Rounded Buttons */
         .action-btns { display: flex; gap: 10px; margin-top: auto; }
         .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 10px; border-radius: 24px; flex: 1; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s;}
         .btn-schedule:hover { background: #cbd5e1; }
@@ -77,7 +75,6 @@
         .form-group input:focus, .form-group select:focus { border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
         .time-info { font-size: 13px; color: #28a745; margin-top: 8px; font-weight: bold; display: none; background: #d4edda; padding: 8px; border-radius: 5px; border-left: 4px solid #28a745;}
         
-        /* RADIO BUTTONS FOR CONSULT TYPE */
         .consult-type-group { display: flex; gap: 10px; }
         .consult-type-group input[type="radio"] { display: none; }
         .consult-type-group label { flex: 1; text-align: center; padding: 12px 10px; border: 2px solid #cbd5e0; border-radius: 8px; font-weight: bold; color: #4a5568; cursor: pointer; transition: 0.3s; background: #f8fafc; font-size: 14px;}
@@ -86,7 +83,11 @@
         #paymentSection { display: none; background: #f0fdf4; padding: 20px; border-radius: 10px; border: 2px dashed #4ade80; margin-top: 15px; text-align: center; }
         #loader { text-align: center; color: #0056b3; padding: 40px; font-weight: bold; font-size: 18px; }
 
-        /* 🌟 LOGIN POPUP STYLES 🌟 */
+        /* 🌟 NAYA: DIRECT UPI BUTTON STYLES 🌟 */
+        .upi-pay-btn { display: inline-block; background-color: #28a745; color: white; padding: 14px 25px; border-radius: 30px; text-decoration: none; font-size: 16px; font-weight: bold; margin-bottom: 15px; width: 80%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: 0.3s; }
+        .upi-pay-btn:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4); }
+
+        /* LOGIN POPUP STYLES */
         #login-section { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 9999px rgba(0,0,0,0.6); border-radius: 12px; text-align: center; z-index: 9999; }
         #login-section h3 { color: #333; margin-bottom: 20px; font-size: 22px; }
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; box-sizing: border-box;}
@@ -95,6 +96,7 @@
         @media (max-width: 600px) {
             .doctors-grid { grid-template-columns: 1fr; }
             .consult-type-group label { font-size: 13px; padding: 10px 5px; }
+            .upi-pay-btn { width: 100%; }
         }
     </style>
 </head>
@@ -196,10 +198,15 @@
                 <h4 style="margin: 0 0 10px; color: #155724; font-size: 18px;"><i class="fas fa-shield-check"></i> Secure Online Payment</h4>
                 <p style="margin: 0 0 5px; font-size: 14px; color:#555;">UPI ID: <strong id="payUpiId" style="color:#333;"></strong></p>
                 <p style="margin: 0 0 15px; font-size: 20px; font-weight: bold; color: #d32f2f;">Pay (10% Off): ₹<span id="payAmount"></span></p>
-                <img id="qrImage" src="" alt="QR Code" style="width:160px; height:160px; border: 4px solid white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                <div class="form-group" style="text-align: left; margin-top: 20px;">
-                    <label>Upload Payment Screenshot *</label>
+                
+                <a id="payUpiBtn" href="#" class="upi-pay-btn" target="_blank">
+                    <i class="fas fa-rupee-sign"></i> Pay Now via UPI App
+                </a>
+                
+                <div class="form-group" style="text-align: left; margin-top: 10px;">
+                    <label style="color:#155724;">Upload Payment Screenshot *</label>
                     <input type="file" id="paymentScreenshot" accept="image/*" style="padding:8px; border: 1px solid #4ade80;">
+                    <p style="font-size:11px; color:#666; margin-top:5px;">Please upload screenshot after successful payment.</p>
                 </div>
             </div>
 

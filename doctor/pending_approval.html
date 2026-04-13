@@ -67,7 +67,6 @@
         }
     }
 
-    // NAYA LOGIC: Database se live status check karna
     async function checkCurrentStatus() {
         const btn = document.getElementById("refreshBtn");
         btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Checking...";
@@ -75,7 +74,11 @@
 
         try {
             const docId = localStorage.getItem("bhavya_user_id");
-            if(!docId) return logoutUser();
+            if(!docId) {
+                alert("Session expired. Please login again.");
+                window.location.href = "../index.html";
+                return;
+            }
 
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -84,29 +87,41 @@
 
             const resData = await response.json();
             if (resData.status === "success") {
-                const newStatus = resData.data.status;
-                const newReason = resData.data.reject_reason;
+                // Status extract karna aur faltu spaces hatana
+                const newStatus = (resData.data.status || "Pending").trim();
+                const newReason = resData.data.reject_reason || "";
 
+                // LocalStorage update kar do
                 localStorage.setItem("bhavya_doc_status", newStatus);
                 localStorage.setItem("bhavya_doc_reject_reason", newReason);
 
-                if (newStatus === "Active") {
+                // YAHAN FIX KIYA HAI: 'Active' ya 'Approved' dono par dashboard .html par jayega
+                if (newStatus === "Active" || newStatus === "Approved") {
                     alert("Congratulations! Your profile is Approved.");
-                    window.location.href = "doctor_dashboard.htm";
+                    window.location.href = "doctor_dashboard.html"; // FILE EXTENSION FIX
                 } else {
                     updateUI(newStatus, newReason);
-                    // Chota sa notification ki status change nahi hua
+                    // Agar abhi bhi pending hai toh red color mein alert message dikhayega vahin par
                     const originalMsg = document.getElementById("statusMessage").innerText;
                     document.getElementById("statusMessage").innerHTML = `<span style='color:red; font-weight:bold;'>Still ${newStatus}... Please wait.</span>`;
                     setTimeout(() => document.getElementById("statusMessage").innerText = originalMsg, 3000);
                 }
+            } else {
+                alert("Error from server: " + resData.message);
             }
         } catch(e) {
             alert("Network Error! Please try again.");
+            console.error(e);
         } finally {
             btn.innerHTML = "<i class='fas fa-sync-alt'></i> Refresh Status";
             btn.disabled = false;
         }
+    }
+
+    // Logout Function (Agar app.js mein nahi hai toh yahan call hoga)
+    function logoutUser() {
+        localStorage.clear();
+        window.location.href = "../index.html";
     }
 </script>
 </body>

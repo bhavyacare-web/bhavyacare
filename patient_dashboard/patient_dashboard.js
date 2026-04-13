@@ -5,7 +5,6 @@ let globalConsultsData = [];
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
-// Base64 Converter (Used for multiple files including QR upload)
 function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -116,13 +115,11 @@ async function checkLoginAndFetchData() {
             }
 
             fetchWalletHistory(userId);
-            // Parallel Fetch
             await Promise.all([
                 fetchPatientBookings(userId),
                 fetchPatientConsults(userId)
             ]);
             
-            // Mix Activity
             updateRecentActivityMixed();
 
         } else {
@@ -246,7 +243,7 @@ async function fetchWalletHistory(userId) {
 }
 
 // ===============================================
-// 🌟 LAB BOOKINGS LOGIC 🌟
+// 🌟 LAB BOOKINGS LOGIC (RESTORED DETAILS) 🌟
 // ===============================================
 async function fetchPatientBookings(userId) {
     const bookingsContainer = document.getElementById("patientBookingsContainer");
@@ -412,6 +409,39 @@ function renderBookingCards(bookings) {
         if (!isComplete && !safeStatus.includes("cancel")) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
         }
+
+        // 🌟 RESTORED: Report PDF and Hand Reports Section 🌟
+        let reportSectionHtml = "";
+        let handReportsArr = [];
+        if (bk.hand_reports) {
+            try { handReportsArr = JSON.parse(bk.hand_reports); if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports]; } catch(e) { handReportsArr = [bk.hand_reports]; }
+        }
+
+        let onlinePdfArr = [];
+        if (bk.report_pdf) {
+            try { onlinePdfArr = JSON.parse(bk.report_pdf); if(!Array.isArray(onlinePdfArr)) onlinePdfArr = [bk.report_pdf]; } catch(e) { onlinePdfArr = [bk.report_pdf]; }
+        }
+
+        if (isComplete && (onlinePdfArr.length > 0 || handReportsArr.length > 0)) {
+            reportSectionHtml = `<div style="margin-top:12px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:8px;">
+                <div style="font-size:12px; color:#2e7d32; font-weight:bold; margin-bottom:5px;"><i class="fas fa-check-circle"></i> Booking Completed</div>`;
+            
+            if(onlinePdfArr.length > 0) {
+                reportSectionHtml += `<div style="font-size:11px; color:#555; margin-top:8px; margin-bottom:5px; font-weight:bold;">Online Reports:</div>`;
+                onlinePdfArr.forEach((url, i) => {
+                    if(url.trim() !== "") {
+                        reportSectionHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; margin-bottom:5px; padding:8px; background:var(--success); color:white; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px;"><i class="fas fa-download"></i> Download Report ${i+1}</a>`;
+                    }
+                });
+            }
+            if (handReportsArr.length > 0) {
+                reportSectionHtml += `<div style="font-size:11px; color:#d84315; margin-top:10px; font-weight:bold;">To Collect Physically (In-Hand):</div>`;
+                reportSectionHtml += `<ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#d84315;">`;
+                handReportsArr.forEach(srv => { if(srv.trim() !== "") reportSectionHtml += `<li>${srv}</li>`; });
+                reportSectionHtml += `</ul>`;
+            }
+            reportSectionHtml += `</div>`;
+        }
         
         cardsHtml += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
@@ -432,11 +462,18 @@ function renderBookingCards(bookings) {
                 ${testsListHtml}
             </div>
 
+            <div style="background:#fcfcfc; padding:10px; border-radius:8px; font-size:12px; color:#666; line-height:1.6; border:1px solid #f0f0f0; margin-bottom:12px;">
+                <strong>Patient Name:</strong> ${bk.patient_name} <br>
+                <strong>Service Mode:</strong> ${modeDisplay} <br>
+                <strong>Collection Address:</strong> ${bk.address}
+            </div>
+
             <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:12px; font-size:12px;">
                 <div style="display:flex; justify-content:space-between; margin-top:8px; font-weight:800; font-size:15px; color:#e65100; align-items:center;">
                     <span>Payable:</span> <span>₹${bk.final_payable}${paymentBadge}</span>
                 </div>
             </div>
+            ${reportSectionHtml}
             ${cancelBtnHtml}
         </div>`;
     });
@@ -522,7 +559,6 @@ function renderConsultCards(consults) {
         let postConsultHtml = "";
         let cancelBtnHtml = "";
 
-        // CANCEL BUTTON LOGIC
         if (safeStatus === "pending" || safeStatus === "approved") {
             cancelBtnHtml = `<button onclick="openConsultCancelModal('${c.appt_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Appointment</button>`;
         }
@@ -548,11 +584,17 @@ function renderConsultCards(consults) {
             }
         } 
         else if (c.appt_status === "Completed") {
-            let rxHtml = c.prescription_link ? `<button onclick="window.open('${c.prescription_link}', '_blank')" style="flex:1; background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-file-prescription"></i> View Rx</button>` : '';
-            let revHtml = c.review ? `<button disabled style="flex:1; background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:8px; border-radius:6px; font-weight:bold; font-size:12px;"><i class="fas fa-star"></i> Reviewed</button>` 
-                                   : `<button onclick="openReviewModal('${c.appt_id}')" style="flex:1; background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-star"></i> Rate Doctor</button>`;
+            // 🌟 NAYA: VALIDITY DISPLAY IN DASHBOARD CARDS 🌟
+            let rxHtml = "";
+            if (c.prescription_link) {
+                let valText = c.validity_days ? `<br><span style="font-size:9px; color:#666;">Valid for ${c.validity_days}</span>` : "";
+                rxHtml = `<div style="flex:1; text-align:center;"><button onclick="window.open('${c.prescription_link}', '_blank')" style="width:100%; background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-file-prescription"></i> View Rx</button>${valText}</div>`;
+            }
             
-            postConsultHtml = `<div style="display:flex; gap:10px; margin-top:10px;">${rxHtml}${revHtml}</div>`;
+            let revHtml = c.review ? `<div style="flex:1; text-align:center;"><button disabled style="width:100%; background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:8px; border-radius:6px; font-weight:bold; font-size:12px;"><i class="fas fa-star"></i> Reviewed</button></div>` 
+                                   : `<div style="flex:1; text-align:center;"><button onclick="openReviewModal('${c.appt_id}')" style="width:100%; background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:8px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-star"></i> Rate Doctor</button></div>`;
+            
+            postConsultHtml = `<div style="display:flex; gap:10px; margin-top:10px; align-items:flex-start;">${rxHtml}${revHtml}</div>`;
         }
 
         html += `
@@ -588,7 +630,6 @@ function openConsultCancelModal(apptId) {
     document.getElementById("cancelConsultReason").value = "";
     document.getElementById("refundQrInput").value = "";
     
-    // Default to Wallet
     document.querySelector('input[name="refundMethod"][value="Wallet"]').checked = true;
     toggleRefundMethod();
     
@@ -614,8 +655,7 @@ async function submitCancelConsult() {
 
     if (!reason) { alert("Please provide a reason for cancellation."); return; }
 
-    let qrBase64 = "";
-    let qrMime = "";
+    let qrBase64 = ""; let qrMime = "";
 
     if (method === "Bank") {
         if (!qrInput.files || qrInput.files.length === 0) {
@@ -623,12 +663,8 @@ async function submitCancelConsult() {
             return;
         }
         const file = qrInput.files[0];
-        try {
-            qrBase64 = await getBase64(file);
-            qrMime = file.type;
-        } catch(e) {
-            alert("Failed to process QR image."); return;
-        }
+        try { qrBase64 = await getBase64(file); qrMime = file.type; } 
+        catch(e) { alert("Failed to process QR image."); return; }
     }
 
     btn.innerText = "Processing..."; btn.disabled = true;
@@ -637,32 +673,21 @@ async function submitCancelConsult() {
         const payload = {
             action: "cancelDoctorConsult",
             user_id: localStorage.getItem("bhavya_user_id"),
-            appt_id: apptId,
-            cancel_reason: reason,
-            refund_choice: method,
-            qr_base64: qrBase64,
-            qr_mime: qrMime
+            appt_id: apptId, cancel_reason: reason, refund_choice: method,
+            qr_base64: qrBase64, qr_mime: qrMime
         };
 
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
+        
         if (result.status === "success") {
             alert("Appointment cancelled successfully. Refund method: " + method);
             document.getElementById("cancel-consult-modal").style.display = "none";
             fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
-            checkLoginAndFetchData(); // Sync everything including Wallet Balance
-        } else {
-            alert("Error: " + result.message);
-        }
-    } catch(e) {
-        alert("Network error.");
-    } finally {
-        btn.innerText = "Confirm Cancellation"; btn.disabled = false;
-    }
+            checkLoginAndFetchData(); 
+        } else { alert("Error: " + result.message); }
+    } catch(e) { alert("Network error."); } 
+    finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
 // 🌟 REVIEW SYSTEM LOGIC 🌟
@@ -678,13 +703,8 @@ function setRating(stars) {
     currentRating = stars;
     const icons = document.getElementById("starRatingContainer").children;
     for(let i=0; i<icons.length; i++) {
-        if(i < stars) {
-            icons[i].classList.add("active");
-            icons[i].style.color = "#ffc107";
-        } else {
-            icons[i].classList.remove("active");
-            icons[i].style.color = "#ddd";
-        }
+        if(i < stars) { icons[i].classList.add("active"); icons[i].style.color = "#ffc107"; } 
+        else { icons[i].classList.remove("active"); icons[i].style.color = "#ddd"; }
     }
 }
 
@@ -700,13 +720,7 @@ async function submitReview() {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ 
-                action: "submitConsultReview", 
-                user_id: localStorage.getItem("bhavya_user_id"), 
-                appt_id: apptId, 
-                rating: currentRating, 
-                comment: comment 
-            })
+            body: JSON.stringify({ action: "submitConsultReview", user_id: localStorage.getItem("bhavya_user_id"), appt_id: apptId, rating: currentRating, comment: comment })
         });
         const result = await response.json();
         if (result.status === "success") {
@@ -718,7 +732,7 @@ async function submitReview() {
     finally { btn.innerText = "Submit Review"; btn.disabled = false; }
 }
 
-// 🌟 PRESCRIPTIONS TAB RENDER LOGIC 🌟
+// 🌟 PRESCRIPTIONS TAB RENDER LOGIC (WITH VALIDITY) 🌟
 function renderPrescriptionsTab(consults) {
     const container = document.getElementById("prescriptionsTabContainer");
     if (!container) return;
@@ -732,11 +746,12 @@ function renderPrescriptionsTab(consults) {
 
     let html = "";
     rxConsults.forEach(c => {
+        let valText = c.validity_days ? `<span style="font-size:11px; background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; margin-left:5px;">Valid: ${c.validity_days}</span>` : "";
         html += `
         <div class="list-item" style="border-bottom:1px solid #eee; padding:15px 0;">
             <div style="flex:1;">
                 <h5 style="margin:0 0 5px 0; color:#333; font-size:15px;"><i class="fas fa-file-medical" style="color:#0056b3;"></i> Dr. ${c.doctor_name}</h5>
-                <p style="margin:0; font-size:12px; color:#777;"><i class="far fa-calendar-alt"></i> ${c.appt_date} | ${c.consult_type}</p>
+                <p style="margin:0; font-size:12px; color:#777;"><i class="far fa-calendar-alt"></i> ${c.appt_date} | ${c.consult_type} ${valText}</p>
             </div>
             <button onclick="window.open('${c.prescription_link}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.05);">Download</button>
         </div>`;
@@ -745,6 +760,7 @@ function renderPrescriptionsTab(consults) {
     container.innerHTML = `<div style="background:#fff; padding:0 15px; border-radius:12px;">${html}</div>`;
 }
 
+// 🌟 NAYA: JITSI AUTO CLOSE PATIENT SIDE 🌟
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";
@@ -752,12 +768,19 @@ function joinJitsiCall(link) {
     
     modal.innerHTML = `
         <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
-            <button onclick="document.getElementById('jitsi-modal').remove()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+            <h3 style="margin:0; font-size:16px;">BhavyaCare Secure Video Consult</h3>
+            <button onclick="closeJitsiCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
         </div>
         <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
     `;
     document.body.appendChild(modal);
+}
+
+function closeJitsiCall() {
+    const modal = document.getElementById('jitsi-modal');
+    if (modal) modal.remove();
+    // Auto refresh data to check if doctor marked as completed
+    fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
 }
 
 // ===============================================

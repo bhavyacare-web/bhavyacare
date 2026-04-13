@@ -3,9 +3,6 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let allDoctorAppointments = []; 
 
 window.onload = function() {
-    // 🌟 NAYA: TIME DROPDOWNS GENERATE KARENGE (15 Min intervals) 🌟
-    populateTimeDropdowns();
-
     const role = localStorage.getItem("bhavya_role");
     const docName = localStorage.getItem("bhavya_name");
     const docId = localStorage.getItem("bhavya_user_id");
@@ -30,23 +27,6 @@ window.onload = function() {
     fetchDoctorAppointments(docId);
 };
 
-// 🌟 NAYA FUNCTION: DROPDOWN OPTIONS BANANE KE LIYE 🌟
-function populateTimeDropdowns() {
-    let times = ['<option value="">Select Time</option>'];
-    for(let h=0; h<=23; h++) {
-        for(let m of ['00', '15', '30', '45']) {
-            let hh = h < 10 ? '0'+h : h;
-            let ampm = h < 12 ? 'AM' : 'PM';
-            let displayH = h % 12 || 12;
-            let displayHH = displayH < 10 ? '0'+displayH : displayH;
-            times.push(`<option value="${hh}:${m}">${displayHH}:${m} ${ampm}</option>`);
-        }
-    }
-    document.querySelectorAll('.time-select').forEach(sel => {
-        sel.innerHTML = times.join('');
-    });
-}
-
 function switchTab(tabId) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
@@ -54,7 +34,6 @@ function switchTab(tabId) {
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
     
-    // 🌟 TAB NAME CHANGED TO "My Profile" 🌟
     let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews', 'profile': 'My Profile' };
     document.getElementById('pageTitle').innerText = titles[tabId];
 
@@ -87,8 +66,24 @@ function formatTime(rawTime) {
 }
 
 // ===============================================
-// 🌟 OFFLINE & ONLINE PROFILE EDIT LOGIC 🌟
+// 🌟 MY PROFILE EDIT LOGIC (DROPDOWN DAY SELECTION) 🌟
 // ===============================================
+
+function showOffDay() {
+    const selectedDay = document.getElementById("offDaySelect").value;
+    const days = ['mon','tue','wed','thu','fri','sat','sun'];
+    days.forEach(d => {
+        document.getElementById(`off_${d}`).style.display = (d === selectedDay) ? "grid" : "none";
+    });
+}
+
+function showOnDay() {
+    const selectedDay = document.getElementById("onDaySelect").value;
+    const days = ['mon','tue','wed','thu','fri','sat','sun'];
+    days.forEach(d => {
+        document.getElementById(`on_${d}`).style.display = (d === selectedDay) ? "grid" : "none";
+    });
+}
 
 function toggleEditOnlineSection() {
     const val = document.getElementById("editOnlineAvailable").value;
@@ -96,8 +91,10 @@ function toggleEditOnlineSection() {
 }
 
 async function loadDoctorProfileData() {
-    document.getElementById("loader").style.display = "block";
-    document.getElementById("sec-profile").style.display = "none";
+    // Hide Form, Show Loading text inside the section to avoid breaking layout
+    document.getElementById("editProfileForm").style.display = "none";
+    document.getElementById("profileLoadingText").style.display = "block";
+
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -112,21 +109,38 @@ async function loadDoctorProfileData() {
             
             const days = ['mon','tue','wed','thu','fri','sat','sun'];
             days.forEach(d => {
-                // Populate Offline Selects
-                document.getElementById(`edit_off_${d}_in`).value = p[`off_${d}_in`] || "";
-                document.getElementById(`edit_off_${d}_out`).value = p[`off_${d}_out`] || "";
+                // Populate Offline Inputs
+                let offIn = document.getElementById(`edit_off_${d}_in`);
+                let offOut = document.getElementById(`edit_off_${d}_out`);
+                offIn.value = p[`off_${d}_in`] || "";
+                offOut.value = p[`off_${d}_out`] || "";
+                
+                // Super Important: Agar value pehle se hai toh input type ko 'time' kar do taki box khali na dikhe
+                if(p[`off_${d}_in`]) offIn.type = "time";
+                if(p[`off_${d}_out`]) offOut.type = "time";
 
-                // Populate Online Selects
-                document.getElementById(`edit_on_${d}_in`).value = p[`on_${d}_in`] || "";
-                document.getElementById(`edit_on_${d}_out`).value = p[`on_${d}_out`] || "";
+                // Populate Online Inputs
+                let onIn = document.getElementById(`edit_on_${d}_in`);
+                let onOut = document.getElementById(`edit_on_${d}_out`);
+                onIn.value = p[`on_${d}_in`] || "";
+                onOut.value = p[`on_${d}_out`] || "";
+                
+                if(p[`on_${d}_in`]) onIn.type = "time";
+                if(p[`on_${d}_out`]) onOut.type = "time";
             });
             toggleEditOnlineSection();
+            
+            // Default show Monday
+            document.getElementById("offDaySelect").value = "mon";
+            document.getElementById("onDaySelect").value = "mon";
+            showOffDay();
+            showOnDay();
         }
     } catch(e) {
         console.log("Error loading profile", e);
     } finally {
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("sec-profile").style.display = "block";
+        document.getElementById("profileLoadingText").style.display = "none";
+        document.getElementById("editProfileForm").style.display = "block";
     }
 }
 
@@ -196,8 +210,9 @@ async function saveDoctorProfile() {
 }
 
 // ===============================================
-// BAARI PURANA CODE SAME RAHEGA (Appointments/Ledger)
+// REST OF THE CODE (Appointments, Ledger, etc) REMAINS EXACTLY SAME
 // ===============================================
+
 async function fetchDoctorAppointments(doctorId) {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {

@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
+   <script>
         (function() {
             const userId = localStorage.getItem("bhavya_user_id");
             const role = localStorage.getItem("bhavya_role");
             
-            // Agar user logged in hai aur wo 'lab' hai
-            if (userId && role === "lab") {
-                // Seedha Lab Dashboard par bhej do (bina Home page dikhaye)
-                window.location.replace("Lab/lab_dashboard.html"); 
+            if (userId) {
+                if (role === "lab") {
+                    window.location.replace("Lab/lab_dashboard.html"); 
+                } else if (role === "doctor") {
+                    window.location.replace("doctor/doctor_dashboard.html"); 
+                } else if (role === "patient") {
+                    // Agar patient ko bhi redirect karna ho toh yahan URL daal sakte hain
+                    // window.location.replace("patient_dashboard/patient_dashboard.html");
+                }
             }
         })();
     </script>

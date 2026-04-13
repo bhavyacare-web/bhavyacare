@@ -2,6 +2,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let isUserVip = false;
 let globalBookingsData = [];
 let globalConsultsData = [];
+let globalCompletedReports = []; // For Reports Tab Filter
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
@@ -14,6 +15,46 @@ function getBase64(file) {
     });
 }
 
+// 🌟 MOBILE MENU LOGIC 🌟
+function toggleMobileMenu() {
+    const sheet = document.getElementById("mobileMenuSheet");
+    const backdrop = document.getElementById("menuBackdrop");
+    if(sheet && backdrop) {
+        if(sheet.classList.contains("active")) {
+            sheet.classList.remove("active");
+            backdrop.classList.remove("active");
+        } else {
+            sheet.classList.add("active");
+            backdrop.classList.add("active");
+        }
+    }
+}
+
+// Ensure safe element checks to prevent JS crash
+function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
+function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
+
+function switchTab(tabId) {
+    const contents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+    
+    const links = document.querySelectorAll(".nav-item");
+    links.forEach(link => link.classList.remove("active"));
+    
+    const selectedTab = document.getElementById(tabId);
+    if(selectedTab) selectedTab.classList.add("active");
+    
+    if(typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList.contains('nav-item')) { 
+        event.currentTarget.classList.add("active"); 
+    } else { 
+        const activeNav = document.querySelector(`[onclick*="switchTab('${tabId}')"].nav-item:not(.mobile-only)`); 
+        if(activeNav) activeNav.classList.add("active"); 
+    }
+}
+
+function logoutDashboard() { localStorage.clear(); window.location.href = "../index.html"; }
+
+// 🌟 MAIN DATA FETCH 🌟
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
     if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
@@ -131,7 +172,7 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
-            // Aage ke funtions safely call honge
+            // Fetch secondary data
             fetchWalletHistory(userId);
             await Promise.all([
                 fetchPatientBookings(userId),
@@ -152,22 +193,6 @@ async function checkLoginAndFetchData() {
 function handleVipCardClick() {
     if (isUserVip) { document.getElementById('vip-details-modal').style.display = 'block'; } else { window.location.href = '../vip/vip_member.html'; }
 }
-
-function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
-function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
-
-function switchTab(tabId) {
-    const contents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-    const links = document.querySelectorAll(".nav-item, .nav-links a");
-    links.forEach(link => link.classList.remove("active"));
-    const selectedTab = document.getElementById(tabId);
-    if(selectedTab) selectedTab.classList.add("active");
-    if(typeof event !== 'undefined' && event && event.currentTarget) { event.currentTarget.classList.add("active"); } 
-    else { const activeNav = document.querySelector(`[onclick="switchTab('${tabId}')"]`); if(activeNav) activeNav.classList.add("active"); }
-}
-
-function logoutDashboard() { localStorage.clear(); window.location.href = "../index.html"; }
 
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
@@ -261,7 +286,7 @@ async function fetchWalletHistory(userId) {
 }
 
 // ===============================================
-// 🌟 LAB BOOKINGS LOGIC (RESTORED DETAILS) 🌟
+// 🌟 LAB BOOKINGS (RESTORED DETAILS & REPORTS FILTER) 🌟
 // ===============================================
 async function fetchPatientBookings(userId) {
     const bookingsContainer = document.getElementById("patientBookingsContainer");
@@ -275,58 +300,19 @@ async function fetchPatientBookings(userId) {
         if (result.status === "success") {
             globalBookingsData = result.data;
             renderBookingCards(globalBookingsData);
-            processLabReports(globalBookingsData);
+            
+            // Extract completed bookings for the separate Reports tab
+            globalCompletedReports = globalBookingsData.filter(bk => {
+                let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
+                return safeStatus.includes("complete") || safeStatus === "completed";
+            });
+            renderFilteredReports(globalCompletedReports);
         } else {
             if(bookingsContainer) bookingsContainer.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
         }
     } catch(e) { 
         if(bookingsContainer) bookingsContainer.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`;
     }
-}
-
-function processLabReports(bookings) {
-    const reportsTab = document.getElementById("reportsTabContainer");
-    let reportsHtml = `<div class="section-title">Medical Records</div>`;
-    let hasReports = false;
-
-    bookings.forEach((bk, index) => {
-        let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
-        let isComplete = (safeStatus.includes("complete") || safeStatus === "completed");
-
-        let onlinePdfArr = [];
-        if (bk.report_pdf) {
-            try { 
-                onlinePdfArr = JSON.parse(bk.report_pdf); 
-                if(!Array.isArray(onlinePdfArr)) onlinePdfArr = [bk.report_pdf];
-            } catch(e) { onlinePdfArr = [bk.report_pdf]; }
-        }
-
-        if (isComplete && onlinePdfArr.length > 0) {
-            hasReports = true;
-            let linksHtml = "";
-            onlinePdfArr.forEach((url, i) => {
-                if(url.trim() !== "") {
-                    linksHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px; margin-top:8px;"><i class="fas fa-cloud-download-alt"></i> Download Report ${i+1}</a>`;
-                }
-            });
-
-            reportsHtml += `
-            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between;">
-                    <h5 style="margin:0 0 5px 0; font-size:15px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Order #${bk.order_id}</h5>
-                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.slot}</span>
-                </div>
-                <div style="font-size:12px; color:var(--text-light); margin-bottom:5px; line-height:1.5;">
-                    <strong>Patient:</strong> ${bk.patient_name} <br>
-                    <strong><span style="color:var(--text-main);">Lab: ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'N/A'}</span></strong>
-                </div>
-                ${linksHtml}
-            </div>`;
-        }
-    });
-
-    if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>Reports will appear here once ready.</p></div>`;
-    if(reportsTab) reportsTab.innerHTML = reportsHtml;
 }
 
 function clearBookingFilters() {
@@ -529,6 +515,78 @@ async function submitCancelOrder() {
     finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
+// 🌟 NAYA: SEPARATE REPORTS TAB FILTER LOGIC 🌟
+function clearReportFilters() {
+    document.getElementById("searchReportText").value = "";
+    document.getElementById("searchReportDate").value = "";
+    renderFilteredReports(globalCompletedReports);
+}
+
+function filterPatientReports() {
+    const searchText = document.getElementById("searchReportText").value.toLowerCase().trim();
+    const searchDate = document.getElementById("searchReportDate").value; 
+
+    const filtered = globalCompletedReports.filter(bk => {
+        let matchText = true;
+        if (searchText !== "") {
+            let testNames = "";
+            try { 
+                let cart = typeof bk.cart_items === 'string' ? JSON.parse(bk.cart_items) : bk.cart_items; 
+                let items = Array.isArray(cart) ? cart : [cart];
+                testNames = items.map(i => typeof i === 'object' ? (i.service_name || i.test_name || "") : String(i)).join(" ").toLowerCase();
+            } catch(e){}
+            matchText = (bk.lab_id || "").toLowerCase().includes(searchText) || testNames.includes(searchText);
+        }
+        let matchDate = searchDate === "" || (bk.date || "").includes(`${searchDate.split("-")[2]}-${searchDate.split("-")[1]}-${searchDate.split("-")[0]}`);
+        return matchText && matchDate;
+    });
+    renderFilteredReports(filtered);
+}
+
+function renderFilteredReports(bookings) {
+    const reportsTab = document.getElementById("reportsTabContainer");
+    let reportsHtml = ""; let hasReports = false;
+
+    bookings.forEach(bk => {
+        let onlinePdfArr = []; let handReportsArr = [];
+        try { if (bk.report_pdf) onlinePdfArr = Array.isArray(JSON.parse(bk.report_pdf)) ? JSON.parse(bk.report_pdf) : [bk.report_pdf]; } catch(e) { onlinePdfArr = [bk.report_pdf]; }
+        try { if (bk.hand_reports) handReportsArr = Array.isArray(JSON.parse(bk.hand_reports)) ? JSON.parse(bk.hand_reports) : [bk.hand_reports]; } catch(e) { handReportsArr = [bk.hand_reports]; }
+
+        if (onlinePdfArr.length > 0 || handReportsArr.length > 0) {
+            hasReports = true;
+            let linksHtml = "";
+            
+            if(onlinePdfArr.length > 0) {
+                onlinePdfArr.forEach((url, i) => {
+                    if(url && url.trim() !== "") linksHtml += `<a href="${url}" target="_blank" style="display:block; text-align:center; background:#e8f5e9; color:#2e7d32; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:12px; margin-top:8px;"><i class="fas fa-cloud-download-alt"></i> Download E-Report ${i+1}</a>`;
+                });
+            }
+            if (handReportsArr.length > 0) {
+                linksHtml += `<div style="font-size:11px; color:#d84315; margin-top:10px; font-weight:bold;">To Collect Physically (In-Hand):</div><ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#d84315;">`;
+                handReportsArr.forEach(srv => { if(srv && srv.trim() !== "") linksHtml += `<li>${srv}</li>`; });
+                linksHtml += `</ul>`;
+            }
+
+            reportsHtml += `
+            <div style="background:#fff; border:1px solid #e0e6ed; border-left: 4px solid var(--success); border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <h5 style="margin:0; font-size:14px; color:var(--text-main);"><i class="fas fa-file-medical" style="color:var(--success);"></i> Order #${bk.order_id}</h5>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;">${bk.date.split(' ')[0]}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-light); line-height:1.5;">
+                    <strong>Patient:</strong> ${bk.patient_name} <br>
+                    <strong>Lab:</strong> ${bk.lab_id ? bk.lab_id.split('(')[0].trim() : 'N/A'}
+                </div>
+                ${linksHtml}
+            </div>`;
+        }
+    });
+
+    if (!hasReports) reportsHtml += `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px;"></i><p>No reports found.</p></div>`;
+    if(reportsTab) reportsTab.innerHTML = reportsHtml;
+}
+
+
 // ===============================================
 // 🌟 DOCTOR CONSULTS & REVIEW LOGIC 🌟
 // ===============================================
@@ -602,7 +660,6 @@ function renderConsultCards(consults) {
             }
         } 
         else if (c.appt_status === "Completed") {
-            // 🌟 NAYA: VALIDITY DISPLAY IN DASHBOARD CARDS 🌟
             let rxHtml = "";
             if (c.prescription_link) {
                 let valText = c.validity_days ? `<br><span style="font-size:9px; color:#666;">Valid for ${c.validity_days}</span>` : "";

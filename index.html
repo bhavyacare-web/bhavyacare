@@ -5,12 +5,20 @@
         (function() {
             const userId = localStorage.getItem("bhavya_user_id");
             const role = localStorage.getItem("bhavya_role");
+            const docStatus = localStorage.getItem("doc_status"); // Doctor ka status fetch karein
             
             if (userId) {
                 if (role === "lab") {
                     window.location.replace("Lab/lab_dashboard.html"); 
                 } else if (role === "doctor") {
-                    window.location.replace("doctor/doctor_dashboard.html"); 
+                    // 🌟 NAYA LOGIC: Status Active hone par hi dashboard bhejein
+                    let safeStatus = (docStatus || "not_registered").toString().trim().toLowerCase();
+                    
+                    if (safeStatus === "active") {
+                        window.location.replace("doctor/doctor_dashboard.html"); 
+                    } else {
+                        window.location.replace("doctor/doctor_registration.html"); 
+                    }
                 } else if (role === "patient") {
                     // Agar patient ko bhi redirect karna ho toh yahan URL daal sakte hain
                     // window.location.replace("patient_dashboard/patient_dashboard.html");

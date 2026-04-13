@@ -63,6 +63,16 @@
 
         #loader { text-align: center; padding: 50px; font-size: 18px; color: var(--primary); font-weight: bold; }
 
+        /* 🌟 NAYA: PROFILE SECTION CSS 🌟 */
+        .profile-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .profile-card h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; font-size: 13px; color: #555; margin-bottom: 5px; }
+        .schedule-grid { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
+        .schedule-grid span { font-weight: bold; color: #2d3748; }
+        .schedule-header { background: transparent !important; padding-bottom: 0 !important; margin-bottom: 5px !important; }
+        .schedule-header span { color: #888 !important; font-size: 12px; }
+
         /* 📱 MOBILE VIEW CSS 📱 */
         .mobile-header-btn { display: none; }
         @media (max-width: 768px) {
@@ -70,15 +80,23 @@
             .sidebar { flex-direction: row; width: 100%; height: 65px; position: fixed; bottom: 0; left: 0; justify-content: space-around; padding: 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
             .sidebar-header, .logout-btn { display: none; }
             .sidebar-menu { display: flex; width: 100%; padding: 0; justify-content: space-around; align-items: center;}
-            .sidebar-menu li { flex-direction: column; gap: 4px; font-size: 10px; padding: 10px 5px; border-left: none; border-bottom: 3px solid transparent; width: 33%; text-align: center; justify-content: center; }
+            .sidebar-menu li { flex-direction: column; gap: 4px; font-size: 10px; padding: 10px 5px; border-left: none; border-bottom: 3px solid transparent; width: 25%; text-align: center; justify-content: center; }
             .sidebar-menu li.active { background: rgba(255,255,255,0.1); border-bottom-color: var(--warning); border-left: none; }
-            .sidebar-menu li i { font-size: 20px; }
+            .sidebar-menu li i { font-size: 18px; }
             
             .main-content { padding: 15px; padding-bottom: 85px; }
             .top-bar { margin-bottom: 15px; }
             .top-bar h1 { font-size: 20px; }
             .mobile-header-btn { display: block; background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px; cursor: pointer; }
             .doc-name-badge { font-size: 12px; padding: 6px 12px; }
+            
+            /* Profile Form Mobile */
+            .schedule-grid { grid-template-columns: 80px 1fr 1fr; gap: 10px; padding: 10px; }
+        }
+        @media (max-width: 480px) {
+            .schedule-header { display: none !important; }
+            .schedule-grid { grid-template-columns: 1fr; gap: 8px; text-align: center; padding: 15px; }
+            .schedule-grid span { margin-bottom: 5px; display: block; font-size: 14px; text-decoration: underline; color: var(--primary); }
         }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(253, 126, 20, 0); } 100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0); } }
@@ -95,6 +113,7 @@
             <li id="tab-appt" class="active" onclick="switchTab('appt')"><i class="fas fa-calendar-check"></i> <span>Appts</span></li>
             <li id="tab-ledger" onclick="switchTab('ledger')"><i class="fas fa-file-invoice-dollar"></i> <span>Ledger</span></li>
             <li id="tab-reviews" onclick="switchTab('reviews')"><i class="fas fa-star"></i> <span>Reviews</span></li>
+            <li id="tab-profile" onclick="switchTab('profile')"><i class="fas fa-user-cog"></i> <span>Settings</span></li>
         </ul>
         <div class="logout-btn" onclick="logoutDoctor()">🚪 Logout</div>
     </div>
@@ -168,6 +187,44 @@
         <div id="sec-reviews" class="dashboard-section">
             <div id="reviewsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                 <div style="text-align: center; grid-column: 1/-1; padding: 40px; color: #888;">No reviews yet.</div>
+            </div>
+        </div>
+
+        <div id="sec-profile" class="dashboard-section">
+            <div class="profile-card">
+                <h3><i class="fas fa-video"></i> Online Consultation Settings</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Aap yahan se apna online consultation chalu kar sakte hain ya timings edit kar sakte hain.</p>
+                
+                <form id="editProfileForm">
+                    <div class="form-group" style="max-width: 300px;">
+                        <label>Are you available for Online Consultation?</label>
+                        <select id="editOnlineAvailable" class="input-box" onchange="toggleEditOnlineSection()">
+                            <option value="No">No, Offline Only</option>
+                            <option value="Yes">Yes, Available Online</option>
+                        </select>
+                    </div>
+
+                    <div id="editOnlineSection" style="display: none; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
+                        <div class="form-group" style="max-width: 300px;">
+                            <label>Online Consultation Fee (₹) *</label>
+                            <input type="number" id="editOnlineFee" class="input-box">
+                        </div>
+                        
+                        <label style="display:block; font-weight:bold; color:var(--primary); margin-bottom:10px;">Online Availability Schedule</label>
+                        <div class="schedule-grid schedule-header"><span>Day</span><span>Open Time</span><span>Close Time</span></div>
+
+                        <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_out" class="input-box" style="margin:0;"></div>
+                    </div>
+
+                    <button type="button" id="btnSaveProfile" class="btn btn-approve" style="margin-top: 20px; padding: 12px 25px; font-size: 15px;" onclick="saveDoctorProfile()">Save Settings</button>
+                    <span id="profileLoader" style="display:none; color:var(--primary); font-weight:bold; margin-left:15px;">Saving... ⏳</span>
+                </form>
             </div>
         </div>
 

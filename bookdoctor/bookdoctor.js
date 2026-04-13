@@ -5,11 +5,10 @@ const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById("apptDate").setAttribute('min', today);
+    // Will set min dynamically when date input is active
     fetchDoctors();
 };
 
-// 🌟 HELPER: Google Drive Thumbnail API
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -30,7 +29,6 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
-// 🌟 HELPER: Google Sheets Time Fixer
 function convertTo24Hour(timeData) {
     if(!timeData) return "";
     let timeString = String(timeData).trim();
@@ -54,7 +52,6 @@ function convertTo24Hour(timeData) {
     return timeString;
 }
 
-// 🌟 HELPER: AM/PM Formatter
 function formatTime12H(time24) {
     if(!time24 || time24.trim() === "") return "";
     let [hours, minutes] = time24.split(":");
@@ -64,7 +61,6 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
-// 🌟 HELPER: Discount Calculator (10% Off)
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
@@ -111,7 +107,9 @@ function checkAvailability(doc, day, time) {
 }
 
 function applyFilters() {
-    const query = document.getElementById("searchInput").value.toLowerCase();
+    // 🌟 SPLIT SEARCH LOGIC 🌟
+    const searchName = document.getElementById("searchName").value.toLowerCase();
+    const searchCity = document.getElementById("searchCity").value.toLowerCase();
     const filterType = document.getElementById("filterType").value;
     let filterDay = document.getElementById("filterDay").value;
     let filterTime = document.getElementById("filterTime").value;
@@ -128,7 +126,12 @@ function applyFilters() {
     container.innerHTML = "";
 
     allDoctors.forEach((doc, index) => {
-        if(!doc.doctor_name.toLowerCase().includes(query) && !doc.speciality.toLowerCase().includes(query) && !doc.city.toLowerCase().includes(query)) return;
+        // Name/Speciality Check
+        let matchName = doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
+        // City Check
+        let matchCity = doc.city.toLowerCase().includes(searchCity);
+        
+        if(!matchName || !matchCity) return;
         if(filterType === "Online" && doc.online_available !== "Yes") return;
         
         let isAvail = checkAvailability(doc, filterDay, filterTime);
@@ -147,28 +150,37 @@ function applyFilters() {
         let offDiscount = getDiscountedFee(doc.offline_fee);
         let onDiscount = getDiscountedFee(doc.online_fee);
         
-        let offlineText = `Clinic: <del style="color:#999; font-size:12px;">₹${doc.offline_fee}</del> <span class="discount-price">₹${offDiscount}</span>`;
-        let onlineText = doc.online_available === "Yes" ? ` | Online: <del style="color:#999; font-size:12px;">₹${doc.online_fee}</del> <span class="discount-price">₹${onDiscount}</span>` : ``;
+        let offlineText = `<div><span style="color:#666; font-size:13px; font-weight:normal;">Clinic</span><br><del style="color:#999; font-size:12px;">₹${doc.offline_fee}</del> <span class="discount-price">₹${offDiscount}</span></div>`;
+        let onlineText = doc.online_available === "Yes" ? `<div><span style="color:#666; font-size:13px; font-weight:normal;">Online</span><br><del style="color:#999; font-size:12px;">₹${doc.online_fee}</del> <span class="discount-price">₹${onDiscount}</span></div>` : ``;
 
+        // 🌟 NEW CARD HTML LAYOUT 🌟
         const card = document.createElement("div");
         card.className = "doc-card";
-        
         card.innerHTML = `
+            <div class="doc-exp-corner">⭐ ${doc.experience} Yrs</div>
+            
+            <div class="doc-card-top">
+                <div class="img-container">
+                    <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.onerror=null; this.src='${fallbackAvatar}';">
+                </div>
+                <div class="doc-info">
+                    <h3>Dr. ${doc.doctor_name}</h3>
+                    <div class="doc-speciality">${doc.speciality}</div>
+                    <div class="doc-qual">${doc.qualification}</div>
+                </div>
+            </div>
+            
+            <p style="margin:0 0 10px 0; color:#4a5568; font-size:14px; font-weight:500;"><i class="fas fa-map-marker-alt" style="color:#e67e22;"></i> ${doc.clinic_name}, ${doc.city}</p>
+            
             <div class="badges-container">
                 ${availBadge} ${onlineBadge}
             </div>
-            <div class="img-container">
-                <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.onerror=null; this.src='${fallbackAvatar}';">
-            </div>
-            <h3>Dr. ${doc.doctor_name}</h3>
-            <div class="doc-speciality">${doc.speciality} (${doc.qualification})</div>
-            <div class="doc-exp">⭐ ${doc.experience} Years Experience</div>
-            <p style="margin:5px 0; color:#555; font-size:14px;">🏥 ${doc.clinic_name}, ${doc.city}</p>
+            
             <div class="fees">${offlineText} ${onlineText}</div>
             
             <div class="action-btns">
-                <button class="btn-schedule" onclick="openSchedule(${index})">🕒 View Timings</button>
-                <button class="btn-book" onclick="attemptBook(${index})">Book</button>
+                <button class="btn-schedule" onclick="openSchedule(${index})"><i class="far fa-clock"></i> Timings</button>
+                <button class="btn-book" onclick="attemptBook(${index})">Book Now</button>
             </div>
         `;
         container.appendChild(card);
@@ -187,10 +199,10 @@ function openSchedule(index) {
         let d = days[i];
         
         let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
-            ? `${formatTime12H(doc['off_'+d+'_in'])} to ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
+            ? `${formatTime12H(doc['off_'+d+'_in'])} - ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
         
         let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) 
-            ? `${formatTime12H(doc['on_'+d+'_in'])} to ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
+            ? `${formatTime12H(doc['on_'+d+'_in'])} - ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
         
         html += `<tr><td><strong>${dayNames[i]}</strong></td><td>${offStr}</td><td>${onStr}</td></tr>`;
     }
@@ -207,8 +219,7 @@ function attemptBook(index) {
     
     if(!uid || role !== "patient") {
         alert("Please Login or Sign Up as a Patient to book an appointment.");
-        localStorage.setItem("stay_on_page", "true"); 
-        openPatientLogin(); 
+        document.getElementById("login-section").style.display = "block"; 
         return;
     }
     
@@ -218,20 +229,40 @@ function attemptBook(index) {
     let offDiscount = getDiscountedFee(selectedDoctor.offline_fee);
     let onDiscount = getDiscountedFee(selectedDoctor.online_fee);
 
-    const typeSelect = document.getElementById("consultType");
-    typeSelect.innerHTML = `<option value="" disabled selected>-- Select Type --</option>`;
-    typeSelect.innerHTML += `<option value="Offline">Clinic Visit (Pay ₹${offDiscount} at Clinic)</option>`;
+    // 🌟 NEW: RADIO BUTTONS GENERATION FOR CONSULT TYPE 🌟
+    const typeGroup = document.getElementById("consultTypeGroup");
+    typeGroup.innerHTML = `
+        <input type="radio" name="cType" id="typeClinic" value="Offline" onchange="selectConsultType('Offline')" checked>
+        <label for="typeClinic">🏥 Clinic Visit<br><span style="font-size:12px; color:#666;">Pay ₹${offDiscount} at Clinic</span></label>
+    `;
     if(selectedDoctor.online_available === "Yes") {
-        typeSelect.innerHTML += `<option value="Online">Online Video/Call (Pay ₹${onDiscount} Now)</option>`;
+        typeGroup.innerHTML += `
+            <input type="radio" name="cType" id="typeOnline" value="Online" onchange="selectConsultType('Online')">
+            <label for="typeOnline">💻 Online Consult<br><span style="font-size:12px; color:#0056b3;">Pay ₹${onDiscount} Now</span></label>
+        `;
     }
     
+    // reset forms
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("apptDate").type = "text"; 
     document.getElementById("apptDate").value = "";
+    document.getElementById("apptDate").setAttribute('min', today);
+
+    document.getElementById("apptTime").type = "text";
     document.getElementById("apptTime").value = "";
     document.getElementById("apptTime").disabled = true;
+    
     document.getElementById("availabilityMsg").style.display = "none";
     
-    handleTypeChange(); 
+    selectConsultType("Offline"); // Default selection
+    
     document.getElementById("bookingModal").style.display = "flex";
+}
+
+// Custom handler for the radio buttons
+function selectConsultType(type) {
+    document.getElementById("consultType").value = type;
+    handleTypeChange();
 }
 
 function handleTypeChange() {
@@ -239,6 +270,7 @@ function handleTypeChange() {
     const paymentDiv = document.getElementById("paymentSection");
     const ssInput = document.getElementById("paymentScreenshot");
     
+    // Check schedule if date is already selected
     if(document.getElementById("apptDate").value) { checkSchedule(); }
     
     if(type === "Online") {
@@ -265,6 +297,8 @@ function checkSchedule() {
     
     if(!dateVal || !typeVal) {
         timeInput.disabled = true;
+        timeInput.type = "text";
+        timeInput.value = "";
         msgDiv.style.display = "none";
         return;
     }
@@ -276,19 +310,25 @@ function checkSchedule() {
     let outTime = typeVal === "Offline" ? selectedDoctor[`off_${dayKey}_out`] : selectedDoctor[`on_${dayKey}_out`];
 
     if (inTime && outTime) {
-        msgDiv.innerText = `Doctor available today from ${formatTime12H(inTime)} to ${formatTime12H(outTime)}. Please pick a time within this range.`;
-        msgDiv.style.color = "#28a745";
+        msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Available from ${formatTime12H(inTime)} to ${formatTime12H(outTime)}`;
+        msgDiv.style.color = "#155724";
+        msgDiv.style.background = "#d4edda";
+        msgDiv.style.borderLeftColor = "#28a745";
         msgDiv.style.display = "block";
         
         timeInput.disabled = false;
+        timeInput.type = "time"; // Ensure it switches to time picker
         timeInput.setAttribute("min", inTime);
         timeInput.setAttribute("max", outTime);
         timeInput.value = ""; 
     } else {
-        msgDiv.innerText = `Sorry, the doctor is not available for ${typeVal} consultation on this day.`;
-        msgDiv.style.color = "#d32f2f";
+        msgDiv.innerHTML = `<i class="fas fa-times-circle"></i> Not available for ${typeVal} consultation on this day.`;
+        msgDiv.style.color = "#721c24";
+        msgDiv.style.background = "#f8d7da";
+        msgDiv.style.borderLeftColor = "#dc3545";
         msgDiv.style.display = "block";
         timeInput.disabled = true;
+        timeInput.type = "text";
         timeInput.value = "";
     }
 }
@@ -314,7 +354,7 @@ async function submitBooking() {
     if(!form.checkValidity()) { form.reportValidity(); return; }
     
     const timeInput = document.getElementById("apptTime");
-    if(timeInput.disabled) {
+    if(timeInput.disabled || timeInput.type === "text") {
         alert("Please select a valid date where the doctor is available."); return;
     }
     if (timeInput.value < timeInput.min || timeInput.value > timeInput.max) {
@@ -374,49 +414,4 @@ async function submitBooking() {
         document.getElementById("submitBtn").style.display = "block";
         document.getElementById("btnLoader").style.display = "none";
     }
-}
-
-// ==========================================
-// 🌟 DASHBOARD & JITSI LOGIC (Aage kaam aayega) 🌟
-// ==========================================
-
-function checkBufferAndRenderButton(appt) {
-    const now = new Date();
-    
-    const [day, month, year] = appt.appt_date.split("-");
-    let [time, modifier] = appt.appt_time.split(" ");
-    let [hours, minutes] = time.split(":");
-    if (hours === "12") hours = "00";
-    if (modifier === "PM") hours = parseInt(hours, 10) + 12;
-    
-    const apptDateTime = new Date(year, month - 1, day, hours, minutes);
-    const diffInMinutes = (now - apptDateTime) / (1000 * 60);
-    
-    let html = "";
-    // Show 15 mins before to 45 mins after
-    if (diffInMinutes >= -15 && diffInMinutes <= 45 && appt.appt_status === "Approved") {
-        html += `<button onclick="joinJitsiCall('${appt.meet_link}')" style="background:#28a745; color:white; padding:8px 15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🟢 Join Video Call</button>`;
-    } 
-    
-    // Patient communication if late
-    if (diffInMinutes > 10 && appt.appt_status === "Approved") {
-        html += `<p style="color:#d32f2f; font-size:13px; margin-top:5px; font-weight:bold;">Doctor late? <a href="tel:8950112467" style="color:#0056b3;">Call Clinic</a></p>`;
-    }
-    return html;
-}
-
-// Jitsi Call inside Website (Iframe)
-function joinJitsiCall(link) {
-    const modal = document.createElement('div');
-    modal.id = "jitsi-modal";
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
-    
-    modal.innerHTML = `
-        <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
-            <button onclick="document.getElementById('jitsi-modal').remove()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
-        </div>
-        <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
-    `;
-    document.body.appendChild(modal);
 }

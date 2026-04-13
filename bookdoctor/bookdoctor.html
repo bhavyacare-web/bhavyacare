@@ -20,9 +20,8 @@
         .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s;}
         .filter-bar button:hover { background: #218838; }
         
-        /* 🌟 MODERN CIRCULAR RECTANGLE CARD DESIGN 🌟 */
-        .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 15px; padding: 0 15px; }
-        
+        /* MODERN CIRCULAR RECTANGLE CARD DESIGN */
+        .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; padding: 0 15px; }
         .doc-card { background: white; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 16px; border: 1px solid #f0f4f8; position: relative; display: flex; flex-direction: column; transition: 0.3s; }
         .doc-card:hover { box-shadow: 0 8px 25px rgba(0,86,179,0.12); transform: translateY(-3px); border-color: #cce5ff; }
         
@@ -58,7 +57,7 @@
         .btn-book { background: #0056b3; color: white; border: none; padding: 10px; border-radius: 24px; flex: 1; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,86,179,0.2);}
         .btn-book:hover { background: #004494; transform: translateY(-1px);}
 
-        /* 🌟 CHECKOUT MODAL STYLES 🌟 */
+        /* CHECKOUT MODAL STYLES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal { background: white; width: 90%; max-width: 500px; border-radius: 15px; padding: 30px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f4f8; padding-bottom: 15px; margin-bottom: 20px; }
@@ -83,8 +82,8 @@
         #paymentSection { display: none; background: #f0fdf4; padding: 20px; border-radius: 10px; border: 2px dashed #4ade80; margin-top: 15px; text-align: center; }
         #loader { text-align: center; color: #0056b3; padding: 40px; font-weight: bold; font-size: 18px; }
 
-        /* 🌟 NAYA: DIRECT UPI BUTTON STYLES 🌟 */
-        .upi-pay-btn { display: inline-block; background-color: #28a745; color: white; padding: 14px 25px; border-radius: 30px; text-decoration: none; font-size: 16px; font-weight: bold; margin-bottom: 15px; width: 80%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: 0.3s; }
+        /* 🌟 DIRECT UPI & QR BUTTON STYLES 🌟 */
+        .upi-pay-btn { display: inline-block; background-color: #28a745; color: white; padding: 14px 25px; border-radius: 30px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: 0.3s; cursor: pointer; }
         .upi-pay-btn:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4); }
 
         /* LOGIN POPUP STYLES */
@@ -96,7 +95,6 @@
         @media (max-width: 600px) {
             .doctors-grid { grid-template-columns: 1fr; }
             .consult-type-group label { font-size: 13px; padding: 10px 5px; }
-            .upi-pay-btn { width: 100%; }
         }
     </style>
 </head>
@@ -191,7 +189,7 @@
             
             <div class="form-group">
                 <label>3. Select Preferred Time</label>
-                <input type="text" id="apptTime" placeholder="⏰ Select Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" required disabled>
+                <input type="text" id="apptTime" placeholder="⏰ Select Time" onfocus="this.type='time'; if(this.dataset.val24) this.value=this.dataset.val24;" onblur="formatTimeDisplay(this)" required disabled>
             </div>
             
             <div id="paymentSection">
@@ -199,10 +197,18 @@
                 <p style="margin: 0 0 5px; font-size: 14px; color:#555;">UPI ID: <strong id="payUpiId" style="color:#333;"></strong></p>
                 <p style="margin: 0 0 15px; font-size: 20px; font-weight: bold; color: #d32f2f;">Pay (10% Off): ₹<span id="payAmount"></span></p>
                 
-                <a id="payUpiBtn" href="#" class="upi-pay-btn" target="_blank">
+                <button type="button" id="payUpiBtn" class="upi-pay-btn" onclick="openUPI()">
                     <i class="fas fa-rupee-sign"></i> Pay Now via UPI App
-                </a>
+                </button>
                 
+                <button type="button" class="btn-schedule" onclick="toggleQR()" style="width:100%; margin-bottom: 15px; border-radius: 30px;">
+                    <i class="fas fa-qrcode"></i> Show QR Code to Pay
+                </button>
+                
+                <div id="qrContainer" style="display:none; margin-bottom: 15px;">
+                    <img id="qrImage" src="" alt="QR Code" style="width:160px; height:160px; border: 4px solid white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                </div>
+
                 <div class="form-group" style="text-align: left; margin-top: 10px;">
                     <label style="color:#155724;">Upload Payment Screenshot *</label>
                     <input type="file" id="paymentScreenshot" accept="image/*" style="padding:8px; border: 1px solid #4ade80;">

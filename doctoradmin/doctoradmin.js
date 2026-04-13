@@ -259,10 +259,16 @@ function renderReviews() {
 
     allAppointments.forEach(a => {
         let isDocMatch = docFilter === "ALL" || a.doctor_id === docFilter;
+        // Check karein ki review data sach me hai ya nahi
         if (isDocMatch && a.review_json && a.review_json.trim() !== "") {
             try {
                 let rev = JSON.parse(a.review_json);
-                let stars = ""; for(let i=1; i<=5; i++) stars += i <= rev.rating ? '<i class="fas fa-star" style="color:var(--warning);"></i> ' : '<i class="fas fa-star" style="color:#e0e0e0;"></i> ';
+                
+                // Star rendering logic
+                let stars = ""; 
+                for(let i=1; i<=5; i++) {
+                    stars += i <= rev.rating ? '<i class="fas fa-star" style="color:var(--warning);"></i> ' : '<i class="fas fa-star" style="color:#e0e0e0;"></i> ';
+                }
                 
                 html += `
                 <div style="background:white; padding:15px; border-radius:10px; border-left:4px solid var(--warning); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
@@ -271,10 +277,12 @@ function renderReviews() {
                         <span style="font-size:12px; color:#888;">Pt: <strong>${a.patient_id}</strong></span>
                     </div>
                     <div style="font-size:14px; margin-bottom:5px;">${stars}</div>
-                    <p style="margin:0; font-size:13px; color:#555; font-style:italic;">"${rev.comment || 'No comment'}"</p>
+                    <p style="margin:0; font-size:13px; color:#555; font-style:italic;">"${rev.comment || 'No comment provided'}"</p>
                     <div style="font-size:10px; color:#aaa; margin-top:8px; text-align:right;">${a.appt_date}</div>
                 </div>`;
-            } catch(e) {}
+            } catch(e) {
+                console.error("JSON Parse Error in Review", e);
+            }
         }
     });
 

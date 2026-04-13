@@ -192,38 +192,52 @@
 
         <div id="sec-profile" class="dashboard-section">
             <div class="profile-card">
-                <h3><i class="fas fa-video"></i> Online Consultation Settings</h3>
-                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Aap yahan se apna online consultation chalu kar sakte hain ya timings edit kar sakte hain.</p>
+                <h3><i class="fas fa-user-cog"></i> Profile Settings</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Aap yahan se apna Offline Clinic aur Online Video Consultation ka schedule edit kar sakte hain.</p>
                 
                 <form id="editProfileForm">
-                    <div class="form-group" style="max-width: 300px;">
-                        <label>Are you available for Online Consultation?</label>
-                        <select id="editOnlineAvailable" class="input-box" onchange="toggleEditOnlineSection()">
-                            <option value="No">No, Offline Only</option>
-                            <option value="Yes">Yes, Available Online</option>
-                        </select>
-                    </div>
-
-                    <div id="editOnlineSection" style="display: none; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
-                        <div class="form-group" style="max-width: 300px;">
-                            <label>Online Consultation Fee (₹) *</label>
-                            <input type="number" id="editOnlineFee" class="input-box">
-                        </div>
-                        
-                        <label style="display:block; font-weight:bold; color:var(--primary); margin-bottom:10px;">Online Availability Schedule</label>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+                        <h4 style="margin-top:0; color: #333;"><i class="fas fa-hospital"></i> Offline Clinic Schedule</h4>
                         <div class="schedule-grid schedule-header"><span>Day</span><span>Open Time</span><span>Close Time</span></div>
-
-                        <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_out" class="input-box" style="margin:0;"></div>
-                        <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_mon_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_tue_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_wed_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_thu_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_fri_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_sat_out" class="input-box" style="margin:0;"></div>
+                        <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_off_sun_out" class="input-box" style="margin:0;"></div>
                     </div>
 
-                    <button type="button" id="btnSaveProfile" class="btn btn-approve" style="margin-top: 20px; padding: 12px 25px; font-size: 15px;" onclick="saveDoctorProfile()">Save Settings</button>
-                    <span id="profileLoader" style="display:none; color:var(--primary); font-weight:bold; margin-left:15px;">Saving... ⏳</span>
+                    <div style="background: #ebf8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bee3f8;">
+                        <h4 style="margin-top:0; color: #0056b3;"><i class="fas fa-video"></i> Online Consultation Settings</h4>
+                        <div class="form-group" style="max-width: 300px;">
+                            <label>Are you available for Online Consultation?</label>
+                            <select id="editOnlineAvailable" class="input-box" onchange="toggleEditOnlineSection()">
+                                <option value="No">No, Offline Only</option>
+                                <option value="Yes">Yes, Available Online</option>
+                            </select>
+                        </div>
+
+                        <div id="editOnlineSection" style="display: none; margin-top: 15px; border-top: 1px dashed #bee3f8; padding-top: 15px;">
+                            <div class="form-group" style="max-width: 300px;">
+                                <label>Online Consultation Fee (₹) *</label>
+                                <input type="number" id="editOnlineFee" class="input-box">
+                            </div>
+                            
+                            <div class="schedule-grid schedule-header"><span>Day</span><span>Open Time</span><span>Close Time</span></div>
+                            <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_mon_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_tue_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_wed_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_thu_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_fri_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sat_out" class="input-box" style="margin:0;"></div>
+                            <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="edit_on_sun_out" class="input-box" style="margin:0;"></div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnSaveProfile" class="btn btn-approve" style="padding: 12px 25px; font-size: 15px; width:100%;" onclick="saveDoctorProfile()">Save Full Schedule</button>
+                    <div id="profileLoader" style="display:none; color:var(--primary); font-weight:bold; margin-top:10px; text-align:center;">Saving... ⏳</div>
                 </form>
             </div>
         </div>

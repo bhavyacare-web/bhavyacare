@@ -2,304 +2,257 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor Registration - BhavyaCare</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* === MODERN & MOBILE RESPONSIVE UI CSS === */
+        /* === MOBILE FRIENDLY & MODERN CSS === */
         * { box-sizing: border-box; }
         body { 
             font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-            padding: 20px 10px; 
+            background: #f4f7fb; 
+            padding: 20px 15px; /* Mobile ke liye padding adjust ki hai */
             color: #0f172a; 
             margin: 0;
             min-height: 100vh;
         }
         
-        .form-container { 
-            background: white; max-width: 900px; margin: auto; padding: 30px 20px; 
-            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            border: 1px solid #f1f5f9; display: none; 
+        .container { 
+            background: white; 
+            max-width: 800px; 
+            margin: auto; 
+            padding: 30px 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
         }
-        
+
+        /* --- STATUS SCREEN STYLING --- */
         .status-screen {
-            max-width: 500px; width: 90%; margin: 10vh auto; background: white; 
-            padding: 40px 20px; border-radius: 16px; text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;
+            text-align: center;
+            padding: 40px 20px;
+            display: none; /* Default hidden */
         }
         .status-screen i { font-size: 60px; margin-bottom: 20px; }
-        .status-screen h2 { color: #0f172a; margin-bottom: 15px; font-size: 22px; margin-top:0;}
-        .status-screen p { color: #64748b; font-size: 15px; line-height: 1.6;}
-
-        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;}
-        p.subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; line-height: 1.5;}
+        .status-screen h2 { color: #0f172a; margin-bottom: 10px; font-size: 24px; }
+        .status-screen p { color: #64748b; font-size: 16px; line-height: 1.5; }
         
-        h2.section-title { color: #0f172a; font-size: 18px; margin-top: 35px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 10px; line-height: 1.4;}
-        h2.section-title span.step { background: #0056b3; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0;}
+        .alert-box {
+            background: #fef2f2; border: 1px solid #f87171; color: #b91c1c;
+            padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;
+            text-align: left;
+        }
+
+        /* --- FORM STYLING --- */
+        h1 { text-align: center; font-size: 24px; margin-top: 0;}
+        h3 { border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; color: #059669; font-size: 18px; margin-top: 30px;}
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .form-group { margin-bottom: 15px; width: 100%;}
+        .form-group { margin-bottom: 15px; width: 100%; }
         
-        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #334155;}
-        input[type="text"], input[type="email"], input[type="number"], input[type="time"], input[type="file"], select, textarea { 
-            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; transition: all 0.3s ease; background: #f8fafc; -webkit-appearance: none;
+        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #475569;}
+        input, select, textarea { 
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; 
+            font-family: 'Inter', sans-serif; font-size: 15px; background: #f8fafc;
         }
-        input[type="file"] { padding: 8px; font-size: 13px; background: white;}
-        input:focus, select:focus, textarea:focus { border-color: #0056b3; background: white; outline: none; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1); }
-        
-        .timing-row { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; position: relative;}
-        .timing-day { grid-column: 1 / -1; font-weight: 700; color: #0056b3; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 5px;}
+        input:focus, select:focus, textarea:focus { border-color: #059669; outline: none; background: white;}
+        input[readonly] { background: #e2e8f0; cursor: not-allowed; }
 
-        button.submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border: none; font-size: 16px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 30px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);}
-        button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 86, 179, 0.4); }
-        button.submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
-        
-        .logout-link { display: block; text-align: center; margin-top: 20px; color: #ef4444; font-weight: bold; text-decoration: none; font-size: 14px; }
+        .submit-btn { 
+            width: 100%; padding: 16px; background: #059669; color: white; border: none; 
+            font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; 
+            margin-top: 30px; transition: 0.3s;
+        }
+        .submit-btn:hover { background: #047857; }
+        .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* MOBILE RESPONSIVENESS */
-        @media (min-width: 768px) {
-            body { padding: 40px 20px; }
-            .form-container { padding: 40px; }
-            h1 { font-size: 32px; }
-            .grid-2 { grid-template-columns: 1fr 1fr; gap: 20px; }
-            .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-            .timing-row { grid-template-columns: 120px 1fr 1fr; padding: 12px 20px; }
-            .timing-day { grid-column: auto; border: none; padding: 0; margin: 0; }
+        /* === MOBILE RESPONSIVENESS (Jadu Yahan Hai) === */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px 15px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 10px; } /* Mobile par ek ke niche ek aayega */
+            h1 { font-size: 20px; }
+            input, select, textarea { padding: 14px; font-size: 16px; } /* Mobile par tap karna aasan ho */
         }
     </style>
 </head>
 <body>
 
-<div id="statusChecker" class="status-screen">
-    <i class="fas fa-spinner fa-spin" style="color: #0056b3;" id="statusIcon"></i>
-    <h2 id="statusTitle">Checking Account...</h2>
-    <p id="statusMsg">Please wait while we verify your details securely.</p>
-    <a href="#" class="logout-link" onclick="logoutDoctor()" style="display:none;" id="logoutBtn">Log Out & Return Home</a>
-    <button class="submit-btn" style="display:none;" id="reapplyBtn" onclick="showForm()">Update Profile & Re-apply</button>
-</div>
+<div class="container">
+    
+    <div id="statusScreen" class="status-screen">
+        <i id="statusIcon" class="fas fa-clock" style="color: #f59e0b;"></i>
+        <h2 id="statusTitle">Checking Account...</h2>
+        <p id="statusMessage">Please wait while we verify your details.</p>
+        <button id="logoutBtn" onclick="logout()" class="submit-btn" style="background:#ef4444; margin-top:20px; display:none;">Logout</button>
+    </div>
 
-<div class="form-container" id="mainFormContainer">
-    <h1>Complete Doctor Profile</h1>
-    <p class="subtitle">Join BhavyaCare to provide top-class online and offline consultations.</p>
-
-    <form id="docRegForm">
-        <h2 class="section-title"><span class="step">1</span> Basic Details</h2>
-        <div class="grid-2">
-            <div class="form-group"><label>Doctor Name *</label><input type="text" id="doc_name" readonly></div>
-            <div class="form-group"><label>Doctor ID *</label><input type="text" id="doc_id" readonly></div>
-            <div class="form-group"><label>Email Address *</label><input type="email" id="doc_email" required></div>
-            <div class="form-group"><label>Medical Registration (PDF) *</label><input type="file" id="reg_doc" accept=".pdf" required></div>
-        </div>
-        <div class="grid-2">
-            <div class="form-group"><label>Speciality *</label><input type="text" id="speciality" placeholder="e.g. Cardiologist" required></div>
-            <div class="form-group"><label>Qualification *</label><input type="text" id="qualification" placeholder="e.g. MBBS, MD" required></div>
-            <div class="form-group"><label>Experience (Years) *</label><input type="number" id="experience" required></div>
-            <div class="form-group"><label>Profile Image *</label><input type="file" id="profile_img" accept="image/*" required></div>
+    <div id="registrationFormContainer" style="display: none;">
+        <h1>Doctor Registration</h1>
+        
+        <div id="rejectAlert" class="alert-box">
+            <strong><i class="fas fa-exclamation-circle"></i> Application Rejected:</strong> 
+            <span id="rejectReasonText"></span><br>
+            <span style="font-size: 13px; color:#475569;">Please update the required details and resubmit.</span>
         </div>
 
-        <h2 class="section-title"><span class="step">2</span> Clinic / Hospital Details</h2>
-        <div class="grid-2">
+        <form id="docRegForm">
+            <h3>Basic Details</h3>
+            <div class="grid-2">
+                <div class="form-group"><label>Doctor ID</label><input type="text" id="doctor_id" readonly></div>
+                <div class="form-group"><label>Full Name</label><input type="text" id="doctor_name" readonly></div>
+                <div class="form-group"><label>Email Address *</label><input type="email" id="email" required></div>
+                <div class="form-group"><label>Speciality *</label><input type="text" id="speciality" required placeholder="e.g. Cardiologist"></div>
+            </div>
+
+            <h3>Clinic Details</h3>
             <div class="form-group"><label>Clinic Name *</label><input type="text" id="clinic_name" required></div>
-            <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
-            <div class="form-group" style="grid-column: 1 / -1;"><label>Full Clinic Address *</label><textarea id="clinic_address" rows="2" required></textarea></div>
-            <div class="form-group"><label>Pincode *</label><input type="number" id="pincode" required></div>
-            <div class="form-group"><label>Your UPI ID (For Payments) *</label><input type="text" id="upi_id" placeholder="e.g. 9876543210@ybl" required></div>
-        </div>
-
-        <h2 class="section-title"><span class="step">3</span> Fees & Schedule</h2>
-        <div class="grid-2">
-            <div class="form-group"><label>Offline Consult Fee (₹) *</label><input type="number" id="offline_fee" required></div>
-            <div class="form-group"><label>Online Consult Fee (₹) *</label><input type="number" id="online_fee" required></div>
-            <div class="form-group"><label>Slot Duration (Minutes) *</label>
-                <select id="slot_duration" required>
-                    <option value="15">15 Mins</option>
-                    <option value="20">20 Mins</option>
-                    <option value="30">30 Mins</option>
-                </select>
+            <div class="form-group"><label>Clinic Full Address *</label><textarea id="clinic_address" rows="3" required></textarea></div>
+            <div class="grid-2">
+                <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
+                <div class="form-group"><label>Pincode *</label><input type="number" id="pincode" required></div>
             </div>
-            <div class="form-group"><label>Provide Online Video Consults?</label>
-                <select id="online_available" required>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
-            </div>
-        </div>
 
-        <h2 class="section-title"><span class="step">4</span> Clinic Timings <span style="font-size:12px; font-weight:normal; color:#888;">(Fill at least 1 day)</span></h2>
-        <div id="timingsContainer"></div>
+            <button type="submit" class="submit-btn" id="submitBtn">Submit Profile for Verification</button>
+        </form>
+    </div>
 
-        <button type="submit" class="submit-btn" id="submitBtn">Submit Profile for Verification</button>
-    </form>
 </div>
 
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
-    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
     document.addEventListener("DOMContentLoaded", () => {
-        const docName = localStorage.getItem("bhavya_name");
+        // User data LocalStorage se get karein
         const docId = localStorage.getItem("bhavya_user_id");
+        const docName = localStorage.getItem("bhavya_name");
         
-        if (!docId || localStorage.getItem("bhavya_role") !== "doctor") {
-            alert("Unauthorized Access! Please login first."); 
-            window.location.href = "../index.html"; 
+        // Agar id "DOC-" se start nahi hoti toh wapas bhej do
+        if (!docId || !docId.startsWith("DOC-")) {
+            alert("Unauthorized! Please login as Doctor.");
+            window.location.href = "../index.html";
             return;
         }
 
-        // Generate Timing Rows
-        const timeDiv = document.getElementById("timingsContainer");
-        days.forEach(day => {
-            let dayName = day.charAt(0).toUpperCase() + day.slice(1);
-            timeDiv.innerHTML += `
-            <div class="timing-row">
-                <div class="timing-day">${dayName}</div>
-                <div><label style="display:none;">Open</label><input type="time" id="${day}_in"></div>
-                <div><label style="display:none;">Close</label><input type="time" id="${day}_out"></div>
-            </div>`;
-        });
+        // Form me pre-fill kar do
+        document.getElementById("doctor_id").value = docId;
+        document.getElementById("doctor_name").value = docName;
 
-        // ==========================================
-        // CHECK DOCTOR STATUS BEFORE SHOWING FORM
-        // ==========================================
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "checkDoctorStatus", doctor_id: docId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            const statusBox = document.getElementById("statusChecker");
-            const sIcon = document.getElementById("statusIcon");
-            const sTitle = document.getElementById("statusTitle");
-            const sMsg = document.getElementById("statusMsg");
-            const logoutBtn = document.getElementById("logoutBtn");
-            const reapplyBtn = document.getElementById("reapplyBtn");
-            
-            if (data.status === "success") {
-                const docStatus = data.data.status;
-                
-                if (docStatus === "Active") {
-                    window.location.href = "doctor_dashboard.html"; 
-                } 
-                else if (docStatus === "Pending") {
-                    sIcon.className = "fas fa-clock"; sIcon.style.color = "#f59e0b";
-                    sTitle.innerText = "Application Under Review";
-                    sMsg.innerText = "Your application is currently being processed by the Admin. You will be notified via email once approved.";
-                    logoutBtn.style.display = "block";
-                } 
-                else if (docStatus === "Inactive") {
-                    sIcon.className = "fas fa-pause-circle"; sIcon.style.color = "#64748b";
-                    sTitle.innerText = "Account Paused";
-                    sMsg.innerText = "Your account is temporarily inactive. Please contact admin support.";
-                    logoutBtn.style.display = "block";
-                }
-                else if (docStatus === "Rejected") {
-                    sIcon.className = "fas fa-times-circle"; sIcon.style.color = "#ef4444";
-                    sTitle.innerText = "Application Rejected";
-                    sMsg.innerHTML = "Admin Reason: <b>" + (data.data.reject_reason || "Check email for details.") + "</b><br><br>You can update your details and submit again.";
-                    logoutBtn.style.display = "block";
-                    reapplyBtn.style.display = "block"; // Give option to resubmit
-                }
-                else {
-                    // Status Not Found / First Time Login -> Show Form
-                    showForm();
-                }
-            } else {
-                showForm(); // Error or New user
-            }
-        })
-        .catch(err => { showForm(); });
+        // Load hote hi check karo Doctor ka status kya hai
+        checkDoctorStatus(docId);
 
+        // Form Submit Event
         document.getElementById("docRegForm").addEventListener("submit", handleFormSubmit);
     });
 
-    function showForm() {
-        document.getElementById("statusChecker").style.display = "none";
-        document.getElementById("mainFormContainer").style.display = "block";
-        document.getElementById("doc_name").value = localStorage.getItem("bhavya_name");
-        document.getElementById("doc_id").value = localStorage.getItem("bhavya_user_id");
+    // ==========================================
+    // 1. STATUS CHECKING LOGIC
+    // ==========================================
+    function checkDoctorStatus(docId) {
+        // Shuru me status screen dikhao with loader
+        document.getElementById("registrationFormContainer").style.display = "none";
+        document.getElementById("statusScreen").style.display = "block";
+        
+        // Ideally, yahan ek API call karni chahiye backend se status confirm karne ke liye.
+        // Lekin kyunki 'doctor.gs' me login ke time hum status LocalStorage me save karte hain, hum wahi use kar sakte hain.
+        let status = localStorage.getItem("doc_status") || "not_registered";
+        let reason = localStorage.getItem("reject_reason") || "";
+
+        showScreenBasedOnStatus(status, reason);
     }
 
-    function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
+    function showScreenBasedOnStatus(status, reason) {
+        const formContainer = document.getElementById("registrationFormContainer");
+        const statusScreen = document.getElementById("statusScreen");
+        const statusIcon = document.getElementById("statusIcon");
+        const statusTitle = document.getElementById("statusTitle");
+        const statusMessage = document.getElementById("statusMessage");
+        const logoutBtn = document.getElementById("logoutBtn");
 
-    function getBase64(fileId) {
-        return new Promise((resolve, reject) => {
-            const fileInput = document.getElementById(fileId);
-            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { resolve(null); return; }
-            const file = fileInput.files[0]; 
-            const reader = new FileReader();
-            reader.readAsDataURL(file); 
-            reader.onload = () => resolve({ base64: reader.result.split(',')[1], mime: file.type }); 
-            reader.onerror = error => reject(error);
-        });
+        if (status === "not_registered") {
+            // Naya doctor - Form dikhao
+            statusScreen.style.display = "none";
+            formContainer.style.display = "block";
+        } 
+        else if (status === "Pending") {
+            // Wait karne ko bolo (WARNING SCREEN)
+            formContainer.style.display = "none";
+            statusScreen.style.display = "block";
+            statusIcon.className = "fas fa-clock";
+            statusIcon.style.color = "#f59e0b";
+            statusTitle.innerText = "Application Under Review";
+            statusMessage.innerText = "Aapka registration form submit ho chuka hai aur admin review ke liye pending hai. Approval milne par aap login kar payenge.";
+            logoutBtn.style.display = "block";
+        } 
+        else if (status === "Rejected") {
+            // Form wapas dikhao, aur upar error message dikhao
+            statusScreen.style.display = "none";
+            formContainer.style.display = "block";
+            document.getElementById("rejectAlert").style.display = "block";
+            document.getElementById("rejectReasonText").innerText = reason;
+        }
+        else if (status === "Active") {
+            // Agar active hai toh sidha dashboard bhej do
+            window.location.href = "doctor_dashboard.html";
+        }
     }
 
+    // ==========================================
+    // 2. FORM SUBMIT LOGIC
+    // ==========================================
     async function handleFormSubmit(e) {
         e.preventDefault();
         
-        let hasAtLeastOneTime = false;
-        days.forEach(day => {
-            if (document.getElementById(day + "_in").value && document.getElementById(day + "_out").value) hasAtLeastOneTime = true;
-        });
-        if (!hasAtLeastOneTime) { alert("Please provide Clinic Timings for at least 1 day."); return; }
-
         const btn = document.getElementById("submitBtn");
-        btn.innerText = "Uploading Documents & Saving... Please wait"; btn.disabled = true;
+        btn.innerText = "Submitting... Please wait";
+        btn.disabled = true;
+
+        // Data ikattha karo (Aapke baaki fields bhi yahan add honge)
+        let payload = {
+            action: "submitDoctorRegistration",
+            data: {
+                doctor_id: document.getElementById("doctor_id").value,
+                doctor_name: document.getElementById("doctor_name").value,
+                email: document.getElementById("email").value,
+                speciality: document.getElementById("speciality").value,
+                clinic_name: document.getElementById("clinic_name").value,
+                clinic_address: document.getElementById("clinic_address").value,
+                city: document.getElementById("city").value,
+                pincode: document.getElementById("pincode").value
+                // doc_base64, img_base64 etc. bhi yahan jayenge
+            }
+        };
 
         try {
-            let docData = await getBase64("reg_doc");
-            let imgData = await getBase64("profile_img");
-
-            let payload = {
-                action: "submitDoctorRegistration",
-                data: {
-                    doctor_id: document.getElementById("doc_id").value,
-                    doctor_name: document.getElementById("doc_name").value,
-                    email: document.getElementById("doc_email").value,
-                    speciality: document.getElementById("speciality").value,
-                    qualification: document.getElementById("qualification").value,
-                    experience: document.getElementById("experience").value,
-                    clinic_name: document.getElementById("clinic_name").value,
-                    clinic_address: document.getElementById("clinic_address").value,
-                    city: document.getElementById("city").value,
-                    pincode: document.getElementById("pincode").value,
-                    upi_id: document.getElementById("upi_id").value,
-                    offline_fee: document.getElementById("offline_fee").value,
-                    online_fee: document.getElementById("online_fee").value,
-                    slot_duration: document.getElementById("slot_duration").value,
-                    online_available: document.getElementById("online_available").value,
-                    doc_base64: docData ? docData.base64 : "", doc_mime: docData ? docData.mime : "",
-                    img_base64: imgData ? imgData.base64 : "", img_mime: imgData ? imgData.mime : ""
-                }
-            };
-
-            days.forEach(day => {
-                payload.data["off_" + day.substring(0,3) + "_in"] = document.getElementById(day + "_in").value;
-                payload.data["off_" + day.substring(0,3) + "_out"] = document.getElementById(day + "_out").value;
-                
-                // Currently setting Online time same as Offline time
-                payload.data["on_" + day.substring(0,3) + "_in"] = document.getElementById(day + "_in").value;
-                payload.data["on_" + day.substring(0,3) + "_out"] = document.getElementById(day + "_out").value;
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
             });
-
-            const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
             const resData = await response.json();
 
             if (resData.status === "success") {
-                alert("Success! Your profile has been submitted and is under process.");
-                window.location.reload(); // Reload to show Pending screen
+                // JADU YAHAN HAI: Submit hote hi LocalStorage me status update kar do aur screen change kar do
+                localStorage.setItem("doc_status", "Pending");
+                showScreenBasedOnStatus("Pending", "");
             } else {
                 alert("Server Error: " + resData.message);
-                btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
+                btn.innerText = "Submit Profile for Verification";
+                btn.disabled = false;
             }
         } catch (error) {
-            alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
-            btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
+            alert("A network error occurred. Please try again.");
+            btn.innerText = "Submit Profile for Verification";
+            btn.disabled = false;
         }
     }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "../index.html";
+    }
 </script>
+
 </body>
 </html>

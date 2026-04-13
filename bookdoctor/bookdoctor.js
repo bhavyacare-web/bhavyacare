@@ -5,10 +5,10 @@ const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
-    // Will set min dynamically when date input is active
     fetchDoctors();
 };
 
+// 🌟 HELPER: Google Drive Thumbnail API
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -29,6 +29,7 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
+// 🌟 HELPER: Google Sheets Time Fixer
 function convertTo24Hour(timeData) {
     if(!timeData) return "";
     let timeString = String(timeData).trim();
@@ -52,6 +53,7 @@ function convertTo24Hour(timeData) {
     return timeString;
 }
 
+// 🌟 HELPER: AM/PM Formatter
 function formatTime12H(time24) {
     if(!time24 || time24.trim() === "") return "";
     let [hours, minutes] = time24.split(":");
@@ -61,6 +63,7 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
+// 🌟 HELPER: Discount Calculator (10% Off)
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
@@ -141,7 +144,7 @@ function applyFilters() {
             : (isAvail ? `<span class="badge avail-yes">🟢 Available at Selected Time</span>` : `<span class="badge avail-no">🔴 Not Available at Selected Time</span>`);
             
         let onlineBadge = doc.online_available === "Yes" 
-            ? `<span class="badge type-online">💻 Online Video Consult</span>` 
+            ? `<span class="badge type-online">💻 Online Consult</span>` 
             : `<span class="badge type-offline">🏥 Clinic Visit Only</span>`;
 
         let safeImg = fixDriveUrl(doc.imgUrl, doc.doctor_name);
@@ -150,8 +153,17 @@ function applyFilters() {
         let offDiscount = getDiscountedFee(doc.offline_fee);
         let onDiscount = getDiscountedFee(doc.online_fee);
         
-        let offlineText = `<div><span style="color:#666; font-size:13px; font-weight:normal;">Clinic</span><br><del style="color:#999; font-size:12px;">₹${doc.offline_fee}</del> <span class="discount-price">₹${offDiscount}</span></div>`;
-        let onlineText = doc.online_available === "Yes" ? `<div><span style="color:#666; font-size:13px; font-weight:normal;">Online</span><br><del style="color:#999; font-size:12px;">₹${doc.online_fee}</del> <span class="discount-price">₹${onDiscount}</span></div>` : ``;
+        // 🌟 PILL SHAPED FEES LAYOUT 🌟
+        let offlineText = `
+            <div class="fee-box">
+                <span class="title">Clinic</span>
+                <div><del>₹${doc.offline_fee}</del> <span class="discount-price">₹${offDiscount}</span></div>
+            </div>`;
+        let onlineText = doc.online_available === "Yes" ? `
+            <div class="fee-box">
+                <span class="title">Online</span>
+                <div><del>₹${doc.online_fee}</del> <span class="discount-price">₹${onDiscount}</span></div>
+            </div>` : ``;
 
         // 🌟 NEW CARD HTML LAYOUT 🌟
         const card = document.createElement("div");
@@ -170,7 +182,9 @@ function applyFilters() {
                 </div>
             </div>
             
-            <p style="margin:0 0 10px 0; color:#4a5568; font-size:14px; font-weight:500;"><i class="fas fa-map-marker-alt" style="color:#e67e22;"></i> ${doc.clinic_name}, ${doc.city}</p>
+            <div class="doc-location">
+                <span style="font-size:16px;">🏥</span> ${doc.clinic_name}, ${doc.city}
+            </div>
             
             <div class="badges-container">
                 ${availBadge} ${onlineBadge}
@@ -179,7 +193,7 @@ function applyFilters() {
             <div class="fees">${offlineText} ${onlineText}</div>
             
             <div class="action-btns">
-                <button class="btn-schedule" onclick="openSchedule(${index})"><i class="far fa-clock"></i> Timings</button>
+                <button class="btn-schedule" onclick="openSchedule(${index})">🕒 Timings</button>
                 <button class="btn-book" onclick="attemptBook(${index})">Book Now</button>
             </div>
         `;
@@ -317,7 +331,7 @@ function checkSchedule() {
         msgDiv.style.display = "block";
         
         timeInput.disabled = false;
-        timeInput.type = "time"; // Ensure it switches to time picker
+        timeInput.type = "time"; // Switch to time picker
         timeInput.setAttribute("min", inTime);
         timeInput.setAttribute("max", outTime);
         timeInput.value = ""; 

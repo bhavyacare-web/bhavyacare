@@ -1,5 +1,6 @@
 let allDoctors = [];
 let selectedDoctor = null;
+let currentUpiLink = ""; // 🌟 NEW: Global variable to hold UPI link
 
 const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
@@ -251,11 +252,15 @@ function attemptBook(index) {
     document.getElementById("apptDate").value = "";
     document.getElementById("apptDate").setAttribute('min', today);
 
-    document.getElementById("apptTime").type = "text";
-    document.getElementById("apptTime").value = "";
-    document.getElementById("apptTime").disabled = true;
+    // Reset time input properly
+    const timeInput = document.getElementById("apptTime");
+    timeInput.type = "text";
+    timeInput.value = "";
+    timeInput.dataset.val24 = "";
+    timeInput.disabled = true;
     
     document.getElementById("availabilityMsg").style.display = "none";
+    document.getElementById("qrContainer").style.display = "none"; // Hide QR initially
     
     selectConsultType("Offline"); 
     
@@ -281,15 +286,45 @@ function handleTypeChange() {
         let onDiscount = getDiscountedFee(selectedDoctor.online_fee);
         document.getElementById("payAmount").innerText = onDiscount;
         
-        // 🌟 NAYA: UPI INTENT LINK GENERATION 🌟
-        // Mobile mein ye link click karne par seedha GPay/PhonePe waghera open ho jayenge
-        const upiString = `upi://pay?pa=${selectedDoctor.upi_id}&pn=BhavyaCare&am=${onDiscount}&cu=INR`;
-        document.getElementById("payUpiBtn").href = upiString;
+        // Save UPI link globally to be used by the button click
+        currentUpiLink = `upi://pay?pa=${selectedDoctor.upi_id}&pn=BhavyaCare&am=${onDiscount}&cu=INR`;
+        
+        // Generate QR code but keep container hidden
+        document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUpiLink)}`;
 
         ssInput.setAttribute("required", "true");
     } else {
         paymentDiv.style.display = "none";
         ssInput.removeAttribute("required");
+        currentUpiLink = "";
+    }
+}
+
+// 🌟 NAYA: UPI App Open Logic 🌟
+function openUPI() {
+    if(currentUpiLink !== "") {
+        window.location.href = currentUpiLink;
+    }
+}
+
+// 🌟 NAYA: Toggle QR Code Visibility 🌟
+function toggleQR() {
+    const qrDiv = document.getElementById("qrContainer");
+    if(qrDiv.style.display === "none") {
+        qrDiv.style.display = "block";
+    } else {
+        qrDiv.style.display = "none";
+    }
+}
+
+// 🌟 NAYA: Time Formatter logic to switch to 12h format on blur 🌟
+function formatTimeDisplay(input) {
+    if(input.value) {
+        input.dataset.val24 = input.value; // Real 24h format hidden me save kar liya
+        input.type = 'text'; // Wapas text type me badla
+        input.value = formatTime12H(input.dataset.val24); // AM/PM me convert karke dikhaya
+    } else {
+        input.type = 'text';
     }
 }
 
@@ -303,6 +338,7 @@ function checkSchedule() {
         timeInput.disabled = true;
         timeInput.type = "text";
         timeInput.value = "";
+        timeInput.dataset.val24 = "";
         msgDiv.style.display = "none";
         return;
     }
@@ -321,10 +357,12 @@ function checkSchedule() {
         msgDiv.style.display = "block";
         
         timeInput.disabled = false;
-        timeInput.type = "time"; 
+        // Keep it text initially so placeholder is visible if empty
+        timeInput.type = "text"; 
         timeInput.setAttribute("min", inTime);
         timeInput.setAttribute("max", outTime);
         timeInput.value = ""; 
+        timeInput.dataset.val24 = "";
     } else {
         msgDiv.innerHTML = `<i class="fas fa-times-circle"></i> Not available for ${typeVal} consultation on this day.`;
         msgDiv.style.color = "#721c24";
@@ -334,6 +372,7 @@ function checkSchedule() {
         timeInput.disabled = true;
         timeInput.type = "text";
         timeInput.value = "";
+        timeInput.dataset.val24 = "";
     }
 }
 
@@ -342,6 +381,7 @@ function closeModal() {
     document.getElementById("bookingForm").reset();
     document.getElementById("paymentSection").style.display = "none";
     document.getElementById("availabilityMsg").style.display = "none";
+    document.getElementById("qrContainer").style.display = "none";
 }
 
 function getBase64(file) {
@@ -358,17 +398,19 @@ async function submitBooking() {
     if(!form.checkValidity()) { form.reportValidity(); return; }
     
     const timeInput = document.getElementById("apptTime");
-    if(timeInput.disabled || timeInput.type === "text") {
+    // Get actual 24h value
+    const rawTime = timeInput.dataset.val24 || timeInput.value;
+    
+    if(timeInput.disabled || !rawTime) {
         alert("Please select a valid date where the doctor is available."); return;
     }
-    if (timeInput.value < timeInput.min || timeInput.value > timeInput.max) {
+    if (rawTime < timeInput.min || rawTime > timeInput.max) {
         alert(`Please select a time between ${formatTime12H(timeInput.min)} and ${formatTime12H(timeInput.max)}.`);
         return;
     }
 
     const consultType = document.getElementById("consultType").value;
     const rawDate = document.getElementById("apptDate").value;
-    const rawTime = timeInput.value;
     const ssInput = document.getElementById("paymentScreenshot").files[0];
     
     if(consultType === "Online" && !ssInput) {

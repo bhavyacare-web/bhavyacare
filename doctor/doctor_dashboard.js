@@ -24,8 +24,63 @@ window.onload = function() {
     document.getElementById("ledgerFrom").value = formatForInput(firstDay);
     document.getElementById("ledgerTo").value = formatForInput(lastDay); 
 
+    // 🌟 NAYA: WARNING BANNER CHECK 🌟
+    verifyDoctorStatus();
+
     fetchDoctorAppointments(docId);
 };
+
+// ===============================================
+// 🌟 AUTOMATIC LIVE STATUS CHECK FUNCTION 🌟
+// ===============================================
+async function verifyDoctorStatus() {
+    const docId = localStorage.getItem("bhavya_user_id");
+    const banner = document.getElementById("statusWarningBanner");
+    
+    // 1. Immediate Local Check (Page load hote hi turant dikhane ke liye)
+    const localStatus = localStorage.getItem("bhavya_doc_status") || "Pending";
+    if (localStatus !== "Active" && localStatus !== "Approved") {
+        if(banner) banner.style.display = "block";
+    } else {
+        if(banner) banner.style.display = "none";
+    }
+
+    // 2. Background Server Check (Agar admin ne background mein approve kar diya ho)
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "checkDoctorStatus", doctor_id: docId })
+        });
+        const resData = await response.json();
+        
+        if (resData.status === "success") {
+            const currentStatus = (resData.data.status || "Pending").trim();
+            localStorage.setItem("bhavya_doc_status", currentStatus);
+            
+            if (currentStatus !== "Active" && currentStatus !== "Approved") {
+                if(banner) {
+                    banner.style.display = "block";
+                    // Agar profile reject ho gayi ho toh red color mein reason dikhayega
+                    if (currentStatus === "Rejected") {
+                        banner.style.backgroundColor = "#f8d7da";
+                        banner.style.color = "#721c24";
+                        banner.style.borderLeftColor = "#dc3545";
+                        banner.innerHTML = `<i class="fas fa-times-circle"></i> Your profile was rejected. Reason: <strong>${resData.data.reject_reason || "Contact Admin"}</strong>. Please update your profile in the settings.`;
+                    }
+                }
+            } else {
+                // Agar Active ho gaya to banner chhupa do
+                if(banner) banner.style.display = "none";
+            }
+        }
+    } catch(e) { 
+        console.error("Status check failed", e); 
+    }
+}
+
+// ===============================================
+// 🌟 MY PROFILE EDIT LOGIC (DROPDOWN DAY SELECTION) 🌟
+// ===============================================
 
 function switchTab(tabId) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
@@ -41,33 +96,6 @@ function switchTab(tabId) {
         loadDoctorProfileData();
     }
 }
-
-function formatDate(rawDate) {
-    if (!rawDate) return "N/A";
-    let dateStr = String(rawDate).trim();
-    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) return dateStr;
-    let d = new Date(dateStr);
-    if (!isNaN(d.getTime())) return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`; 
-    return dateStr;
-}
-
-function formatTime(rawTime) {
-    if (!rawTime) return "N/A";
-    let timeStr = String(rawTime).trim();
-    if (timeStr.includes("T") || timeStr.includes("Z")) {
-        let d = new Date(timeStr);
-        if (!isNaN(d.getTime())) {
-            let h = d.getHours(); let m = d.getMinutes(); let ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12 || 12;
-            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`;
-        }
-    }
-    return timeStr;
-}
-
-// ===============================================
-// 🌟 MY PROFILE EDIT LOGIC (DROPDOWN DAY SELECTION) 🌟
-// ===============================================
 
 function showOffDay() {
     const selectedDay = document.getElementById("offDaySelect").value;
@@ -91,7 +119,6 @@ function toggleEditOnlineSection() {
 }
 
 async function loadDoctorProfileData() {
-    // Hide Form, Show Loading text inside the section to avoid breaking layout
     document.getElementById("editProfileForm").style.display = "none";
     document.getElementById("profileLoadingText").style.display = "block";
 
@@ -109,17 +136,14 @@ async function loadDoctorProfileData() {
             
             const days = ['mon','tue','wed','thu','fri','sat','sun'];
             days.forEach(d => {
-                // Populate Offline Inputs
                 let offIn = document.getElementById(`edit_off_${d}_in`);
                 let offOut = document.getElementById(`edit_off_${d}_out`);
                 offIn.value = p[`off_${d}_in`] || "";
                 offOut.value = p[`off_${d}_out`] || "";
                 
-                // Super Important: Agar value pehle se hai toh input type ko 'time' kar do taki box khali na dikhe
                 if(p[`off_${d}_in`]) offIn.type = "time";
                 if(p[`off_${d}_out`]) offOut.type = "time";
 
-                // Populate Online Inputs
                 let onIn = document.getElementById(`edit_on_${d}_in`);
                 let onOut = document.getElementById(`edit_on_${d}_out`);
                 onIn.value = p[`on_${d}_in`] || "";
@@ -130,7 +154,6 @@ async function loadDoctorProfileData() {
             });
             toggleEditOnlineSection();
             
-            // Default show Monday
             document.getElementById("offDaySelect").value = "mon";
             document.getElementById("onDaySelect").value = "mon";
             showOffDay();
@@ -200,7 +223,11 @@ async function saveDoctorProfile() {
             body: JSON.stringify(payload)
         });
         const resData = await response.json();
-        if (resData.status === "success") alert("Full Schedule updated successfully!");
+        if (resData.status === "success") {
+            alert("Full Schedule updated successfully!");
+            // Profile update hone ke baad wapas status check karega
+            verifyDoctorStatus();
+        }
         else alert("Error: " + resData.message);
     } catch(e) { alert("Failed to update."); } 
     finally {
@@ -210,8 +237,31 @@ async function saveDoctorProfile() {
 }
 
 // ===============================================
-// REST OF THE CODE (Appointments, Ledger, etc) REMAINS EXACTLY SAME
+// 🌟 APPOINTMENTS & LEDGER LOGIC 🌟
 // ===============================================
+
+function formatDate(rawDate) {
+    if (!rawDate) return "N/A";
+    let dateStr = String(rawDate).trim();
+    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) return dateStr;
+    let d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`; 
+    return dateStr;
+}
+
+function formatTime(rawTime) {
+    if (!rawTime) return "N/A";
+    let timeStr = String(rawTime).trim();
+    if (timeStr.includes("T") || timeStr.includes("Z")) {
+        let d = new Date(timeStr);
+        if (!isNaN(d.getTime())) {
+            let h = d.getHours(); let m = d.getMinutes(); let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`;
+        }
+    }
+    return timeStr;
+}
 
 async function fetchDoctorAppointments(doctorId) {
     try {

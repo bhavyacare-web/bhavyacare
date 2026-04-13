@@ -1,8 +1,28 @@
 let allDoctors = [];
 let selectedDoctor = null;
-let currentUpiLink = ""; // 🌟 NEW: Global variable to hold UPI link
+let currentUpiLink = ""; 
 
 const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+// 🌟 KEYWORD MAPPING DICTIONARY (Symptom to Speciality) 🌟
+const symptomMapping = {
+    "general physician": ["fever", "cold", "cough", "flu", "headache", "body ache", "fatigue", "viral", "infection", "weakness", "bukhar", "sardi", "khasi", "dard", "thakan"],
+    "cardiologist": ["chest pain", "heart", "blood pressure", "bp", "palpitations", "breathlessness", "heart attack", "cholesterol", "dil", "seene me dard", "ghabrahat"],
+    "dermatologist": ["skin", "acne", "pimples", "rash", "hair fall", "dandruff", "itching", "eczema", "khujli", "daag", "baal jhadna", "allergy", "twacha"],
+    "gastroenterologist": ["stomach", "pain", "digestion", "acidity", "gas", "ulcer", "vomiting", "diarrhea", "constipation", "pet dard", "kabz", "pachan", "ulti", "loose motion", "dast"],
+    "dentist": ["tooth", "teeth", "gum", "cavity", "braces", "root canal", "bleeding gums", "bad breath", "daant", "masude", "muh ki badboo"],
+    "orthopedic": ["bone", "joint", "fracture", "arthritis", "back pain", "knee pain", "muscle", "sprain", "haddi", "jodo me dard", "kamar dard", "ghutno me dard", "moch"],
+    "pediatrician": ["child", "baby", "kid", "vaccination", "infant", "growth", "bacha", "bachcho ki bimari"],
+    "gynecologist": ["pregnancy", "period", "menstruation", "pcos", "pcod", "women", "uterus", "fertility", "mahila", "masik dharm", "garbhavastha", "white discharge"],
+    "neurologist": ["brain", "nerve", "migraine", "seizures", "stroke", "paralysis", "memory", "dimag", "nas", "sir dard", "chakkar", "behoshi"],
+    "psychiatrist": ["mental", "depression", "anxiety", "stress", "sleep", "bipolar", "tension", "neend", "chinta", "tanav", "udasi", "darr"],
+    "ent": ["ear", "nose", "throat", "hearing", "sinus", "tonsil", "kaan", "naak", "gala", "kharash"],
+    "ophthalmologist": ["eye", "vision", "spectacles", "cataract", "glaucoma", "blindness", "aankh", "chashma", "motiyabind", "dhundhla"],
+    "urologist": ["kidney", "urine", "bladder", "stone", "prostate", "peshab", "gurda", "pathri", "jalan"],
+    "endocrinologist": ["diabetes", "thyroid", "sugar", "hormone", "weight gain", "obesity", "motapa"],
+    "pulmonologist": ["lungs", "breathing", "asthma", "tuberculosis", "tb", "cough", "phephde", "saans", "dama"],
+    "sexologist": ["sexual", "ed", "erectile dysfunction", "premature ejaculation", "nightfall", "gupt rog", "mardana kamzori"]
+};
 
 window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
@@ -113,6 +133,17 @@ function applyFilters() {
     let filterDay = document.getElementById("filterDay").value;
     let filterTime = document.getElementById("filterTime").value;
 
+    // 🌟 SYMPTOM SEARCH LOGIC 🌟
+    let matchedSpecialities = [];
+    if (searchName !== "") {
+        for (const [speciality, symptoms] of Object.entries(symptomMapping)) {
+            // Agar patient ne exact symptom type kiya ho
+            if (symptoms.some(s => searchName.includes(s) || s.includes(searchName))) {
+                matchedSpecialities.push(speciality);
+            }
+        }
+    }
+
     let isCurrentTimeCheck = false;
     if (filterDay === "Any" && filterTime === "") {
         const now = new Date();
@@ -124,11 +155,20 @@ function applyFilters() {
     const container = document.getElementById("doctorsContainer");
     container.innerHTML = "";
 
+    let displayedCount = 0;
+
     allDoctors.forEach((doc, index) => {
-        let matchName = doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
+        // 1. Direct Name ya Speciality Match
+        let matchName = searchName === "" || doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
+        
+        // 2. Symptom se nikali hui Speciality Match
+        let matchSymptom = matchedSpecialities.some(spec => doc.speciality.toLowerCase().includes(spec));
+        
         let matchCity = doc.city.toLowerCase().includes(searchCity);
         
-        if(!matchName || !matchCity) return;
+        // Agar naam bhi match nahi hua, aur symptom list mein bhi match nahi hua, to skip kar do
+        if(!matchName && !matchSymptom) return;
+        if(!matchCity) return;
         if(filterType === "Online" && doc.online_available !== "Yes") return;
         
         let isAvail = checkAvailability(doc, filterDay, filterTime);
@@ -190,7 +230,12 @@ function applyFilters() {
             </div>
         `;
         container.appendChild(card);
+        displayedCount++;
     });
+
+    if (displayedCount === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666; font-size: 16px;">No doctors found matching your search or symptom.</div>`;
+    }
 }
 
 function openSchedule(index) {
@@ -252,7 +297,6 @@ function attemptBook(index) {
     document.getElementById("apptDate").value = "";
     document.getElementById("apptDate").setAttribute('min', today);
 
-    // Reset time input properly
     const timeInput = document.getElementById("apptTime");
     timeInput.type = "text";
     timeInput.value = "";
@@ -260,7 +304,7 @@ function attemptBook(index) {
     timeInput.disabled = true;
     
     document.getElementById("availabilityMsg").style.display = "none";
-    document.getElementById("qrContainer").style.display = "none"; // Hide QR initially
+    document.getElementById("qrContainer").style.display = "none"; 
     
     selectConsultType("Offline"); 
     
@@ -286,10 +330,7 @@ function handleTypeChange() {
         let onDiscount = getDiscountedFee(selectedDoctor.online_fee);
         document.getElementById("payAmount").innerText = onDiscount;
         
-        // Save UPI link globally to be used by the button click
         currentUpiLink = `upi://pay?pa=${selectedDoctor.upi_id}&pn=BhavyaCare&am=${onDiscount}&cu=INR`;
-        
-        // Generate QR code but keep container hidden
         document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUpiLink)}`;
 
         ssInput.setAttribute("required", "true");
@@ -300,14 +341,12 @@ function handleTypeChange() {
     }
 }
 
-// 🌟 NAYA: UPI App Open Logic 🌟
 function openUPI() {
     if(currentUpiLink !== "") {
         window.location.href = currentUpiLink;
     }
 }
 
-// 🌟 NAYA: Toggle QR Code Visibility 🌟
 function toggleQR() {
     const qrDiv = document.getElementById("qrContainer");
     if(qrDiv.style.display === "none") {
@@ -317,12 +356,11 @@ function toggleQR() {
     }
 }
 
-// 🌟 NAYA: Time Formatter logic to switch to 12h format on blur 🌟
 function formatTimeDisplay(input) {
     if(input.value) {
-        input.dataset.val24 = input.value; // Real 24h format hidden me save kar liya
-        input.type = 'text'; // Wapas text type me badla
-        input.value = formatTime12H(input.dataset.val24); // AM/PM me convert karke dikhaya
+        input.dataset.val24 = input.value; 
+        input.type = 'text'; 
+        input.value = formatTime12H(input.dataset.val24); 
     } else {
         input.type = 'text';
     }
@@ -357,7 +395,6 @@ function checkSchedule() {
         msgDiv.style.display = "block";
         
         timeInput.disabled = false;
-        // Keep it text initially so placeholder is visible if empty
         timeInput.type = "text"; 
         timeInput.setAttribute("min", inTime);
         timeInput.setAttribute("max", outTime);
@@ -398,7 +435,6 @@ async function submitBooking() {
     if(!form.checkValidity()) { form.reportValidity(); return; }
     
     const timeInput = document.getElementById("apptTime");
-    // Get actual 24h value
     const rawTime = timeInput.dataset.val24 || timeInput.value;
     
     if(timeInput.disabled || !rawTime) {

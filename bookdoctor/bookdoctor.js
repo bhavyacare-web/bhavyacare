@@ -26,27 +26,28 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = titles[tabId];
 }
 
-// 🌟 NAYA: IMAGE URL FIXER FUNCTION 🌟
+// 🌟 SUPER ROBUST IMAGE URL FIXER 🌟
 function fixDriveUrl(rawImg, docName) {
-    let imgSrc = "";
-    if (rawImg && rawImg.trim() !== "") {
-        if (rawImg.includes("drive.google.com/file/d/")) {
-            let match = rawImg.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
-        } else if (rawImg.includes("drive.google.com/open?id=")) {
-            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
-            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
-        } else if (rawImg.includes("drive.google.com/uc?id=")) {
-            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
-            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
-        } else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
-            imgSrc = `data:image/jpeg;base64,${rawImg}`;
-        } else { imgSrc = rawImg; }
+    let defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName || 'Doc')}&background=0056b3&color=fff&size=100`;
+    
+    if (!rawImg || typeof rawImg !== 'string' || rawImg.trim() === "") {
+        return defaultAvatar;
     }
-    if (imgSrc === "") { 
-        imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0056b3&color=fff&size=100`; 
+    
+    // Agar link drive ka hai, toh exact ID extract karke usko 'uc?export=view' mein convert karenge (Best for <img> tags)
+    if (rawImg.includes("drive.google.com")) {
+        let match = rawImg.match(/[-\w]{25,}/); // Google Drive file ID hamesha 25+ chars ka hota hai
+        if (match && match[0]) {
+            return `https://drive.google.com/uc?export=view&id=${match[0]}`;
+        }
     }
-    return imgSrc;
+    
+    // Agar pehle se base64 hai ya normal link hai
+    if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+        return `data:image/jpeg;base64,${rawImg}`;
+    }
+    
+    return rawImg;
 }
 
 async function fetchAdminData() {
@@ -64,7 +65,7 @@ async function fetchAdminData() {
         document.getElementById("doctorsTable").style.display = "table";
 
         if (docsJson.status === "success") {
-            // Yahan hum sabhi doctors ki image fix kar rahe hain
+            // Yahan sabhi doctors ki images background mein fix ho rahi hain
             allDoctors = docsJson.data.map(d => {
                 d.imgUrl = fixDriveUrl(d.imgUrl, d.doctor_name);
                 return d;
@@ -120,10 +121,11 @@ function renderDocsTable(doctors) {
             actionButtons = `<button class="btn btn-reject" onclick="updateStatus('${doc.doctor_id}', 'Inactive')">Deactivate</button>`;
         }
 
+        // Added onerror fallback to guarantee the image never shows broken
         tbody.innerHTML += `
             <tr>
                 <td class="doc-clickable" onclick="showDoctorProfile('${doc.doctor_id}')" title="Click to view full profile">
-                    <img src="${doc.imgUrl}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                    <img src="${doc.imgUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff'" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </td>
                 <td class="doc-clickable" onclick="showDoctorProfile('${doc.doctor_id}')" style="font-weight:bold; color:var(--primary); cursor:pointer;">${doc.doctor_id}</td>
                 <td><strong>${doc.doctor_name}</strong><br><span style="font-size:12px; color:#777;">${doc.speciality}</span></td>
@@ -146,7 +148,7 @@ function showDoctorProfile(docId) {
     
     let html = `
         <div style="display:flex; gap:20px; align-items:center; border-bottom:1px solid #eee; padding-bottom:20px; margin-bottom:20px;">
-            <img src="${doc.imgUrl}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <img src="${doc.imgUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff'" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
             <div>
                 <h2 style="margin:0; color:var(--primary);">${doc.doctor_name}</h2>
                 <p style="margin:5px 0; color:#555; font-size:15px;"><strong>${doc.doctor_id}</strong> | ${doc.speciality}</p>

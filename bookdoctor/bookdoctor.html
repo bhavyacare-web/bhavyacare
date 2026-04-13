@@ -14,74 +14,97 @@
         .header-top { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .header h2 { margin: 0; font-size: 22px; }
         
+        /* SEARCH & FILTERS */
         .filter-bar { max-width: 1100px; margin: 15px auto 0; display: flex; gap: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
-        .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 140px; }
+        .filter-bar input, .filter-bar select { padding: 10px; border: none; border-radius: 5px; font-size: 14px; outline: none; flex: 1; min-width: 140px; box-sizing: border-box; }
         .filter-bar button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s;}
         .filter-bar button:hover { background: #218838; }
         
-        .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 15px; }
-        .doc-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; text-align: center; border: 1px solid #eaeaea; position: relative;}
+        /* 🌟 NEW DOCTOR CARD DESIGN 🌟 */
+        .doctors-grid { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; padding: 0 15px; }
+        .doc-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid #eaeaea; position: relative; display: flex; flex-direction: column; transition: 0.3s; }
+        .doc-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); transform: translateY(-3px); }
         
-        .img-container { width: 100px; height: 100px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; border: 3px solid #0056b3; padding: 2px; }
+        .doc-exp-corner { position: absolute; top: 15px; right: 15px; background: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid #ffeeba; }
+        
+        .doc-card-top { display: flex; align-items: center; gap: 15px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
+        .img-container { width: 85px; height: 85px; flex-shrink: 0; border-radius: 50%; overflow: hidden; border: 3px solid #0056b3; padding: 2px; }
         .doc-card img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         
-        .doc-card h3 { color: #333; margin: 5px 0; font-size: 20px; }
-        .doc-speciality { font-weight: bold; color: #e67e22; font-size: 14px; margin-bottom: 5px;}
-        .doc-exp { background: #fff3cd; color: #856404; display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; margin-bottom: 10px;}
+        .doc-info { text-align: left; padding-right: 40px; /* space for experience badge */ }
+        .doc-info h3 { color: #333; margin: 0 0 5px 0; font-size: 20px; }
+        .doc-speciality { font-weight: 800; color: #0056b3; font-size: 15px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .doc-qual { font-size: 12px; color: #666; font-weight: bold;}
         
-        .badges-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badges-container { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
         .avail-yes { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .avail-no { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .type-online { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
         .type-offline { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
         
-        .fees { margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #333; border: 1px dashed #ccc;}
+        .fees { margin: 10px 0; background: #f8f9fa; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #333; border: 1px dashed #cbd5e0; display: flex; justify-content: space-between; align-items: center;}
         .discount-price { color: #28a745; font-size: 16px; margin-left: 5px;}
         
-        .action-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 10px; border-radius: 5px; flex: 1; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .action-btns { display: flex; gap: 10px; margin-top: auto; }
+        .btn-schedule { background: #e2e8f0; color: #333; border: none; padding: 12px; border-radius: 8px; flex: 1; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s;}
         .btn-schedule:hover { background: #cbd5e1; }
-        .btn-book { background: #0056b3; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-size: 13px; font-weight: bold; cursor: pointer; }
-        .btn-book:hover { background: #004494; }
+        .btn-book { background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,86,179,0.2);}
+        .btn-book:hover { background: #004494; transform: translateY(-1px);}
 
-        /* Modal Styles */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal { background: white; width: 90%; max-width: 550px; border-radius: 10px; padding: 25px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
+        /* 🌟 CHECKOUT MODAL STYLES 🌟 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal { background: white; width: 90%; max-width: 500px; border-radius: 15px; padding: 30px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f4f8; padding-bottom: 15px; margin-bottom: 20px; }
+        .close-btn { background: #f1f5f9; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .close-btn:hover { background: #e2e8f0; color: #dc3545; }
         
         .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .schedule-table th, .schedule-table td { padding: 10px 8px; border: 1px solid #ddd; text-align: center; }
         .schedule-table th { background: #f4f4f4; color: #333;}
         
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px;}
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; outline: none;}
-        .form-group input:focus, .form-group select:focus { border-color: #0056b3; }
-        .time-info { font-size: 13px; color: #28a745; margin-top: 5px; font-weight: bold; display: none; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #2d3748; font-size: 14px;}
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; box-sizing: border-box; font-size: 15px; outline: none; background: #fff; transition: 0.3s;}
+        .form-group input:focus, .form-group select:focus { border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
+        .time-info { font-size: 13px; color: #28a745; margin-top: 8px; font-weight: bold; display: none; background: #d4edda; padding: 8px; border-radius: 5px; border-left: 4px solid #28a745;}
         
-        #paymentSection { display: none; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #28a745; margin-top: 15px; text-align: center; }
-        #loader { text-align: center; color: #0056b3; padding: 20px; font-weight: bold; font-size: 18px; }
+        /* RADIO BUTTONS FOR CONSULT TYPE */
+        .consult-type-group { display: flex; gap: 10px; }
+        .consult-type-group input[type="radio"] { display: none; }
+        .consult-type-group label { flex: 1; text-align: center; padding: 12px 10px; border: 2px solid #cbd5e0; border-radius: 8px; font-weight: bold; color: #4a5568; cursor: pointer; transition: 0.3s; background: #f8fafc; font-size: 14px;}
+        .consult-type-group input[type="radio"]:checked + label { border-color: #0056b3; background: #ebf8ff; color: #0056b3; box-shadow: 0 4px 10px rgba(0,86,179,0.15); }
+        
+        #paymentSection { display: none; background: #f0fdf4; padding: 20px; border-radius: 10px; border: 2px dashed #4ade80; margin-top: 15px; text-align: center; }
+        #loader { text-align: center; color: #0056b3; padding: 40px; font-weight: bold; font-size: 18px; }
 
         /* 🌟 LOGIN POPUP STYLES 🌟 */
-        #login-section { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 9999px rgba(0,0,0,0.6); border-radius: 10px; text-align: center; z-index: 9999; }
-        #login-section h3 { color: #333; margin-bottom: 20px; }
+        #login-section { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 9999px rgba(0,0,0,0.6); border-radius: 12px; text-align: center; z-index: 9999; }
+        #login-section h3 { color: #333; margin-bottom: 20px; font-size: 22px; }
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; box-sizing: border-box;}
         .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+        
+        /* Mobile specific adjustments */
+        @media (max-width: 600px) {
+            .doctors-grid { grid-template-columns: 1fr; }
+            .consult-type-group label { font-size: 13px; padding: 10px 5px; }
+            .fees { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="header-top">
-        <a href="../index.html" style="color:white; text-decoration:none; font-weight:bold;">⬅ Home</a>
+        <a href="../index.html" style="color:white; text-decoration:none; font-weight:bold; font-size:16px;">⬅ Back</a>
         <h2>Find & Book a Doctor</h2>
         <div style="width: 50px;"></div>
     </div>
     
     <div class="filter-bar">
-        <input type="text" id="searchInput" placeholder="Search Doctor, Speciality, City...">
+        <input type="text" id="searchName" placeholder="🔍 Doctor Name or Speciality...">
+        <input type="text" id="searchCity" placeholder="📍 City (e.g. Delhi)">
+        
         <select id="filterType">
             <option value="Any">Consult Type: Any</option>
             <option value="Offline">Clinic Visit</option>
@@ -94,17 +117,17 @@
             <option value="fri">Friday</option><option value="sat">Saturday</option>
             <option value="sun">Sunday</option>
         </select>
-        <input type="time" id="filterTime">
+        <input type="text" id="filterTime" placeholder="⏰ Select Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'">
         <button onclick="applyFilters()">Search</button>
     </div>
 </div>
 
-<div id="loader">Fetching doctors... ⏳</div>
+<div id="loader">Fetching available doctors... ⏳</div>
 <div class="doctors-grid" id="doctorsContainer"></div>
 
 <div id="login-section">
-    <button class="close-btn" onclick="closeLoginPopup()" style="position:absolute; top:10px; right:15px; font-size:24px;">&times;</button>
-    <h3 id="form-title">Patient Login</h3>
+    <button class="close-btn" onclick="closeLoginPopup()" style="position:absolute; top:15px; right:15px;">&times;</button>
+    <h3 id="form-title">Patient Login to Book</h3>
     
     <div id="phone-section">
         <div id="partner-role-container" style="display: none;">
@@ -131,7 +154,7 @@
 <div class="modal-overlay" id="scheduleModal">
     <div class="modal">
         <div class="modal-header">
-            <h3 id="scheduleDocName">Doctor Schedule</h3>
+            <h3 id="scheduleDocName" style="margin:0; color:#0056b3;">Doctor Schedule</h3>
             <button class="close-btn" onclick="closeSchedule()">&times;</button>
         </div>
         <div id="scheduleContent"></div>
@@ -141,44 +164,60 @@
 <div class="modal-overlay" id="bookingModal">
     <div class="modal">
         <div class="modal-header">
-            <h3 id="modalDocName">Book Appointment</h3>
+            <h3 id="modalDocName" style="margin:0; color:#0056b3;">Book Appointment</h3>
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
         <form id="bookingForm">
+            
             <div class="form-group">
                 <label>1. Select Consultation Type</label>
-                <select id="consultType" onchange="handleTypeChange()" required></select>
+                <div class="consult-type-group" id="consultTypeGroup"></div>
+                <input type="hidden" id="consultType" required>
             </div>
             
             <div class="form-group">
                 <label>2. Choose Appointment Date</label>
-                <input type="date" id="apptDate" onchange="checkSchedule()" required>
+                <input type="text" id="apptDate" placeholder="📅 Select Date" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" onchange="checkSchedule()" required>
                 <div id="availabilityMsg" class="time-info"></div>
             </div>
             
             <div class="form-group">
                 <label>3. Select Preferred Time</label>
-                <input type="time" id="apptTime" required disabled>
+                <input type="text" id="apptTime" placeholder="⏰ Select Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" required disabled>
             </div>
             
             <div id="paymentSection">
-                <h4 style="margin: 0 0 10px; color: #155724;">Online Payment Required</h4>
-                <p style="margin: 0; font-size: 14px;">UPI ID: <strong id="payUpiId"></strong></p>
-                <p style="margin: 5px 0 15px; font-size: 18px; font-weight: bold; color: #d32f2f;">Pay (10% Off): ₹<span id="payAmount"></span></p>
-                <img id="qrImage" src="" alt="QR Code" style="width:150px; height:150px; border: 5px solid white; border-radius: 8px;">
-                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <h4 style="margin: 0 0 10px; color: #155724; font-size: 18px;"><i class="fas fa-shield-check"></i> Secure Online Payment</h4>
+                <p style="margin: 0 0 5px; font-size: 14px; color:#555;">UPI ID: <strong id="payUpiId" style="color:#333;"></strong></p>
+                <p style="margin: 0 0 15px; font-size: 20px; font-weight: bold; color: #d32f2f;">Pay (10% Off): ₹<span id="payAmount"></span></p>
+                <img id="qrImage" src="" alt="QR Code" style="width:160px; height:160px; border: 4px solid white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <div class="form-group" style="text-align: left; margin-top: 20px;">
                     <label>Upload Payment Screenshot *</label>
-                    <input type="file" id="paymentScreenshot" accept="image/*">
+                    <input type="file" id="paymentScreenshot" accept="image/*" style="padding:8px; border: 1px solid #4ade80;">
                 </div>
             </div>
 
-            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 15px; padding: 12px; font-size: 16px;">Confirm & Book</button>
-            <div id="btnLoader" style="display:none; text-align:center; font-weight:bold; color:#0056b3; margin-top:15px;">Processing... ⏳</div>
+            <button type="button" class="btn-book" id="submitBtn" onclick="submitBooking()" style="margin-top: 10px; padding: 15px; font-size: 16px; width: 100%;">Confirm & Book Appointment</button>
+            <div id="btnLoader" style="display:none; text-align:center; font-weight:bold; color:#0056b3; margin-top:15px; padding: 15px;">Processing your booking... ⏳</div>
         </form>
     </div>
 </div>
 
 <script src="../app.js"></script>
+
+<script>
+    // Ye script app.js ke redirect ko block karegi booking page par
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user && document.getElementById("login-section").style.display === "block") {
+            // Patient successfully logged in inside the popup on this booking page
+            // Immediately reload this page to prevent app.js from redirecting to 404
+            setTimeout(() => {
+                window.location.replace(window.location.href.split('#')[0]); 
+            }, 300);
+        }
+    });
+</script>
+
 <script src="bookdoctor.js"></script>
 </body>
 </html>

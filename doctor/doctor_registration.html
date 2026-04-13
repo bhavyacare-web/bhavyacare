@@ -22,6 +22,10 @@
         .schedule-grid { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
         .schedule-grid span { font-weight: bold; color: #2d3748; }
         
+        /* Headers for Time Columns */
+        .schedule-header { background: transparent !important; padding-bottom: 0 !important; margin-bottom: 5px !important; border: none; }
+        .schedule-header span { color: #4a5568 !important; font-size: 14px; font-weight: 600; text-decoration: none !important;}
+
         .online-toggle { background: #ebf8ff; border: 1px solid #bee3f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         #onlineSection { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #bee3f8; }
         
@@ -32,9 +36,6 @@
         .btn-submit:hover { background-color: #218838; transform: translateY(-1px); }
         #loader { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 20px; font-size: 16px; }
 
-        /* ========================================= */
-        /* MOBILE RESPONSIVE CSS (Naya Add Kiya Hai) */
-        /* ========================================= */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .container { padding: 20px; }
@@ -44,6 +45,7 @@
         }
 
         @media (max-width: 480px) {
+            .schedule-header { display: none !important; } /* Mobile par labels hide kar denge kyuki column stack ho jate hain */
             .schedule-grid { grid-template-columns: 1fr; gap: 8px; text-align: center; padding: 15px; }
             .schedule-grid span { margin-bottom: 5px; display: block; font-size: 16px; text-decoration: underline; color: #0056b3; }
         }
@@ -88,14 +90,19 @@
 
         <div class="section-title">3. Offline Clinic Schedule (Fill at least 1 day)</div>
         <p style="font-size:13px; color:#e53e3e; margin-top:-10px;">Leave blank if clinic is closed on that day.</p>
+        
         <div id="offlineSchedule">
-            <div class="schedule-grid"><span>Monday</span><input type="time" id="off_mon_in"><input type="time" id="off_mon_out"></div>
-            <div class="schedule-grid"><span>Tuesday</span><input type="time" id="off_tue_in"><input type="time" id="off_tue_out"></div>
-            <div class="schedule-grid"><span>Wednesday</span><input type="time" id="off_wed_in"><input type="time" id="off_wed_out"></div>
-            <div class="schedule-grid"><span>Thursday</span><input type="time" id="off_thu_in"><input type="time" id="off_thu_out"></div>
-            <div class="schedule-grid"><span>Friday</span><input type="time" id="off_fri_in"><input type="time" id="off_fri_out"></div>
-            <div class="schedule-grid"><span>Saturday</span><input type="time" id="off_sat_in"><input type="time" id="off_sat_out"></div>
-            <div class="schedule-grid"><span>Sunday</span><input type="time" id="off_sun_in"><input type="time" id="off_sun_out"></div>
+            <div class="schedule-grid schedule-header">
+                <span>Day</span><span>Open Clinic Time</span><span>Close Clinic Time</span>
+            </div>
+            
+            <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_mon_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_mon_out"></div>
+            <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_tue_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_tue_out"></div>
+            <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_wed_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_wed_out"></div>
+            <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_thu_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_thu_out"></div>
+            <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_fri_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_fri_out"></div>
+            <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_sat_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_sat_out"></div>
+            <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_sun_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="off_sun_out"></div>
         </div>
 
         <div class="section-title">4. Online Video/Call Consultation</div>
@@ -109,13 +116,18 @@
             <div id="onlineSection">
                 <div class="form-group" style="width:50%;"><label>Online Consultation Fee (₹) *</label><input type="number" id="onlineFee"></div>
                 <label style="margin-top:15px; color:#0056b3; display:block;">Online Availability Schedule (Fill at least 1 day)</label>
-                <div class="schedule-grid"><span>Monday</span><input type="time" id="on_mon_in"><input type="time" id="on_mon_out"></div>
-                <div class="schedule-grid"><span>Tuesday</span><input type="time" id="on_tue_in"><input type="time" id="on_tue_out"></div>
-                <div class="schedule-grid"><span>Wednesday</span><input type="time" id="on_wed_in"><input type="time" id="on_wed_out"></div>
-                <div class="schedule-grid"><span>Thursday</span><input type="time" id="on_thu_in"><input type="time" id="on_thu_out"></div>
-                <div class="schedule-grid"><span>Friday</span><input type="time" id="on_fri_in"><input type="time" id="on_fri_out"></div>
-                <div class="schedule-grid"><span>Saturday</span><input type="time" id="on_sat_in"><input type="time" id="on_sat_out"></div>
-                <div class="schedule-grid"><span>Sunday</span><input type="time" id="on_sun_in"><input type="time" id="on_sun_out"></div>
+                
+                <div class="schedule-grid schedule-header">
+                    <span>Day</span><span>Open Online Time</span><span>Close Online Time</span>
+                </div>
+
+                <div class="schedule-grid"><span>Monday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_mon_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_mon_out"></div>
+                <div class="schedule-grid"><span>Tuesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_tue_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_tue_out"></div>
+                <div class="schedule-grid"><span>Wednesday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_wed_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_wed_out"></div>
+                <div class="schedule-grid"><span>Thursday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_thu_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_thu_out"></div>
+                <div class="schedule-grid"><span>Friday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_fri_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_fri_out"></div>
+                <div class="schedule-grid"><span>Saturday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_sat_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_sat_out"></div>
+                <div class="schedule-grid"><span>Sunday</span><input type="text" placeholder="Open Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_sun_in"><input type="text" placeholder="Close Time" onfocus="(this.type='time')" onblur="if(!this.value) this.type='text'" id="on_sun_out"></div>
             </div>
         </div>
 
@@ -143,9 +155,6 @@
         const uid = localStorage.getItem("bhavya_user_id");
         if(!uid) { alert("Session Expired. Please login."); window.location.href="../index.html"; return; }
         
-        // ========================================================
-        // NAYA LOGIC: Agar status Pending ya Active hai toh direct wapas bhej do
-        // ========================================================
         const status = localStorage.getItem("bhavya_doc_status");
         if(status === "Pending" || status === "Active") {
             window.location.href = "pending_approval.html";
@@ -249,9 +258,6 @@
             if (resData.status === "success") {
                 alert("Profile Registered Successfully! Awaiting Admin Approval.");
                 
-                // ========================================================
-                // NAYA LOGIC: LocalStorage turant update karke Pending Page par redirect
-                // ========================================================
                 localStorage.setItem("bhavya_doc_status", "Pending"); 
                 window.location.href = "pending_approval.html"; 
                 

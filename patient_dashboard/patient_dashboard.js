@@ -37,10 +37,14 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
-                document.getElementById('btn-withdraw').style.display = 'block';
-            } else {
-                document.getElementById('btn-withdraw').style.display = 'none';
+            // 🌟 SAFE CHECKS ADDED HERE 🌟
+            let btnWithdraw = document.getElementById('btn-withdraw');
+            if (btnWithdraw) {
+                if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
+                    btnWithdraw.style.display = 'block';
+                } else {
+                    btnWithdraw.style.display = 'none';
+                }
             }
 
             const planName = patient.plan ? patient.plan.toLowerCase() : "basic";
@@ -50,6 +54,8 @@ async function checkLoginAndFetchData() {
             const vipBtn = document.getElementById("btn-vip-action");
             const vipSubText = document.getElementById("vipSubText");
             const vipAlert = document.getElementById("vipPackageAlert");
+            const notifDot = document.getElementById("notifDot");
+            const notifDotDesktop = document.getElementById("notifDotDesktop");
 
             if (isUserVip) {
                 if (vipBtn) vipBtn.style.display = "none";
@@ -57,32 +63,43 @@ async function checkLoginAndFetchData() {
                 
                 if (patient.vip_package_status === "pending") {
                     if (vipAlert) vipAlert.style.display = "block";
-                    document.getElementById("notifDot").style.display = "block";
+                    if (notifDot) notifDot.style.display = "block";
+                    if (notifDotDesktop) notifDotDesktop.style.display = "block";
                 } else {
                     if (vipAlert) vipAlert.style.display = "none";
-                    document.getElementById("notifDot").style.display = "none";
+                    if (notifDot) notifDot.style.display = "none";
+                    if (notifDotDesktop) notifDotDesktop.style.display = "none";
                 }
 
                 if (patient.vip_details) {
                     safeSetText("vd-start", patient.vip_details.start_date || "N/A");
                     safeSetText("vd-end", patient.vip_details.end_date || "N/A");
-                    document.getElementById("vd-mem1").innerHTML = `<span><strong>${patient.vip_details.member1_name || 'N/A'}</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member1_id || '-'}</span>`;
                     
-                    if (patient.vip_details.member2_name) {
-                        document.getElementById("vd-mem2").innerHTML = `<span><strong>${patient.vip_details.member2_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member2_id || '-'}</span>`;
-                        document.getElementById("vd-mem2").style.display = "flex";
-                    } else { document.getElementById("vd-mem2").style.display = "none"; }
+                    let mem1 = document.getElementById("vd-mem1");
+                    if(mem1) mem1.innerHTML = `<span><strong>${patient.vip_details.member1_name || 'N/A'}</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member1_id || '-'}</span>`;
+                    
+                    let mem2 = document.getElementById("vd-mem2");
+                    if (mem2) {
+                        if (patient.vip_details.member2_name) {
+                            mem2.innerHTML = `<span><strong>${patient.vip_details.member2_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member2_id || '-'}</span>`;
+                            mem2.style.display = "flex";
+                        } else { mem2.style.display = "none"; }
+                    }
 
-                    if (patient.vip_details.member3_name) {
-                        document.getElementById("vd-mem3").innerHTML = `<span><strong>${patient.vip_details.member3_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member3_id || '-'}</span>`;
-                        document.getElementById("vd-mem3").style.display = "flex";
-                    } else { document.getElementById("vd-mem3").style.display = "none"; }
+                    let mem3 = document.getElementById("vd-mem3");
+                    if (mem3) {
+                        if (patient.vip_details.member3_name) {
+                            mem3.innerHTML = `<span><strong>${patient.vip_details.member3_name}</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">${patient.vip_details.member3_id || '-'}</span>`;
+                            mem3.style.display = "flex";
+                        } else { mem3.style.display = "none"; }
+                    }
                 }
             } else {
                 if (vipBtn) vipBtn.style.display = "block";
                 if (vipSubText) vipSubText.innerText = "Upgrade for free home collection";
                 if (vipAlert) vipAlert.style.display = "none";
-                document.getElementById("notifDot").style.display = "none";
+                if (notifDot) notifDot.style.display = "none";
+                if (notifDotDesktop) notifDotDesktop.style.display = "none";
             }
             
             const banner = document.getElementById("profileBanner");
@@ -102,8 +119,8 @@ async function checkLoginAndFetchData() {
                 if (patient.extra_details.image && patient.extra_details.image.startsWith("data:image")) {
                     profileImages.forEach(img => img.src = patient.extra_details.image);
                     if(editPreview) editPreview.src = patient.extra_details.image;
-                    document.getElementById("mobileProfileImg").src = patient.extra_details.image;
-                    document.getElementById("desktopProfileImg").src = patient.extra_details.image;
+                    let mobImg = document.getElementById("mobileProfileImg"); if(mobImg) mobImg.src = patient.extra_details.image;
+                    let deskImg = document.getElementById("desktopProfileImg"); if(deskImg) deskImg.src = patient.extra_details.image;
                 } else {
                     profileImages.forEach(img => img.src = fallbackUrl);
                     if(editPreview) editPreview.src = fallbackUrl;
@@ -114,6 +131,7 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
+            // Aage ke funtions safely call honge
             fetchWalletHistory(userId);
             await Promise.all([
                 fetchPatientBookings(userId),

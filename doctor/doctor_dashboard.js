@@ -34,10 +34,16 @@ function switchTab(tabId) {
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
     
-    let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews' };
+    let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews', 'profile': 'Profile Settings' };
     document.getElementById('pageTitle').innerText = titles[tabId];
+
+    // 🌟 NAYA: Agar profile tab open ho to data load karo 🌟
+    if(tabId === 'profile') {
+        loadDoctorProfileData();
+    }
 }
 
+// ... [Purana format Date/Time ka same rahega] ...
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
     let dateStr = String(rawDate).trim();
@@ -61,6 +67,104 @@ function formatTime(rawTime) {
     return timeStr;
 }
 
+// ===============================================
+// 🌟 NAYA: PROFILE EDIT LOGIC 🌟
+// ===============================================
+
+function toggleEditOnlineSection() {
+    const val = document.getElementById("editOnlineAvailable").value;
+    document.getElementById("editOnlineSection").style.display = (val === "Yes") ? "block" : "none";
+}
+
+async function loadDoctorProfileData() {
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("sec-profile").style.display = "none";
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getDoctorProfileSettings", doctor_id: localStorage.getItem("bhavya_user_id") })
+        });
+        const resData = await response.json();
+        
+        if (resData.status === "success" && resData.data) {
+            const p = resData.data;
+            document.getElementById("editOnlineAvailable").value = p.online_available || "No";
+            document.getElementById("editOnlineFee").value = p.online_fee || "";
+            
+            const days = ['mon','tue','wed','thu','fri','sat','sun'];
+            days.forEach(d => {
+                let inInput = document.getElementById(`edit_on_${d}_in`);
+                let outInput = document.getElementById(`edit_on_${d}_out`);
+                inInput.value = p[`on_${d}_in`] || "";
+                outInput.value = p[`on_${d}_out`] || "";
+                if(inInput.value) inInput.type = "time";
+                if(outInput.value) outInput.type = "time";
+            });
+            toggleEditOnlineSection();
+        }
+    } catch(e) {
+        console.log("Error loading profile", e);
+    } finally {
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("sec-profile").style.display = "block";
+    }
+}
+
+async function saveDoctorProfile() {
+    const isOnline = document.getElementById('editOnlineAvailable').value === "Yes";
+    if(isOnline) {
+        if(!document.getElementById('editOnlineFee').value) { alert("Please enter Online Fee."); return; }
+        
+        // Check at least one schedule
+        let hasSchedule = false;
+        const days = ['mon','tue','wed','thu','fri','sat','sun'];
+        for(let d of days) {
+            let inT = document.getElementById(`edit_on_${d}_in`).value;
+            let outT = document.getElementById(`edit_on_${d}_out`).value;
+            if(inT && outT) { hasSchedule = true; break; }
+        }
+        if(!hasSchedule) { alert("Please fill open/close time for at least one day for online consultation."); return; }
+    }
+
+    document.getElementById("btnSaveProfile").style.display = "none";
+    document.getElementById("profileLoader").style.display = "inline-block";
+
+    const payload = {
+        action: "updateDoctorProfileSettings",
+        doctor_id: localStorage.getItem("bhavya_user_id"),
+        data: {
+            online_available: document.getElementById('editOnlineAvailable').value,
+            online_fee: document.getElementById('editOnlineFee').value || "",
+            on_mon_in: document.getElementById('edit_on_mon_in').value, on_mon_out: document.getElementById('edit_on_mon_out').value,
+            on_tue_in: document.getElementById('edit_on_tue_in').value, on_tue_out: document.getElementById('edit_on_tue_out').value,
+            on_wed_in: document.getElementById('edit_on_wed_in').value, on_wed_out: document.getElementById('edit_on_wed_out').value,
+            on_thu_in: document.getElementById('edit_on_thu_in').value, on_thu_out: document.getElementById('edit_on_thu_out').value,
+            on_fri_in: document.getElementById('edit_on_fri_in').value, on_fri_out: document.getElementById('edit_on_fri_out').value,
+            on_sat_in: document.getElementById('edit_on_sat_in').value, on_sat_out: document.getElementById('edit_on_sat_out').value,
+            on_sun_in: document.getElementById('edit_on_sun_in').value, on_sun_out: document.getElementById('edit_on_sun_out').value
+        }
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+        if (resData.status === "success") {
+            alert("Settings updated successfully!");
+        } else {
+            alert("Error: " + resData.message);
+        }
+    } catch(e) {
+        alert("Failed to update.");
+    } finally {
+        document.getElementById("btnSaveProfile").style.display = "inline-block";
+        document.getElementById("profileLoader").style.display = "none";
+    }
+}
+
+// ... [Baaki saara purana code bilkul same rahega (fetchDoctorAppointments, renderAppointments, etc.)] ...
 async function fetchDoctorAppointments(doctorId) {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -81,7 +185,7 @@ async function fetchDoctorAppointments(doctorId) {
             
             renderAppointments(allDoctorAppointments);
             calculateSettlement(); 
-            renderReviews(); // 🌟 REVIEW FIX CALL 🌟
+            renderReviews(); 
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -173,13 +277,11 @@ function renderAppointments(appointments) {
     document.getElementById("statEarnings").innerText = totalEarnings;
 }
 
-// 🌟 NAYA: REVIEWS FIX 🌟
 function renderReviews() {
     const container = document.getElementById("reviewsContainer");
     let html = "";
 
     allDoctorAppointments.forEach(appt => {
-        // Fix: Use review_json as mapped in getDoctorAppointments
         if (appt.review_json && appt.review_json.trim() !== "") {
             try {
                 let rev = JSON.parse(appt.review_json);
@@ -205,12 +307,11 @@ function renderReviews() {
     container.innerHTML = html;
 }
 
-// 🌟 NAYA: VALIDITY ADDED 🌟
 function handleCompleteAction(apptId, consultType) {
     if (consultType === "Online") {
         document.getElementById("completeApptIdHidden").value = apptId;
         document.getElementById("prescriptionFileInput").value = ""; 
-        document.getElementById("rxValidityDays").value = "3"; // Default 3 Days
+        document.getElementById("rxValidityDays").value = "3"; 
         document.getElementById("prescription-modal").style.display = "block";
     } else {
         updateApptStatus(apptId, 'complete');
@@ -229,7 +330,7 @@ function getBase64(file) {
 async function submitPrescriptionAndComplete() {
     const apptId = document.getElementById("completeApptIdHidden").value;
     const fileInput = document.getElementById("prescriptionFileInput");
-    const validity = document.getElementById("rxValidityDays").value; // Grab Validity
+    const validity = document.getElementById("rxValidityDays").value;
     const btn = document.getElementById("btnUploadPrescription");
     
     if (!fileInput.files || fileInput.files.length === 0) { alert("Please select a prescription file."); return; }
@@ -254,7 +355,7 @@ async function submitPrescriptionAndComplete() {
                 appt_action: "complete", 
                 prescription_base64: base64Data, 
                 prescription_mime: mimeType,
-                valid_days: validity // Send to Backend
+                valid_days: validity 
             })
         });
         
@@ -369,7 +470,6 @@ function calculateSettlement() {
     document.getElementById("ledgNet").innerText = sumNet;
 }
 
-// 🌟 NAYA: PDF DOWNLOAD LOGIC 🌟
 function downloadLedgerPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -429,7 +529,6 @@ function downloadLedgerPDF() {
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
-// 🌟 NAYA: JITSI AUTO CLOSE & REFRESH 🌟
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";
@@ -448,7 +547,6 @@ function joinJitsiCall(link) {
 function closeJitsiCall() {
     const modal = document.getElementById('jitsi-modal');
     if (modal) modal.remove();
-    // Auto refresh data to check if any state changed
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
 }
 

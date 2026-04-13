@@ -8,7 +8,6 @@ window.onload = function() {
     fetchDoctors();
 };
 
-// 🌟 HELPER: Google Drive Thumbnail API
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -29,7 +28,6 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
-// 🌟 HELPER: Google Sheets Time Fixer
 function convertTo24Hour(timeData) {
     if(!timeData) return "";
     let timeString = String(timeData).trim();
@@ -53,7 +51,6 @@ function convertTo24Hour(timeData) {
     return timeString;
 }
 
-// 🌟 HELPER: AM/PM Formatter
 function formatTime12H(time24) {
     if(!time24 || time24.trim() === "") return "";
     let [hours, minutes] = time24.split(":");
@@ -63,7 +60,6 @@ function formatTime12H(time24) {
     return `${h < 10 ? '0'+h : h}:${minutes} ${ampm}`;
 }
 
-// 🌟 HELPER: Discount Calculator (10% Off)
 function getDiscountedFee(fee) {
     let original = parseInt(fee);
     if(isNaN(original)) return 0;
@@ -110,7 +106,6 @@ function checkAvailability(doc, day, time) {
 }
 
 function applyFilters() {
-    // 🌟 SPLIT SEARCH LOGIC 🌟
     const searchName = document.getElementById("searchName").value.toLowerCase();
     const searchCity = document.getElementById("searchCity").value.toLowerCase();
     const filterType = document.getElementById("filterType").value;
@@ -129,9 +124,7 @@ function applyFilters() {
     container.innerHTML = "";
 
     allDoctors.forEach((doc, index) => {
-        // Name/Speciality Check
         let matchName = doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
-        // City Check
         let matchCity = doc.city.toLowerCase().includes(searchCity);
         
         if(!matchName || !matchCity) return;
@@ -153,7 +146,6 @@ function applyFilters() {
         let offDiscount = getDiscountedFee(doc.offline_fee);
         let onDiscount = getDiscountedFee(doc.online_fee);
         
-        // 🌟 PILL SHAPED FEES LAYOUT 🌟
         let offlineText = `
             <div class="fee-box">
                 <span class="title">Clinic</span>
@@ -165,7 +157,6 @@ function applyFilters() {
                 <div><del>₹${doc.online_fee}</del> <span class="discount-price">₹${onDiscount}</span></div>
             </div>` : ``;
 
-        // 🌟 NEW CARD HTML LAYOUT 🌟
         const card = document.createElement("div");
         card.className = "doc-card";
         card.innerHTML = `
@@ -193,7 +184,7 @@ function applyFilters() {
             <div class="fees">${offlineText} ${onlineText}</div>
             
             <div class="action-btns">
-                <button class="btn-schedule" onclick="openSchedule(${index})">🕒 Timings</button>
+                <button class="btn-schedule" onclick="openSchedule(${index})"><i class="far fa-clock"></i> Timings</button>
                 <button class="btn-book" onclick="attemptBook(${index})">Book Now</button>
             </div>
         `;
@@ -243,7 +234,6 @@ function attemptBook(index) {
     let offDiscount = getDiscountedFee(selectedDoctor.offline_fee);
     let onDiscount = getDiscountedFee(selectedDoctor.online_fee);
 
-    // 🌟 NEW: RADIO BUTTONS GENERATION FOR CONSULT TYPE 🌟
     const typeGroup = document.getElementById("consultTypeGroup");
     typeGroup.innerHTML = `
         <input type="radio" name="cType" id="typeClinic" value="Offline" onchange="selectConsultType('Offline')" checked>
@@ -256,7 +246,6 @@ function attemptBook(index) {
         `;
     }
     
-    // reset forms
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("apptDate").type = "text"; 
     document.getElementById("apptDate").value = "";
@@ -268,12 +257,11 @@ function attemptBook(index) {
     
     document.getElementById("availabilityMsg").style.display = "none";
     
-    selectConsultType("Offline"); // Default selection
+    selectConsultType("Offline"); 
     
     document.getElementById("bookingModal").style.display = "flex";
 }
 
-// Custom handler for the radio buttons
 function selectConsultType(type) {
     document.getElementById("consultType").value = type;
     handleTypeChange();
@@ -284,7 +272,6 @@ function handleTypeChange() {
     const paymentDiv = document.getElementById("paymentSection");
     const ssInput = document.getElementById("paymentScreenshot");
     
-    // Check schedule if date is already selected
     if(document.getElementById("apptDate").value) { checkSchedule(); }
     
     if(type === "Online") {
@@ -294,8 +281,11 @@ function handleTypeChange() {
         let onDiscount = getDiscountedFee(selectedDoctor.online_fee);
         document.getElementById("payAmount").innerText = onDiscount;
         
+        // 🌟 NAYA: UPI INTENT LINK GENERATION 🌟
+        // Mobile mein ye link click karne par seedha GPay/PhonePe waghera open ho jayenge
         const upiString = `upi://pay?pa=${selectedDoctor.upi_id}&pn=BhavyaCare&am=${onDiscount}&cu=INR`;
-        document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}`;
+        document.getElementById("payUpiBtn").href = upiString;
+
         ssInput.setAttribute("required", "true");
     } else {
         paymentDiv.style.display = "none";
@@ -331,7 +321,7 @@ function checkSchedule() {
         msgDiv.style.display = "block";
         
         timeInput.disabled = false;
-        timeInput.type = "time"; // Switch to time picker
+        timeInput.type = "time"; 
         timeInput.setAttribute("min", inTime);
         timeInput.setAttribute("max", outTime);
         timeInput.value = ""; 

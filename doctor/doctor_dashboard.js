@@ -30,22 +30,22 @@ window.onload = function() {
     fetchDoctorAppointments(docId);
 };
 
-// ===============================================
-// 🌟 AUTOMATIC LIVE STATUS CHECK FUNCTION 🌟
-// ===============================================
+// window.onload ke andar isko call karna mat bhulna: verifyDoctorStatus();
+
 async function verifyDoctorStatus() {
     const docId = localStorage.getItem("bhavya_user_id");
     const banner = document.getElementById("statusWarningBanner");
-    
-    // 1. Immediate Local Check (Page load hote hi turant dikhane ke liye)
+    if(!banner) return; // Agar banner HTML me nahi mila to error na aaye
+
+    // 1. Turant Check LocalStorage se
     const localStatus = localStorage.getItem("bhavya_doc_status") || "Pending";
     if (localStatus !== "Active" && localStatus !== "Approved") {
-        if(banner) banner.style.display = "block";
+        banner.style.display = "block";
     } else {
-        if(banner) banner.style.display = "none";
+        banner.style.display = "none";
     }
 
-    // 2. Background Server Check (Agar admin ne background mein approve kar diya ho)
+    // 2. Background me Real Database Check
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -58,24 +58,20 @@ async function verifyDoctorStatus() {
             localStorage.setItem("bhavya_doc_status", currentStatus);
             
             if (currentStatus !== "Active" && currentStatus !== "Approved") {
-                if(banner) {
-                    banner.style.display = "block";
-                    // Agar profile reject ho gayi ho toh red color mein reason dikhayega
-                    if (currentStatus === "Rejected") {
-                        banner.style.backgroundColor = "#f8d7da";
-                        banner.style.color = "#721c24";
-                        banner.style.borderLeftColor = "#dc3545";
-                        banner.innerHTML = `<i class="fas fa-times-circle"></i> Your profile was rejected. Reason: <strong>${resData.data.reject_reason || "Contact Admin"}</strong>. Please update your profile in the settings.`;
-                    }
+                banner.style.display = "block";
+                
+                // Agar reject ho gaya
+                if (currentStatus === "Rejected") {
+                    banner.style.backgroundColor = "#f8d7da";
+                    banner.style.color = "#721c24";
+                    banner.style.borderLeftColor = "#dc3545";
+                    banner.innerHTML = `<i class="fas fa-times-circle"></i> Your profile was rejected. Reason: <strong>${resData.data.reject_reason || "Check with admin"}</strong>. Please update your profile below.`;
                 }
             } else {
-                // Agar Active ho gaya to banner chhupa do
-                if(banner) banner.style.display = "none";
+                banner.style.display = "none";
             }
         }
-    } catch(e) { 
-        console.error("Status check failed", e); 
-    }
+    } catch(e) { console.error("Banner check failed", e); }
 }
 
 // ===============================================

@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Status - BhavyaCare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 450px; }
         h1 { margin-bottom: 10px; }
         p { color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 25px; }
-        .btn { border: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.3s; font-weight: bold;}
+        .btn { border: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.3s; font-weight: bold; margin: 5px;}
         .btn-logout { background-color: #555; color: white; }
         .btn-logout:hover { background-color: #333; }
-        .btn-edit { background-color: #28a745; color: white; margin-bottom: 10px; }
+        .btn-edit { background-color: #28a745; color: white; }
         .btn-edit:hover { background-color: #218838; }
+        .btn-refresh { background-color: #0056b3; color: white; }
+        .btn-refresh:hover { background-color: #004494; }
         
         #rejectBox { display: none; background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; color: #721c24; margin-bottom: 20px; font-size: 14px;}
     </style>
@@ -30,6 +33,8 @@
     </div>
 
     <a href="doctor_registration.html" id="editBtn" class="btn btn-edit" style="display: none;">Fix Mistakes & Re-Submit</a><br>
+    
+    <button id="refreshBtn" onclick="checkCurrentStatus()" class="btn btn-refresh"><i class="fas fa-sync-alt"></i> Refresh Status</button>
     <a href="#" onclick="logoutUser()" class="btn btn-logout">Logout</a>
 </div>
 
@@ -37,10 +42,13 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="../app.js"></script>
 <script>
-    window.onload = function() {
-        const status = localStorage.getItem("bhavya_doc_status");
-        const reason = localStorage.getItem("bhavya_doc_reject_reason");
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
+    window.onload = function() {
+        updateUI(localStorage.getItem("bhavya_doc_status"), localStorage.getItem("bhavya_doc_reject_reason"));
+    };
+
+    function updateUI(status, reason) {
         if (status === "Rejected") {
             document.getElementById("statusTitle").innerText = "❌ Profile Rejected";
             document.getElementById("statusTitle").style.color = "#dc3545";
@@ -51,9 +59,55 @@
             
             document.getElementById("editBtn").style.display = "inline-block";
         } else {
+            document.getElementById("statusTitle").innerText = "⏳ Approval Pending";
             document.getElementById("statusTitle").style.color = "#f39c12";
+            document.getElementById("statusMessage").innerText = "Aapki profile details BhavyaCare team ke paas aa chuki hain. Humara admin panel jald hi aapki details verify karke aapko Active kar dega.";
+            document.getElementById("rejectBox").style.display = "none";
+            document.getElementById("editBtn").style.display = "none";
         }
-    };
+    }
+
+    // NAYA LOGIC: Database se live status check karna
+    async function checkCurrentStatus() {
+        const btn = document.getElementById("refreshBtn");
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Checking...";
+        btn.disabled = true;
+
+        try {
+            const docId = localStorage.getItem("bhavya_user_id");
+            if(!docId) return logoutUser();
+
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "checkDoctorStatus", doctor_id: docId })
+            });
+
+            const resData = await response.json();
+            if (resData.status === "success") {
+                const newStatus = resData.data.status;
+                const newReason = resData.data.reject_reason;
+
+                localStorage.setItem("bhavya_doc_status", newStatus);
+                localStorage.setItem("bhavya_doc_reject_reason", newReason);
+
+                if (newStatus === "Active") {
+                    alert("Congratulations! Your profile is Approved.");
+                    window.location.href = "doctor_dashboard.htm";
+                } else {
+                    updateUI(newStatus, newReason);
+                    // Chota sa notification ki status change nahi hua
+                    const originalMsg = document.getElementById("statusMessage").innerText;
+                    document.getElementById("statusMessage").innerHTML = `<span style='color:red; font-weight:bold;'>Still ${newStatus}... Please wait.</span>`;
+                    setTimeout(() => document.getElementById("statusMessage").innerText = originalMsg, 3000);
+                }
+            }
+        } catch(e) {
+            alert("Network Error! Please try again.");
+        } finally {
+            btn.innerHTML = "<i class='fas fa-sync-alt'></i> Refresh Status";
+            btn.disabled = false;
+        }
+    }
 </script>
 </body>
 </html>

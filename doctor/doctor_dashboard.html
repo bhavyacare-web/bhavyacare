@@ -117,6 +117,10 @@
             <button class="mobile-header-btn" onclick="logoutDoctor()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
         
+        <div id="statusWarningBanner" style="display: none; background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #ffc107; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <i class="fas fa-exclamation-triangle"></i> Your account approval is currently pending. Please check back after some time.
+        </div>
+        
         <div id="loader">Loading Data... ⏳</div>
 
         <div id="sec-appt" class="dashboard-section active">
@@ -263,7 +267,6 @@
                 </form>
             </div>
         </div>
-
     </div>
 
     <div id="prescription-modal" class="modal-overlay">

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin - Manage Doctors | BhavyaCare</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root { --primary: #0056b3; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; }
@@ -64,14 +66,17 @@
         .stat-card h3 { margin: 0 0 10px; color: #666; font-size: 13px; text-transform: uppercase; font-weight: 600; }
         .stat-card p { margin: 0; font-size: 28px; font-weight: bold; color: #2d3748; }
 
-        /* Loader */
+        /* Loader & Modals */
         #loader { text-align: center; color: var(--primary); font-weight: bold; padding: 50px; font-size: 18px; }
+        .modal-overlay { width: 90%; max-width: 700px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border-radius: 15px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 30px; max-height: 90vh; overflow-y: auto; }
+        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .close-btn-modal:hover { background: #e2e8f0; color: #333; }
+        .doc-clickable { cursor: pointer; transition: 0.2s; }
+        .doc-clickable:hover { background-color: #f8fafc; border-radius: 8px; transform: scale(1.02); }
 
         /* 📱 MOBILE RESPONSIVE CSS 📱 */
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            
-            /* Bottom Navigation Bar */
             .sidebar { flex-direction: row; width: 100%; height: 70px; position: fixed; bottom: 0; left: 0; justify-content: space-around; padding: 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.15); z-index: 1000; border-top-left-radius: 15px; border-top-right-radius: 15px; }
             .sidebar-header, .desktop-back-btn { display: none; }
             .sidebar-menu { display: flex; width: 100%; padding: 0; justify-content: space-around; align-items: center;}
@@ -79,18 +84,14 @@
             .sidebar-menu li.active { background: transparent; border-bottom-color: var(--warning); color: var(--warning); font-weight: bold; }
             .sidebar-menu li i { font-size: 20px; }
             
-            /* Main Content Adjustments */
             .main-content { padding: 15px; padding-bottom: 90px; }
             .header { padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; border-radius: 8px;}
             .header h2 { font-size: 18px; }
             .mobile-back-btn { display: inline-block; padding: 8px 12px; font-size: 12px; }
             
-            /* Filter Bar Stacking */
             .filter-bar { flex-direction: column; align-items: stretch; padding: 15px; gap: 10px;}
             .filter-bar div { min-width: 100%; }
             .filter-bar .btn-primary { margin-top: 10px; }
-
-            /* Table Container adjustments */
             .table-container { padding: 10px; border-radius: 8px; }
             th, td { padding: 10px; font-size: 13px; }
         }
@@ -121,6 +122,13 @@
         <div id="loader">Loading Data from Server... ⏳</div>
 
         <div id="sec-docs" class="dashboard-section active">
+            <div class="filter-bar">
+                <div>
+                    <label>Search Doctor</label>
+                    <input type="text" id="filterDocSearch" placeholder="Search by Name, ID or City..." onkeyup="filterDoctors()">
+                </div>
+            </div>
+
             <div class="table-container">
                 <table id="doctorsTable" style="display: none;">
                     <thead>
@@ -135,7 +143,7 @@
 
         <div id="sec-appts" class="dashboard-section">
             <div class="filter-bar">
-                <div><label>Search Doctor or Patient ID</label><input type="text" id="filterApptSearch" placeholder="Enter ID..." onkeyup="filterAppts()"></div>
+                <div><label>Search Appt, Doc or Pt ID</label><input type="text" id="filterApptSearch" placeholder="Enter ID..." onkeyup="filterAppts()"></div>
                 <div>
                     <label>Consult Status</label>
                     <select id="filterApptStatus" onchange="filterAppts()">
@@ -151,7 +159,7 @@
                     <select id="filterRefundType" onchange="filterAppts()">
                         <option value="All">All Transactions</option>
                         <option value="Wallet">Wallet Refund (Instant)</option>
-                        <option value="Bank">Bank Refund (Manual - 1st Date)</option>
+                        <option value="Bank">Bank Refund (Manual)</option>
                     </select>
                 </div>
             </div>
@@ -177,7 +185,7 @@
                 <div style="flex:0.5;"><button class="btn btn-primary" style="width:100%; padding:13px; font-size:14px;" onclick="calculateLedger()">Calculate</button></div>
             </div>
 
-            <button class="btn" style="background:#343a40; margin-bottom:20px; padding:10px 20px;" onclick="downloadAdminLedger()"><i class="fas fa-download"></i> Download Report (CSV)</button>
+            <button class="btn" style="background:#343a40; margin-bottom:20px; padding:10px 20px;" onclick="downloadAdminLedgerPDF()"><i class="fas fa-file-pdf"></i> Download Report (PDF)</button>
 
             <div class="stats-grid">
                 <div class="stat-card" style="border-color: #333;"><h3>Total Collected</h3><p>₹<span id="ledgTotal">0</span></p></div>
@@ -203,6 +211,12 @@
             </div>
             <div id="reviewsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
         </div>
+    </div>
+
+    <div id="doctorProfileModal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('doctorProfileModal').style.display='none'">✖</button>
+        <div id="docProfileContent">
+            </div>
     </div>
 
     <script src="doctoradmin.js"></script>

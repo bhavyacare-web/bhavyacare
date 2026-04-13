@@ -19,9 +19,7 @@ window.onload = function() {
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0); 
     
-    const formatForInput = (d) => {
-        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
-    };
+    const formatForInput = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
 
     document.getElementById("ledgerFrom").value = formatForInput(firstDay);
     document.getElementById("ledgerTo").value = formatForInput(lastDay); 
@@ -30,12 +28,8 @@ window.onload = function() {
 };
 
 function switchTab(tabId) {
-    document.getElementById('sec-appt').classList.remove('active');
-    document.getElementById('sec-ledger').classList.remove('active');
-    document.getElementById('sec-reviews').classList.remove('active'); // NAYA
-    document.getElementById('tab-appt').classList.remove('active');
-    document.getElementById('tab-ledger').classList.remove('active');
-    document.getElementById('tab-reviews').classList.remove('active'); // NAYA
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
 
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
@@ -49,9 +43,7 @@ function formatDate(rawDate) {
     let dateStr = String(rawDate).trim();
     if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) return dateStr;
     let d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-        return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`; 
-    }
+    if (!isNaN(d.getTime())) return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`; 
     return dateStr;
 }
 
@@ -89,13 +81,11 @@ async function fetchDoctorAppointments(doctorId) {
             
             renderAppointments(allDoctorAppointments);
             calculateSettlement(); 
-            renderReviews(); // 🌟 NAYA
+            renderReviews(); // 🌟 REVIEW FIX CALL 🌟
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
-    } catch(e) {
-        document.getElementById("loader").innerText = "Failed to load data. Please refresh.";
-    }
+    } catch(e) { document.getElementById("loader").innerText = "Failed to load data. Please refresh."; }
 }
 
 function filterAppointments() {
@@ -116,7 +106,7 @@ function renderAppointments(appointments) {
     
     let pendingCount = 0; let approvedCount = 0; let totalEarnings = 0;
 
-    if(appointments.length === 0) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No appointments found.</td></tr>`;
+    if(appointments.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No appointments found.</td></tr>`; return;}
 
     appointments.forEach(appt => {
         if (appt.appt_status === "Pending") pendingCount++;
@@ -129,13 +119,12 @@ function renderAppointments(appointments) {
         else if(appt.appt_status === "Completed") statusBadge = `<span class="badge bg-success">Completed</span>`;
         else statusBadge = `<span class="badge bg-danger">${appt.appt_status}</span>`;
 
-        let typeBadge = appt.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
+        let typeBadge = appt.consult_type === "Online" ? "💻 Online" : "🏥 Clinic";
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
             actionHTML = `<button class="btn btn-approve" onclick="updateApptStatus('${appt.appt_id}', 'approve')">✅ Approve</button>`;
-        } 
-        else if (appt.appt_status === "Approved") {
+        } else if (appt.appt_status === "Approved") {
             const now = new Date();
             const [day, month, year] = appt.cleanDate.split("-");
             let [timePart, modifier] = appt.cleanTime.split(" ");
@@ -147,32 +136,33 @@ function renderAppointments(appointments) {
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
             if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
-                actionHTML += `<button class="btn btn-join" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
+                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
             }
             actionHTML += `
-                <button class="btn btn-complete" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Complete</button>
-                <button class="btn btn-noshow" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ No-Show</button>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-complete" style="flex:1;" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Done</button>
+                    <button class="btn btn-noshow" style="flex:1;" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ Miss</button>
+                </div>
             `;
-        } 
-        else if (appt.appt_status === "Completed") {
+        } else if (appt.appt_status === "Completed") {
             actionHTML = `<span style="color:#28a745; font-weight:bold;"><i class="fas fa-check-circle"></i> Done</span>`;
             if (appt.prescription_link && appt.prescription_link !== "") {
-                actionHTML += `<br><a href="${appt.prescription_link}" target="_blank" style="display:inline-block; margin-top:8px; background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold; border: 1px solid #c8e6c9;">📄 View Rx</a>`;
+                actionHTML += `<br><a href="${appt.prescription_link}" target="_blank" style="display:inline-block; margin-top:8px; background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:5px; text-decoration:none; font-size:11px; font-weight:bold; border: 1px solid #c8e6c9;">📄 View Rx</a>`;
             }
+        } else {
+            actionHTML = `<span style="color:#888; font-size:12px; font-style:italic;">No Action</span>`; 
         }
-        else if (appt.appt_status === "Patient No-Show") { actionHTML = `<span style="color:#dc3545; font-weight:bold;"><i class="fas fa-times-circle"></i> No-Show</span>`; }
-        else { actionHTML = `<span style="color:#888; font-style:italic;">No Actions Required</span>`; }
 
-        let paymentText = appt.consult_type === "Online" ? `<a href="${appt.payment_screenshot}" target="_blank" style="color:#0056b3; font-weight:bold;">📄 View Screenshot</a>` : `Pay at Clinic`;
+        let paymentText = appt.consult_type === "Online" ? `<a href="${appt.payment_screenshot}" target="_blank" style="color:#0056b3; font-weight:bold; font-size:12px;">📄 Receipt</a>` : `<span style="font-size:12px;">At Clinic</span>`;
 
         tbody.innerHTML += `
             <tr>
-                <td><strong>${appt.cleanDate}</strong><br><span style="color:#666; font-size:12px;">${appt.cleanTime}</span></td>
-                <td>${typeBadge}</td>
-                <td>${appt.patient_id}</td>
+                <td><strong style="font-size:13px;">${appt.cleanDate}</strong><br><span style="color:#666; font-size:11px;">${appt.cleanTime}</span></td>
+                <td style="font-size:12px;">${typeBadge}</td>
+                <td style="font-size:13px;">${appt.patient_id}</td>
                 <td>${statusBadge}</td>
                 <td>${paymentText}</td>
-                <td style="color:#28a745; font-weight:bold;">₹${appt.doctor_earning || 0}</td>
+                <td style="color:#28a745; font-weight:bold; font-size:13px;">₹${appt.doctor_earning || 0}</td>
                 <td style="text-align: center;">${actionHTML}</td>
             </tr>
         `;
@@ -183,43 +173,44 @@ function renderAppointments(appointments) {
     document.getElementById("statEarnings").innerText = totalEarnings;
 }
 
-// 🌟 NAYA: RENDER REVIEWS 🌟
+// 🌟 NAYA: REVIEWS FIX 🌟
 function renderReviews() {
     const container = document.getElementById("reviewsContainer");
     let html = "";
 
     allDoctorAppointments.forEach(appt => {
-        if (appt.review && appt.review.trim() !== "") {
+        // Fix: Use review_json as mapped in getDoctorAppointments
+        if (appt.review_json && appt.review_json.trim() !== "") {
             try {
-                let rev = JSON.parse(appt.review);
+                let rev = JSON.parse(appt.review_json);
                 let starsHtml = "";
-                for(let i=1; i<=5; i++) {
-                    starsHtml += i <= rev.rating ? '<i class="fas fa-star" style="color:#ffc107;"></i> ' : '<i class="fas fa-star" style="color:#e0e0e0;"></i> ';
-                }
+                for(let i=1; i<=5; i++) starsHtml += i <= rev.rating ? '<i class="fas fa-star" style="color:#ffc107;"></i> ' : '<i class="fas fa-star" style="color:#e0e0e0;"></i> ';
                 
                 html += `
-                <div style="background:white; padding:20px; border-radius:12px; margin-bottom:15px; border-left:5px solid #ffc107; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #ffc107; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <div>
-                            <strong style="color:var(--primary); font-size:15px;">${appt.patient_id}</strong> 
-                            <span style="font-size:12px; color:#888; margin-left:10px;"><i class="far fa-calendar-alt"></i> ${appt.cleanDate}</span>
+                            <strong style="color:var(--primary); font-size:14px;">${appt.patient_id}</strong> 
+                            <span style="font-size:11px; color:#888; display:block; margin-top:2px;"><i class="far fa-calendar-alt"></i> ${appt.cleanDate}</span>
                         </div>
-                        <div style="font-size:16px;">${starsHtml}</div>
+                        <div style="font-size:14px;">${starsHtml}</div>
                     </div>
-                    <p style="margin:0; font-size:14px; color:#555; font-style:italic;">"${rev.comment || "No comment provided."}"</p>
+                    <p style="margin:0; font-size:13px; color:#555; font-style:italic;">"${rev.comment || "No comment provided."}"</p>
                 </div>`;
-            } catch(e) {}
+            } catch(e) { console.log(e); }
         }
     });
 
-    if(html === "") html = "<div style='text-align:center; padding:40px; color:#888; font-size:15px;'><i class='fas fa-star-half-alt' style='font-size:40px; color:#ddd; margin-bottom:15px; display:block;'></i> No patient reviews yet.</div>";
+    if(html === "") html = "<div style='grid-column: 1/-1; text-align:center; padding:40px; color:#888; font-size:15px;'><i class='fas fa-star-half-alt' style='font-size:40px; color:#ddd; margin-bottom:15px; display:block;'></i> No patient reviews yet.</div>";
     container.innerHTML = html;
 }
 
+// 🌟 NAYA: VALIDITY ADDED 🌟
 function handleCompleteAction(apptId, consultType) {
     if (consultType === "Online") {
         document.getElementById("completeApptIdHidden").value = apptId;
         document.getElementById("prescriptionFileInput").value = ""; 
+        document.getElementById("rxValidityDays").value = "3"; // Default 3 Days
         document.getElementById("prescription-modal").style.display = "block";
     } else {
         updateApptStatus(apptId, 'complete');
@@ -238,10 +229,11 @@ function getBase64(file) {
 async function submitPrescriptionAndComplete() {
     const apptId = document.getElementById("completeApptIdHidden").value;
     const fileInput = document.getElementById("prescriptionFileInput");
+    const validity = document.getElementById("rxValidityDays").value; // Grab Validity
     const btn = document.getElementById("btnUploadPrescription");
     
     if (!fileInput.files || fileInput.files.length === 0) { alert("Please select a prescription file."); return; }
-    if(!confirm("Are you sure you want to mark this as COMPLETED?")) return;
+    if(!confirm("Mark as COMPLETED and save prescription?")) return;
 
     const file = fileInput.files[0];
     btn.innerText = "Uploading & Completing..."; btn.disabled = true;
@@ -256,15 +248,22 @@ async function submitPrescriptionAndComplete() {
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: "complete", prescription_base64: base64Data, prescription_mime: mimeType })
+            body: JSON.stringify({ 
+                action: "processAppointmentAction", 
+                appt_id: apptId, 
+                appt_action: "complete", 
+                prescription_base64: base64Data, 
+                prescription_mime: mimeType,
+                valid_days: validity // Send to Backend
+            })
         });
         
         const resData = await response.json();
         if(resData.status === "success") {
-            alert("Prescription uploaded and appointment completed!");
+            alert("Prescription saved successfully!");
             fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
         } else { alert("Error: " + resData.message); location.reload(); }
-    } catch(e) { alert("Failed to upload prescription."); location.reload(); } 
+    } catch(e) { alert("Failed to upload."); location.reload(); } 
     finally { btn.innerText = "Upload & Mark Completed"; btn.disabled = false; }
 }
 
@@ -293,7 +292,6 @@ function parseDateDDMMYYYY(dateStr) {
     return new Date(dateStr);
 }
 
-// 🌟 NAYA: ACCURATE MATH LOGIC (10% FEE + REFUNDS) 🌟
 function calculateSettlement() {
     const fromStr = document.getElementById("ledgerFrom").value;
     const toStr = document.getElementById("ledgerTo").value;
@@ -305,8 +303,7 @@ function calculateSettlement() {
     const tbody = document.getElementById("ledgerTableBody");
     tbody.innerHTML = "";
     
-    let sumCollected = 0; let sumFee = 0; let sumRefund = 0; let sumNet = 0;
-    let count = 0;
+    let sumCollected = 0; let sumFee = 0; let sumRefund = 0; let sumNet = 0; let count = 0;
 
     allDoctorAppointments.forEach(appt => {
         let isCompleted = appt.appt_status === "Completed";
@@ -319,38 +316,35 @@ function calculateSettlement() {
                 count++;
                 let mrp = parseInt(appt.total_mrp) || 0;
                 let earning = parseInt(appt.doctor_earning) || 0;
-                let collected = Math.round(mrp * 0.90); // Jo patient ne actually pay kiya
-                let platformFee = collected - earning; // Correct 10% Platform Fee calculation
+                let collected = Math.round(mrp * 0.90); 
+                let platformFee = collected - earning;
 
                 if (isCompleted && !isRefunded) {
-                    sumCollected += collected;
-                    sumFee += platformFee;
-                    sumNet += earning;
+                    sumCollected += collected; sumFee += platformFee; sumNet += earning;
 
                     tbody.innerHTML += `
                         <tr>
-                            <td>${appt.cleanDate}</td>
-                            <td><strong style="color:#0056b3;">${appt.appt_id}</strong></td>
-                            <td>${appt.consult_type}</td>
-                            <td>₹${collected} <del style="font-size:10px; color:#999; margin-left:3px;">₹${mrp}</del></td>
-                            <td style="color:#0056b3;">-₹${platformFee}</td>
-                            <td>-</td>
-                            <td style="color:#28a745; font-weight:bold;">₹${earning}</td>
+                            <td><span style="font-size:12px;">${appt.cleanDate}</span></td>
+                            <td><strong style="color:#0056b3; font-size:12px;">${appt.appt_id}</strong></td>
+                            <td style="font-size:12px;">${appt.consult_type}</td>
+                            <td style="font-size:13px;">₹${collected}</td>
+                            <td style="color:#0056b3; font-size:13px;">-₹${platformFee}</td>
+                            <td style="font-size:13px;">-</td>
+                            <td style="color:#28a745; font-weight:bold; font-size:13px;">₹${earning}</td>
                         </tr>
                     `;
                 } else if (isRefunded) {
-                    sumRefund += collected;
-                    sumNet -= collected; // Deduction from Doctor's Payout
+                    sumRefund += collected; sumNet -= collected; 
 
                     tbody.innerHTML += `
                         <tr style="background: #fff5f5;">
-                            <td>${appt.cleanDate}</td>
-                            <td><strong style="color:#dc3545;">${appt.appt_id}</strong></td>
-                            <td>${appt.consult_type} <span style="font-size:10px; background:#dc3545; color:white; padding:2px 5px; border-radius:4px;">CANCELLED</span></td>
-                            <td style="color:#999;">₹0</td>
-                            <td style="color:#999;">₹0</td>
-                            <td style="color:#dc3545; font-weight:bold;">-₹${collected}</td>
-                            <td style="color:#dc3545; font-weight:bold;">-₹${collected}</td>
+                            <td><span style="font-size:12px;">${appt.cleanDate}</span></td>
+                            <td><strong style="color:#dc3545; font-size:12px;">${appt.appt_id}</strong></td>
+                            <td style="font-size:12px;">${appt.consult_type} <span style="font-size:9px; background:#dc3545; color:white; padding:2px; border-radius:3px;">CANC</span></td>
+                            <td style="color:#999; font-size:13px;">₹0</td>
+                            <td style="color:#999; font-size:13px;">₹0</td>
+                            <td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td>
+                            <td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td>
                         </tr>
                     `;
                 }
@@ -375,40 +369,67 @@ function calculateSettlement() {
     document.getElementById("ledgNet").innerText = sumNet;
 }
 
-function downloadLedgerCSV() {
+// 🌟 NAYA: PDF DOWNLOAD LOGIC 🌟
+function downloadLedgerPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
     const fromStr = document.getElementById("ledgerFrom").value;
     const toStr = document.getElementById("ledgerTo").value;
-    const tbody = document.getElementById("ledgerTableBody");
+    const docName = document.getElementById("displayDocName").innerText;
     
-    if (tbody.rows.length === 0 || tbody.innerHTML.includes("No data found")) { alert("No data available to download."); return; }
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Date,Appointment ID,Type,Collected,BhavyaCare Fee,Refunded,Net Earning\n";
-
-    const rows = tbody.querySelectorAll("tr");
-    rows.forEach(row => {
-        let cols = row.querySelectorAll("td");
+    doc.setFontSize(16);
+    doc.setTextColor(0, 86, 179);
+    doc.text("BhavyaCare Settlement Ledger", 14, 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Doctor: Dr. ${docName}`, 14, 22);
+    doc.text(`Period: ${fromStr} to ${toStr}`, 14, 27);
+    
+    const tbody = document.getElementById("ledgerTableBody");
+    if (tbody.rows.length === 0 || tbody.innerHTML.includes("No data found")) {
+        alert("No data available to download."); return;
+    }
+    
+    let bodyData = [];
+    tbody.querySelectorAll("tr").forEach(row => {
         let rowData = [];
-        cols.forEach(col => {
-            let text = col.innerText.replace(/₹/g, '').replace(/-/g, '').replace(/CANCELLED/g, '').trim();
-            // Remove the MRP strike-through value from export
+        row.querySelectorAll("td").forEach(c => {
+            let text = c.innerText.replace(/₹/g, '').replace(/CANC/g, '').trim();
             if(text.includes("\n")) text = text.split("\n")[0].trim();
             rowData.push(text);
         });
-        csvContent += rowData.join(",") + "\n";
+        bodyData.push(rowData);
+    });
+
+    let footData = [];
+    let footRow = document.querySelector("#ledgerTableFoot tr");
+    if(footRow) {
+        let fData = ["GRAND TOTAL", "", ""];
+        let fCols = footRow.querySelectorAll("td");
+        fData.push(fCols[1].innerText.replace(/₹/g, '').trim());
+        fData.push(fCols[2].innerText.replace(/₹/g, '').trim());
+        fData.push(fCols[3].innerText.replace(/₹/g, '').trim());
+        fData.push(fCols[4].innerText.replace(/₹/g, '').trim());
+        footData.push(fData);
+    }
+
+    doc.autoTable({
+        head: [['Date', 'Appt ID', 'Type', 'Collected (INR)', 'Platform Fee (INR)', 'Refunded (INR)', 'Net Earning (INR)']],
+        body: bodyData,
+        foot: footData,
+        startY: 32,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 86, 179] },
+        footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 9 }
     });
     
-    csvContent += `GRAND TOTAL,,,${document.getElementById("footCollected").innerText},${document.getElementById("footFee").innerText},${document.getElementById("footRefund").innerText},${document.getElementById("footNet").innerText}\n`;
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Settlement_Report_${fromStr}_to_${toStr}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
+// 🌟 NAYA: JITSI AUTO CLOSE & REFRESH 🌟
 function joinJitsiCall(link) {
     const modal = document.createElement('div');
     modal.id = "jitsi-modal";
@@ -416,12 +437,19 @@ function joinJitsiCall(link) {
     
     modal.innerHTML = `
         <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
-            <button onclick="document.getElementById('jitsi-modal').remove()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+            <h3 style="margin:0; font-size:16px;">BhavyaCare Video Consult</h3>
+            <button onclick="closeJitsiCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
         </div>
         <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
     `;
     document.body.appendChild(modal);
+}
+
+function closeJitsiCall() {
+    const modal = document.getElementById('jitsi-modal');
+    if (modal) modal.remove();
+    // Auto refresh data to check if any state changed
+    fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
 }
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }

@@ -23,7 +23,7 @@
         .sidebar-menu li:hover, .sidebar-menu li.active { background: rgba(255,255,255,0.1); border-left-color: var(--warning); color: var(--warning); }
         .logout-btn { padding: 15px 20px; background: var(--danger); color: white; text-align: center; cursor: pointer; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); }
         
-        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
         .dashboard-section { display: none; animation: fadeIn 0.3s; }
         .dashboard-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -68,10 +68,9 @@
         .profile-card h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: bold; font-size: 13px; color: #555; margin-bottom: 5px; }
-        .schedule-grid { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
-        .schedule-grid span { font-weight: bold; color: #2d3748; }
+        .schedule-grid { display: grid; gap: 15px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
         .schedule-header { background: transparent !important; padding-bottom: 0 !important; margin-bottom: 5px !important; }
-        .schedule-header span { color: #888 !important; font-size: 12px; }
+        .schedule-header span { color: #888 !important; font-size: 12px; font-weight: bold; }
 
         /* 📱 MOBILE VIEW CSS 📱 */
         .mobile-header-btn { display: none; }
@@ -89,15 +88,7 @@
             .top-bar h1 { font-size: 20px; }
             .mobile-header-btn { display: block; background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px; cursor: pointer; }
             .doc-name-badge { font-size: 12px; padding: 6px 12px; }
-            
-            .schedule-grid { grid-template-columns: 80px 1fr 1fr; gap: 10px; padding: 10px; }
         }
-        @media (max-width: 480px) {
-            .schedule-header { display: none !important; }
-            .schedule-grid { grid-template-columns: 1fr; gap: 8px; text-align: center; padding: 15px; }
-            .schedule-grid span { margin-bottom: 5px; display: block; font-size: 14px; text-decoration: underline; color: var(--primary); }
-        }
-
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(253, 126, 20, 0); } 100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0); } }
     </style>
 </head>
@@ -188,23 +179,41 @@
                 <div style="text-align: center; grid-column: 1/-1; padding: 40px; color: #888;">No reviews yet.</div>
             </div>
         </div>
+
         <div id="sec-profile" class="dashboard-section">
             <div class="profile-card">
                 <h3><i class="fas fa-user-circle"></i> My Profile</h3>
                 <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Manage your Offline Clinic and Online Video Consultation schedule here.</p>
                 
+                <div id="profileLoadingText" style="display:none; text-align:center; padding: 30px; font-weight:bold; color:var(--primary);">Loading Profile Data... ⏳</div>
+
                 <form id="editProfileForm">
-                    
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
                         <h4 style="margin-top:0; color: #333;"><i class="fas fa-hospital"></i> Offline Clinic Schedule</h4>
-                        <div class="schedule-grid schedule-header"><span>Day</span><span>Open Time</span><span>Close Time</span></div>
-                        <div class="schedule-grid"><span>Monday</span><select id="edit_off_mon_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_mon_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Tuesday</span><select id="edit_off_tue_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_tue_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Wednesday</span><select id="edit_off_wed_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_wed_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Thursday</span><select id="edit_off_thu_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_thu_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Friday</span><select id="edit_off_fri_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_fri_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Saturday</span><select id="edit_off_sat_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_sat_out" class="input-box time-select" style="margin:0;"></select></div>
-                        <div class="schedule-grid"><span>Sunday</span><select id="edit_off_sun_in" class="input-box time-select" style="margin:0;"></select><select id="edit_off_sun_out" class="input-box time-select" style="margin:0;"></select></div>
+                        
+                        <div class="form-group" style="max-width: 300px;">
+                            <label>Select Day to Edit</label>
+                            <select id="offDaySelect" class="input-box" onchange="showOffDay()">
+                                <option value="mon">Monday</option>
+                                <option value="tue">Tuesday</option>
+                                <option value="wed">Wednesday</option>
+                                <option value="thu">Thursday</option>
+                                <option value="fri">Friday</option>
+                                <option value="sat">Saturday</option>
+                                <option value="sun">Sunday</option>
+                            </select>
+                        </div>
+
+                        <div class="schedule-grid schedule-header" style="grid-template-columns: 1fr 1fr;"><span>Open Time</span><span>Close Time</span></div>
+                        
+                        <div id="off_mon" class="schedule-grid" style="grid-template-columns: 1fr 1fr;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_mon_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_tue" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_tue_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_wed" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_wed_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_thu" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_thu_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_fri" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_fri_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_sat" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_sat_out" class="input-box" style="margin:0;"></div>
+                        <div id="off_sun" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_off_sun_out" class="input-box" style="margin:0;"></div>
+                        <p style="font-size: 11px; color: #888; margin-top: 10px;">* Remember to select other days from the dropdown to fill their timings before saving.</p>
                     </div>
 
                     <div style="background: #ebf8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bee3f8;">
@@ -224,16 +233,28 @@
                                 <input type="number" id="editOnlineFee" class="input-box">
                             </div>
                             
-                            <label style="display:block; font-weight:bold; color:var(--primary); margin-bottom:10px;">Online Availability Schedule</label>
-                            <div class="schedule-grid schedule-header"><span>Day</span><span>Open Time</span><span>Close Time</span></div>
+                            <div class="form-group" style="max-width: 300px; margin-top: 20px;">
+                                <label>Select Day to Edit</label>
+                                <select id="onDaySelect" class="input-box" onchange="showOnDay()">
+                                    <option value="mon">Monday</option>
+                                    <option value="tue">Tuesday</option>
+                                    <option value="wed">Wednesday</option>
+                                    <option value="thu">Thursday</option>
+                                    <option value="fri">Friday</option>
+                                    <option value="sat">Saturday</option>
+                                    <option value="sun">Sunday</option>
+                                </select>
+                            </div>
 
-                            <div class="schedule-grid"><span>Monday</span><select id="edit_on_mon_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_mon_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Tuesday</span><select id="edit_on_tue_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_tue_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Wednesday</span><select id="edit_on_wed_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_wed_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Thursday</span><select id="edit_on_thu_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_thu_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Friday</span><select id="edit_on_fri_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_fri_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Saturday</span><select id="edit_on_sat_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_sat_out" class="input-box time-select" style="margin:0;"></select></div>
-                            <div class="schedule-grid"><span>Sunday</span><select id="edit_on_sun_in" class="input-box time-select" style="margin:0;"></select><select id="edit_on_sun_out" class="input-box time-select" style="margin:0;"></select></div>
+                            <div class="schedule-grid schedule-header" style="grid-template-columns: 1fr 1fr;"><span>Open Time</span><span>Close Time</span></div>
+
+                            <div id="on_mon" class="schedule-grid" style="grid-template-columns: 1fr 1fr;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_mon_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_mon_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_tue" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_tue_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_tue_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_wed" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_wed_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_wed_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_thu" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_thu_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_thu_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_fri" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_fri_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_fri_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_sat" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_sat_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_sat_out" class="input-box" style="margin:0;"></div>
+                            <div id="on_sun" class="schedule-grid" style="grid-template-columns: 1fr 1fr; display:none;"><input type="text" placeholder="Open Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_sun_in" class="input-box" style="margin:0;"><input type="text" placeholder="Close Time" onfocus="this.type='time'" onblur="if(!this.value) this.type='text'" id="edit_on_sun_out" class="input-box" style="margin:0;"></div>
                         </div>
                     </div>
 
@@ -242,7 +263,8 @@
                 </form>
             </div>
         </div>
-        </div>
+
+    </div>
 
     <div id="prescription-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('prescription-modal').style.display='none'">✖</button>

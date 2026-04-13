@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Registration - BhavyaCare</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doctor Registration - BhavyaCare</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -13,443 +13,290 @@
         body { 
             font-family: 'Inter', sans-serif; 
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-            padding: 30px 15px; 
+            padding: 20px 10px; 
             color: #0f172a; 
             margin: 0;
             min-height: 100vh;
         }
         
         .form-container { 
-            background: white; max-width: 950px; margin: auto; padding: 40px; 
+            background: white; max-width: 900px; margin: auto; padding: 30px 20px; 
             border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
             border: 1px solid #f1f5f9; display: none; 
         }
         
         .status-screen {
-            max-width: 600px; width: 90%; margin: 10vh auto; background: white; 
-            padding: 50px 30px; border-radius: 16px; text-align: center; 
+            max-width: 500px; width: 90%; margin: 10vh auto; background: white; 
+            padding: 40px 20px; border-radius: 16px; text-align: center; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;
         }
         .status-screen i { font-size: 60px; margin-bottom: 20px; }
-        .status-screen h2 { color: #0f172a; margin-bottom: 15px; font-size: 24px; margin-top:0;}
-        .status-screen p { color: #64748b; font-size: 16px; line-height: 1.6;}
+        .status-screen h2 { color: #0f172a; margin-bottom: 15px; font-size: 22px; margin-top:0;}
+        .status-screen p { color: #64748b; font-size: 15px; line-height: 1.6;}
 
-        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;}
-        p.subtitle { text-align: center; color: #64748b; margin-bottom: 40px; font-size: 15px; line-height: 1.5;}
+        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;}
+        p.subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; line-height: 1.5;}
         
-        h2 { color: #0f172a; font-size: 18px; margin-top: 45px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 12px; line-height: 1.4;}
-        h2 span.step { background: #10b981; color: white; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; flex-shrink: 0;}
+        h2.section-title { color: #0f172a; font-size: 18px; margin-top: 35px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 10px; line-height: 1.4;}
+        h2.section-title span.step { background: #0056b3; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0;}
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .form-group { margin-bottom: 20px; width: 100%;}
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .form-group { margin-bottom: 15px; width: 100%;}
         
-        label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #334155;}
-        input[type="text"], input[type="email"], input[type="time"], input[type="file"], input[type="number"], select { 
-            width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; transition: all 0.3s ease; background: #f8fafc; -webkit-appearance: none;
+        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #334155;}
+        input[type="text"], input[type="email"], input[type="number"], input[type="time"], input[type="file"], select, textarea { 
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; transition: all 0.3s ease; background: #f8fafc; -webkit-appearance: none;
         }
-        input[type="file"] { padding: 10px; font-size: 14px; background: white;}
-        input:focus, select:focus { border-color: #10b981; background: white; outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+        input[type="file"] { padding: 8px; font-size: 13px; background: white;}
+        input:focus, select:focus, textarea:focus { border-color: #0056b3; background: white; outline: none; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1); }
         
-        .service-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-        .service-checkboxes label { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; margin: 0; min-height: 48px;}
-        .service-checkboxes label:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
-        .service-checkboxes input { width: 18px; height: 18px; margin-right: 12px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;}
+        .timing-row { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; position: relative;}
+        .timing-day { grid-column: 1 / -1; font-weight: 700; color: #0056b3; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 5px;}
 
-        .timing-row { display: grid; grid-template-columns: 130px 1fr 1fr; align-items: center; gap: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; transition: 0.2s;}
-        .timing-row:hover { border-color: #cbd5e1; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
-        .timing-day { font-weight: 600; color: #0f172a; font-size: 15px; }
-
-        button.submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 40px; transition: 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); min-height: 56px;}
-        button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        button.submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border: none; font-size: 16px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 30px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);}
+        button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 86, 179, 0.4); }
         button.submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
         
-        .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: stretch; flex-wrap: wrap;}
-        .input-with-button input { flex: 1; margin: 0; min-width: 130px; background: white;}
-        .add-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 18px; height: 48px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .add-btn:hover { background: #1d4ed8; }
-        
-        .ai-controls { display: flex; gap: 10px; flex: 1; min-width: 250px;}
-        .ai-controls select { width: 90px; height: 48px; background: white; margin: 0;}
-        .ai-btn { flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; height: 48px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); padding: 0 15px;}
-        .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.4);}
-        .ai-btn:disabled { background: #c4b5fd; cursor: not-allowed; box-shadow:none;}
-        
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 20px;}
-        .tag { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd;}
-        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px; transition: 0.2s; display: inline-flex; padding: 2px;}
-        .tag span:hover { color: #0c4a6e; transform: scale(1.2);}
+        .logout-link { display: block; text-align: center; margin-top: 20px; color: #ef4444; font-weight: bold; text-decoration: none; font-size: 14px; }
 
         /* MOBILE RESPONSIVENESS */
-        @media (max-width: 768px) {
-            body { padding: 15px 10px; }
-            .form-container { padding: 25px 20px; border-radius: 12px; }
-            h1 { font-size: 24px; }
-            p.subtitle { font-size: 14px; margin-bottom: 25px;}
-            .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 15px; }
-            h2 { font-size: 16px; margin-top: 35px; }
-            .service-checkboxes { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .timing-row { grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; position: relative; }
-            .timing-day { grid-column: 1 / -1; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #059669; }
-            .input-with-button { flex-direction: column; gap: 12px; }
-            .input-with-button > div:first-child { display: flex; gap: 10px; width: 100%;}
-            .ai-controls { width: 100%; }
-        }
-
-        @media (max-width: 400px) {
-            .service-checkboxes { grid-template-columns: 1fr; }
-            .form-container { padding: 20px 15px; }
+        @media (min-width: 768px) {
+            body { padding: 40px 20px; }
+            .form-container { padding: 40px; }
+            h1 { font-size: 32px; }
+            .grid-2 { grid-template-columns: 1fr 1fr; gap: 20px; }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .timing-row { grid-template-columns: 120px 1fr 1fr; padding: 12px 20px; }
+            .timing-day { grid-column: auto; border: none; padding: 0; margin: 0; }
         }
     </style>
 </head>
 <body>
 
 <div id="statusChecker" class="status-screen">
-    <i class="fas fa-spinner fa-spin" style="color: #3b82f6;"></i>
-    <h2>Checking Account Status...</h2>
-    <p>Please wait while we verify your details securely.</p>
+    <i class="fas fa-spinner fa-spin" style="color: #0056b3;" id="statusIcon"></i>
+    <h2 id="statusTitle">Checking Account...</h2>
+    <p id="statusMsg">Please wait while we verify your details securely.</p>
+    <a href="#" class="logout-link" onclick="logoutDoctor()" style="display:none;" id="logoutBtn">Log Out & Return Home</a>
+    <button class="submit-btn" style="display:none;" id="reapplyBtn" onclick="showForm()">Update Profile & Re-apply</button>
 </div>
 
 <div class="form-container" id="mainFormContainer">
-    <h1>Complete Your Lab Profile</h1>
-    <p class="subtitle">Join BhavyaCare's network of trusted diagnostic centers.</p>
+    <h1>Complete Doctor Profile</h1>
+    <p class="subtitle">Join BhavyaCare to provide top-class online and offline consultations.</p>
 
-    <form id="labRegForm">
-        <h2><span class="step">1</span> Basic Details</h2>
+    <form id="docRegForm">
+        <h2 class="section-title"><span class="step">1</span> Basic Details</h2>
         <div class="grid-2">
-            <div class="form-group"><label>Lab Name *</label><input type="text" id="lab_name" readonly></div>
-            <div class="form-group"><label>Email Address *</label><input type="email" id="lab_email" required></div>
-            <div class="form-group"><label>Lab Registration Document (PDF) *</label><input type="file" id="reg_doc" accept=".pdf" required></div>
+            <div class="form-group"><label>Doctor Name *</label><input type="text" id="doc_name" readonly></div>
+            <div class="form-group"><label>Doctor ID *</label><input type="text" id="doc_id" readonly></div>
+            <div class="form-group"><label>Email Address *</label><input type="email" id="doc_email" required></div>
+            <div class="form-group"><label>Medical Registration (PDF) *</label><input type="file" id="reg_doc" accept=".pdf" required></div>
         </div>
-        <div class="form-group"><label>Full Address *</label><input type="text" id="lab_address" required></div>
-        <div class="grid-3">
+        <div class="grid-2">
+            <div class="form-group"><label>Speciality *</label><input type="text" id="speciality" placeholder="e.g. Cardiologist" required></div>
+            <div class="form-group"><label>Qualification *</label><input type="text" id="qualification" placeholder="e.g. MBBS, MD" required></div>
+            <div class="form-group"><label>Experience (Years) *</label><input type="number" id="experience" required></div>
+            <div class="form-group"><label>Profile Image *</label><input type="file" id="profile_img" accept="image/*" required></div>
+        </div>
+
+        <h2 class="section-title"><span class="step">2</span> Clinic / Hospital Details</h2>
+        <div class="grid-2">
+            <div class="form-group"><label>Clinic Name *</label><input type="text" id="clinic_name" required></div>
             <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
-            <div class="form-group"><label>Main Pincode *</label><input type="number" id="pincode" required></div>
+            <div class="form-group" style="grid-column: 1 / -1;"><label>Full Clinic Address *</label><textarea id="clinic_address" rows="2" required></textarea></div>
+            <div class="form-group"><label>Pincode *</label><input type="number" id="pincode" required></div>
+            <div class="form-group"><label>Your UPI ID (For Payments) *</label><input type="text" id="upi_id" placeholder="e.g. 9876543210@ybl" required></div>
         </div>
 
-        <h2><span class="step">2</span> Service Areas</h2>
-        
-        <div class="form-group tag-input-container">
-            <label>Available Pincodes * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press Enter or +)</span></label>
-            <div class="input-with-button">
-                <div style="display: flex; gap: 10px; flex: 1;">
-                    <input type="number" id="pincodeInput" placeholder="Add pincode manually">
-                    <button type="button" class="add-btn" onclick="addTag('pincode')" title="Add Pincode">+</button>
-                </div>
-                
-                <div class="ai-controls">
-                    <select id="radiusSelect">
-                        <option value="5">5 km</option>
-                        <option value="10">10 km</option>
-                        <option value="20">20 km</option>
-                        <option value="30" selected>30 km</option>
-                        <option value="50">50 km</option>
-                    </select>
-                    <button type="button" class="ai-btn" onclick="aiAutoFillPincodes()"><i class="fas fa-magic"></i> Auto-Fill Area</button>
-                </div>
-            </div>
-            <div id="pincodeTags" class="tags-wrapper"></div>
-            <input type="hidden" id="available_pincode" required> 
-        </div>
-
-        <div class="form-group tag-input-container">
-            <label>Available Cities/Localities * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press Enter or +)</span></label>
-            <div class="input-with-button">
-                <div style="display: flex; gap: 10px; flex: 1; width: 100%;">
-                    <input type="text" id="cityInput" placeholder="Add city manually">
-                    <button type="button" class="add-btn" onclick="addTag('city')" title="Add City">+</button>
-                </div>
-            </div>
-            <div id="cityTags" class="tags-wrapper"></div>
-            <input type="hidden" id="available_city" required>
-        </div>
-
-        <h2><span class="step">3</span> Accreditations</h2>
+        <h2 class="section-title"><span class="step">3</span> Fees & Schedule</h2>
         <div class="grid-2">
-            <div class="form-group">
-                <label>NABL Approved? *</label>
-                <select id="nabl" onchange="toggleCert('nabl')" required>
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
+            <div class="form-group"><label>Offline Consult Fee (₹) *</label><input type="number" id="offline_fee" required></div>
+            <div class="form-group"><label>Online Consult Fee (₹) *</label><input type="number" id="online_fee" required></div>
+            <div class="form-group"><label>Slot Duration (Minutes) *</label>
+                <select id="slot_duration" required>
+                    <option value="15">15 Mins</option>
+                    <option value="20">20 Mins</option>
+                    <option value="30">30 Mins</option>
                 </select>
-                <input type="file" id="nabl_cert" accept=".pdf" style="display:none; margin-top:10px;">
             </div>
-            <div class="form-group">
-                <label>NABH Approved? *</label>
-                <select id="nabh" onchange="toggleCert('nabh')" required>
-                    <option value="No">No</option>
+            <div class="form-group"><label>Provide Online Video Consults?</label>
+                <select id="online_available" required>
                     <option value="Yes">Yes</option>
+                    <option value="No">No</option>
                 </select>
-                <input type="file" id="nabh_cert" accept=".pdf" style="display:none; margin-top:10px;">
             </div>
         </div>
 
-        <h2><span class="step">4</span> Services Offered</h2>
-        <div class="service-checkboxes" id="servicesContainer"></div>
-
-        <h2><span class="step">5</span> Working Timings <span style="font-size: 13px; font-weight: normal; color: #64748b;">(Fill at least 1 day)</span></h2>
+        <h2 class="section-title"><span class="step">4</span> Clinic Timings <span style="font-size:12px; font-weight:normal; color:#888;">(Fill at least 1 day)</span></h2>
         <div id="timingsContainer"></div>
-
-        <h2><span class="step">6</span> Lab Images</h2>
-        <div class="grid-3">
-            <div class="form-group"><label>Lab Image 1 (Required) *</label><input type="file" id="lab_img1" accept="image/*" required></div>
-            <div class="form-group"><label>Lab Image 2</label><input type="file" id="lab_img2" accept="image/*"></div>
-            <div class="form-group"><label>Lab Image 3</label><input type="file" id="lab_img3" accept="image/*"></div>
-        </div>
 
         <button type="submit" class="submit-btn" id="submitBtn">Submit Profile for Verification</button>
     </form>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0YBo69ZZ-5HxWOSC-6W06jsk9I9_N4Ds&libraries=places&v=weekly"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
-    
-    const services = ["pathology", "profile", "discount_profile", "usg", "xray", "ct", "mri", "ecg", "echo", "tmt", "eeg", "pft", "holter", "abp", "ncv_emg", "ssep", "evoked_potentiat", "sleep_study", "mammography", "dlco", "endoscopy", "colonoscopy"];
     const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-    
-    let pincodeList = [];
-    let cityList = [];
 
     document.addEventListener("DOMContentLoaded", () => {
-        const labName = localStorage.getItem("bhavya_name");
-        const userId = localStorage.getItem("bhavya_user_id");
+        const docName = localStorage.getItem("bhavya_name");
+        const docId = localStorage.getItem("bhavya_user_id");
         
-        if (!userId || localStorage.getItem("bhavya_role") !== "lab") {
+        if (!docId || localStorage.getItem("bhavya_role") !== "doctor") {
             alert("Unauthorized Access! Please login first."); 
             window.location.href = "../index.html"; 
             return;
         }
 
+        // Generate Timing Rows
+        const timeDiv = document.getElementById("timingsContainer");
+        days.forEach(day => {
+            let dayName = day.charAt(0).toUpperCase() + day.slice(1);
+            timeDiv.innerHTML += `
+            <div class="timing-row">
+                <div class="timing-day">${dayName}</div>
+                <div><label style="display:none;">Open</label><input type="time" id="${day}_in"></div>
+                <div><label style="display:none;">Close</label><input type="time" id="${day}_out"></div>
+            </div>`;
+        });
+
         // ==========================================
-        // CHECK STATUS BEFORE SHOWING FORM
+        // CHECK DOCTOR STATUS BEFORE SHOWING FORM
         // ==========================================
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "checkLabStatus", user_id: userId })
+            body: JSON.stringify({ action: "checkDoctorStatus", doctor_id: docId })
         })
         .then(res => res.json())
         .then(data => {
             const statusBox = document.getElementById("statusChecker");
+            const sIcon = document.getElementById("statusIcon");
+            const sTitle = document.getElementById("statusTitle");
+            const sMsg = document.getElementById("statusMsg");
+            const logoutBtn = document.getElementById("logoutBtn");
+            const reapplyBtn = document.getElementById("reapplyBtn");
             
-            if (data.status === "ACTIVE") {
-                window.location.href = "lab_dashboard.html"; 
-            } 
-            else if (data.status === "INACTIVE" || data.status === "PENDING") {
-                statusBox.innerHTML = `
-                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
-                    <h2>Application Under Review</h2>
-                    <p style="margin-top:10px;">Your application is under process. Please try again after some time or you will be notified via email.</p>
-                `;
-            } 
-            else {
-                // If NOT_FOUND, show the form
-                statusBox.style.display = "none";
-                document.getElementById("mainFormContainer").style.display = "block";
+            if (data.status === "success") {
+                const docStatus = data.data.status;
                 
-                // Initialize Form Elements
-                document.getElementById("lab_name").value = labName;
-
-                const servDiv = document.getElementById("servicesContainer");
-                services.forEach(srv => {
-                    let displayName = srv.replace("_", " ").toUpperCase();
-                    servDiv.innerHTML += `<label><input type="checkbox" id="srv_${srv}"> ${displayName}</label>`;
-                });
-
-                const timeDiv = document.getElementById("timingsContainer");
-                days.forEach(day => {
-                    let dayName = day.charAt(0).toUpperCase() + day.slice(1);
-                    timeDiv.innerHTML += `
-                    <div class="timing-row">
-                        <div class="timing-day">${dayName}</div>
-                        <div><input type="time" id="${day}_open" title="Opening Time"></div>
-                        <div><input type="time" id="${day}_close" title="Closing Time"></div>
-                    </div>`;
-                });
-            }
-        })
-        .catch(error => {
-            console.error("Status Check Error:", error);
-            // Fallback: If API fails, show form just in case
-            document.getElementById("statusChecker").style.display = "none";
-            document.getElementById("mainFormContainer").style.display = "block";
-        });
-
-        document.getElementById("pincodeInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); } });
-        document.getElementById("cityInput").addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); addTag('city'); } });
-        document.getElementById("labRegForm").addEventListener("submit", handleFormSubmit);
-    });
-
-    // ==========================================
-    // TAG SYSTEM
-    // ==========================================
-    function addTag(type, aiValue = null) {
-        let inputElem = document.getElementById(type + "Input");
-        let val = aiValue ? aiValue : inputElem.value.trim();
-        if (!val) return;
-
-        if (type === 'pincode' && !pincodeList.includes(val)) {
-            pincodeList.push(val); updateTagsUI('pincode');
-        } else if (type === 'city') {
-            val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-            let lowerCaseCityList = cityList.map(c => c.toLowerCase());
-            if (!lowerCaseCityList.includes(val.toLowerCase())) { cityList.push(val); updateTagsUI('city'); }
-        }
-        if(!aiValue) inputElem.value = ""; 
-    }
-
-    function removeTag(type, index) {
-        if (type === 'pincode') pincodeList.splice(index, 1); else cityList.splice(index, 1);
-        updateTagsUI(type);
-    }
-
-    function updateTagsUI(type) {
-        let wrapper = document.getElementById(type + "Tags");
-        let hiddenInput = document.getElementById("available_" + type);
-        let list = type === 'pincode' ? pincodeList : cityList;
-        wrapper.innerHTML = "";
-        list.forEach((item, index) => {
-            let tag = document.createElement("div");
-            tag.className = "tag";
-            tag.innerHTML = `${item} <span onclick="removeTag('${type}', ${index})" title="Remove">×</span>`;
-            wrapper.appendChild(tag);
-        });
-        hiddenInput.value = list.join(',');
-    }
-
-    // ==========================================
-    // AI AUTO FILL LOGIC (MAPS + POSTAL API)
-    // ==========================================
-    async function aiAutoFillPincodes() {
-        const basePincode = document.getElementById("pincode").value.trim();
-        const city = document.getElementById("city").value.trim();
-        const radiusKm = parseInt(document.getElementById("radiusSelect").value);
-
-        if (!basePincode || !city) { alert("Please enter both 'City' and 'Main Pincode' in the Basic Details section first."); return; }
-
-        const btn = document.querySelector(".ai-btn");
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Area..."; btn.disabled = true;
-        const geocoder = new google.maps.Geocoder();
-        const addressStr = `${city}, ${basePincode}, India`;
-
-        geocoder.geocode({ address: addressStr }, async function(results, status) {
-            if (status === 'OK') {
-                const labLocation = results[0].geometry.location;
-                try {
-                    const radiusMeters = radiusKm * 1000;
-                    const request = { fields: ['addressComponents'], locationRestriction: { center: labLocation, radius: radiusMeters }};
-                    const { places } = await google.maps.places.Place.searchNearby(request);
-                    
-                    let discoveredPincodes = new Set(); discoveredPincodes.add(basePincode);
-                    if (places && places.length > 0) {
-                        places.forEach(place => {
-                            if (place.addressComponents) {
-                                place.addressComponents.forEach(comp => { if (comp.types.includes('postal_code')) discoveredPincodes.add(comp.longText); });
-                            }
-                        });
-                    }
-                    
-                    if(discoveredPincodes.size === 1) {
-                        let baseNum = parseInt(basePincode); let extra = Math.ceil(radiusKm / 10) + 1;
-                        for(let i=1; i<=extra; i++){ discoveredPincodes.add((baseNum + i).toString()); discoveredPincodes.add((baseNum - i).toString()); }
-                    }
-
-                    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching Villages...";
-                    let foundVillages = 0; let foundPins = 0; const pinArray = Array.from(discoveredPincodes);
-                    
-                    for (const pin of pinArray) {
-                        addTag('pincode', pin); foundPins++;
-                        try {
-                            let response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-                            let data = await response.json();
-                            if(data && data[0] && data[0].Status === "Success") {
-                                data[0].PostOffice.forEach(po => {
-                                    let areaName = po.Name;
-                                    if(areaName.toLowerCase() !== city.toLowerCase() && areaName.toLowerCase() !== "india") { addTag('city', areaName); foundVillages++; }
-                                });
-                            }
-                        } catch(e) {}
-                    }
-                    addTag('city', city); resetBtn(btn);
-                    alert(`AI Magic Complete! Found ${foundPins} Pincodes and ${foundVillages} real Indian villages within your ${radiusKm}km radius.`);
-                } catch (error) {
-                    let baseNum = parseInt(basePincode); let extra = Math.ceil(radiusKm / 10) + 1;
-                    addTag('pincode', basePincode);
-                    for(let i=1; i<=extra; i++){ addTag('pincode', (baseNum + i).toString()); addTag('pincode', (baseNum - i).toString()); }
-                    addTag('city', city); resetBtn(btn); alert("Added nearby area Pincodes successfully.");
+                if (docStatus === "Active") {
+                    window.location.href = "doctor_dashboard.html"; 
+                } 
+                else if (docStatus === "Pending") {
+                    sIcon.className = "fas fa-clock"; sIcon.style.color = "#f59e0b";
+                    sTitle.innerText = "Application Under Review";
+                    sMsg.innerText = "Your application is currently being processed by the Admin. You will be notified via email once approved.";
+                    logoutBtn.style.display = "block";
+                } 
+                else if (docStatus === "Inactive") {
+                    sIcon.className = "fas fa-pause-circle"; sIcon.style.color = "#64748b";
+                    sTitle.innerText = "Account Paused";
+                    sMsg.innerText = "Your account is temporarily inactive. Please contact admin support.";
+                    logoutBtn.style.display = "block";
+                }
+                else if (docStatus === "Rejected") {
+                    sIcon.className = "fas fa-times-circle"; sIcon.style.color = "#ef4444";
+                    sTitle.innerText = "Application Rejected";
+                    sMsg.innerHTML = "Admin Reason: <b>" + (data.data.reject_reason || "Check email for details.") + "</b><br><br>You can update your details and submit again.";
+                    logoutBtn.style.display = "block";
+                    reapplyBtn.style.display = "block"; // Give option to resubmit
+                }
+                else {
+                    // Status Not Found / First Time Login -> Show Form
+                    showForm();
                 }
             } else {
-                alert("Could not locate your main Pincode on Google Maps."); addTag('pincode', basePincode); addTag('city', city); resetBtn(btn);
+                showForm(); // Error or New user
             }
-        });
+        })
+        .catch(err => { showForm(); });
+
+        document.getElementById("docRegForm").addEventListener("submit", handleFormSubmit);
+    });
+
+    function showForm() {
+        document.getElementById("statusChecker").style.display = "none";
+        document.getElementById("mainFormContainer").style.display = "block";
+        document.getElementById("doc_name").value = localStorage.getItem("bhavya_name");
+        document.getElementById("doc_id").value = localStorage.getItem("bhavya_user_id");
     }
 
-    function resetBtn(btn) { btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false; }
-    
-    function toggleCert(type) {
-        const val = document.getElementById(type).value; const fileInput = document.getElementById(type + "_cert");
-        if (val === "Yes") { fileInput.style.display = "block"; fileInput.required = true; } 
-        else { fileInput.style.display = "none"; fileInput.required = false; }
-    }
-    
+    function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
+
     function getBase64(fileId) {
         return new Promise((resolve, reject) => {
             const fileInput = document.getElementById(fileId);
-            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { resolve(""); return; }
-            const file = fileInput.files[0]; const reader = new FileReader();
-            reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) { resolve(null); return; }
+            const file = fileInput.files[0]; 
+            const reader = new FileReader();
+            reader.readAsDataURL(file); 
+            reader.onload = () => resolve({ base64: reader.result.split(',')[1], mime: file.type }); 
+            reader.onerror = error => reject(error);
         });
     }
 
-    // ==========================================
-    // FORM SUBMIT & UPLOAD
-    // ==========================================
     async function handleFormSubmit(e) {
         e.preventDefault();
         
-        if(pincodeList.length === 0 || cityList.length === 0) { alert("Please add at least one Available Pincode and one Available City using the '+' or 'Auto-Fill' button."); return; }
-
-        // Timing Check: At least 1 day required
         let hasAtLeastOneTime = false;
         days.forEach(day => {
-            let openTime = document.getElementById(day + "_open").value; let closeTime = document.getElementById(day + "_close").value;
-            if (openTime && closeTime) hasAtLeastOneTime = true;
+            if (document.getElementById(day + "_in").value && document.getElementById(day + "_out").value) hasAtLeastOneTime = true;
         });
-
-        if (!hasAtLeastOneTime) { alert("Please provide Opening and Closing times for at least 1 day."); return; }
+        if (!hasAtLeastOneTime) { alert("Please provide Clinic Timings for at least 1 day."); return; }
 
         const btn = document.getElementById("submitBtn");
         btn.innerText = "Uploading Documents & Saving... Please wait"; btn.disabled = true;
 
         try {
-            let available_pincodes_json = JSON.stringify(pincodeList); let available_cities_str = cityList.join(', ');
-            let base64RegDoc = await getBase64("reg_doc"); let base64Nabl = await getBase64("nabl_cert"); let base64Nabh = await getBase64("nabh_cert");
-            let base64Img1 = await getBase64("lab_img1"); let base64Img2 = await getBase64("lab_img2"); let base64Img3 = await getBase64("lab_img3");
+            let docData = await getBase64("reg_doc");
+            let imgData = await getBase64("profile_img");
 
             let payload = {
-                action: "submitLabProfile", user_id: localStorage.getItem("bhavya_user_id"), lab_name: document.getElementById("lab_name").value,
-                lab_registration_docoment: base64RegDoc, lab_email: document.getElementById("lab_email").value, lab_address: document.getElementById("lab_address").value,
-                city: document.getElementById("city").value, pincode: document.getElementById("pincode").value, available_pincode: available_pincodes_json,
-                nabl: document.getElementById("nabl").value, nabl_certificate: base64Nabl, nabh: document.getElementById("nabh").value, nabh_certificate: base64Nabh,
-                lab_image1: base64Img1, lab_image2: base64Img2, lab_image3: base64Img3, available_city: available_cities_str
+                action: "submitDoctorRegistration",
+                data: {
+                    doctor_id: document.getElementById("doc_id").value,
+                    doctor_name: document.getElementById("doc_name").value,
+                    email: document.getElementById("doc_email").value,
+                    speciality: document.getElementById("speciality").value,
+                    qualification: document.getElementById("qualification").value,
+                    experience: document.getElementById("experience").value,
+                    clinic_name: document.getElementById("clinic_name").value,
+                    clinic_address: document.getElementById("clinic_address").value,
+                    city: document.getElementById("city").value,
+                    pincode: document.getElementById("pincode").value,
+                    upi_id: document.getElementById("upi_id").value,
+                    offline_fee: document.getElementById("offline_fee").value,
+                    online_fee: document.getElementById("online_fee").value,
+                    slot_duration: document.getElementById("slot_duration").value,
+                    online_available: document.getElementById("online_available").value,
+                    doc_base64: docData ? docData.base64 : "", doc_mime: docData ? docData.mime : "",
+                    img_base64: imgData ? imgData.base64 : "", img_mime: imgData ? imgData.mime : ""
+                }
             };
 
-            services.forEach(srv => { let checkbox = document.getElementById("srv_" + srv); payload[srv] = (checkbox && checkbox.checked) ? "Yes" : "No"; });
-            days.forEach(day => { payload[day + "_opening_time"] = document.getElementById(day + "_open").value; payload[day + "_closing_time"] = document.getElementById(day + "_close").value; });
+            days.forEach(day => {
+                payload.data["off_" + day.substring(0,3) + "_in"] = document.getElementById(day + "_in").value;
+                payload.data["off_" + day.substring(0,3) + "_out"] = document.getElementById(day + "_out").value;
+                
+                // Currently setting Online time same as Offline time
+                payload.data["on_" + day.substring(0,3) + "_in"] = document.getElementById(day + "_in").value;
+                payload.data["on_" + day.substring(0,3) + "_out"] = document.getElementById(day + "_out").value;
+            });
 
             const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
             const resData = await response.json();
 
             if (resData.status === "success") {
                 alert("Success! Your profile has been submitted and is under process.");
-                window.location.reload(); // Reloads page to show "Under Review" screen
+                window.location.reload(); // Reload to show Pending screen
             } else {
-                alert("Server Error: " + resData.message); btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
+                alert("Server Error: " + resData.message);
+                btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
             }
         } catch (error) {
-            console.error("Submission Error:", error); alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
+            alert("A network error occurred. Please ensure document sizes are small (under 2MB) and try again.");
             btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
         }
     }

@@ -26,28 +26,30 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = titles[tabId];
 }
 
-// 🌟 SUPER ROBUST IMAGE URL FIXER 🌟
-function fixDriveUrl(rawImg, docName) {
+// 🌟 DEBUGGING IMAGE URL FIXER 🌟
+function fixDriveUrl(rawImg, docName, docId) {
     let defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName || 'Doc')}&background=0056b3&color=fff&size=100`;
     
     if (!rawImg || typeof rawImg !== 'string' || rawImg.trim() === "") {
+        console.warn(`⚠️ [IMAGE DEBUG] ${docId} has NO image data. Using default avatar.`);
         return defaultAvatar;
     }
     
-    // Agar link drive ka hai, toh exact ID extract karke usko 'uc?export=view' mein convert karenge (Best for <img> tags)
+    let finalUrl = rawImg;
+
     if (rawImg.includes("drive.google.com")) {
-        let match = rawImg.match(/[-\w]{25,}/); // Google Drive file ID hamesha 25+ chars ka hota hai
+        let match = rawImg.match(/[-\w]{25,}/); 
         if (match && match[0]) {
-            return `https://drive.google.com/uc?export=view&id=${match[0]}`;
+            // Using uc?export=view as it is standard for img tags
+            finalUrl = `https://drive.google.com/uc?export=view&id=${match[0]}`;
         }
+    } else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+        // Assume Base64 if no http
+        finalUrl = `data:image/jpeg;base64,${rawImg}`;
     }
-    
-    // Agar pehle se base64 hai ya normal link hai
-    if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
-        return `data:image/jpeg;base64,${rawImg}`;
-    }
-    
-    return rawImg;
+
+    console.log(`✅ [IMAGE DEBUG] ${docId} | Original: ${rawImg.substring(0, 40)}... | Converted To: ${finalUrl.substring(0, 50)}...`);
+    return finalUrl;
 }
 
 async function fetchAdminData() {
@@ -65,11 +67,13 @@ async function fetchAdminData() {
         document.getElementById("doctorsTable").style.display = "table";
 
         if (docsJson.status === "success") {
-            // Yahan sabhi doctors ki images background mein fix ho rahi hain
+            console.log("---- STARTING IMAGE URL CONVERSIONS ----");
             allDoctors = docsJson.data.map(d => {
-                d.imgUrl = fixDriveUrl(d.imgUrl, d.doctor_name);
+                d.imgUrl = fixDriveUrl(d.imgUrl, d.doctor_name, d.doctor_id);
                 return d;
             });
+            console.log("---- FINISHED IMAGE URL CONVERSIONS ----");
+            
             filterDoctors();
             populateDoctorDropdowns();
         } else { alert("Error loading doctors: " + docsJson.message); }
@@ -84,6 +88,7 @@ async function fetchAdminData() {
     } catch (error) {
         alert("System error loading data. Please check internet.");
         document.getElementById("loader").innerText = "Failed to load data.";
+        console.error("Fetch Data Error:", error);
     }
 }
 
@@ -121,11 +126,14 @@ function renderDocsTable(doctors) {
             actionButtons = `<button class="btn btn-reject" onclick="updateStatus('${doc.doctor_id}', 'Inactive')">Deactivate</button>`;
         }
 
-        // Added onerror fallback to guarantee the image never shows broken
+        // 🌟 NAYA: EXPLICIT CONSOLE ERROR ON HTML IMAGE LOAD FAILURE 🌟
+        let fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff`;
+        let imgErrorScript = `console.error('❌ BROWSER BLOCKED IMAGE LOAD for ${doc.doctor_id}. URL: ${doc.imgUrl}'); this.onerror=null; this.src='${fallbackUrl}';`;
+
         tbody.innerHTML += `
             <tr>
                 <td class="doc-clickable" onclick="showDoctorProfile('${doc.doctor_id}')" title="Click to view full profile">
-                    <img src="${doc.imgUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff'" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                    <img src="${doc.imgUrl}" onerror="${imgErrorScript}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </td>
                 <td class="doc-clickable" onclick="showDoctorProfile('${doc.doctor_id}')" style="font-weight:bold; color:var(--primary); cursor:pointer;">${doc.doctor_id}</td>
                 <td><strong>${doc.doctor_name}</strong><br><span style="font-size:12px; color:#777;">${doc.speciality}</span></td>
@@ -146,9 +154,12 @@ function showDoctorProfile(docId) {
     const totalAppts = docAppts.length;
     const completedAppts = docAppts.filter(a => a.appt_status === "Completed").length;
     
+    let fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff`;
+    let imgErrorScript = `console.error('❌ MODAL IMAGE FAILED for ${doc.doctor_id}'); this.onerror=null; this.src='${fallbackUrl}';`;
+
     let html = `
         <div style="display:flex; gap:20px; align-items:center; border-bottom:1px solid #eee; padding-bottom:20px; margin-bottom:20px;">
-            <img src="${doc.imgUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctor_name)}&background=0056b3&color=fff'" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <img src="${doc.imgUrl}" onerror="${imgErrorScript}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
             <div>
                 <h2 style="margin:0; color:var(--primary);">${doc.doctor_name}</h2>
                 <p style="margin:5px 0; color:#555; font-size:15px;"><strong>${doc.doctor_id}</strong> | ${doc.speciality}</p>
@@ -283,7 +294,7 @@ function renderApptsTable(appts) {
 }
 
 // ===============================================
-// 3. SETTLEMENT LEDGER LOGIC (ADMIN VIEW)
+// 3. SETTLEMENT LEDGER LOGIC
 // ===============================================
 function parseDateDDMMYYYY(dateStr) {
     if (!dateStr || dateStr === "N/A") return new Date(0);

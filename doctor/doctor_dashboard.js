@@ -76,6 +76,10 @@ function toggleEditOnlineSection() {
     document.getElementById("editOnlineSection").style.display = (val === "Yes") ? "block" : "none";
 }
 
+// ===============================================
+// 🌟 OFFLINE & ONLINE PROFILE EDIT LOGIC 🌟
+// ===============================================
+
 async function loadDoctorProfileData() {
     document.getElementById("loader").style.display = "block";
     document.getElementById("sec-profile").style.display = "none";
@@ -93,12 +97,21 @@ async function loadDoctorProfileData() {
             
             const days = ['mon','tue','wed','thu','fri','sat','sun'];
             days.forEach(d => {
-                let inInput = document.getElementById(`edit_on_${d}_in`);
-                let outInput = document.getElementById(`edit_on_${d}_out`);
-                inInput.value = p[`on_${d}_in`] || "";
-                outInput.value = p[`on_${d}_out`] || "";
-                if(inInput.value) inInput.type = "time";
-                if(outInput.value) outInput.type = "time";
+                // Populate Offline
+                let offIn = document.getElementById(`edit_off_${d}_in`);
+                let offOut = document.getElementById(`edit_off_${d}_out`);
+                offIn.value = p[`off_${d}_in`] || "";
+                offOut.value = p[`off_${d}_out`] || "";
+                if(offIn.value) offIn.type = "time";
+                if(offOut.value) offOut.type = "time";
+
+                // Populate Online
+                let onIn = document.getElementById(`edit_on_${d}_in`);
+                let onOut = document.getElementById(`edit_on_${d}_out`);
+                onIn.value = p[`on_${d}_in`] || "";
+                onOut.value = p[`on_${d}_out`] || "";
+                if(onIn.value) onIn.type = "time";
+                if(onOut.value) onOut.type = "time";
             });
             toggleEditOnlineSection();
         }
@@ -112,27 +125,44 @@ async function loadDoctorProfileData() {
 
 async function saveDoctorProfile() {
     const isOnline = document.getElementById('editOnlineAvailable').value === "Yes";
+    const days = ['mon','tue','wed','thu','fri','sat','sun'];
+    
+    // Check at least one Offline schedule
+    let hasOffline = false;
+    for(let d of days) {
+        if(document.getElementById(`edit_off_${d}_in`).value && document.getElementById(`edit_off_${d}_out`).value) { 
+            hasOffline = true; break; 
+        }
+    }
+    if(!hasOffline) { alert("Please fill open/close time for at least ONE day for Offline Clinic."); return; }
+
+    // Check Online
     if(isOnline) {
         if(!document.getElementById('editOnlineFee').value) { alert("Please enter Online Fee."); return; }
-        
-        // Check at least one schedule
-        let hasSchedule = false;
-        const days = ['mon','tue','wed','thu','fri','sat','sun'];
+        let hasOnline = false;
         for(let d of days) {
-            let inT = document.getElementById(`edit_on_${d}_in`).value;
-            let outT = document.getElementById(`edit_on_${d}_out`).value;
-            if(inT && outT) { hasSchedule = true; break; }
+            if(document.getElementById(`edit_on_${d}_in`).value && document.getElementById(`edit_on_${d}_out`).value) { 
+                hasOnline = true; break; 
+            }
         }
-        if(!hasSchedule) { alert("Please fill open/close time for at least one day for online consultation."); return; }
+        if(!hasOnline) { alert("Please fill open/close time for at least ONE day for Online Consultation."); return; }
     }
 
     document.getElementById("btnSaveProfile").style.display = "none";
-    document.getElementById("profileLoader").style.display = "inline-block";
+    document.getElementById("profileLoader").style.display = "block";
 
     const payload = {
         action: "updateDoctorProfileSettings",
         doctor_id: localStorage.getItem("bhavya_user_id"),
         data: {
+            off_mon_in: document.getElementById('edit_off_mon_in').value, off_mon_out: document.getElementById('edit_off_mon_out').value,
+            off_tue_in: document.getElementById('edit_off_tue_in').value, off_tue_out: document.getElementById('edit_off_tue_out').value,
+            off_wed_in: document.getElementById('edit_off_wed_in').value, off_wed_out: document.getElementById('edit_off_wed_out').value,
+            off_thu_in: document.getElementById('edit_off_thu_in').value, off_thu_out: document.getElementById('edit_off_thu_out').value,
+            off_fri_in: document.getElementById('edit_off_fri_in').value, off_fri_out: document.getElementById('edit_off_fri_out').value,
+            off_sat_in: document.getElementById('edit_off_sat_in').value, off_sat_out: document.getElementById('edit_off_sat_out').value,
+            off_sun_in: document.getElementById('edit_off_sun_in').value, off_sun_out: document.getElementById('edit_off_sun_out').value,
+            
             online_available: document.getElementById('editOnlineAvailable').value,
             online_fee: document.getElementById('editOnlineFee').value || "",
             on_mon_in: document.getElementById('edit_on_mon_in').value, on_mon_out: document.getElementById('edit_on_mon_out').value,
@@ -151,15 +181,11 @@ async function saveDoctorProfile() {
             body: JSON.stringify(payload)
         });
         const resData = await response.json();
-        if (resData.status === "success") {
-            alert("Settings updated successfully!");
-        } else {
-            alert("Error: " + resData.message);
-        }
-    } catch(e) {
-        alert("Failed to update.");
-    } finally {
-        document.getElementById("btnSaveProfile").style.display = "inline-block";
+        if (resData.status === "success") alert("Full Schedule updated successfully!");
+        else alert("Error: " + resData.message);
+    } catch(e) { alert("Failed to update."); } 
+    finally {
+        document.getElementById("btnSaveProfile").style.display = "block";
         document.getElementById("profileLoader").style.display = "none";
     }
 }

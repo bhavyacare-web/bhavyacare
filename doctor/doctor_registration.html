@@ -156,8 +156,9 @@
         if(!uid) { alert("Session Expired. Please login."); window.location.href="../index.html"; return; }
         
         const status = localStorage.getItem("bhavya_doc_status");
-        if(status === "Pending" || status === "Active") {
-            window.location.href = "pending_approval.html";
+        // Ab yahan pending approval page nahi aayega, direct dashboard par bhejenge
+        if(status === "Pending" || status === "Active" || status === "Approved") {
+            window.location.href = "doctor_dashboard.html";
             return;
         }
 
@@ -234,7 +235,7 @@
                     off_thu_in: document.getElementById('off_thu_in').value, off_thu_out: document.getElementById('off_thu_out').value,
                     off_fri_in: document.getElementById('off_fri_in').value, off_fri_out: document.getElementById('off_fri_out').value,
                     off_sat_in: document.getElementById('off_sat_in').value, off_sat_out: document.getElementById('off_sat_out').value,
-                    off_sun_in: document.getElementById('off_sun_in').value, off_sun_out: document.getElementById('off_sun_out').value,
+                    off_sun_in: document.getElementById('off_sun_in').value, off_sun_out: document.getElementById('edit_off_sun_out').value,
                     online_available: document.getElementById('onlineAvailable').value,
                     online_fee: document.getElementById('onlineFee').value || "",
                     on_mon_in: document.getElementById('on_mon_in').value, on_mon_out: document.getElementById('on_mon_out').value,
@@ -256,11 +257,9 @@
 
             const resData = await response.json();
             if (resData.status === "success") {
-                alert("Profile Registered Successfully! Awaiting Admin Approval.");
-                
+                // Direct dashboard par redirect
                 localStorage.setItem("bhavya_doc_status", "Pending"); 
-                window.location.href = "pending_approval.html"; 
-                
+                window.location.href = "doctor_dashboard.html"; 
             } else {
                 alert("Error: " + resData.message);
             }

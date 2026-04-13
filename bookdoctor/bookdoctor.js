@@ -127,18 +127,20 @@ function checkAvailability(doc, day, time) {
 }
 
 function applyFilters() {
+    // 🌟 SEPARATED SEARCH LOGIC 🌟
+    const searchSymptom = document.getElementById("searchSymptom").value.toLowerCase();
     const searchName = document.getElementById("searchName").value.toLowerCase();
     const searchCity = document.getElementById("searchCity").value.toLowerCase();
+    
     const filterType = document.getElementById("filterType").value;
     let filterDay = document.getElementById("filterDay").value;
     let filterTime = document.getElementById("filterTime").value;
 
-    // 🌟 SYMPTOM SEARCH LOGIC 🌟
+    // Find Speciality based on Symptom
     let matchedSpecialities = [];
-    if (searchName !== "") {
+    if (searchSymptom !== "") {
         for (const [speciality, symptoms] of Object.entries(symptomMapping)) {
-            // Agar patient ne exact symptom type kiya ho
-            if (symptoms.some(s => searchName.includes(s) || s.includes(searchName))) {
+            if (symptoms.some(s => searchSymptom.includes(s) || s.includes(searchSymptom))) {
                 matchedSpecialities.push(speciality);
             }
         }
@@ -158,17 +160,19 @@ function applyFilters() {
     let displayedCount = 0;
 
     allDoctors.forEach((doc, index) => {
-        // 1. Direct Name ya Speciality Match
+        // Match Name or Speciality from Name input
         let matchName = searchName === "" || doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
         
-        // 2. Symptom se nikali hui Speciality Match
-        let matchSymptom = matchedSpecialities.some(spec => doc.speciality.toLowerCase().includes(spec));
+        // Match Symptom from Symptom input
+        let matchSymptom = searchSymptom === "" || matchedSpecialities.some(spec => doc.speciality.toLowerCase().includes(spec));
         
-        let matchCity = doc.city.toLowerCase().includes(searchCity);
+        // Match City
+        let matchCity = searchCity === "" || doc.city.toLowerCase().includes(searchCity);
         
-        // Agar naam bhi match nahi hua, aur symptom list mein bhi match nahi hua, to skip kar do
-        if(!matchName && !matchSymptom) return;
-        if(!matchCity) return;
+        // If any provided filter doesn't match, skip the doctor
+        if(!matchName || !matchSymptom || !matchCity) return;
+        
+        // Online/Offline check
         if(filterType === "Online" && doc.online_available !== "Yes") return;
         
         let isAvail = checkAvailability(doc, filterDay, filterTime);
@@ -234,7 +238,7 @@ function applyFilters() {
     });
 
     if (displayedCount === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666; font-size: 16px;">No doctors found matching your search or symptom.</div>`;
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666; font-size: 16px;">No doctors found matching your search.</div>`;
     }
 }
 

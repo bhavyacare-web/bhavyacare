@@ -26,6 +26,29 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = titles[tabId];
 }
 
+// 🌟 NAYA: IMAGE URL FIXER FUNCTION 🌟
+function fixDriveUrl(rawImg, docName) {
+    let imgSrc = "";
+    if (rawImg && rawImg.trim() !== "") {
+        if (rawImg.includes("drive.google.com/file/d/")) {
+            let match = rawImg.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (rawImg.includes("drive.google.com/open?id=")) {
+            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (rawImg.includes("drive.google.com/uc?id=")) {
+            let match = rawImg.match(/id=([a-zA-Z0-9_-]+)/);
+            imgSrc = match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : rawImg;
+        } else if (!rawImg.startsWith("http") && !rawImg.startsWith("data:image")) {
+            imgSrc = `data:image/jpeg;base64,${rawImg}`;
+        } else { imgSrc = rawImg; }
+    }
+    if (imgSrc === "") { 
+        imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0056b3&color=fff&size=100`; 
+    }
+    return imgSrc;
+}
+
 async function fetchAdminData() {
     document.getElementById("loader").style.display = "block";
     try {
@@ -41,15 +64,18 @@ async function fetchAdminData() {
         document.getElementById("doctorsTable").style.display = "table";
 
         if (docsJson.status === "success") {
-            allDoctors = docsJson.data;
-            // Always apply the current search filter after refreshing data
+            // Yahan hum sabhi doctors ki image fix kar rahe hain
+            allDoctors = docsJson.data.map(d => {
+                d.imgUrl = fixDriveUrl(d.imgUrl, d.doctor_name);
+                return d;
+            });
             filterDoctors();
             populateDoctorDropdowns();
         } else { alert("Error loading doctors: " + docsJson.message); }
 
         if (apptsJson.status === "success") {
             allAppointments = apptsJson.data;
-            filterAppts(); // Keep current appt filters active
+            filterAppts(); 
             renderReviews();
             calculateLedger(); 
         } else { console.error("Error loading appts: " + apptsJson.message); }
@@ -110,12 +136,10 @@ function renderDocsTable(doctors) {
     });
 }
 
-// 🌟 NAYA: DOCTOR PROFILE MODAL 🌟
 function showDoctorProfile(docId) {
     const doc = allDoctors.find(d => d.doctor_id === docId);
     if(!doc) return;
 
-    // Calculate performance stats
     const docAppts = allAppointments.filter(a => a.doctor_id === docId);
     const totalAppts = docAppts.length;
     const completedAppts = docAppts.filter(a => a.appt_status === "Completed").length;
@@ -193,7 +217,6 @@ async function updateStatus(docId, newStatus) {
         const resData = await res.json();
         
         if (resData.status === "success") { 
-            // 🌟 NAYA: AUTO REFRESH HAPPENS HERE WITHOUT RELOADING PAGE 🌟
             fetchAdminData(); 
         } 
         else { alert("Error: " + resData.message); }
@@ -287,8 +310,8 @@ function calculateLedger() {
                 count++;
                 let mrp = parseInt(a.total_mrp) || 0;
                 let earning = parseInt(a.doctor_earning) || 0;
-                let collected = Math.round(mrp * 0.90); // Exact collected amount
-                let platformFee = collected - earning; // Admin Margin (10%)
+                let collected = Math.round(mrp * 0.90); 
+                let platformFee = collected - earning; 
 
                 if (isComplete && !isRefunded) {
                     sumColl += collected; sumFee += platformFee; sumNet += earning;
@@ -298,7 +321,7 @@ function calculateLedger() {
                         <td>-</td><td style="color:var(--success); font-weight:bold;">₹${earning}</td>
                     </tr>`;
                 } else if (isRefunded) {
-                    sumRef += collected; sumNet -= collected; // Recovery from Doc
+                    sumRef += collected; sumNet -= collected; 
                     tbody.innerHTML += `<tr style="background:#fff5f5;">
                         <td>${a.appt_date}</td><td><strong style="color:var(--danger);">${a.appt_id}</strong></td>
                         <td>${a.doctor_id} <span style="font-size:10px; background:var(--danger); color:white; padding:2px 5px; border-radius:4px;">CANCELLED</span></td>
@@ -319,7 +342,6 @@ function calculateLedger() {
     document.getElementById("ledgNet").innerText = sumNet;
 }
 
-// 🌟 NAYA: PDF DOWNLOAD LOGIC FOR ADMIN LEDGER 🌟
 function downloadAdminLedgerPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();

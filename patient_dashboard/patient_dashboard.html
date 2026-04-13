@@ -27,7 +27,6 @@
         .user-profile-mini .name { font-size: 15px; font-weight: bold; color: var(--text-main); margin: 0; }
         .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e6f0fa; object-fit: cover;}
         
-        .notification-bell { position: relative; font-size: 20px; color: var(--text-light); cursor: pointer; margin-right: 15px; }
         .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
         
         .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -51,7 +50,7 @@
         
         .data-box { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px;}
         .section-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
-        .section-title a { font-size: 13px; color: var(--primary); text-decoration: none; font-weight: normal; }
+        
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
         .list-item:last-child { border-bottom: none; padding-bottom: 0; }
         .list-info h5 { margin: 0 0 5px 0; font-size: 15px; color: var(--text-main); }
@@ -63,8 +62,9 @@
         .status-primary { background: #e6f0fa; color: #0056b3; }
         .status-danger { background: #ffebee; color: #d32f2f; }
 
+        /* 🌟 NAVIGATION STYLES 🌟 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 5px 15px 5px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; cursor: pointer; }
         .nav-item i { font-size: 20px; margin-bottom: 2px; transition: 0.3s;}
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
@@ -83,20 +83,28 @@
         .date-input { flex: 1; }
         .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;}
         
-        @media (max-width: 768px) {
-            .filter-bar { flex-direction: column; padding: 12px; gap: 12px; }
-            .search-wrapper { width: 100%; }
-            .filter-actions { width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
-        }
-        
+        /* Modals & Bottom Sheets */
         .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+
+        /* 🌟 NAYA: MOBILE MENU SHEET STYLES 🌟 */
+        .bottom-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: #fff; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 2001; padding: 25px; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bottom-sheet.active { bottom: 0; }
+        .sheet-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
+        .sheet-backdrop.active { display: block; opacity: 1; }
+        .sheet-handle { width: 40px; height: 5px; background: #e0e0e0; border-radius: 5px; margin: 0 auto 20px auto; }
 
         .star-rating { display: flex; justify-content: center; gap: 8px; font-size: 30px; color: #ddd; margin: 15px 0; cursor: pointer; }
         .star-rating i:hover, .star-rating i.active { color: #ffc107; }
 
+        /* Mobile vs Desktop Display Logic */
+        .mobile-only { display: flex; }
+        .desktop-only { display: none; }
+
         @media (min-width: 769px) {
             body { flex-direction: row; }
+            .mobile-only { display: none !important; }
+            .desktop-only { display: flex; }
             .mobile-header { display: none; }
             .bottom-nav { flex-direction: column; position: static; width: 250px; justify-content: flex-start; padding: 20px 10px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
             .nav-item { flex-direction: row; justify-content: flex-start; gap: 15px; font-size: 15px; padding: 15px 20px; margin-bottom: 5px; width: 100%; }
@@ -104,7 +112,12 @@
             .main-content { padding: 40px; padding-bottom: 40px;}
             .desktop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         }
-        @media (max-width: 768px) { .desktop-header { display: none; } }
+        @media (max-width: 768px) { 
+            .desktop-header { display: none; } 
+            .filter-bar { flex-direction: column; padding: 12px; gap: 12px; }
+            .search-wrapper { width: 100%; }
+            .filter-actions { width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -113,13 +126,29 @@
         <div class="brand desktop-header" style="padding: 10px 20px 30px 20px; text-align:center;">
             <h2>Bhavya<span>Care</span></h2>
         </div>
-        <a href="#" class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Lab Tests</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> <span>Consults</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> <span>Rx</span></a>
-        <a href="#" class="nav-item" onclick="switchTab('profile')"><i class="fas fa-user"></i> <span>My Info</span></a>
-        <a href="#" class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        <a class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
+        <a class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Lab Tests</span></a>
+        <a class="nav-item" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> <span>Consults</span></a>
+        
+        <a class="nav-item mobile-only" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i> <span>Menu</span></a>
+        
+        <a class="nav-item desktop-only" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> <span>Rx</span></a>
+        <a class="nav-item desktop-only" onclick="switchTab('reports')"><i class="fas fa-file-medical-alt"></i> <span>Reports</span></a>
+        <a class="nav-item desktop-only" onclick="switchTab('profile')"><i class="fas fa-user"></i> <span>My Info</span></a>
+        <a class="nav-item desktop-only" style="color: var(--danger); margin-top: auto;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
     </nav>
+
+    <div class="sheet-backdrop" id="menuBackdrop" onclick="toggleMobileMenu()"></div>
+    <div class="bottom-sheet" id="mobileMenuSheet">
+        <div class="sheet-handle"></div>
+        <h3 style="margin: 0 0 20px 0; color: var(--primary); font-size: 18px;">More Options</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button class="action-btn-main btn-rx" onclick="toggleMobileMenu(); switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> Prescriptions</button>
+            <button class="action-btn-main" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;" onclick="toggleMobileMenu(); switchTab('reports')"><i class="fas fa-file-medical-alt"></i> Medical Reports</button>
+            <button class="action-btn-main" style="background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;" onclick="toggleMobileMenu(); switchTab('profile')"><i class="fas fa-user"></i> My Profile Info</button>
+            <button class="action-btn-main" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> Logout Securely</button>
+        </div>
+    </div>
 
     <div class="main-content">
         
@@ -154,15 +183,9 @@
         <div id="overview" class="tab-content active">
             
             <div class="quick-actions-container">
-                <button class="action-btn-main btn-book" onclick="window.location.href='../booking/cart.html'">
-                    <i class="fas fa-microscope"></i> Book Test
-                </button>
-                <button class="action-btn-main btn-consult" onclick="switchTab('consults')">
-                    <i class="fas fa-user-md"></i> Dr Consult
-                </button>
-                <button class="action-btn-main btn-rx" onclick="switchTab('prescriptions')">
-                    <i class="fas fa-file-prescription"></i> Prescriptions
-                </button>
+                <button class="action-btn-main btn-book" onclick="window.location.href='../booking/cart.html'"><i class="fas fa-microscope"></i> Book Test</button>
+                <button class="action-btn-main btn-consult" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> Dr Consult</button>
+                <button class="action-btn-main btn-rx" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> Prescriptions</button>
             </div>
 
             <div class="dashboard-grid">
@@ -188,14 +211,6 @@
                 </div>
             </div>
 
-            <div class="dash-card" style="background: linear-gradient(to right, #0056b3, #004494); color: white; flex-direction: row; justify-content: space-between; align-items: center; padding: 20px; margin-bottom: 25px;">
-                <div>
-                    <h4 style="color: #cce5ff; margin-bottom: 5px;">Share & Earn ₹50</h4>
-                    <div class="value" id="refCode" style="color: white; font-size: 20px; letter-spacing: 2px;">-----</div>
-                </div>
-                <button class="card-action-btn" style="color: #0056b3; margin: 0;" onclick="copyMyReferral()"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-
             <div class="data-box">
                 <div class="section-title"><span>Recent Activity</span></div>
                 <div id="recentActivityContainer"></div> 
@@ -205,7 +220,6 @@
         <div id="bookings" class="tab-content">
             <div class="data-box">
                 <div class="section-title">My Lab Tests</div>
-                
                 <div class="filter-bar">
                     <div class="search-wrapper">
                         <i class="fas fa-search search-icon"></i>
@@ -216,7 +230,6 @@
                         <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
                     </div>
                 </div>
-
                 <div id="patientBookingsContainer">
                     <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
                         <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
@@ -251,12 +264,24 @@
         </div>
 
         <div id="reports" class="tab-content">
-            <div class="data-box" id="reportsTabContainer">
-                 <div class="section-title">Medical Records</div>
-                 <div style="text-align: center; padding: 50px 20px; color: var(--success);">
-                    <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
-                    <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
+            <div class="data-box">
+                 <div class="section-title">Medical Lab Reports</div>
+                 <div class="filter-bar">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchReportText" class="filter-input with-icon" placeholder="Search Test or Lab Name..." onkeyup="filterPatientReports()">
+                    </div>
+                    <div class="filter-actions">
+                        <input type="date" id="searchReportDate" class="filter-input date-input" onchange="filterPatientReports()">
+                        <button class="filter-btn" onclick="clearReportFilters()"><i class="fas fa-times"></i> Clear</button>
+                    </div>
                 </div>
+                 <div id="reportsTabContainer">
+                    <div style="text-align: center; padding: 50px 20px; color: var(--success);">
+                        <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
+                    </div>
+                 </div>
             </div>
         </div>
 
@@ -264,10 +289,7 @@
             <div class="data-box">
                 <div class="section-title">Transaction History</div>
                 <div id="walletHistoryContainer">
-                    <div style="text-align: center; padding: 40px; color: #ddd;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 15px;"></i>
-                        <p>Loading transactions...</p>
-                    </div>
+                    <div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 15px;"></i><p>Loading transactions...</p></div>
                 </div>
             </div>
         </div>
@@ -278,12 +300,10 @@
                     <span style="font-size: 20px;">My Info</span>
                     <button onclick="switchTab('overview')" style="background:none; border:none; color:var(--text-light); font-size:24px; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
                 </div>
-
                 <div style="text-align: center; margin-bottom: 20px;">
                     <img id="editProfilePreview" src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;"><br>
                     <input type="file" id="profileImageInput" accept="image/*" style="font-size: 12px; max-width: 200px;">
                 </div>
-                
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <h5 style="margin: 0 0 10px 0; color: var(--primary);">Account Details</h5>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
@@ -291,85 +311,21 @@
                         <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:#888;">Mobile Number</label><div style="font-weight:bold; font-size:14px;" id="infoMobile">Loading...</div></div>
                     </div>
                 </div>
-                
                 <h5 style="margin: 0 0 10px 0; color: var(--primary);">Personal Details</h5>
                 <div class="form-group"><input type="email" id="infoEmail" class="input-box" placeholder="Email Address"></div>
                 <div class="form-group"><input type="text" id="infoAddress" class="input-box" placeholder="Full Address (House, Street)"></div>
-                
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoCity" class="input-box" placeholder="City/Village"></div>
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoDistrict" class="input-box" placeholder="District"></div>
                 </div>
-                
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;"><input type="text" id="infoState" class="input-box" placeholder="State"></div>
                     <div class="form-group" style="flex: 1;"><input type="number" id="infoPincode" class="input-box" placeholder="Pincode"></div>
                 </div>
-                
                 <input type="hidden" id="infoImageBase64" value="">
                 <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>
         </div>
-    </div>
-
-    <div id="vip-details-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('vip-details-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-crown" style="font-size: 30px; color: #2e7d32;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">My VIP Plan Details</h3>
-        </div>
-        <div style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom: 15px; display:flex; justify-content: space-between; border: 1px solid #e0e0e0;">
-            <div><small style="color:#888;">Start Date</small><br><strong id="vd-start" style="color:#333;">-</strong></div>
-            <div style="text-align:right;"><small style="color:#888;">End Date</small><br><strong id="vd-end" style="color:var(--danger);">-</strong></div>
-        </div>
-        <h5 style="margin: 0 0 10px 0; color: var(--primary);">VIP Family Members</h5>
-        <div style="background:white; border:1px solid #eee; border-radius:10px; padding:10px;">
-            <div id="vd-mem1" style="padding:8px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;">
-                <span><strong>-</strong> <br><small style="color:#888;">(Self)</small></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">-</span>
-            </div>
-            <div id="vd-mem2" style="padding:8px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;">
-                <span><strong>-</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">-</span>
-            </div>
-            <div id="vd-mem3" style="padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
-                <span><strong>-</strong></span><span style="font-size:11px; background:#e6f0fa; color:#0056b3; padding:3px 8px; border-radius:4px; font-weight:bold;">-</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="cancel-order-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('cancel-order-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #ffebee; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-ban" style="font-size: 26px; color: #d32f2f;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">Cancel Order</h3>
-            <p style="font-size:13px; color:var(--text-light); margin-top:5px;">Please tell us why you are cancelling.</p>
-        </div>
-        <input type="hidden" id="cancelOrderIdHidden">
-        <div class="form-group">
-            <textarea id="cancelReasonInput" class="input-box" rows="3" placeholder="Enter cancellation reason..." style="resize: none;"></textarea>
-        </div>
-        <button id="btnConfirmCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelOrder()">Confirm Cancellation</button>
-    </div>
-
-    <div id="review-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('review-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-star" style="font-size: 26px; color: #ffc107;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">Rate Doctor</h3>
-        </div>
-        <input type="hidden" id="reviewApptIdHidden">
-        
-        <div class="star-rating" id="starRatingContainer">
-            <i class="fas fa-star" onclick="setRating(1)"></i>
-            <i class="fas fa-star" onclick="setRating(2)"></i>
-            <i class="fas fa-star" onclick="setRating(3)"></i>
-            <i class="fas fa-star" onclick="setRating(4)"></i>
-            <i class="fas fa-star" onclick="setRating(5)"></i>
-        </div>
-        
-        <div class="form-group">
-            <textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..." style="resize: none;"></textarea>
-        </div>
-        <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
     </div>
 
     <div id="cancel-consult-modal" class="modal-overlay">
@@ -379,37 +335,39 @@
             <h3 style="margin:0; color: var(--text-main);">Cancel Consultation</h3>
         </div>
         <input type="hidden" id="cancelConsultIdHidden">
-
-        <div class="form-group">
-            <textarea id="cancelConsultReason" class="input-box" rows="2" placeholder="Reason for cancellation..." style="resize: none;"></textarea>
-        </div>
-
+        <div class="form-group"><textarea id="cancelConsultReason" class="input-box" rows="2" placeholder="Reason for cancellation..." style="resize: none;"></textarea></div>
         <div style="margin-top:15px; text-align:left;">
             <label style="font-size:13px; font-weight:bold; color:#555;">Refund Method:</label>
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
                 <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
                     <input type="radio" name="refundMethod" value="Wallet" checked onchange="toggleRefundMethod()">
-                    <div>
-                        <strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong>
-                        <div style="font-size:11px; color:#777;">Refund added immediately.</div>
-                    </div>
+                    <div><strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong><div style="font-size:11px; color:#777;">Refund added immediately.</div></div>
                 </label>
                 <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
                     <input type="radio" name="refundMethod" value="Bank" onchange="toggleRefundMethod()">
-                    <div>
-                        <strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong>
-                        <div style="font-size:11px; color:#777;">Processed on 1st of next month.</div>
-                    </div>
+                    <div><strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong><div style="font-size:11px; color:#777;">Processed on 1st of next month.</div></div>
                 </label>
             </div>
         </div>
-
         <div id="bankRefundSection" style="display:none; margin-top:15px; background:#fff8e1; padding:10px; border-radius:8px; border:1px solid #ffeeba;">
-            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code. Admin will manually verify and refund on the 1st.</p>
+            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code.</p>
             <input type="file" id="refundQrInput" class="input-box" accept="image/*" style="font-size:12px; background:white;">
         </div>
-
         <button id="btnConfirmConsultCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelConsult()">Confirm Cancellation</button>
+    </div>
+
+    <div id="review-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('review-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-star" style="font-size: 26px; color: #ffc107;"></i></div>
+            <h3 style="margin:0; color: var(--text-main);">Rate Doctor</h3>
+        </div>
+        <input type="hidden" id="reviewApptIdHidden">
+        <div class="star-rating" id="starRatingContainer">
+            <i class="fas fa-star" onclick="setRating(1)"></i><i class="fas fa-star" onclick="setRating(2)"></i><i class="fas fa-star" onclick="setRating(3)"></i><i class="fas fa-star" onclick="setRating(4)"></i><i class="fas fa-star" onclick="setRating(5)"></i>
+        </div>
+        <div class="form-group"><textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..."></textarea></div>
+        <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
     </div>
 
     <script src="patient_dashboard.js"></script>

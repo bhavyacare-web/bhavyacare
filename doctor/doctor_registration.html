@@ -31,6 +31,22 @@
         .btn-submit { background-color: #28a745; color: white; padding: 14px; width: 100%; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 35px; transition: 0.3s; }
         .btn-submit:hover { background-color: #218838; transform: translateY(-1px); }
         #loader { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 20px; font-size: 16px; }
+
+        /* ========================================= */
+        /* MOBILE RESPONSIVE CSS (Naya Add Kiya Hai) */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+            .schedule-grid { grid-template-columns: 80px 1fr 1fr; gap: 10px; padding: 10px; }
+            #onlineSection .form-group { width: 100% !important; }
+        }
+
+        @media (max-width: 480px) {
+            .schedule-grid { grid-template-columns: 1fr; gap: 8px; text-align: center; padding: 15px; }
+            .schedule-grid span { margin-bottom: 5px; display: block; font-size: 16px; text-decoration: underline; color: #0056b3; }
+        }
     </style>
 </head>
 <body>
@@ -92,7 +108,7 @@
 
             <div id="onlineSection">
                 <div class="form-group" style="width:50%;"><label>Online Consultation Fee (₹) *</label><input type="number" id="onlineFee"></div>
-                <label style="margin-top:15px; color:#0056b3;">Online Availability Schedule (Fill at least 1 day)</label>
+                <label style="margin-top:15px; color:#0056b3; display:block;">Online Availability Schedule (Fill at least 1 day)</label>
                 <div class="schedule-grid"><span>Monday</span><input type="time" id="on_mon_in"><input type="time" id="on_mon_out"></div>
                 <div class="schedule-grid"><span>Tuesday</span><input type="time" id="on_tue_in"><input type="time" id="on_tue_out"></div>
                 <div class="schedule-grid"><span>Wednesday</span><input type="time" id="on_wed_in"><input type="time" id="on_wed_out"></div>
@@ -126,6 +142,16 @@
     window.onload = function() {
         const uid = localStorage.getItem("bhavya_user_id");
         if(!uid) { alert("Session Expired. Please login."); window.location.href="../index.html"; return; }
+        
+        // ========================================================
+        // NAYA LOGIC: Agar status Pending ya Active hai toh direct wapas bhej do
+        // ========================================================
+        const status = localStorage.getItem("bhavya_doc_status");
+        if(status === "Pending" || status === "Active") {
+            window.location.href = "pending_approval.html";
+            return;
+        }
+
         document.getElementById('docId').value = uid;
         document.getElementById('docName').value = localStorage.getItem("bhavya_name") || "";
     };
@@ -144,7 +170,6 @@
         });
     }
 
-    // Check if at least one day has both opening and closing times
     function checkSchedule(type) {
         const days = ['mon','tue','wed','thu','fri','sat','sun'];
         for(let d of days) {
@@ -194,7 +219,6 @@
                     upi_id: document.getElementById('upiId').value,
                     offline_fee: document.getElementById('offlineFee').value,
                     slot_duration: document.getElementById('slotDuration').value,
-                    // Offline Times
                     off_mon_in: document.getElementById('off_mon_in').value, off_mon_out: document.getElementById('off_mon_out').value,
                     off_tue_in: document.getElementById('off_tue_in').value, off_tue_out: document.getElementById('off_tue_out').value,
                     off_wed_in: document.getElementById('off_wed_in').value, off_wed_out: document.getElementById('off_wed_out').value,
@@ -202,7 +226,6 @@
                     off_fri_in: document.getElementById('off_fri_in').value, off_fri_out: document.getElementById('off_fri_out').value,
                     off_sat_in: document.getElementById('off_sat_in').value, off_sat_out: document.getElementById('off_sat_out').value,
                     off_sun_in: document.getElementById('off_sun_in').value, off_sun_out: document.getElementById('off_sun_out').value,
-                    // Online 
                     online_available: document.getElementById('onlineAvailable').value,
                     online_fee: document.getElementById('onlineFee').value || "",
                     on_mon_in: document.getElementById('on_mon_in').value, on_mon_out: document.getElementById('on_mon_out').value,
@@ -212,7 +235,6 @@
                     on_fri_in: document.getElementById('on_fri_in').value, on_fri_out: document.getElementById('on_fri_out').value,
                     on_sat_in: document.getElementById('on_sat_in').value, on_sat_out: document.getElementById('on_sat_out').value,
                     on_sun_in: document.getElementById('on_sun_in').value, on_sun_out: document.getElementById('on_sun_out').value,
-                    // Files
                     doc_base64: docB64, doc_mime: docFile.type,
                     img_base64: imgB64, img_mime: imgFile.type
                 }
@@ -226,7 +248,13 @@
             const resData = await response.json();
             if (resData.status === "success") {
                 alert("Profile Registered Successfully! Awaiting Admin Approval.");
-                window.location.href = "../index.html"; // Ya dashboard par bhej de
+                
+                // ========================================================
+                // NAYA LOGIC: LocalStorage turant update karke Pending Page par redirect
+                // ========================================================
+                localStorage.setItem("bhavya_doc_status", "Pending"); 
+                window.location.href = "pending_approval.html"; 
+                
             } else {
                 alert("Error: " + resData.message);
             }

@@ -3,6 +3,9 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let allDoctorAppointments = []; 
 
 window.onload = function() {
+    // 🌟 NAYA: TIME DROPDOWNS GENERATE KARENGE (15 Min intervals) 🌟
+    populateTimeDropdowns();
+
     const role = localStorage.getItem("bhavya_role");
     const docName = localStorage.getItem("bhavya_name");
     const docId = localStorage.getItem("bhavya_user_id");
@@ -27,6 +30,23 @@ window.onload = function() {
     fetchDoctorAppointments(docId);
 };
 
+// 🌟 NAYA FUNCTION: DROPDOWN OPTIONS BANANE KE LIYE 🌟
+function populateTimeDropdowns() {
+    let times = ['<option value="">Select Time</option>'];
+    for(let h=0; h<=23; h++) {
+        for(let m of ['00', '15', '30', '45']) {
+            let hh = h < 10 ? '0'+h : h;
+            let ampm = h < 12 ? 'AM' : 'PM';
+            let displayH = h % 12 || 12;
+            let displayHH = displayH < 10 ? '0'+displayH : displayH;
+            times.push(`<option value="${hh}:${m}">${displayHH}:${m} ${ampm}</option>`);
+        }
+    }
+    document.querySelectorAll('.time-select').forEach(sel => {
+        sel.innerHTML = times.join('');
+    });
+}
+
 function switchTab(tabId) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
@@ -34,16 +54,15 @@ function switchTab(tabId) {
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
     
-    let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews', 'profile': 'Profile Settings' };
+    // 🌟 TAB NAME CHANGED TO "My Profile" 🌟
+    let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews', 'profile': 'My Profile' };
     document.getElementById('pageTitle').innerText = titles[tabId];
 
-    // 🌟 NAYA: Agar profile tab open ho to data load karo 🌟
     if(tabId === 'profile') {
         loadDoctorProfileData();
     }
 }
 
-// ... [Purana format Date/Time ka same rahega] ...
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
     let dateStr = String(rawDate).trim();
@@ -68,17 +87,13 @@ function formatTime(rawTime) {
 }
 
 // ===============================================
-// 🌟 NAYA: PROFILE EDIT LOGIC 🌟
+// 🌟 OFFLINE & ONLINE PROFILE EDIT LOGIC 🌟
 // ===============================================
 
 function toggleEditOnlineSection() {
     const val = document.getElementById("editOnlineAvailable").value;
     document.getElementById("editOnlineSection").style.display = (val === "Yes") ? "block" : "none";
 }
-
-// ===============================================
-// 🌟 OFFLINE & ONLINE PROFILE EDIT LOGIC 🌟
-// ===============================================
 
 async function loadDoctorProfileData() {
     document.getElementById("loader").style.display = "block";
@@ -97,21 +112,13 @@ async function loadDoctorProfileData() {
             
             const days = ['mon','tue','wed','thu','fri','sat','sun'];
             days.forEach(d => {
-                // Populate Offline
-                let offIn = document.getElementById(`edit_off_${d}_in`);
-                let offOut = document.getElementById(`edit_off_${d}_out`);
-                offIn.value = p[`off_${d}_in`] || "";
-                offOut.value = p[`off_${d}_out`] || "";
-                if(offIn.value) offIn.type = "time";
-                if(offOut.value) offOut.type = "time";
+                // Populate Offline Selects
+                document.getElementById(`edit_off_${d}_in`).value = p[`off_${d}_in`] || "";
+                document.getElementById(`edit_off_${d}_out`).value = p[`off_${d}_out`] || "";
 
-                // Populate Online
-                let onIn = document.getElementById(`edit_on_${d}_in`);
-                let onOut = document.getElementById(`edit_on_${d}_out`);
-                onIn.value = p[`on_${d}_in`] || "";
-                onOut.value = p[`on_${d}_out`] || "";
-                if(onIn.value) onIn.type = "time";
-                if(onOut.value) onOut.type = "time";
+                // Populate Online Selects
+                document.getElementById(`edit_on_${d}_in`).value = p[`on_${d}_in`] || "";
+                document.getElementById(`edit_on_${d}_out`).value = p[`on_${d}_out`] || "";
             });
             toggleEditOnlineSection();
         }
@@ -127,16 +134,14 @@ async function saveDoctorProfile() {
     const isOnline = document.getElementById('editOnlineAvailable').value === "Yes";
     const days = ['mon','tue','wed','thu','fri','sat','sun'];
     
-    // Check at least one Offline schedule
     let hasOffline = false;
     for(let d of days) {
         if(document.getElementById(`edit_off_${d}_in`).value && document.getElementById(`edit_off_${d}_out`).value) { 
             hasOffline = true; break; 
         }
     }
-    if(!hasOffline) { alert("Please fill open/close time for at least ONE day for Offline Clinic."); return; }
+    if(!hasOffline) { alert("Please select Open and Close time for at least ONE day for Offline Clinic."); return; }
 
-    // Check Online
     if(isOnline) {
         if(!document.getElementById('editOnlineFee').value) { alert("Please enter Online Fee."); return; }
         let hasOnline = false;
@@ -145,7 +150,7 @@ async function saveDoctorProfile() {
                 hasOnline = true; break; 
             }
         }
-        if(!hasOnline) { alert("Please fill open/close time for at least ONE day for Online Consultation."); return; }
+        if(!hasOnline) { alert("Please select Open and Close time for at least ONE day for Online Consultation."); return; }
     }
 
     document.getElementById("btnSaveProfile").style.display = "none";
@@ -190,7 +195,9 @@ async function saveDoctorProfile() {
     }
 }
 
-// ... [Baaki saara purana code bilkul same rahega (fetchDoctorAppointments, renderAppointments, etc.)] ...
+// ===============================================
+// BAARI PURANA CODE SAME RAHEGA (Appointments/Ledger)
+// ===============================================
 async function fetchDoctorAppointments(doctorId) {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {

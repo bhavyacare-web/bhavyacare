@@ -298,6 +298,27 @@
         <button id="btnUploadPrescription" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPrescriptionAndComplete()">Upload & Mark Completed</button>
     </div>
 
+    <div id="approve-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('approve-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-check-circle" style="font-size: 26px; color: #0056b3;"></i></div>
+            <h3 style="margin:0; color: #333; font-size: 20px;">Approve Consultation</h3>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; color: #555; line-height: 1.6;">
+            <input type="hidden" id="approveApptIdHidden">
+            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Appt ID:</span> <strong id="appModalId" style="color:#333;">---</strong></div>
+            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Patient Name:</span> <strong id="appModalPatient" style="color:#333;">---</strong></div>
+            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Type:</span> <strong id="appModalType" style="color:#0056b3;">---</strong></div>
+            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Date & Time:</span> <strong id="appModalDateTime" style="color:#333;">---</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>Total Amount:</span> <strong id="appModalFee" style="color:#28a745;">---</strong></div>
+        </div>
+        
+        <p style="font-size:12px; color:#888; margin-bottom:15px; text-align:center;">Approving this will notify the patient that their booking is confirmed.</p>
+        
+        <button id="btnConfirmApprove" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="confirmApproveAppt()">✅ Confirm & Approve</button>
+    </div>
+
     <div id="doctorLiveBackdrop" class="modal-overlay" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; justify-content: center; align-items: center; max-width: 100%;">
         <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,86,179,0.2); border: 2px solid #0056b3; width: 90%; max-width: 400px; text-align: center;">
             <div style="background:#e6f0fa; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px auto;">

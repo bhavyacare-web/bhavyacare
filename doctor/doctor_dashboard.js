@@ -609,12 +609,17 @@ function downloadLedgerPDF() {
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
-// 🌟 100ms / VIDEO CALL IFRAME FUNCTION 🌟
+// 🌟 100ms / VIDEO CALL IFRAME FUNCTION (WITH AUTO-NAME) 🌟
 function joinVideoCall(link) {
     if (!link || link === "" || link === "N/A") {
         alert("Video consultation link is not available yet.");
         return;
     }
+    
+    // 🌟 NAYA: Doctor ka naam local storage se nikal kar link me jodna 🌟
+    const docName = localStorage.getItem("bhavya_name") || "Doctor";
+    const finalLink = link + "?name=" + encodeURIComponent("Dr. " + docName);
+
     const modal = document.createElement('div');
     modal.id = "video-modal";
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
@@ -624,7 +629,7 @@ function joinVideoCall(link) {
             <h3 style="margin:0; font-size:16px;">BhavyaCare Video Consult</h3>
             <button onclick="closeVideoCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
         </div>
-        <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
+        <iframe src="${finalLink}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
     `;
     document.body.appendChild(modal);
 }

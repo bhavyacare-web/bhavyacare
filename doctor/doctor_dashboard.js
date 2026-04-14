@@ -1,6 +1,7 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allDoctorAppointments = []; 
+let videoCallActive = false;
 
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
@@ -25,7 +26,12 @@ window.onload = function() {
     document.getElementById("ledgerTo").value = formatForInput(lastDay); 
 
     verifyDoctorStatus();
-    fetchDoctorAppointments(docId);
+    fetchDoctorAppointments(docId); // First time fetch
+
+    // 🌟 5 MINUTE AUTO-REFRESH (Silent) 🌟
+    setInterval(() => {
+        if(!videoCallActive) { fetchDoctorAppointments(docId, true); }
+    }, 5 * 60 * 1000); 
 };
 
 async function verifyDoctorStatus() {
@@ -243,7 +249,7 @@ function formatTime(rawTime) {
     return timeStr;
 }
 
-async function fetchDoctorAppointments(doctorId) {
+async function fetchDoctorAppointments(doctorId, isSilent = false) {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -251,8 +257,10 @@ async function fetchDoctorAppointments(doctorId) {
         });
         const resData = await response.json();
         
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("apptTable").style.display = "table";
+        if(!isSilent) {
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("apptTable").style.display = "table";
+        }
 
         if (resData.status === "success") {
             allDoctorAppointments = resData.data.map(appt => {
@@ -265,12 +273,57 @@ async function fetchDoctorAppointments(doctorId) {
             calculateSettlement(); 
             renderReviews(); 
             
-            startHandshakeMonitor(); // Monitor trigger
+            checkAndShowPendingApprovals(); // 🌟 Auto-Popup Check for Pending Appts
+            startHandshakeMonitor();        // 🌟 Start 10-Min Live Check
 
         } else {
-            document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
+            if(!isSilent) document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
-    } catch(e) { document.getElementById("loader").innerText = "Failed to load data. Please refresh."; }
+    } catch(e) { 
+        if(!isSilent) document.getElementById("loader").innerText = "Failed to load data. Please refresh."; 
+    }
+}
+
+// 🌟 NAYA: AUTO-APPROVAL POPUP LOGIC 🌟
+function checkAndShowPendingApprovals() {
+    // Agar koi dusra modal khula hai, toh isko mat dikhao
+    if(document.getElementById("doctorLiveBackdrop").style.display === "flex" || videoCallActive) return;
+
+    for (let appt of allDoctorAppointments) {
+        if (appt.appt_status === "Pending") {
+            // Agar pehle cancel/skip dabaya hai toh same id dubara tang na kare session me
+            if (!sessionStorage.getItem("skipped_approve_" + appt.appt_id)) {
+                openApproveModal(appt.appt_id);
+                break; // Ek waqt pe ek hi popup dikhao
+            }
+        }
+    }
+}
+
+function openApproveModal(apptId) {
+    const appt = allDoctorAppointments.find(a => a.appt_id === apptId);
+    if(appt) {
+        document.getElementById("approveApptIdHidden").value = apptId;
+        document.getElementById("appModalId").innerText = apptId;
+        document.getElementById("appModalPatient").innerText = appt.patient_id;
+        document.getElementById("appModalType").innerText = appt.consult_type;
+        document.getElementById("appModalDateTime").innerText = appt.cleanDate + " | " + appt.cleanTime;
+        document.getElementById("appModalFee").innerText = "₹" + (appt.doctor_earning || 0);
+        document.getElementById("approve-modal").style.display = "flex";
+    }
+}
+
+function skipApproveModal() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    sessionStorage.setItem("skipped_approve_" + apptId, "true"); // Ignore for this session
+    document.getElementById("approve-modal").style.display = "none";
+    checkAndShowPendingApprovals(); // Check for next pending if any
+}
+
+async function confirmApproveAppt() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    document.getElementById("approve-modal").style.display = "none";
+    updateApptStatus(apptId, 'approve'); // Backend process call karega
 }
 
 function filterAppointments() {
@@ -283,26 +336,6 @@ function filterAppointments() {
         return matchStatus && matchSearch;
     });
     renderAppointments(filtered);
-}
-
-// 🌟 NAYA: APPROVAL MODAL LOGIC 🌟
-function openApproveModal(apptId) {
-    const appt = allDoctorAppointments.find(a => a.appt_id === apptId);
-    if(appt) {
-        document.getElementById("approveApptIdHidden").value = apptId;
-        document.getElementById("appModalId").innerText = apptId;
-        document.getElementById("appModalPatient").innerText = appt.patient_id;
-        document.getElementById("appModalType").innerText = appt.consult_type;
-        document.getElementById("appModalDateTime").innerText = appt.cleanDate + " | " + appt.cleanTime;
-        document.getElementById("appModalFee").innerText = "₹" + (appt.total_mrp || 0);
-        document.getElementById("approve-modal").style.display = "flex";
-    }
-}
-
-async function confirmApproveAppt() {
-    const apptId = document.getElementById("approveApptIdHidden").value;
-    document.getElementById("approve-modal").style.display = "none";
-    updateApptStatus(apptId, 'approve'); // Backend process call karega
 }
 
 function renderAppointments(appointments) {
@@ -328,7 +361,7 @@ function renderAppointments(appointments) {
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
-            // 🌟 YAHAN CHANGE KIYA HAI: Direct approve ki jagah modal khulega 🌟
+            // Yahan Direct button openApproveModal karega
             actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}')">✅ Approve</button>`;
         } else if (appt.appt_status === "Approved") {
             const now = new Date();
@@ -342,7 +375,8 @@ function renderAppointments(appointments) {
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
             if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
-                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}')">📹 Start Video Consult</button>`;
+                // Changed direct join to trigger live backdrop manual entry if wanted
+                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="showDoctorLiveModal({appt_id: '${appt.appt_id}', patient_id: '${appt.patient_id}', meet_link: '${appt.meet_link}', host_meet_link: '${appt.host_meet_link}'}, '')">📹 Start Video Consult</button>`;
             }
             actionHTML += `
                 <div style="display:flex; gap:5px;">
@@ -414,7 +448,7 @@ function handleCompleteAction(apptId, consultType) {
         document.getElementById("completeApptIdHidden").value = apptId;
         document.getElementById("prescriptionFileInput").value = ""; 
         document.getElementById("rxValidityDays").value = "3"; 
-        document.getElementById("prescription-modal").style.display = "block";
+        document.getElementById("prescription-modal").style.display = "flex";
     } else {
         updateApptStatus(apptId, 'complete');
     }
@@ -471,7 +505,6 @@ async function submitPrescriptionAndComplete() {
 }
 
 async function updateApptStatus(apptId, actionType) {
-    // Sirf confirm action ke alawa baki sabme normal confirm magega
     if(actionType !== 'approve' && !confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
 
     try {
@@ -484,7 +517,9 @@ async function updateApptStatus(apptId, actionType) {
         });
         
         const resData = await response.json();
-        if(resData.status === "success") { fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); } 
+        if(resData.status === "success") { 
+            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
+        } 
         else { alert("Error: " + resData.message); location.reload(); }
     } catch (e) { alert("Failed to update status."); location.reload(); }
 }
@@ -634,10 +669,10 @@ function downloadLedgerPDF() {
 
 function joinVideoCall(link) {
     if (!link || link === "" || link === "N/A") {
-        alert("Video consultation link is not available yet.");
-        return;
+        alert("Video consultation link is not available yet."); return;
     }
     
+    videoCallActive = true;
     const docName = localStorage.getItem("bhavya_name") || "Doctor";
     const finalLink = link + "?name=" + encodeURIComponent("Dr. " + docName);
 
@@ -658,24 +693,25 @@ function joinVideoCall(link) {
 function closeVideoCall() {
     const modal = document.getElementById('video-modal');
     if (modal) modal.remove();
-    fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
+    videoCallActive = false;
+    fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"), true);
 }
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
 
 // ==========================================
-// 🌟 HANDSHAKE SILENT POLLING LOGIC 🌟
+// 🌟 HANDSHAKE SILENT POLLING LOGIC (AUTO-JOIN) 🌟
 // ==========================================
 let handshakeInterval = null;
-let isModalDismissedFor = null;
 
 function startHandshakeMonitor() {
     if (handshakeInterval) clearInterval(handshakeInterval);
     checkUpcomingConsults(); 
-    handshakeInterval = setInterval(checkUpcomingConsults, 15000); // Har 15 sec me chupchap check karega
+    handshakeInterval = setInterval(checkUpcomingConsults, 15000); 
 }
 
 async function checkUpcomingConsults() {
+    if(videoCallActive) return; // Agar call chal rahi hai toh background disturb na kare
     const now = new Date();
 
     for (let appt of allDoctorAppointments) {
@@ -691,7 +727,7 @@ async function checkUpcomingConsults() {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (apptDateTime - now) / (1000 * 60);
 
-            // Time: 10 minutes pehle se lekar 45 minutes baad tak popup check karega
+            // Time: 10 minutes pehle se popup check karega
             if (diffInMinutes <= 10 && diffInMinutes >= -45) {
                 
                 try {
@@ -704,13 +740,20 @@ async function checkUpcomingConsults() {
                     if (res.status === "success") {
                         const status = res.data.handshake_status;
                         
-                        // Agar Modal khud se band nahi kiya hai, ya fir patient ready ho gaya hai toh popup dikhao
-                        if (isModalDismissedFor !== appt.appt_id || status === "Patient_Ready") {
+                        // 🌟 AUTO JOIN JAISE HI PATIENT READY HO 🌟
+                        if(status === "Patient_Ready") {
+                            document.getElementById('doctorLiveBackdrop').style.display = 'none';
+                            joinVideoCall(appt.host_meet_link || appt.meet_link);
+                            break; 
+                        }
+                        
+                        // Warna agar dismiss nahi kiya hai toh popup dikhao
+                        if (!sessionStorage.getItem("dismissed_live_" + appt.appt_id)) {
                             showDoctorLiveModal(appt, status);
                         }
                     }
                 } catch(e) { console.error("Silent check failed", e); }
-                break; // Ek baar me ek hi active meeting par focus karega
+                break; 
             }
         }
     }
@@ -724,29 +767,24 @@ function showDoctorLiveModal(appt, status) {
     const step2 = document.getElementById("docActionStep2");
     const step3 = document.getElementById("docActionStep3");
 
-    if (status === "Patient_Ready") {
-        // Patient ready ho gaya hai
-        step1.style.display = "none";
-        step2.style.display = "none";
-        step3.style.display = "block";
-        
-        document.getElementById("btnJoinDocCall").onclick = () => {
-            modal.style.display = "none";
-            isModalDismissedFor = appt.appt_id; // Join karne ke baad wapas disturb na kare
-            joinVideoCall(appt.host_meet_link || appt.meet_link);
-        };
-    } else if (status === "Doctor_Ready") {
-        // Doctor ne notify kar diya hai, waiting for patient
+    if (status === "Doctor_Ready") {
         step1.style.display = "none";
         step2.style.display = "block";
         step3.style.display = "none";
     } else {
-        // Abhi tak process start nahi hua
         step1.style.display = "block";
         step2.style.display = "none";
         step3.style.display = "none";
-        
         document.getElementById("btnNotifyPatient").onclick = () => notifyPatientReady(appt.appt_id);
+    }
+    
+    // Setup dismiss logic
+    const dismissBtn = modal.querySelector("p[onclick]");
+    if(dismissBtn) {
+        dismissBtn.onclick = function() {
+            sessionStorage.setItem("dismissed_live_" + appt.appt_id, "true");
+            modal.style.display = 'none';
+        }
     }
     
     if(modal.style.display !== "flex") {
@@ -764,7 +802,6 @@ async function notifyPatientReady(apptId) {
         });
         const res = await response.json();
         if (res.status === "success") {
-            // Status update hote hi UI step 2 par chala jayega
             document.getElementById("docActionStep1").style.display = "none";
             document.getElementById("docActionStep2").style.display = "block";
         }

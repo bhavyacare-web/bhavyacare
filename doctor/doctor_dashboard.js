@@ -265,8 +265,7 @@ async function fetchDoctorAppointments(doctorId) {
             calculateSettlement(); 
             renderReviews(); 
             
-            // 🌟 NAYA: Yahan Background monitor shuru ho jayega
-            startHandshakeMonitor();
+            startHandshakeMonitor(); // Monitor trigger
 
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
@@ -284,6 +283,26 @@ function filterAppointments() {
         return matchStatus && matchSearch;
     });
     renderAppointments(filtered);
+}
+
+// 🌟 NAYA: APPROVAL MODAL LOGIC 🌟
+function openApproveModal(apptId) {
+    const appt = allDoctorAppointments.find(a => a.appt_id === apptId);
+    if(appt) {
+        document.getElementById("approveApptIdHidden").value = apptId;
+        document.getElementById("appModalId").innerText = apptId;
+        document.getElementById("appModalPatient").innerText = appt.patient_id;
+        document.getElementById("appModalType").innerText = appt.consult_type;
+        document.getElementById("appModalDateTime").innerText = appt.cleanDate + " | " + appt.cleanTime;
+        document.getElementById("appModalFee").innerText = "₹" + (appt.total_mrp || 0);
+        document.getElementById("approve-modal").style.display = "flex";
+    }
+}
+
+async function confirmApproveAppt() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    document.getElementById("approve-modal").style.display = "none";
+    updateApptStatus(apptId, 'approve'); // Backend process call karega
 }
 
 function renderAppointments(appointments) {
@@ -309,7 +328,8 @@ function renderAppointments(appointments) {
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
-            actionHTML = `<button class="btn btn-approve" onclick="updateApptStatus('${appt.appt_id}', 'approve')">✅ Approve</button>`;
+            // 🌟 YAHAN CHANGE KIYA HAI: Direct approve ki jagah modal khulega 🌟
+            actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}')">✅ Approve</button>`;
         } else if (appt.appt_status === "Approved") {
             const now = new Date();
             const [day, month, year] = appt.cleanDate.split("-");
@@ -451,7 +471,8 @@ async function submitPrescriptionAndComplete() {
 }
 
 async function updateApptStatus(apptId, actionType) {
-    if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
+    // Sirf confirm action ke alawa baki sabme normal confirm magega
+    if(actionType !== 'approve' && !confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
 
     try {
         document.getElementById("loader").style.display = "block";
@@ -643,7 +664,7 @@ function closeVideoCall() {
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
 
 // ==========================================
-// 🌟 NAYA: HANDSHAKE SILENT POLLING LOGIC 🌟
+// 🌟 HANDSHAKE SILENT POLLING LOGIC 🌟
 // ==========================================
 let handshakeInterval = null;
 let isModalDismissedFor = null;

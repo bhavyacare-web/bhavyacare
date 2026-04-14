@@ -24,20 +24,15 @@ window.onload = function() {
     document.getElementById("ledgerFrom").value = formatForInput(firstDay);
     document.getElementById("ledgerTo").value = formatForInput(lastDay); 
 
-    // 🌟 NAYA: WARNING BANNER CHECK 🌟
     verifyDoctorStatus();
-
     fetchDoctorAppointments(docId);
 };
-
-// window.onload ke andar isko call karna mat bhulna: verifyDoctorStatus();
 
 async function verifyDoctorStatus() {
     const docId = localStorage.getItem("bhavya_user_id");
     const banner = document.getElementById("statusWarningBanner");
-    if(!banner) return; // Agar banner HTML me nahi mila to error na aaye
+    if(!banner) return; 
 
-    // 1. Turant Check LocalStorage se
     const localStatus = localStorage.getItem("bhavya_doc_status") || "Pending";
     if (localStatus !== "Active" && localStatus !== "Approved") {
         banner.style.display = "block";
@@ -45,7 +40,6 @@ async function verifyDoctorStatus() {
         banner.style.display = "none";
     }
 
-    // 2. Background me Real Database Check
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -60,7 +54,6 @@ async function verifyDoctorStatus() {
             if (currentStatus !== "Active" && currentStatus !== "Approved") {
                 banner.style.display = "block";
                 
-                // Agar reject ho gaya
                 if (currentStatus === "Rejected") {
                     banner.style.backgroundColor = "#f8d7da";
                     banner.style.color = "#721c24";
@@ -73,10 +66,6 @@ async function verifyDoctorStatus() {
         }
     } catch(e) { console.error("Banner check failed", e); }
 }
-
-// ===============================================
-// 🌟 MY PROFILE EDIT LOGIC (DROPDOWN DAY SELECTION) 🌟
-// ===============================================
 
 function switchTab(tabId) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
@@ -221,7 +210,6 @@ async function saveDoctorProfile() {
         const resData = await response.json();
         if (resData.status === "success") {
             alert("Full Schedule updated successfully!");
-            // Profile update hone ke baad wapas status check karega
             verifyDoctorStatus();
         }
         else alert("Error: " + resData.message);
@@ -231,10 +219,6 @@ async function saveDoctorProfile() {
         document.getElementById("profileLoader").style.display = "none";
     }
 }
-
-// ===============================================
-// 🌟 APPOINTMENTS & LEDGER LOGIC 🌟
-// ===============================================
 
 function formatDate(rawDate) {
     if (!rawDate) return "N/A";
@@ -333,8 +317,10 @@ function renderAppointments(appointments) {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
+            // 🌟 100MS VIDEO CALL BUTTON 🌟
             if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
-                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinJitsiCall('${appt.meet_link}')">📹 Join Call</button>`;
+                // Host Meet Link aayega backend se, warna purana fallback
+                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}')">📹 Start Video Consult</button>`;
             }
             actionHTML += `
                 <div style="display:flex; gap:5px;">
@@ -623,23 +609,28 @@ function downloadLedgerPDF() {
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
-function joinJitsiCall(link) {
+// 🌟 100ms / VIDEO CALL IFRAME FUNCTION 🌟
+function joinVideoCall(link) {
+    if (!link || link === "" || link === "N/A") {
+        alert("Video consultation link is not available yet.");
+        return;
+    }
     const modal = document.createElement('div');
-    modal.id = "jitsi-modal";
+    modal.id = "video-modal";
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
     
     modal.innerHTML = `
         <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
             <h3 style="margin:0; font-size:16px;">BhavyaCare Video Consult</h3>
-            <button onclick="closeJitsiCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+            <button onclick="closeVideoCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
         </div>
         <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
     `;
     document.body.appendChild(modal);
 }
 
-function closeJitsiCall() {
-    const modal = document.getElementById('jitsi-modal');
+function closeVideoCall() {
+    const modal = document.getElementById('video-modal');
     if (modal) modal.remove();
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
 }

@@ -57,7 +57,8 @@
         .btn-join { background: #fd7e14; animation: pulse 1.5s infinite; }
         .btn-download { background: #343a40; padding: 10px 20px; font-size: 14px; margin-bottom: 20px; display: inline-block; }
 
-        .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
+        .modal-overlay { width: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); display: none; position: fixed; top: 0; left: 0; height: 100%; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-box { background: #ffffff; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border-radius: 20px; padding: 30px; width: 90%; max-width: 450px; position: relative; animation: scaleIn 0.3s ease; }
         .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
         .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; background: #fff; }
 
@@ -89,6 +90,7 @@
             .mobile-header-btn { display: block; background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px; cursor: pointer; }
             .doc-name-badge { font-size: 12px; padding: 6px 12px; }
         }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(253, 126, 20, 0); } 100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0); } }
         @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(40,167,69,0.7); } 70% { box-shadow: 0 0 0 15px rgba(40,167,69,0); } 100% { box-shadow: 0 0 0 0 rgba(40,167,69,0); } }
     </style>
@@ -271,56 +273,67 @@
     </div>
 
     <div id="prescription-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('prescription-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-file-prescription" style="font-size: 26px; color: #2e7d32;"></i></div>
-            <h3 style="margin:0; color: #333;">Upload Prescription</h3>
-            <p style="font-size:13px; color:#777; margin-top:5px;">Mandatory for Online Consults</p>
+        <div class="modal-box">
+            <button class="close-btn-modal" onclick="document.getElementById('prescription-modal').style.display='none'">✖</button>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-file-prescription" style="font-size: 26px; color: #2e7d32;"></i></div>
+                <h3 style="margin:0; color: #333;">Upload Prescription</h3>
+                <p style="font-size:13px; color:#777; margin-top:5px;">Mandatory for Online Consults</p>
+            </div>
+            <input type="hidden" id="completeApptIdHidden">
+            <div class="form-group" style="margin-bottom: 10px; text-align: left;">
+                <label style="font-size: 13px; font-weight: bold; color: #555;">Prescription File (Image/PDF) *</label>
+                <input type="file" id="prescriptionFileInput" class="input-box" accept=".pdf, image/*">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label style="font-size: 13px; font-weight: bold; color: #555;">Valid For (Days) *</label>
+                <select id="rxValidityDays" class="input-box">
+                    <option value="3">3 Days</option><option value="5">5 Days</option><option value="7">7 Days</option><option value="15">15 Days</option><option value="30">30 Days</option>
+                </select>
+            </div>
+            <button id="btnUploadPrescription" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPrescriptionAndComplete()">Upload & Mark Completed</button>
         </div>
-        <input type="hidden" id="completeApptIdHidden">
-        
-        <div class="form-group" style="margin-bottom: 10px; text-align: left;">
-            <label style="font-size: 13px; font-weight: bold; color: #555;">Prescription File (Image/PDF) *</label>
-            <input type="file" id="prescriptionFileInput" class="input-box" accept=".pdf, image/*">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 15px; text-align: left;">
-            <label style="font-size: 13px; font-weight: bold; color: #555;">Valid For (Days) *</label>
-            <select id="rxValidityDays" class="input-box">
-                <option value="3">3 Days</option>
-                <option value="5">5 Days</option>
-                <option value="7">7 Days</option>
-                <option value="15">15 Days</option>
-                <option value="30">30 Days</option>
-            </select>
-        </div>
-
-        <button id="btnUploadPrescription" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPrescriptionAndComplete()">Upload & Mark Completed</button>
     </div>
 
     <div id="approve-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('approve-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-check-circle" style="font-size: 26px; color: #0056b3;"></i></div>
-            <h3 style="margin:0; color: #333; font-size: 20px;">Approve Consultation</h3>
+        <div class="modal-box">
+            <button class="close-btn-modal" onclick="skipApproveModal()">✖</button>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; box-shadow: 0 4px 10px rgba(0,86,179,0.15);">
+                    <i class="fas fa-calendar-check" style="font-size: 26px; color: #0056b3;"></i>
+                </div>
+                <h3 style="margin:0; color: #333; font-size: 22px;">New Booking Request</h3>
+                <p style="font-size:12px; color:#777; margin-top:5px;">Please review the patient details below.</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; color: #444; border: 1px solid #e2e8f0;">
+                <input type="hidden" id="approveApptIdHidden">
+                <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="color:#64748b; font-weight:bold;">Appt ID:</span> <strong id="appModalId" style="color:#1e293b;">---</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="color:#64748b; font-weight:bold;">Patient ID:</span> <strong id="appModalPatient" style="color:#1e293b;">---</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="color:#64748b; font-weight:bold;">Consult Type:</span> <strong id="appModalType" style="color:#0056b3; background:#e0f2fe; padding:2px 8px; border-radius:6px; font-size:12px;">---</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="color:#64748b; font-weight:bold;">Date & Time:</span> <strong id="appModalDateTime" style="color:#1e293b;">---</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#64748b; font-weight:bold;">Expected Earning:</span> <strong id="appModalFee" style="color:#059669; font-size:18px;">---</strong>
+                </div>
+            </div>
+            
+            <button id="btnConfirmApprove" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:14px; border-radius:30px; font-size: 15px; cursor:pointer; box-shadow: 0 4px 15px rgba(40,167,69,0.3); transition:0.2s;" onclick="confirmApproveAppt()">✅ Approve Appointment</button>
+            <div style="text-align:center; margin-top:15px;">
+                <span onclick="skipApproveModal()" style="font-size:12px; color:#aaa; cursor:pointer; text-decoration:underline;">Skip for now</span>
+            </div>
         </div>
-        
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; color: #555; line-height: 1.6;">
-            <input type="hidden" id="approveApptIdHidden">
-            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Appt ID:</span> <strong id="appModalId" style="color:#333;">---</strong></div>
-            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Patient Name:</span> <strong id="appModalPatient" style="color:#333;">---</strong></div>
-            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Type:</span> <strong id="appModalType" style="color:#0056b3;">---</strong></div>
-            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px;"><span>Date & Time:</span> <strong id="appModalDateTime" style="color:#333;">---</strong></div>
-            <div style="display:flex; justify-content:space-between;"><span>Total Amount:</span> <strong id="appModalFee" style="color:#28a745;">---</strong></div>
-        </div>
-        
-        <p style="font-size:12px; color:#888; margin-bottom:15px; text-align:center;">Approving this will notify the patient that their booking is confirmed.</p>
-        
-        <button id="btnConfirmApprove" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="confirmApproveAppt()">✅ Confirm & Approve</button>
     </div>
 
-    <div id="doctorLiveBackdrop" class="modal-overlay" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; justify-content: center; align-items: center; max-width: 100%;">
-        <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,86,179,0.2); border: 2px solid #0056b3; width: 90%; max-width: 400px; text-align: center;">
+    <div id="doctorLiveBackdrop" class="modal-overlay">
+        <div class="modal-box" style="border: 2px solid #0056b3; text-align: center;">
             <div style="background:#e6f0fa; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px auto;">
                 <i class="fas fa-video" style="font-size:24px; color:#0056b3;"></i>
             </div>
@@ -334,14 +347,14 @@
 
             <div id="docActionStep2" style="display: none;">
                 <div style="padding: 15px; background: #fff8e1; border-radius: 12px; border: 1px solid #ffeeba;">
-                    <p style="font-size: 14px; color: #f57c00; font-weight: bold; margin: 0;"><i class="fas fa-circle-notch fa-spin"></i> Waiting for patient to click 'Ready'...</p>
-                    <p style="font-size: 11px; color: #888; margin: 5px 0 0 0;">We will automatically connect you once they are ready.</p>
+                    <p style="font-size: 14px; color: #f57c00; font-weight: bold; margin: 0;"><i class="fas fa-circle-notch fa-spin"></i> Waiting for patient...</p>
+                    <p style="font-size: 11px; color: #888; margin: 5px 0 0 0;">We will automatically connect you once they click ready.</p>
                 </div>
             </div>
 
             <div id="docActionStep3" style="display: none;">
                 <p style="font-size: 16px; color: #28a745; font-weight: bold; margin-bottom: 15px;">✅ Patient is Ready!</p>
-                <button id="btnJoinDocCall" style="width: 100%; padding: 14px; font-size: 15px; border-radius: 30px; background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(40,167,69,0.4); animation: pulseGreen 1.5s infinite;">📹 Join Video Call Now</button>
+                <button id="btnJoinDocCall" style="width: 100%; padding: 14px; font-size: 15px; border-radius: 30px; background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(40,167,69,0.4); animation: pulseGreen 1.5s infinite;">📹 Joining Video Call...</button>
             </div>
             
             <p style="margin-top:20px; font-size:12px; color:#aaa; cursor:pointer; text-decoration:underline;" onclick="document.getElementById('doctorLiveBackdrop').style.display='none'">Dismiss for now</p>

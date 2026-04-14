@@ -4,6 +4,7 @@ let globalBookingsData = [];
 let globalConsultsData = [];
 let globalCompletedReports = []; 
 let activeCallCheckInterval = null;
+let isModalDismissedFor = null;
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
@@ -596,10 +597,8 @@ async function fetchPatientConsults(userId) {
             renderPrescriptionsTab(globalConsultsData); 
             
             // 🌟 NAYA: Check for Live Calls after fetching data
-            checkForActiveVideoCalls();
-            if (activeCallCheckInterval) clearInterval(activeCallCheckInterval);
-            activeCallCheckInterval = setInterval(checkForActiveVideoCalls, 60000); // Check every 1 minute
-
+            startHandshakeMonitor(); // Polling function call
+            
         } else {
             if(container) container.innerHTML = `<p style="color:red; text-align:center;">Failed to load consults: ${result.message}</p>`;
         }
@@ -608,16 +607,22 @@ async function fetchPatientConsults(userId) {
     }
 }
 
-// 🌟 NAYA: SMART BLUR BACKDROP TRIGGER LOGIC 🌟
-function checkForActiveVideoCalls() {
+// 🌟 NAYA: PATIENT HANDSHAKE SILENT POLLING LOGIC 🌟
+function startHandshakeMonitor() {
+    if (activeCallCheckInterval) clearInterval(activeCallCheckInterval);
+    checkPatientLiveStatus(); 
+    activeCallCheckInterval = setInterval(checkPatientLiveStatus, 15000); // Har 15 sec me chupchap check karega
+}
+
+async function checkPatientLiveStatus() {
     const now = new Date();
     let hasActiveCall = false;
 
-    globalConsultsData.forEach(c => {
-        if (c.appt_status === "Approved" && c.consult_type === "Online" && c.meet_link && c.meet_link !== "") {
-            let cleanDate = c.appt_date.replace(/\//g, '-'); 
+    for (let appt of globalConsultsData) {
+        if (appt.appt_status === "Approved" && appt.consult_type === "Online" && appt.meet_link && appt.meet_link !== "") {
+            let cleanDate = appt.appt_date.replace(/\//g, '-'); 
             const [day, month, year] = cleanDate.split("-");
-            let [timePart, modifier] = c.appt_time.split(" ");
+            let [timePart, modifier] = appt.appt_time.split(" ");
             let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
             
             hours = parseInt(hours, 10);
@@ -629,24 +634,82 @@ function checkForActiveVideoCalls() {
 
             // Trigger Modal if current time is between 15 mins before and 45 mins after appt time
             if (diffInMinutes >= -15 && diffInMinutes <= 45) {
-                showLiveCallBackdrop(c.meet_link, c.doctor_name);
                 hasActiveCall = true;
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action: "checkHandshakeStatus", appt_id: appt.appt_id })
+                    });
+                    const res = await response.json();
+                    
+                    if (res.status === "success") {
+                        const status = res.data.handshake_status;
+                        
+                        // Agar Modal khud se band nahi kiya hai, ya fir doctor ne bula liya hai
+                        if (isModalDismissedFor !== appt.appt_id || status === "Doctor_Ready") {
+                            showPatientLiveModal(appt, status);
+                        }
+                    }
+                } catch(e) { console.error("Silent check failed", e); }
+                break; // Ek baar me ek call process karega
             }
         }
-    });
+    }
 
     if (!hasActiveCall) {
-        document.getElementById('liveCallBackdrop').style.display = 'none';
+        const modal = document.getElementById('patientLiveBackdrop');
+        if (modal) modal.style.display = 'none';
     }
 }
 
-function showLiveCallBackdrop(link, docName) {
-    document.getElementById('liveDocName').innerText = "Dr. " + docName;
-    document.getElementById('liveJoinBtn').onclick = function() {
-        document.getElementById('liveCallBackdrop').style.display = 'none';
-        joinVideoCall(link);
-    };
-    document.getElementById('liveCallBackdrop').style.display = 'flex';
+function showPatientLiveModal(appt, status) {
+    const modal = document.getElementById("patientLiveBackdrop");
+    document.getElementById("liveDocName1").innerText = "Dr. " + appt.doctor_name;
+    document.getElementById("liveDocName2").innerText = "Dr. " + appt.doctor_name;
+    
+    const step1 = document.getElementById("patActionStep1");
+    const step2 = document.getElementById("patActionStep2");
+
+    if (status === "Doctor_Ready" || status === "Patient_Ready") {
+        // Doctor waiting me hai, patient ko Ready dabana hai
+        step1.style.display = "none";
+        step2.style.display = "block";
+        
+        document.getElementById("btnPatientReady").onclick = () => {
+            notifyDoctorIamReady(appt.appt_id, appt.meet_link);
+        };
+    } else {
+        // Abhi tak process start nahi hua, Doctor ka wait karo
+        step1.style.display = "block";
+        step2.style.display = "none";
+    }
+    
+    if(modal.style.display !== "flex") {
+       modal.style.display = "flex";
+    }
+}
+
+async function notifyDoctorIamReady(apptId, meetLink) {
+    const btn = document.getElementById("btnPatientReady");
+    btn.innerText = "Connecting..."; btn.disabled = true;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Patient_Ready" })
+        });
+        const res = await response.json();
+        if (res.status === "success") {
+            // Status update hote hi video call join kar lenge
+            document.getElementById('patientLiveBackdrop').style.display = 'none';
+            isModalDismissedFor = apptId;
+            joinVideoCall(meetLink);
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Failed to connect. Please check internet.");
+    } finally {
+        btn.innerText = "✅ I am Ready (Join Call)"; btn.disabled = false;
+    }
 }
 
 function renderConsultCards(consults) {
@@ -692,10 +755,10 @@ function renderConsultCards(consults) {
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
             if (diffInMinutes >= -15 && diffInMinutes <= 45) {
-                // Changed from joinJitsiCall to joinVideoCall
-                joinBtnHtml = `<button onclick="joinVideoCall('${c.meet_link}')" style="background:#fd7e14; color:white; border:none; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 1.5s infinite;">📹 Join Video Call Now</button>`;
+                // Button bas status dikhayega
+                joinBtnHtml = `<div style="background:#fff8e1; color:#f57c00; border:1px solid #ffeeba; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; text-align:center; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> Waiting for Doctor...</div>`;
             } else if (diffInMinutes < -15) {
-                joinBtnHtml = `<div style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Call link will activate 15 mins before time.</div>`;
+                joinBtnHtml = `<div style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Call room will open 15 mins before time.</div>`;
             }
         } 
         else if (c.appt_status === "Completed") {

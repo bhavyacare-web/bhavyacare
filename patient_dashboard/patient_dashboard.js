@@ -607,14 +607,20 @@ async function fetchPatientConsults(userId) {
     }
 }
 
-// 🌟 NAYA: PATIENT HANDSHAKE SILENT POLLING LOGIC 🌟
+let videoCallActive = false;
+
+// Update checking interval in your checkLoginAndFetchData to auto refresh every 5 mins
+// Add this near the bottom of checkLoginAndFetchData:
+// setInterval(checkLoginAndFetchData, 5 * 60 * 1000);
+
 function startHandshakeMonitor() {
     if (activeCallCheckInterval) clearInterval(activeCallCheckInterval);
     checkPatientLiveStatus(); 
-    activeCallCheckInterval = setInterval(checkPatientLiveStatus, 15000); // Har 15 sec me chupchap check karega
+    activeCallCheckInterval = setInterval(checkPatientLiveStatus, 15000); 
 }
 
 async function checkPatientLiveStatus() {
+    if(videoCallActive) return; // Call me disturb na kare
     const now = new Date();
     let hasActiveCall = false;
 
@@ -632,7 +638,7 @@ async function checkPatientLiveStatus() {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // Trigger Modal if current time is between 15 mins before and 45 mins after appt time
+            // Trigger Modal only if it's within time window
             if (diffInMinutes >= -15 && diffInMinutes <= 45) {
                 hasActiveCall = true;
                 try {
@@ -645,13 +651,15 @@ async function checkPatientLiveStatus() {
                     if (res.status === "success") {
                         const status = res.data.handshake_status;
                         
-                        // Agar Modal khud se band nahi kiya hai, ya fir doctor ne bula liya hai
-                        if (isModalDismissedFor !== appt.appt_id || status === "Doctor_Ready") {
+                        // Agar Patient ready hai toh usko baar-baar modal na dikhaye
+                        if(status === "Patient_Ready") break;
+
+                        if (!sessionStorage.getItem("dismissed_pat_live_" + appt.appt_id) || status === "Doctor_Ready") {
                             showPatientLiveModal(appt, status);
                         }
                     }
                 } catch(e) { console.error("Silent check failed", e); }
-                break; // Ek baar me ek call process karega
+                break; 
             }
         }
     }
@@ -670,20 +678,25 @@ function showPatientLiveModal(appt, status) {
     const step1 = document.getElementById("patActionStep1");
     const step2 = document.getElementById("patActionStep2");
 
-    if (status === "Doctor_Ready" || status === "Patient_Ready") {
-        // Doctor waiting me hai, patient ko Ready dabana hai
+    if (status === "Doctor_Ready") {
+        // Doctor is waiting
         step1.style.display = "none";
         step2.style.display = "block";
-        
-        document.getElementById("btnPatientReady").onclick = () => {
-            notifyDoctorIamReady(appt.appt_id, appt.meet_link);
-        };
+        document.getElementById("btnPatientReady").onclick = () => notifyDoctorIamReady(appt.appt_id, appt.meet_link);
     } else {
-        // Abhi tak process start nahi hua, Doctor ka wait karo
+        // Still waiting for Doctor
         step1.style.display = "block";
         step2.style.display = "none";
     }
     
+    const dismissBtn = modal.querySelector("p[onclick]");
+    if(dismissBtn) {
+        dismissBtn.onclick = function() {
+            sessionStorage.setItem("dismissed_pat_live_" + appt.appt_id, "true");
+            modal.style.display = 'none';
+        }
+    }
+
     if(modal.style.display !== "flex") {
        modal.style.display = "flex";
     }
@@ -699,13 +712,12 @@ async function notifyDoctorIamReady(apptId, meetLink) {
         });
         const res = await response.json();
         if (res.status === "success") {
-            // Status update hote hi video call join kar lenge
             document.getElementById('patientLiveBackdrop').style.display = 'none';
-            isModalDismissedFor = apptId;
+            // Auto open video call
+            videoCallActive = true;
             joinVideoCall(meetLink);
         }
     } catch(e) {
-        console.error(e);
         alert("Failed to connect. Please check internet.");
     } finally {
         btn.innerText = "✅ I am Ready (Join Call)"; btn.disabled = false;

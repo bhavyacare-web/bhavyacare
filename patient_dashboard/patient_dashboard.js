@@ -2,7 +2,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let isUserVip = false;
 let globalBookingsData = [];
 let globalConsultsData = [];
-let globalCompletedReports = []; // For Reports Tab Filter
+let globalCompletedReports = []; 
+let activeCallCheckInterval = null;
 
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
@@ -15,7 +16,6 @@ function getBase64(file) {
     });
 }
 
-// 🌟 MOBILE MENU LOGIC 🌟
 function toggleMobileMenu() {
     const sheet = document.getElementById("mobileMenuSheet");
     const backdrop = document.getElementById("menuBackdrop");
@@ -30,7 +30,6 @@ function toggleMobileMenu() {
     }
 }
 
-// Ensure safe element checks to prevent JS crash
 function safeSetText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
 function safeSetValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
 
@@ -54,7 +53,6 @@ function switchTab(tabId) {
 
 function logoutDashboard() { localStorage.clear(); window.location.href = "../index.html"; }
 
-// 🌟 MAIN DATA FETCH 🌟
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
     if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
@@ -70,6 +68,9 @@ async function checkLoginAndFetchData() {
         if (result.status === "success") {
             const patient = result.data;
             
+            // Save Name to LocalStorage for 100ms
+            if(patient.patient_name) localStorage.setItem("bhavya_name", patient.patient_name);
+
             safeSetText("userNameMobile", patient.patient_name);
             safeSetText("userNameDesktop", patient.patient_name);
             safeSetText("userIdDisplay", "ID: " + patient.user_id);
@@ -78,7 +79,6 @@ async function checkLoginAndFetchData() {
             safeSetText("infoName", patient.patient_name);
             safeSetText("infoMobile", patient.mobile_number);
 
-            // 🌟 SAFE CHECKS ADDED HERE 🌟
             let btnWithdraw = document.getElementById('btn-withdraw');
             if (btnWithdraw) {
                 if (patient.withdraw && patient.withdraw.toLowerCase() === 'active') {
@@ -172,7 +172,6 @@ async function checkLoginAndFetchData() {
                 if(editPreview) editPreview.src = fallbackUrl;
             }
 
-            // Fetch secondary data
             fetchWalletHistory(userId);
             await Promise.all([
                 fetchPatientBookings(userId),
@@ -280,14 +279,10 @@ async function fetchWalletHistory(userId) {
             container.innerHTML = `<p style="color:red; text-align:center;">Failed: ${result.message}</p>`;
         }
     } catch(e) {
-        console.error("Wallet Fetch Error:", e);
         container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`;
     }
 }
 
-// ===============================================
-// 🌟 LAB BOOKINGS (RESTORED DETAILS & REPORTS FILTER) 🌟
-// ===============================================
 async function fetchPatientBookings(userId) {
     const bookingsContainer = document.getElementById("patientBookingsContainer");
     try {
@@ -301,7 +296,6 @@ async function fetchPatientBookings(userId) {
             globalBookingsData = result.data;
             renderBookingCards(globalBookingsData);
             
-            // Extract completed bookings for the separate Reports tab
             globalCompletedReports = globalBookingsData.filter(bk => {
                 let safeStatus = (bk.status || "pending").toString().toLowerCase().trim();
                 return safeStatus.includes("complete") || safeStatus === "completed";
@@ -414,7 +408,6 @@ function renderBookingCards(bookings) {
             cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
         }
 
-        // 🌟 RESTORED: Report PDF and Hand Reports Section 🌟
         let reportSectionHtml = "";
         let handReportsArr = [];
         if (bk.hand_reports) {
@@ -515,7 +508,6 @@ async function submitCancelOrder() {
     finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
-// 🌟 NAYA: SEPARATE REPORTS TAB FILTER LOGIC 🌟
 function clearReportFilters() {
     document.getElementById("searchReportText").value = "";
     document.getElementById("searchReportDate").value = "";
@@ -586,7 +578,6 @@ function renderFilteredReports(bookings) {
     if(reportsTab) reportsTab.innerHTML = reportsHtml;
 }
 
-
 // ===============================================
 // 🌟 DOCTOR CONSULTS & REVIEW LOGIC 🌟
 // ===============================================
@@ -603,12 +594,59 @@ async function fetchPatientConsults(userId) {
             globalConsultsData = result.data;
             renderConsultCards(globalConsultsData);
             renderPrescriptionsTab(globalConsultsData); 
+            
+            // 🌟 NAYA: Check for Live Calls after fetching data
+            checkForActiveVideoCalls();
+            if (activeCallCheckInterval) clearInterval(activeCallCheckInterval);
+            activeCallCheckInterval = setInterval(checkForActiveVideoCalls, 60000); // Check every 1 minute
+
         } else {
             if(container) container.innerHTML = `<p style="color:red; text-align:center;">Failed to load consults: ${result.message}</p>`;
         }
     } catch(e) { 
         if(container) container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`;
     }
+}
+
+// 🌟 NAYA: SMART BLUR BACKDROP TRIGGER LOGIC 🌟
+function checkForActiveVideoCalls() {
+    const now = new Date();
+    let hasActiveCall = false;
+
+    globalConsultsData.forEach(c => {
+        if (c.appt_status === "Approved" && c.consult_type === "Online" && c.meet_link && c.meet_link !== "") {
+            let cleanDate = c.appt_date.replace(/\//g, '-'); 
+            const [day, month, year] = cleanDate.split("-");
+            let [timePart, modifier] = c.appt_time.split(" ");
+            let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
+            
+            hours = parseInt(hours, 10);
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            
+            const apptDateTime = new Date(year, month - 1, day, hours, minutes);
+            const diffInMinutes = (now - apptDateTime) / (1000 * 60);
+
+            // Trigger Modal if current time is between 15 mins before and 45 mins after appt time
+            if (diffInMinutes >= -15 && diffInMinutes <= 45) {
+                showLiveCallBackdrop(c.meet_link, c.doctor_name);
+                hasActiveCall = true;
+            }
+        }
+    });
+
+    if (!hasActiveCall) {
+        document.getElementById('liveCallBackdrop').style.display = 'none';
+    }
+}
+
+function showLiveCallBackdrop(link, docName) {
+    document.getElementById('liveDocName').innerText = "Dr. " + docName;
+    document.getElementById('liveJoinBtn').onclick = function() {
+        document.getElementById('liveCallBackdrop').style.display = 'none';
+        joinVideoCall(link);
+    };
+    document.getElementById('liveCallBackdrop').style.display = 'flex';
 }
 
 function renderConsultCards(consults) {
@@ -654,7 +692,8 @@ function renderConsultCards(consults) {
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
             if (diffInMinutes >= -15 && diffInMinutes <= 45) {
-                joinBtnHtml = `<button onclick="joinJitsiCall('${c.meet_link}')" style="background:#fd7e14; color:white; border:none; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 1.5s infinite;">📹 Join Video Call Now</button>`;
+                // Changed from joinJitsiCall to joinVideoCall
+                joinBtnHtml = `<button onclick="joinVideoCall('${c.meet_link}')" style="background:#fd7e14; color:white; border:none; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 1.5s infinite;">📹 Join Video Call Now</button>`;
             } else if (diffInMinutes < -15) {
                 joinBtnHtml = `<div style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Call link will activate 15 mins before time.</div>`;
             }
@@ -699,7 +738,6 @@ function renderConsultCards(consults) {
     container.innerHTML = html;
 }
 
-// 🌟 DOCTOR CONSULT CANCEL & REFUND LOGIC 🌟
 function openConsultCancelModal(apptId) {
     document.getElementById("cancelConsultIdHidden").value = apptId;
     document.getElementById("cancelConsultReason").value = "";
@@ -765,7 +803,6 @@ async function submitCancelConsult() {
     finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
-// 🌟 REVIEW SYSTEM LOGIC 🌟
 let currentRating = 0;
 function openReviewModal(apptId) {
     document.getElementById("reviewApptIdHidden").value = apptId;
@@ -807,7 +844,6 @@ async function submitReview() {
     finally { btn.innerText = "Submit Review"; btn.disabled = false; }
 }
 
-// 🌟 PRESCRIPTIONS TAB RENDER LOGIC (WITH VALIDITY) 🌟
 function renderPrescriptionsTab(consults) {
     const container = document.getElementById("prescriptionsTabContainer");
     if (!container) return;
@@ -835,32 +871,35 @@ function renderPrescriptionsTab(consults) {
     container.innerHTML = `<div style="background:#fff; padding:0 15px; border-radius:12px;">${html}</div>`;
 }
 
-// 🌟 NAYA: JITSI AUTO CLOSE PATIENT SIDE 🌟
-function joinJitsiCall(link) {
+// 🌟 NAYA: 100ms AUTO-NAME IFRAME 🌟
+function joinVideoCall(link) {
+    if (!link || link === "" || link === "N/A") {
+        alert("Video link is not ready yet."); return;
+    }
+
+    const patientName = localStorage.getItem("bhavya_name") || "Patient";
+    const finalLink = link + "?name=" + encodeURIComponent(patientName);
+
     const modal = document.createElement('div');
-    modal.id = "jitsi-modal";
+    modal.id = "video-modal";
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
     
     modal.innerHTML = `
         <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-            <h3 style="margin:0; font-size:16px;">BhavyaCare Secure Video Consult</h3>
-            <button onclick="closeJitsiCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
+            <button onclick="closeVideoCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
         </div>
-        <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
+        <iframe src="${finalLink}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
     `;
     document.body.appendChild(modal);
 }
 
-function closeJitsiCall() {
-    const modal = document.getElementById('jitsi-modal');
+function closeVideoCall() {
+    const modal = document.getElementById('video-modal');
     if (modal) modal.remove();
-    // Auto refresh data to check if doctor marked as completed
     fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
 }
 
-// ===============================================
-// 🌟 MIXED RECENT ACTIVITY (LAB + DOCTOR) 🌟
-// ===============================================
 function updateRecentActivityMixed() {
     let allActivity = [];
 

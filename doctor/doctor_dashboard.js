@@ -641,3 +641,115 @@ function closeVideoCall() {
 }
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
+// ==========================================
+// 🌟 NAYA: HANDSHAKE SILENT POLLING LOGIC 🌟
+// ==========================================
+let handshakeInterval = null;
+let isModalDismissedFor = null;
+
+function startHandshakeMonitor() {
+    if (handshakeInterval) clearInterval(handshakeInterval);
+    checkUpcomingConsults(); 
+    handshakeInterval = setInterval(checkUpcomingConsults, 15000); // Har 15 sec me chupchap check karega
+}
+
+async function checkUpcomingConsults() {
+    const now = new Date();
+
+    for (let appt of allDoctorAppointments) {
+        if (appt.appt_status === "Approved" && appt.consult_type === "Online" && appt.meet_link) {
+            const [day, month, year] = appt.cleanDate.split("-");
+            let [timePart, modifier] = appt.cleanTime.split(" ");
+            let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
+            
+            hours = parseInt(hours, 10);
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            
+            const apptDateTime = new Date(year, month - 1, day, hours, minutes);
+            const diffInMinutes = (apptDateTime - now) / (1000 * 60);
+
+            // Time: 10 minutes pehle se lekar 45 minutes baad tak popup check karega
+            if (diffInMinutes <= 10 && diffInMinutes >= -45) {
+                
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action: "checkHandshakeStatus", appt_id: appt.appt_id })
+                    });
+                    const res = await response.json();
+                    
+                    if (res.status === "success") {
+                        const status = res.data.handshake_status;
+                        
+                        // Agar Modal khud se band nahi kiya hai, ya fir patient ready ho gaya hai toh popup dikhao
+                        if (isModalDismissedFor !== appt.appt_id || status === "Patient_Ready") {
+                            showDoctorLiveModal(appt, status);
+                        }
+                    }
+                } catch(e) { console.error("Silent check failed", e); }
+                break; // Ek baar me ek hi active meeting par focus karega
+            }
+        }
+    }
+}
+
+function showDoctorLiveModal(appt, status) {
+    const modal = document.getElementById("doctorLiveBackdrop");
+    document.getElementById("livePatientName").innerText = appt.patient_id + " (ID: " + appt.appt_id + ")";
+    
+    const step1 = document.getElementById("docActionStep1");
+    const step2 = document.getElementById("docActionStep2");
+    const step3 = document.getElementById("docActionStep3");
+
+    if (status === "Patient_Ready") {
+        // Patient ready ho gaya hai
+        step1.style.display = "none";
+        step2.style.display = "none";
+        step3.style.display = "block";
+        
+        document.getElementById("btnJoinDocCall").onclick = () => {
+            modal.style.display = "none";
+            isModalDismissedFor = appt.appt_id; // Join karne ke baad wapas disturb na kare
+            joinVideoCall(appt.host_meet_link || appt.meet_link);
+        };
+    } else if (status === "Doctor_Ready") {
+        // Doctor ne notify kar diya hai, waiting for patient
+        step1.style.display = "none";
+        step2.style.display = "block";
+        step3.style.display = "none";
+    } else {
+        // Abhi tak process start nahi hua
+        step1.style.display = "block";
+        step2.style.display = "none";
+        step3.style.display = "none";
+        
+        document.getElementById("btnNotifyPatient").onclick = () => notifyPatientReady(appt.appt_id);
+    }
+    
+    if(modal.style.display !== "flex") {
+       modal.style.display = "flex";
+    }
+}
+
+async function notifyPatientReady(apptId) {
+    const btn = document.getElementById("btnNotifyPatient");
+    btn.innerText = "Notifying Patient..."; btn.disabled = true;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Doctor_Ready" })
+        });
+        const res = await response.json();
+        if (res.status === "success") {
+            // Status update hote hi UI step 2 par chala jayega
+            document.getElementById("docActionStep1").style.display = "none";
+            document.getElementById("docActionStep2").style.display = "block";
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Failed to notify. Please check internet.");
+    } finally {
+        btn.innerText = "🔔 Start & Notify Patient"; btn.disabled = false;
+    }
+}

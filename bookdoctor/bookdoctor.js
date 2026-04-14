@@ -4,7 +4,7 @@ let currentUpiLink = "";
 
 const daysMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-// 🌟 KEYWORD MAPPING DICTIONARY (Symptom to Speciality) 🌟
+// 🌟 KEYWORD MAPPING DICTIONARY 🌟
 const symptomMapping = {
     "general physician": ["fever", "cold", "cough", "flu", "headache", "body ache", "fatigue", "viral", "infection", "weakness", "bukhar", "sardi", "khasi", "dard", "thakan"],
     "cardiologist": ["chest pain", "heart", "blood pressure", "bp", "palpitations", "breathlessness", "heart attack", "cholesterol", "dil", "seene me dard", "ghabrahat"],
@@ -127,7 +127,6 @@ function checkAvailability(doc, day, time) {
 }
 
 function applyFilters() {
-    // 🌟 SEPARATED SEARCH LOGIC 🌟
     const searchSymptom = document.getElementById("searchSymptom").value.toLowerCase();
     const searchName = document.getElementById("searchName").value.toLowerCase();
     const searchCity = document.getElementById("searchCity").value.toLowerCase();
@@ -136,7 +135,6 @@ function applyFilters() {
     let filterDay = document.getElementById("filterDay").value;
     let filterTime = document.getElementById("filterTime").value;
 
-    // Find Speciality based on Symptom
     let matchedSpecialities = [];
     if (searchSymptom !== "") {
         for (const [speciality, symptoms] of Object.entries(symptomMapping)) {
@@ -160,19 +158,11 @@ function applyFilters() {
     let displayedCount = 0;
 
     allDoctors.forEach((doc, index) => {
-        // Match Name or Speciality from Name input
         let matchName = searchName === "" || doc.doctor_name.toLowerCase().includes(searchName) || doc.speciality.toLowerCase().includes(searchName);
-        
-        // Match Symptom from Symptom input
         let matchSymptom = searchSymptom === "" || matchedSpecialities.some(spec => doc.speciality.toLowerCase().includes(spec));
-        
-        // Match City
         let matchCity = searchCity === "" || doc.city.toLowerCase().includes(searchCity);
         
-        // If any provided filter doesn't match, skip the doctor
         if(!matchName || !matchSymptom || !matchCity) return;
-        
-        // Online/Offline check
         if(filterType === "Online" && doc.online_available !== "Yes") return;
         
         let isAvail = checkAvailability(doc, filterDay, filterTime);
@@ -206,7 +196,6 @@ function applyFilters() {
         card.className = "doc-card";
         card.innerHTML = `
             <div class="doc-exp-corner">⭐ ${doc.experience} Yrs</div>
-            
             <div class="doc-card-top">
                 <div class="img-container">
                     <img src="${safeImg}" alt="${doc.doctor_name}" onerror="this.onerror=null; this.src='${fallbackAvatar}';">
@@ -217,17 +206,13 @@ function applyFilters() {
                     <div class="doc-qual">${doc.qualification}</div>
                 </div>
             </div>
-            
             <div class="doc-location">
                 <span style="font-size:16px;">🏥</span> ${doc.clinic_name}, ${doc.city}
             </div>
-            
             <div class="badges-container">
                 ${availBadge} ${onlineBadge}
             </div>
-            
             <div class="fees">${offlineText} ${onlineText}</div>
-            
             <div class="action-btns">
                 <button class="btn-schedule" onclick="openSchedule(${index})"><i class="far fa-clock"></i> Timings</button>
                 <button class="btn-book" onclick="attemptBook(${index})">Book Now</button>
@@ -252,13 +237,8 @@ function openSchedule(index) {
     
     for(let i=0; i<7; i++) {
         let d = days[i];
-        
-        let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) 
-            ? `${formatTime12H(doc['off_'+d+'_in'])} - ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
-        
-        let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) 
-            ? `${formatTime12H(doc['on_'+d+'_in'])} - ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
-        
+        let offStr = (doc[`off_${d}_in`] && doc[`off_${d}_out`]) ? `${formatTime12H(doc['off_'+d+'_in'])} - ${formatTime12H(doc['off_'+d+'_out'])}` : `<span style="color:#ccc;">Closed</span>`;
+        let onStr = (doc[`on_${d}_in`] && doc[`on_${d}_out`]) ? `${formatTime12H(doc['on_'+d+'_in'])} - ${formatTime12H(doc['on_'+d+'_out'])}` : `<span style="color:#ccc;">N/A</span>`;
         html += `<tr><td><strong>${dayNames[i]}</strong></td><td>${offStr}</td><td>${onStr}</td></tr>`;
     }
     html += `</table>`;
@@ -500,4 +480,50 @@ async function submitBooking() {
         document.getElementById("submitBtn").style.display = "block";
         document.getElementById("btnLoader").style.display = "none";
     }
+}
+
+// 🌟 DASHBOARD & VIDEO LOGIC (Aage kaam aayega) 🌟
+
+function checkBufferAndRenderButton(appt) {
+    const now = new Date();
+    
+    const [day, month, year] = appt.appt_date.split("-");
+    let [time, modifier] = appt.appt_time.split(" ");
+    let [hours, minutes] = time.split(":");
+    if (hours === "12") hours = "00";
+    if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+    
+    const apptDateTime = new Date(year, month - 1, day, hours, minutes);
+    const diffInMinutes = (now - apptDateTime) / (1000 * 60);
+    
+    let html = "";
+    // Show 15 mins before to 45 mins after
+    if (diffInMinutes >= -15 && diffInMinutes <= 45 && appt.appt_status === "Approved") {
+        html += `<button onclick="joinVideoCall('${appt.meet_link}')" style="background:#28a745; color:white; padding:8px 15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🟢 Join Video Call</button>`;
+    } 
+    
+    // Patient communication if late
+    if (diffInMinutes > 10 && appt.appt_status === "Approved") {
+        html += `<p style="color:#d32f2f; font-size:13px; margin-top:5px; font-weight:bold;">Doctor late? <a href="tel:8950112467" style="color:#0056b3;">Call Clinic</a></p>`;
+    }
+    return html;
+}
+
+// Professional 100ms Video Call inside Website (Iframe)
+function joinVideoCall(link) {
+    if (!link || link === "" || link === "N/A") {
+        alert("Video link is not ready yet."); return;
+    }
+    const modal = document.createElement('div');
+    modal.id = "video-modal";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
+    
+    modal.innerHTML = `
+        <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+            <h3 style="margin:0; font-size:18px;">BhavyaCare Secure Video Consult</h3>
+            <button onclick="document.getElementById('video-modal').remove()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+        </div>
+        <iframe src="${link}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
+    `;
+    document.body.appendChild(modal);
 }

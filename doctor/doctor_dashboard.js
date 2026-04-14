@@ -264,6 +264,10 @@ async function fetchDoctorAppointments(doctorId) {
             renderAppointments(allDoctorAppointments);
             calculateSettlement(); 
             renderReviews(); 
+            
+            // 🌟 NAYA: Yahan Background monitor shuru ho jayega
+            startHandshakeMonitor();
+
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -317,9 +321,7 @@ function renderAppointments(appointments) {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // 🌟 100MS VIDEO CALL BUTTON 🌟
             if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
-                // Host Meet Link aayega backend se, warna purana fallback
                 actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}')">📹 Start Video Consult</button>`;
             }
             actionHTML += `
@@ -609,14 +611,12 @@ function downloadLedgerPDF() {
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
-// 🌟 100ms / VIDEO CALL IFRAME FUNCTION (WITH AUTO-NAME) 🌟
 function joinVideoCall(link) {
     if (!link || link === "" || link === "N/A") {
         alert("Video consultation link is not available yet.");
         return;
     }
     
-    // 🌟 NAYA: Doctor ka naam local storage se nikal kar link me jodna 🌟
     const docName = localStorage.getItem("bhavya_name") || "Doctor";
     const finalLink = link + "?name=" + encodeURIComponent("Dr. " + docName);
 
@@ -641,6 +641,7 @@ function closeVideoCall() {
 }
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
+
 // ==========================================
 // 🌟 NAYA: HANDSHAKE SILENT POLLING LOGIC 🌟
 // ==========================================

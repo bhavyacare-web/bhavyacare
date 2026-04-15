@@ -232,24 +232,11 @@ function renderAppointments(appointments) {
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
-            actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
+            // Pending me ek modal se approve/reject dono ka option de rahe hain
+            actionHTML = `<button class="btn btn-approve" style="padding:8px 12px; width:100%;" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
         } else if (appt.appt_status === "Approved") {
-            if (appt.appt_status === "Pending") {
-            actionHTML = `
-            <div style="display:flex; gap:5px;">
-                <button class="btn btn-approve" style="flex:1;" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ Approve</button>
-                <button class="btn btn-noshow" style="flex:1;" onclick="openDoctorRejectModal('${appt.appt_id}')">❌ Cancel</button>
-            </div>`;
-        } else if (appt.appt_status === "Approved") {
-            // ... video button logic ...
-            actionHTML += `
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-complete" style="flex:1;" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Done</button>
-                    <button class="btn btn-noshow" style="flex:1;" onclick="openDoctorRejectModal('${appt.appt_id}')">❌ Cancel</button>
-                </div>
-            `;
-        }
-            // 🌟 VIDEO BUTTON VISIBILITY LOGIC 🌟
+            
+            // Video Button Logic
             if (appt.consult_type === "Online") {
                 if (appt.handshake_status === "Patient_Ready") {
                     actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Join Video Call</button>`;
@@ -261,7 +248,7 @@ function renderAppointments(appointments) {
             actionHTML += `
                 <div style="display:flex; gap:5px;">
                     <button class="btn btn-complete" style="flex:1;" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Done</button>
-                    <button class="btn btn-noshow" style="flex:1;" onclick="updateApptStatus('${appt.appt_id}', 'noshow')">❌ Miss</button>
+                    <button class="btn btn-noshow" style="flex:1;" onclick="openDoctorRejectModal('${appt.appt_id}')">❌ Cancel</button>
                 </div>
             `;
         } else if (appt.appt_status === "Completed") {
@@ -390,7 +377,9 @@ function calculateSettlement() {
     let sumCollected = 0; let sumFee = 0; let sumRefund = 0; let sumNet = 0; let count = 0;
 
     allDoctorAppointments.forEach(appt => {
-        let isCompleted = appt.appt_status === "Completed"; let isRefunded = appt.refund_status && (appt.refund_status.includes("Refunded") || appt.refund_status.includes("Pending"));
+        let isCompleted = appt.appt_status === "Completed"; 
+        let isRefunded = appt.refund_status && (appt.refund_status.includes("Refunded") || appt.refund_status.includes("Pending") || appt.refund_status.includes("Action Required"));
+        
         if (isCompleted || isRefunded) {
             const apptDateObj = parseDateDDMMYYYY(appt.cleanDate);
             if (apptDateObj >= fromDate && apptDateObj <= toDate) {
@@ -433,7 +422,7 @@ function downloadLedgerPDF() {
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
 
 // ==========================================
-// 🌟 NAYA HANDSHAKE WORKFLOW (Doctor) 🌟
+// 🌟 CANCELLATION LOGIC 🌟
 // ==========================================
 
 function openApproveModal(apptId, patientId, date, time, type) {
@@ -448,7 +437,52 @@ function confirmApproveBooking() {
     updateApptStatus(apptId, 'approve');
 }
 
-// Background Polling
+function openDoctorRejectModal(apptId) {
+    document.getElementById("rejectApptIdHidden").value = apptId;
+    document.getElementById("doctor-reject-modal").style.display = "block";
+}
+
+function submitRejectFromApprove() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    document.getElementById("approve-booking-modal").style.display = "none";
+    executeRejection(apptId);
+}
+
+function submitRejectBooking() {
+    const apptId = document.getElementById("rejectApptIdHidden").value;
+    document.getElementById("doctor-reject-modal").style.display = "none";
+    executeRejection(apptId);
+}
+
+async function executeRejection(apptId) {
+    try {
+        document.getElementById("loader").style.display = "block"; 
+        document.getElementById("apptTable").style.display = "none";
+        
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "processAppointmentAction", 
+                appt_id: apptId, 
+                appt_action: "reject",
+                cancel_reason: "doctor_unavailable" // Default reason
+            })
+        });
+        
+        const resData = await response.json();
+        if(resData.status === "success") { 
+            alert("Appointment Cancelled. Patient notified to claim refund.");
+            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
+        } 
+        else { alert("Error: " + resData.message); location.reload(); }
+    } catch (e) { alert("Failed to cancel."); location.reload(); }
+}
+
+
+// ==========================================
+// 🌟 HANDSHAKE WORKFLOW (Doctor) 🌟
+// ==========================================
+
 setInterval(silentDoctorPolling, 30000);
 
 async function silentDoctorPolling() {
@@ -462,7 +496,7 @@ async function silentDoctorPolling() {
         const resData = await response.json();
         if (resData.status === "success") {
             allDoctorAppointments = resData.data.map(appt => { appt.cleanDate = formatDate(appt.appt_date); appt.cleanTime = formatTime(appt.appt_time); return appt; }).reverse();
-            renderAppointments(allDoctorAppointments); // Refresh UI to show buttons if ready
+            renderAppointments(allDoctorAppointments); 
             checkDoctorHandshakeTrigger();
         }
     } catch(e) { console.log("Silent poll failed"); }
@@ -481,12 +515,10 @@ function checkDoctorHandshakeTrigger() {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // Show Popup at <= 10 mins
             if (diffInMinutes >= -10 && diffInMinutes <= 45) {
                 if ((!appt.handshake_status || appt.handshake_status === "") && !handledDocTriggers.has(appt.appt_id)) {
                     if(document.getElementById("doctor-trigger-modal").style.display !== "block") {
                         
-                        // YAHAN FIX KIYA HAI: <input type="hidden"> ko template ke andar add kar diya gaya hai
                         document.getElementById("doctor-trigger-modal").innerHTML = `
                             <div style="text-align: center; padding: 15px;">
                                 <input type="hidden" id="triggerApptIdHidden" value="${appt.appt_id}">
@@ -518,7 +550,7 @@ async function doctorStartsConsult() {
         if(res.status === "success") {
             const appt = allDoctorAppointments.find(a => a.appt_id == apptId);
             if(appt) appt.handshake_status = "Doctor_Ready";
-            renderAppointments(allDoctorAppointments); // Refresh to show "Notified" text
+            renderAppointments(allDoctorAppointments); 
         }
     } catch(e) { alert("Failed to notify patient."); } 
 }
@@ -543,7 +575,6 @@ function joinVideoCall(link, apptId) {
     document.body.appendChild(modal);
 }
 
-// 🌟 AUTO OPEN PRESCRIPTION ON CALL CUT 🌟
 function closeVideoCall() {
     const endedApptId = activeVideoCallApptId;
     const modal = document.getElementById('video-modal');
@@ -557,31 +588,4 @@ function closeVideoCall() {
         document.getElementById("prescription-modal").style.display = "block";
     }
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
-}
-function openDoctorRejectModal(apptId) {
-    document.getElementById("rejectApptIdHidden").value = apptId;
-    document.getElementById("doctorRejectReason").value = "payment_not_received";
-    document.getElementById("doctor-reject-modal").style.display = "block";
-}
-
-async function submitRejectBooking() {
-    const apptId = document.getElementById("rejectApptIdHidden").value;
-    const reason = document.getElementById("doctorRejectReason").value;
-    const btn = document.getElementById("btnConfirmReject");
-    
-    btn.innerText = "Processing..."; btn.disabled = true;
-
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: "reject", cancel_reason: reason })
-        });
-        const resData = await response.json();
-        if(resData.status === "success") { 
-            alert("Appointment Cancelled Successfully!");
-            document.getElementById("doctor-reject-modal").style.display = "none";
-            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
-        } else { alert("Error: " + resData.message); }
-    } catch (e) { alert("Network Error."); } 
-    finally { btn.innerText = "Confirm Cancel"; btn.disabled = false; }
 }

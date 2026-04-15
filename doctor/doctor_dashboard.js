@@ -1,6 +1,8 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allDoctorAppointments = []; 
+let activeVideoCallApptId = null;
+let handledDocTriggers = new Set(); // Popup loop ko rokne ke liye blocker
 
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
@@ -125,7 +127,6 @@ async function loadDoctorProfileData() {
                 let offOut = document.getElementById(`edit_off_${d}_out`);
                 offIn.value = p[`off_${d}_in`] || "";
                 offOut.value = p[`off_${d}_out`] || "";
-                
                 if(p[`off_${d}_in`]) offIn.type = "time";
                 if(p[`off_${d}_out`]) offOut.type = "time";
 
@@ -133,7 +134,6 @@ async function loadDoctorProfileData() {
                 let onOut = document.getElementById(`edit_on_${d}_out`);
                 onIn.value = p[`on_${d}_in`] || "";
                 onOut.value = p[`on_${d}_out`] || "";
-                
                 if(p[`on_${d}_in`]) onIn.type = "time";
                 if(p[`on_${d}_out`]) onOut.type = "time";
             });
@@ -304,24 +304,12 @@ function renderAppointments(appointments) {
         let typeBadge = appt.consult_type === "Online" ? "💻 Online" : "🏥 Clinic";
         let actionHTML = "";
         
-        // --- NAYA POPUP LOGIC YAHAN HAI ---
         if (appt.appt_status === "Pending") {
             actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
         } else if (appt.appt_status === "Approved") {
-            const now = new Date();
-            const [day, month, year] = appt.cleanDate.split("-");
-            let [timePart, modifier] = appt.cleanTime.split(" ");
-            let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
-            hours = parseInt(hours, 10);
-            if (modifier === "PM" && hours !== 12) hours += 12;
-            if (modifier === "AM" && hours === 12) hours = 0;
-            const apptDateTime = new Date(year, month - 1, day, hours, minutes);
-            const diffInMinutes = (now - apptDateTime) / (1000 * 60);
-
-           if (appt.consult_type === "Online" && appt.handshake_status === "Patient_Ready") {
-    actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Re-Join Video Call</button>`;
-}
-                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}')">📹 Start Video Consult</button>`;
+            // Online Video Button - Only shows when Handshake is Complete (Patient Ready)
+            if (appt.consult_type === "Online" && appt.handshake_status === "Patient_Ready") {
+                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Re-Join Video Call</button>`;
             }
             actionHTML += `
                 <div style="display:flex; gap:5px;">
@@ -451,6 +439,7 @@ async function submitPrescriptionAndComplete() {
 
 async function updateApptStatus(apptId, actionType) {
     if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
+
     try {
         document.getElementById("loader").style.display = "block";
         document.getElementById("apptTable").style.display = "none";
@@ -587,11 +576,10 @@ function downloadLedgerPDF() {
     let footRow = document.querySelector("#ledgerTableFoot tr");
     if(footRow) {
         let fData = ["GRAND TOTAL", "", ""];
-        let fCols = footRow.querySelectorAll("td");
-        fData.push(fCols[1].innerText.replace(/₹/g, '').trim());
-        fData.push(fCols[2].innerText.replace(/₹/g, '').trim());
-        fData.push(fCols[3].innerText.replace(/₹/g, '').trim());
-        fData.push(fCols[4].innerText.replace(/₹/g, '').trim());
+        fData.push(footRow.querySelectorAll("td")[1].innerText.replace(/₹/g, '').trim());
+        fData.push(footRow.querySelectorAll("td")[2].innerText.replace(/₹/g, '').trim());
+        fData.push(footRow.querySelectorAll("td")[3].innerText.replace(/₹/g, '').trim());
+        fData.push(footRow.querySelectorAll("td")[4].innerText.replace(/₹/g, '').trim());
         footData.push(fData);
     }
 
@@ -609,39 +597,12 @@ function downloadLedgerPDF() {
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
-function joinVideoCall(link) {
-    if (!link || link === "" || link === "N/A") {
-        alert("Video consultation link is not available yet.");
-        return;
-    }
-    
-    const docName = localStorage.getItem("bhavya_name") || "Doctor";
-    const finalLink = link + "?name=" + encodeURIComponent("Dr. " + docName);
-
-    const modal = document.createElement('div');
-    modal.id = "video-modal";
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
-    
-    modal.innerHTML = `
-        <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-            <h3 style="margin:0; font-size:16px;">BhavyaCare Video Consult</h3>
-            <button onclick="closeVideoCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
-        </div>
-        <iframe src="${finalLink}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
-    `;
-    document.body.appendChild(modal);
-}
-
-function closeVideoCall() {
-    const modal = document.getElementById('video-modal');
-    if (modal) modal.remove();
-    fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
-}
-
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
-// --- NAYA WORKFLOW LOGIC ---
 
-// 1. Doctor Confirmation Popup Open
+// ==========================================
+// 🌟 NAYA HANDSHAKE WORKFLOW (Doctor) 🌟
+// ==========================================
+
 function openApproveModal(apptId, patientId, date, time, type) {
     document.getElementById("approveApptIdHidden").value = apptId;
     document.getElementById("approveDetailsDiv").innerHTML = `
@@ -658,12 +619,12 @@ function confirmApproveBooking() {
     updateApptStatus(apptId, 'approve');
 }
 
-// 2. Background Polling for Handshake
+// Background Polling for Handshake
 setInterval(silentDoctorPolling, 30000);
 
 async function silentDoctorPolling() {
     const docId = localStorage.getItem("bhavya_user_id");
-    if(!docId || document.getElementById("loader").style.display === "block") return; // Don't interrupt if main loader is active
+    if(!docId || document.getElementById("loader").style.display === "block") return;
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -677,10 +638,7 @@ async function silentDoctorPolling() {
                 appt.cleanTime = formatTime(appt.appt_time);
                 return appt;
             }).reverse();
-            
             checkDoctorHandshakeTrigger();
-            // Optional: You can call renderAppointments(allDoctorAppointments) here, but it might refresh UI while doctor is clicking. 
-            // Better to just let handshake trigger work invisibly.
         }
     } catch(e) { console.log("Silent poll failed"); }
 }
@@ -698,19 +656,20 @@ function checkDoctorHandshakeTrigger() {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // Trigger 10 minutes BEFORE (-10) to 45 minutes AFTER
+            // 10 Min Trigger
             if (diffInMinutes >= -10 && diffInMinutes <= 45) {
-                if (!appt.handshake_status || appt.handshake_status === "") {
-                    // Show Doctor Trigger Popup
+                // Show Popup if Handshake empty AND not triggered yet
+                if ((!appt.handshake_status || appt.handshake_status === "") && !handledDocTriggers.has(appt.appt_id)) {
                     if(document.getElementById("doctor-trigger-modal").style.display !== "block") {
                         document.getElementById("triggerApptIdHidden").value = appt.appt_id;
                         document.getElementById("doctor-trigger-modal").style.display = "block";
+                        handledDocTriggers.add(appt.appt_id); // Add to local block list
                     }
                 } 
+                // Auto Join Video Call when Patient clicks Ready
                 else if (appt.handshake_status === "Patient_Ready" && activeVideoCallApptId !== appt.appt_id) {
-                    // Both Ready -> 100ms Video Call Active!
                     activeVideoCallApptId = appt.appt_id;
-                    joinVideoCall(appt.host_meet_link || appt.meet_link);
+                    joinVideoCall(appt.host_meet_link || appt.meet_link, appt.appt_id);
                 }
             }
         }
@@ -721,34 +680,60 @@ async function doctorStartsConsult() {
     const apptId = document.getElementById("triggerApptIdHidden").value;
     const btn = document.getElementById("btnStartConsult");
     
-    // UI se turant hatane ke liye
+    // UI hide instantly
     document.getElementById("doctor-trigger-modal").style.display = "none";
     btn.disabled = true;
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ 
-                action: "updateHandshakeStatus", 
-                appt_id: apptId, 
-                handshake_status: "Doctor_Ready" 
-            })
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Doctor_Ready" })
         });
-        
         const res = await response.json();
         if(res.status === "success") {
-            // Local data ko turant update karein taaki poll hone tak popup na aaye
+            // Instantly update local array to prevent loop
             const appt = allDoctorAppointments.find(a => a.appt_id == apptId);
             if(appt) appt.handshake_status = "Doctor_Ready";
-            
-            alert("Patient ko notify kar diya gaya hai!");
-        } else {
-            alert("Sheet me save nahi ho paya: " + res.message);
+            alert("Patient notified! Video call will start automatically as soon as patient connects.");
         }
-    } catch(e) { 
-        alert("Network error: Check internet or Script URL"); 
-    } finally { 
-        btn.disabled = false; 
+    } catch(e) { alert("Failed to notify patient."); } 
+    finally { btn.innerText = "Start Consult"; btn.disabled = false; }
+}
+
+function joinVideoCall(link, apptId) {
+    if (!link || link === "" || link === "N/A") {
+        alert("Video consultation link is not available yet."); return;
     }
+    
+    activeVideoCallApptId = apptId; 
+    const docName = localStorage.getItem("bhavya_name") || "Doctor";
+    const finalLink = link + "?name=" + encodeURIComponent("Dr. " + docName);
+
+    const modal = document.createElement('div');
+    modal.id = "video-modal";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:99999; display:flex; flex-direction:column;";
+    modal.innerHTML = `
+        <div style="height:60px; background:#0056b3; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+            <h3 style="margin:0; font-size:16px;">BhavyaCare Video Consult</h3>
+            <button onclick="closeVideoCall()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">End Call / Close</button>
+        </div>
+        <iframe src="${finalLink}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex-grow:1; border:none;"></iframe>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Auto open prescription modal when call is closed
+function closeVideoCall() {
+    const endedApptId = activeVideoCallApptId;
+    const modal = document.getElementById('video-modal');
+    if (modal) modal.remove();
+    activeVideoCallApptId = null; 
+
+    if (endedApptId) {
+        document.getElementById("completeApptIdHidden").value = endedApptId;
+        document.getElementById("prescriptionFileInput").value = "";
+        document.getElementById("rxValidityDays").value = "3";
+        document.getElementById("prescription-modal").style.display = "block";
+    }
+    fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
 }

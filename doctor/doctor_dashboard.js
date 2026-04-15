@@ -471,15 +471,15 @@ function checkDoctorHandshakeTrigger() {
             if (diffInMinutes >= -10 && diffInMinutes <= 45) {
                 if ((!appt.handshake_status || appt.handshake_status === "") && !handledDocTriggers.has(appt.appt_id)) {
                     if(document.getElementById("doctor-trigger-modal").style.display !== "block") {
-                        document.getElementById("triggerApptIdHidden").value = appt.appt_id;
                         
-                        // Update Modal Content dynamically in English
+                        // YAHAN FIX KIYA HAI: <input type="hidden"> ko template ke andar add kar diya gaya hai
                         document.getElementById("doctor-trigger-modal").innerHTML = `
                             <div style="text-align: center; padding: 15px;">
-                                <i class="fas fa-bell" style="font-size: 40px; color: var(--primary); margin-bottom:15px;"></i>
+                                <input type="hidden" id="triggerApptIdHidden" value="${appt.appt_id}">
+                                <i class="fas fa-bell" style="font-size: 40px; color: #0056b3; margin-bottom:15px;"></i>
                                 <h3 style="margin:0; color: #333; font-size: 22px;">Consultation Time!</h3>
                                 <p style="color:#555; font-size:14px; margin-top:10px;">Your consult time is here. Send notification to patient?</p>
-                                <button style="background:var(--primary); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:15px;" onclick="doctorStartsConsult()">OK, Notify Patient</button>
+                                <button style="background:#0056b3; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:15px;" onclick="doctorStartsConsult()">OK, Notify Patient</button>
                             </div>
                         `;
                         document.getElementById("doctor-trigger-modal").style.display = "block";

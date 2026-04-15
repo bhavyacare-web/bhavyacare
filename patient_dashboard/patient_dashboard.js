@@ -565,11 +565,11 @@ function checkPatientHandshakeTrigger() {
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             if (c.handshake_status === "Doctor_Ready" && !handledPatTriggers.has(c.appt_id)) {
                 if (document.getElementById("patient-ready-modal").style.display !== "block") {
-                    document.getElementById("readyApptIdHidden").value = c.appt_id;
                     
-                    // Update Modal dynamically in English
+                    // YAHAN FIX KIYA HAI: <input type="hidden"> ko template ke andar wapas add kar diya hai
                     document.getElementById("patient-ready-modal").innerHTML = `
                         <div style="text-align: center; padding: 15px;">
+                            <input type="hidden" id="readyApptIdHidden" value="${c.appt_id}">
                             <i class="fas fa-user-md" style="font-size: 40px; color: var(--success); margin-bottom:15px;"></i>
                             <h3 style="margin:0; color: #333; font-size: 22px;">Doctor is Ready!</h3>
                             <p style="color:#555; font-size:14px; margin-top:10px;">Your doctor is waiting in the clinic room. Please confirm your presence.</p>

@@ -369,6 +369,16 @@
         <div class="form-group"><textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..."></textarea></div>
         <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
     </div>
+    <div id="patient-ready-modal" class="modal-overlay" style="background: rgba(255,255,255,0.90); backdrop-filter: blur(10px); border: 2px solid var(--success);">
+        <div style="text-align: center;">
+            <div style="background: #e8f5e9; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;"><i class="fas fa-stethoscope" style="font-size: 30px; color: var(--success); animation: pulse 1.5s infinite;"></i></div>
+            <h3 style="margin:0; color: var(--text-main); font-size: 22px;">Doctor is Waiting!</h3>
+            <p style="color:var(--text-light); font-size:14px; margin-top:10px;">The doctor is waiting in the clinic room. Please set up your camera and mic, then click below to enter.</p>
+        </div>
+        <input type="hidden" id="readyApptIdHidden">
+        <input type="hidden" id="readyMeetLinkHidden">
+        <button id="btnPatientReady" style="background:var(--success); width:100%; color:white; border:none; font-weight:bold; padding:15px; border-radius:8px; cursor:pointer; margin-top:15px; font-size: 16px;" onclick="patientConfirmsReady()">I Am Ready</button>
+    </div>
 
     <script src="patient_dashboard.js"></script>
 </body>

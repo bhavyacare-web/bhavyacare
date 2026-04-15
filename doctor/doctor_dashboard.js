@@ -232,11 +232,9 @@ function renderAppointments(appointments) {
         let actionHTML = "";
         
         if (appt.appt_status === "Pending") {
-            // Pending me ek modal se approve/reject dono ka option de rahe hain
-            actionHTML = `<button class="btn btn-approve" style="padding:8px 12px; width:100%;" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
+            actionHTML = `<button class="btn btn-approve" style="padding:8px 12px; width:100%;" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View Details</button>`;
         } else if (appt.appt_status === "Approved") {
             
-            // Video Button Logic
             if (appt.consult_type === "Online") {
                 if (appt.handshake_status === "Patient_Ready") {
                     actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Join Video Call</button>`;
@@ -421,8 +419,9 @@ function downloadLedgerPDF() {
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
 
+
 // ==========================================
-// 🌟 CANCELLATION LOGIC 🌟
+// 🌟 REJECT & APPROVE LOGIC 🌟
 // ==========================================
 
 function openApproveModal(apptId, patientId, date, time, type) {
@@ -437,45 +436,48 @@ function confirmApproveBooking() {
     updateApptStatus(apptId, 'approve');
 }
 
-function openDoctorRejectModal(apptId) {
+function openDoctorRejectModalFromApprove() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    document.getElementById("approve-booking-modal").style.display = "none";
+    
     document.getElementById("rejectApptIdHidden").value = apptId;
+    document.getElementById("doctorRejectReason").value = "payment_not_received";
     document.getElementById("doctor-reject-modal").style.display = "block";
 }
 
-function submitRejectFromApprove() {
-    const apptId = document.getElementById("approveApptIdHidden").value;
-    document.getElementById("approve-booking-modal").style.display = "none";
-    executeRejection(apptId);
+function openDoctorRejectModal(apptId) {
+    document.getElementById("rejectApptIdHidden").value = apptId;
+    document.getElementById("doctorRejectReason").value = "doctor_unavailable";
+    document.getElementById("doctor-reject-modal").style.display = "block";
 }
 
-function submitRejectBooking() {
+async function submitRejectBooking() {
     const apptId = document.getElementById("rejectApptIdHidden").value;
-    document.getElementById("doctor-reject-modal").style.display = "none";
-    executeRejection(apptId);
-}
+    const reason = document.getElementById("doctorRejectReason").value;
+    const btn = document.getElementById("btnConfirmReject");
+    
+    btn.innerText = "Processing..."; btn.disabled = true;
 
-async function executeRejection(apptId) {
     try {
-        document.getElementById("loader").style.display = "block"; 
-        document.getElementById("apptTable").style.display = "none";
-        
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ 
                 action: "processAppointmentAction", 
                 appt_id: apptId, 
                 appt_action: "reject",
-                cancel_reason: "doctor_unavailable" // Default reason
+                cancel_reason: reason
             })
         });
         
         const resData = await response.json();
         if(resData.status === "success") { 
-            alert("Appointment Cancelled. Patient notified to claim refund.");
+            alert("Appointment Cancelled successfully.");
+            document.getElementById("doctor-reject-modal").style.display = "none";
             fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
         } 
         else { alert("Error: " + resData.message); location.reload(); }
     } catch (e) { alert("Failed to cancel."); location.reload(); }
+    finally { btn.innerText = "Confirm Cancel"; btn.disabled = false; }
 }
 
 

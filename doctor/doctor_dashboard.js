@@ -318,7 +318,9 @@ function renderAppointments(appointments) {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            if (appt.consult_type === "Online" && diffInMinutes >= -15 && diffInMinutes <= 45) {
+           if (appt.consult_type === "Online" && appt.handshake_status === "Patient_Ready") {
+    actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Re-Join Video Call</button>`;
+}
                 actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}')">📹 Start Video Consult</button>`;
             }
             actionHTML += `

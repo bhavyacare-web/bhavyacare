@@ -26,7 +26,6 @@ function switchTab(tabId) {
     document.getElementById('pageTitle').innerText = titles[tabId];
 }
 
-// 🌟 NAYA: IMAGE URL FIXER FUNCTION 🌟
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -64,7 +63,6 @@ async function fetchAdminData() {
         document.getElementById("doctorsTable").style.display = "table";
 
         if (docsJson.status === "success") {
-            // Yahan hum sabhi doctors ki image fix kar rahe hain
             allDoctors = docsJson.data.map(d => {
                 d.imgUrl = fixDriveUrl(d.imgUrl, d.doctor_name);
                 return d;
@@ -262,9 +260,31 @@ function renderApptsTable(appts) {
         if(a.appt_status === "Completed") badge = "bg-success";
         if(a.appt_status.includes("Cancel") || a.appt_status.includes("No-Show")) badge = "bg-danger";
 
+        // 👇 Refund aur Cancel Reason dono show karna 👇
         let refInfo = "-";
-        if (a.refund_choice === "Wallet") refInfo = `<span style="color:var(--primary); font-weight:bold; font-size:11px;">Wallet Refunded</span>`;
-        if (a.refund_choice === "Bank") refInfo = `<a href="${a.refund_status_qr}" target="_blank" style="color:var(--danger); font-weight:bold; font-size:11px;">View Bank QR</a><br><span style="font-size:10px; color:#888;">Due on 1st</span>`;
+        
+        if (a.refund_status || a.refund_choice) {
+            let refText = a.refund_status || a.refund_choice;
+            let refColor = "var(--primary)";
+            
+            if (refText.includes("Action Required")) {
+                refColor = "#f57c00"; 
+                refText = "Pending Claim from Patient";
+            } else if (refText.includes("Bank") || refText.includes("Pending")) {
+                refColor = "var(--danger)";
+            } else if (refText.includes("No Refund")) {
+                refColor = "#888";
+            }
+
+            refInfo = `<span style="color:${refColor}; font-weight:bold; font-size:11px;">${refText}</span>`;
+            
+            if (a.refund_status_qr && a.refund_status_qr !== "") {
+                refInfo += `<br><a href="${a.refund_status_qr}" target="_blank" style="color:var(--danger); font-weight:bold; font-size:10px; text-decoration:underline;">View Bank QR</a>`;
+            }
+            if (a.cancel_reason && a.cancel_reason !== "") {
+                refInfo += `<br><span style="font-size:10px; color:#666; font-style:italic;">Reason: ${a.cancel_reason}</span>`;
+            }
+        }
 
         tbody.innerHTML += `
             <tr>
@@ -302,7 +322,8 @@ function calculateLedger() {
     allAppointments.forEach(a => {
         let isDocMatch = docFilter === "ALL" || a.doctor_id === docFilter;
         let isComplete = a.appt_status === "Completed";
-        let isRefunded = a.refund_status && (a.refund_status.includes("Refunded") || a.refund_status.includes("Pending"));
+        // Update: Includes "Action Required"
+        let isRefunded = a.refund_status && (a.refund_status.includes("Refunded") || a.refund_status.includes("Pending") || a.refund_status.includes("Action Required"));
 
         if (isDocMatch && (isComplete || isRefunded)) {
             const dtObj = parseDateDDMMYYYY(a.appt_date);

@@ -2,7 +2,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 
 let allDoctorAppointments = []; 
 let activeVideoCallApptId = null;
-let handledDocTriggers = new Set(); // Popup loop ko rokne ke liye blocker
+let handledDocTriggers = new Set(); 
 
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
@@ -16,13 +16,10 @@ window.onload = function() {
     }
 
     document.getElementById("displayDocName").innerText = docName;
-    
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0); 
-    
     const formatForInput = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
-
     document.getElementById("ledgerFrom").value = formatForInput(firstDay);
     document.getElementById("ledgerTo").value = formatForInput(lastDay); 
 
@@ -36,11 +33,8 @@ async function verifyDoctorStatus() {
     if(!banner) return; 
 
     const localStatus = localStorage.getItem("bhavya_doc_status") || "Pending";
-    if (localStatus !== "Active" && localStatus !== "Approved") {
-        banner.style.display = "block";
-    } else {
-        banner.style.display = "none";
-    }
+    if (localStatus !== "Active" && localStatus !== "Approved") banner.style.display = "block";
+    else banner.style.display = "none";
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -52,54 +46,37 @@ async function verifyDoctorStatus() {
         if (resData.status === "success") {
             const currentStatus = (resData.data.status || "Pending").trim();
             localStorage.setItem("bhavya_doc_status", currentStatus);
-            
             if (currentStatus !== "Active" && currentStatus !== "Approved") {
                 banner.style.display = "block";
-                
                 if (currentStatus === "Rejected") {
-                    banner.style.backgroundColor = "#f8d7da";
-                    banner.style.color = "#721c24";
-                    banner.style.borderLeftColor = "#dc3545";
-                    banner.innerHTML = `<i class="fas fa-times-circle"></i> Your profile was rejected. Reason: <strong>${resData.data.reject_reason || "Check with admin"}</strong>. Please update your profile below.`;
+                    banner.style.backgroundColor = "#f8d7da"; banner.style.color = "#721c24"; banner.style.borderLeftColor = "#dc3545";
+                    banner.innerHTML = `<i class="fas fa-times-circle"></i> Your profile was rejected. Reason: <strong>${resData.data.reject_reason || "Check with admin"}</strong>. Please update your profile.`;
                 }
-            } else {
-                banner.style.display = "none";
-            }
+            } else banner.style.display = "none";
         }
-    } catch(e) { console.error("Banner check failed", e); }
+    } catch(e) { console.error("Banner check failed"); }
 }
 
 function switchTab(tabId) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
-
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
-    
     let titles = { 'appt': 'Manage Appointments', 'ledger': 'Settlement Ledger', 'reviews': 'Patient Reviews', 'profile': 'My Profile' };
     document.getElementById('pageTitle').innerText = titles[tabId];
-
-    if(tabId === 'profile') {
-        loadDoctorProfileData();
-    }
+    if(tabId === 'profile') loadDoctorProfileData();
 }
 
 function showOffDay() {
     const selectedDay = document.getElementById("offDaySelect").value;
     const days = ['mon','tue','wed','thu','fri','sat','sun'];
-    days.forEach(d => {
-        document.getElementById(`off_${d}`).style.display = (d === selectedDay) ? "grid" : "none";
-    });
+    days.forEach(d => document.getElementById(`off_${d}`).style.display = (d === selectedDay) ? "grid" : "none");
 }
-
 function showOnDay() {
     const selectedDay = document.getElementById("onDaySelect").value;
     const days = ['mon','tue','wed','thu','fri','sat','sun'];
-    days.forEach(d => {
-        document.getElementById(`on_${d}`).style.display = (d === selectedDay) ? "grid" : "none";
-    });
+    days.forEach(d => document.getElementById(`on_${d}`).style.display = (d === selectedDay) ? "grid" : "none");
 }
-
 function toggleEditOnlineSection() {
     const val = document.getElementById("editOnlineAvailable").value;
     document.getElementById("editOnlineSection").style.display = (val === "Yes") ? "block" : "none";
@@ -108,79 +85,49 @@ function toggleEditOnlineSection() {
 async function loadDoctorProfileData() {
     document.getElementById("editProfileForm").style.display = "none";
     document.getElementById("profileLoadingText").style.display = "block";
-
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getDoctorProfileSettings", doctor_id: localStorage.getItem("bhavya_user_id") })
         });
         const resData = await response.json();
-        
         if (resData.status === "success" && resData.data) {
             const p = resData.data;
             document.getElementById("editOnlineAvailable").value = p.online_available || "No";
             document.getElementById("editOnlineFee").value = p.online_fee || "";
-            
             const days = ['mon','tue','wed','thu','fri','sat','sun'];
             days.forEach(d => {
-                let offIn = document.getElementById(`edit_off_${d}_in`);
-                let offOut = document.getElementById(`edit_off_${d}_out`);
-                offIn.value = p[`off_${d}_in`] || "";
-                offOut.value = p[`off_${d}_out`] || "";
-                if(p[`off_${d}_in`]) offIn.type = "time";
-                if(p[`off_${d}_out`]) offOut.type = "time";
-
-                let onIn = document.getElementById(`edit_on_${d}_in`);
-                let onOut = document.getElementById(`edit_on_${d}_out`);
-                onIn.value = p[`on_${d}_in`] || "";
-                onOut.value = p[`on_${d}_out`] || "";
-                if(p[`on_${d}_in`]) onIn.type = "time";
-                if(p[`on_${d}_out`]) onOut.type = "time";
+                let offIn = document.getElementById(`edit_off_${d}_in`); let offOut = document.getElementById(`edit_off_${d}_out`);
+                offIn.value = p[`off_${d}_in`] || ""; offOut.value = p[`off_${d}_out`] || "";
+                if(p[`off_${d}_in`]) offIn.type = "time"; if(p[`off_${d}_out`]) offOut.type = "time";
+                let onIn = document.getElementById(`edit_on_${d}_in`); let onOut = document.getElementById(`edit_on_${d}_out`);
+                onIn.value = p[`on_${d}_in`] || ""; onOut.value = p[`on_${d}_out`] || "";
+                if(p[`on_${d}_in`]) onIn.type = "time"; if(p[`on_${d}_out`]) onOut.type = "time";
             });
             toggleEditOnlineSection();
-            
-            document.getElementById("offDaySelect").value = "mon";
-            document.getElementById("onDaySelect").value = "mon";
-            showOffDay();
-            showOnDay();
+            document.getElementById("offDaySelect").value = "mon"; document.getElementById("onDaySelect").value = "mon";
+            showOffDay(); showOnDay();
         }
-    } catch(e) {
-        console.log("Error loading profile", e);
-    } finally {
-        document.getElementById("profileLoadingText").style.display = "none";
-        document.getElementById("editProfileForm").style.display = "block";
-    }
+    } catch(e) { console.log("Error loading profile", e); } 
+    finally { document.getElementById("profileLoadingText").style.display = "none"; document.getElementById("editProfileForm").style.display = "block"; }
 }
 
 async function saveDoctorProfile() {
     const isOnline = document.getElementById('editOnlineAvailable').value === "Yes";
     const days = ['mon','tue','wed','thu','fri','sat','sun'];
-    
     let hasOffline = false;
-    for(let d of days) {
-        if(document.getElementById(`edit_off_${d}_in`).value && document.getElementById(`edit_off_${d}_out`).value) { 
-            hasOffline = true; break; 
-        }
-    }
+    for(let d of days) { if(document.getElementById(`edit_off_${d}_in`).value && document.getElementById(`edit_off_${d}_out`).value) { hasOffline = true; break; } }
     if(!hasOffline) { alert("Please select Open and Close time for at least ONE day for Offline Clinic."); return; }
-
     if(isOnline) {
         if(!document.getElementById('editOnlineFee').value) { alert("Please enter Online Fee."); return; }
         let hasOnline = false;
-        for(let d of days) {
-            if(document.getElementById(`edit_on_${d}_in`).value && document.getElementById(`edit_on_${d}_out`).value) { 
-                hasOnline = true; break; 
-            }
-        }
+        for(let d of days) { if(document.getElementById(`edit_on_${d}_in`).value && document.getElementById(`edit_on_${d}_out`).value) { hasOnline = true; break; } }
         if(!hasOnline) { alert("Please select Open and Close time for at least ONE day for Online Consultation."); return; }
     }
-
     document.getElementById("btnSaveProfile").style.display = "none";
     document.getElementById("profileLoader").style.display = "block";
-
     const payload = {
-        action: "updateDoctorProfileSettings",
-        doctor_id: localStorage.getItem("bhavya_user_id"),
+        action: "updateDoctorProfileSettings", doctor_id: localStorage.getItem("bhavya_user_id"),
         data: {
             off_mon_in: document.getElementById('edit_off_mon_in').value, off_mon_out: document.getElementById('edit_off_mon_out').value,
             off_tue_in: document.getElementById('edit_off_tue_in').value, off_tue_out: document.getElementById('edit_off_tue_out').value,
@@ -189,9 +136,7 @@ async function saveDoctorProfile() {
             off_fri_in: document.getElementById('edit_off_fri_in').value, off_fri_out: document.getElementById('edit_off_fri_out').value,
             off_sat_in: document.getElementById('edit_off_sat_in').value, off_sat_out: document.getElementById('edit_off_sat_out').value,
             off_sun_in: document.getElementById('edit_off_sun_in').value, off_sun_out: document.getElementById('edit_off_sun_out').value,
-            
-            online_available: document.getElementById('editOnlineAvailable').value,
-            online_fee: document.getElementById('editOnlineFee').value || "",
+            online_available: document.getElementById('editOnlineAvailable').value, online_fee: document.getElementById('editOnlineFee').value || "",
             on_mon_in: document.getElementById('edit_on_mon_in').value, on_mon_out: document.getElementById('edit_on_mon_out').value,
             on_tue_in: document.getElementById('edit_on_tue_in').value, on_tue_out: document.getElementById('edit_on_tue_out').value,
             on_wed_in: document.getElementById('edit_on_wed_in').value, on_wed_out: document.getElementById('edit_on_wed_out').value,
@@ -201,28 +146,17 @@ async function saveDoctorProfile() {
             on_sun_in: document.getElementById('edit_on_sun_in').value, on_sun_out: document.getElementById('edit_on_sun_out').value
         }
     };
-
     try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
-        if (resData.status === "success") {
-            alert("Full Schedule updated successfully!");
-            verifyDoctorStatus();
-        }
+        if (resData.status === "success") { alert("Full Schedule updated successfully!"); verifyDoctorStatus(); }
         else alert("Error: " + resData.message);
     } catch(e) { alert("Failed to update."); } 
-    finally {
-        document.getElementById("btnSaveProfile").style.display = "block";
-        document.getElementById("profileLoader").style.display = "none";
-    }
+    finally { document.getElementById("btnSaveProfile").style.display = "block"; document.getElementById("profileLoader").style.display = "none"; }
 }
 
 function formatDate(rawDate) {
-    if (!rawDate) return "N/A";
-    let dateStr = String(rawDate).trim();
+    if (!rawDate) return "N/A"; let dateStr = String(rawDate).trim();
     if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) return dateStr;
     let d = new Date(dateStr);
     if (!isNaN(d.getTime())) return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`; 
@@ -230,14 +164,12 @@ function formatDate(rawDate) {
 }
 
 function formatTime(rawTime) {
-    if (!rawTime) return "N/A";
-    let timeStr = String(rawTime).trim();
+    if (!rawTime) return "N/A"; let timeStr = String(rawTime).trim();
     if (timeStr.includes("T") || timeStr.includes("Z")) {
         let d = new Date(timeStr);
         if (!isNaN(d.getTime())) {
             let h = d.getHours(); let m = d.getMinutes(); let ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12 || 12;
-            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`;
+            h = h % 12 || 12; return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m} ${ampm}`;
         }
     }
     return timeStr;
@@ -250,7 +182,6 @@ async function fetchDoctorAppointments(doctorId) {
             body: JSON.stringify({ action: "getDoctorAppointments", doctor_id: doctorId })
         });
         const resData = await response.json();
-        
         document.getElementById("loader").style.display = "none";
         document.getElementById("apptTable").style.display = "table";
 
@@ -260,10 +191,8 @@ async function fetchDoctorAppointments(doctorId) {
                 appt.cleanTime = formatTime(appt.appt_time);
                 return appt;
             }).reverse();
-            
             renderAppointments(allDoctorAppointments);
-            calculateSettlement(); 
-            renderReviews(); 
+            calculateSettlement(); renderReviews(); 
         } else {
             document.getElementById("apptTableBody").innerHTML = `<tr><td colspan="7" style="text-align:center;">${resData.message}</td></tr>`;
         }
@@ -273,7 +202,6 @@ async function fetchDoctorAppointments(doctorId) {
 function filterAppointments() {
     const term = document.getElementById("searchAppt").value.toLowerCase();
     const status = document.getElementById("filterStatus").value;
-    
     const filtered = allDoctorAppointments.filter(appt => {
         const matchStatus = (status === "All" || appt.appt_status === status);
         const matchSearch = (appt.patient_id.toLowerCase().includes(term) || appt.cleanDate.includes(term));
@@ -285,7 +213,6 @@ function filterAppointments() {
 function renderAppointments(appointments) {
     const tbody = document.getElementById("apptTableBody");
     tbody.innerHTML = "";
-    
     let pendingCount = 0; let approvedCount = 0; let totalEarnings = 0;
 
     if(appointments.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No appointments found.</td></tr>`; return;}
@@ -307,10 +234,16 @@ function renderAppointments(appointments) {
         if (appt.appt_status === "Pending") {
             actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
         } else if (appt.appt_status === "Approved") {
-            // Online Video Button - Only shows when Handshake is Complete (Patient Ready)
-            if (appt.consult_type === "Online" && appt.handshake_status === "Patient_Ready") {
-                actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Re-Join Video Call</button>`;
+            
+            // 🌟 VIDEO BUTTON VISIBILITY LOGIC 🌟
+            if (appt.consult_type === "Online") {
+                if (appt.handshake_status === "Patient_Ready") {
+                    actionHTML += `<button class="btn btn-join" style="display:block; width:100%; margin-bottom:5px;" onclick="joinVideoCall('${appt.host_meet_link || appt.meet_link}', '${appt.appt_id}')">📹 Join Video Call</button>`;
+                } else if (appt.handshake_status === "Doctor_Ready") {
+                    actionHTML += `<div style="text-align:center; font-size:11px; color:#856404; background:#fff3cd; padding:5px; border-radius:5px; margin-bottom:5px;">Notified. Waiting for patient...</div>`;
+                }
             }
+
             actionHTML += `
                 <div style="display:flex; gap:5px;">
                     <button class="btn btn-complete" style="flex:1;" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Done</button>
@@ -349,21 +282,15 @@ function renderAppointments(appointments) {
 function renderReviews() {
     const container = document.getElementById("reviewsContainer");
     let html = "";
-
     allDoctorAppointments.forEach(appt => {
         if (appt.review_json && appt.review_json.trim() !== "") {
             try {
-                let rev = JSON.parse(appt.review_json);
-                let starsHtml = "";
+                let rev = JSON.parse(appt.review_json); let starsHtml = "";
                 for(let i=1; i<=5; i++) starsHtml += i <= rev.rating ? '<i class="fas fa-star" style="color:#ffc107;"></i> ' : '<i class="fas fa-star" style="color:#e0e0e0;"></i> ';
-                
                 html += `
                 <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #ffc107; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div>
-                            <strong style="color:var(--primary); font-size:14px;">${appt.patient_id}</strong> 
-                            <span style="font-size:11px; color:#888; display:block; margin-top:2px;"><i class="far fa-calendar-alt"></i> ${appt.cleanDate}</span>
-                        </div>
+                        <div><strong style="color:var(--primary); font-size:14px;">${appt.patient_id}</strong><span style="font-size:11px; color:#888; display:block; margin-top:2px;"><i class="far fa-calendar-alt"></i> ${appt.cleanDate}</span></div>
                         <div style="font-size:14px;">${starsHtml}</div>
                     </div>
                     <p style="margin:0; font-size:13px; color:#555; font-style:italic;">"${rev.comment || "No comment provided."}"</p>
@@ -371,7 +298,6 @@ function renderReviews() {
             } catch(e) { console.log(e); }
         }
     });
-
     if(html === "") html = "<div style='grid-column: 1/-1; text-align:center; padding:40px; color:#888; font-size:15px;'><i class='fas fa-star-half-alt' style='font-size:40px; color:#ddd; margin-bottom:15px; display:block;'></i> No patient reviews yet.</div>";
     container.innerHTML = html;
 }
@@ -389,8 +315,7 @@ function handleCompleteAction(apptId, consultType) {
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
+        const reader = new FileReader(); reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result.split(',')[1]); 
         reader.onerror = error => reject(error);
     });
@@ -411,44 +336,26 @@ async function submitPrescriptionAndComplete() {
     try {
         const base64Data = await getBase64(file);
         const mimeType = file.type;
-        
-        document.getElementById("loader").style.display = "block";
-        document.getElementById("apptTable").style.display = "none";
-        document.getElementById("prescription-modal").style.display = "none";
-
+        document.getElementById("loader").style.display = "block"; document.getElementById("apptTable").style.display = "none"; document.getElementById("prescription-modal").style.display = "none";
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ 
-                action: "processAppointmentAction", 
-                appt_id: apptId, 
-                appt_action: "complete", 
-                prescription_base64: base64Data, 
-                prescription_mime: mimeType,
-                valid_days: validity 
-            })
+            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: "complete", prescription_base64: base64Data, prescription_mime: mimeType, valid_days: validity })
         });
-        
         const resData = await response.json();
-        if(resData.status === "success") {
-            alert("Prescription saved successfully!");
-            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
-        } else { alert("Error: " + resData.message); location.reload(); }
+        if(resData.status === "success") { alert("Prescription saved successfully!"); fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); } 
+        else { alert("Error: " + resData.message); location.reload(); }
     } catch(e) { alert("Failed to upload."); location.reload(); } 
     finally { btn.innerText = "Upload & Mark Completed"; btn.disabled = false; }
 }
 
 async function updateApptStatus(apptId, actionType) {
     if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
-
     try {
-        document.getElementById("loader").style.display = "block";
-        document.getElementById("apptTable").style.display = "none";
-
+        document.getElementById("loader").style.display = "block"; document.getElementById("apptTable").style.display = "none";
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: actionType })
         });
-        
         const resData = await response.json();
         if(resData.status === "success") { fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); } 
         else { alert("Error: " + resData.message); location.reload(); }
@@ -458,142 +365,54 @@ async function updateApptStatus(apptId, actionType) {
 function parseDateDDMMYYYY(dateStr) {
     if (!dateStr || dateStr === "N/A") return new Date(0);
     const parts = dateStr.split("-"); 
-    if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
-    return new Date(dateStr);
+    if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]); return new Date(dateStr);
 }
 
 function calculateSettlement() {
-    const fromStr = document.getElementById("ledgerFrom").value;
-    const toStr = document.getElementById("ledgerTo").value;
+    const fromStr = document.getElementById("ledgerFrom").value; const toStr = document.getElementById("ledgerTo").value;
     if(!fromStr || !toStr) return;
-    
-    const fromDate = new Date(fromStr); fromDate.setHours(0,0,0,0);
-    const toDate = new Date(toStr); toDate.setHours(23, 59, 59, 999); 
-
-    const tbody = document.getElementById("ledgerTableBody");
-    tbody.innerHTML = "";
-    
+    const fromDate = new Date(fromStr); fromDate.setHours(0,0,0,0); const toDate = new Date(toStr); toDate.setHours(23, 59, 59, 999); 
+    const tbody = document.getElementById("ledgerTableBody"); tbody.innerHTML = "";
     let sumCollected = 0; let sumFee = 0; let sumRefund = 0; let sumNet = 0; let count = 0;
 
     allDoctorAppointments.forEach(appt => {
-        let isCompleted = appt.appt_status === "Completed";
-        let isRefunded = appt.refund_status && (appt.refund_status.includes("Refunded") || appt.refund_status.includes("Pending"));
-
+        let isCompleted = appt.appt_status === "Completed"; let isRefunded = appt.refund_status && (appt.refund_status.includes("Refunded") || appt.refund_status.includes("Pending"));
         if (isCompleted || isRefunded) {
             const apptDateObj = parseDateDDMMYYYY(appt.cleanDate);
-            
             if (apptDateObj >= fromDate && apptDateObj <= toDate) {
                 count++;
-                let mrp = parseInt(appt.total_mrp) || 0;
-                let earning = parseInt(appt.doctor_earning) || 0;
-                let collected = Math.round(mrp * 0.90); 
-                let platformFee = collected - earning;
-
+                let mrp = parseInt(appt.total_mrp) || 0; let earning = parseInt(appt.doctor_earning) || 0; let collected = Math.round(mrp * 0.90); let platformFee = collected - earning;
                 if (isCompleted && !isRefunded) {
                     sumCollected += collected; sumFee += platformFee; sumNet += earning;
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><span style="font-size:12px;">${appt.cleanDate}</span></td>
-                            <td><strong style="color:#0056b3; font-size:12px;">${appt.appt_id}</strong></td>
-                            <td style="font-size:12px;">${appt.consult_type}</td>
-                            <td style="font-size:13px;">₹${collected}</td>
-                            <td style="color:#0056b3; font-size:13px;">-₹${platformFee}</td>
-                            <td style="font-size:13px;">-</td>
-                            <td style="color:#28a745; font-weight:bold; font-size:13px;">₹${earning}</td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr><td><span style="font-size:12px;">${appt.cleanDate}</span></td><td><strong style="color:#0056b3; font-size:12px;">${appt.appt_id}</strong></td><td style="font-size:12px;">${appt.consult_type}</td><td style="font-size:13px;">₹${collected}</td><td style="color:#0056b3; font-size:13px;">-₹${platformFee}</td><td style="font-size:13px;">-</td><td style="color:#28a745; font-weight:bold; font-size:13px;">₹${earning}</td></tr>`;
                 } else if (isRefunded) {
                     sumRefund += collected; sumNet -= collected; 
-
-                    tbody.innerHTML += `
-                        <tr style="background: #fff5f5;">
-                            <td><span style="font-size:12px;">${appt.cleanDate}</span></td>
-                            <td><strong style="color:#dc3545; font-size:12px;">${appt.appt_id}</strong></td>
-                            <td style="font-size:12px;">${appt.consult_type} <span style="font-size:9px; background:#dc3545; color:white; padding:2px; border-radius:3px;">CANC</span></td>
-                            <td style="color:#999; font-size:13px;">₹0</td>
-                            <td style="color:#999; font-size:13px;">₹0</td>
-                            <td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td>
-                            <td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr style="background: #fff5f5;"><td><span style="font-size:12px;">${appt.cleanDate}</span></td><td><strong style="color:#dc3545; font-size:12px;">${appt.appt_id}</strong></td><td style="font-size:12px;">${appt.consult_type} <span style="font-size:9px; background:#dc3545; color:white; padding:2px; border-radius:3px;">CANC</span></td><td style="color:#999; font-size:13px;">₹0</td><td style="color:#999; font-size:13px;">₹0</td><td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td><td style="color:#dc3545; font-weight:bold; font-size:13px;">-₹${collected}</td></tr>`;
                 }
             }
         }
     });
 
-    if(count === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No data found for selected dates.</td></tr>`;
-        document.getElementById("ledgerTableFoot").style.display = "none";
-    } else {
-        document.getElementById("ledgerTableFoot").style.display = "table-footer-group";
-        document.getElementById("footCollected").innerText = sumCollected;
-        document.getElementById("footFee").innerText = sumFee;
-        document.getElementById("footRefund").innerText = sumRefund;
-        document.getElementById("footNet").innerText = sumNet;
-    }
-
-    document.getElementById("ledgTotal").innerText = sumCollected;
-    document.getElementById("ledgFee").innerText = sumFee;
-    document.getElementById("ledgRefund").innerText = sumRefund;
-    document.getElementById("ledgNet").innerText = sumNet;
+    if(count === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No data found for selected dates.</td></tr>`; document.getElementById("ledgerTableFoot").style.display = "none"; } 
+    else { document.getElementById("ledgerTableFoot").style.display = "table-footer-group"; document.getElementById("footCollected").innerText = sumCollected; document.getElementById("footFee").innerText = sumFee; document.getElementById("footRefund").innerText = sumRefund; document.getElementById("footNet").innerText = sumNet; }
+    document.getElementById("ledgTotal").innerText = sumCollected; document.getElementById("ledgFee").innerText = sumFee; document.getElementById("ledgRefund").innerText = sumRefund; document.getElementById("ledgNet").innerText = sumNet;
 }
 
 function downloadLedgerPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    const fromStr = document.getElementById("ledgerFrom").value;
-    const toStr = document.getElementById("ledgerTo").value;
-    const docName = document.getElementById("displayDocName").innerText;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 86, 179);
-    doc.text("BhavyaCare Settlement Ledger", 14, 15);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Doctor: Dr. ${docName}`, 14, 22);
-    doc.text(`Period: ${fromStr} to ${toStr}`, 14, 27);
+    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+    const fromStr = document.getElementById("ledgerFrom").value; const toStr = document.getElementById("ledgerTo").value; const docName = document.getElementById("displayDocName").innerText;
+    doc.setFontSize(16); doc.setTextColor(0, 86, 179); doc.text("BhavyaCare Settlement Ledger", 14, 15);
+    doc.setFontSize(10); doc.setTextColor(100, 100, 100); doc.text(`Doctor: Dr. ${docName}`, 14, 22); doc.text(`Period: ${fromStr} to ${toStr}`, 14, 27);
     
     const tbody = document.getElementById("ledgerTableBody");
-    if (tbody.rows.length === 0 || tbody.innerHTML.includes("No data found")) {
-        alert("No data available to download."); return;
-    }
+    if (tbody.rows.length === 0 || tbody.innerHTML.includes("No data found")) { alert("No data available to download."); return; }
     
     let bodyData = [];
-    tbody.querySelectorAll("tr").forEach(row => {
-        let rowData = [];
-        row.querySelectorAll("td").forEach(c => {
-            let text = c.innerText.replace(/₹/g, '').replace(/CANC/g, '').trim();
-            if(text.includes("\n")) text = text.split("\n")[0].trim();
-            rowData.push(text);
-        });
-        bodyData.push(rowData);
-    });
+    tbody.querySelectorAll("tr").forEach(row => { let rowData = []; row.querySelectorAll("td").forEach(c => { let text = c.innerText.replace(/₹/g, '').replace(/CANC/g, '').trim(); if(text.includes("\n")) text = text.split("\n")[0].trim(); rowData.push(text); }); bodyData.push(rowData); });
+    let footData = []; let footRow = document.querySelector("#ledgerTableFoot tr");
+    if(footRow) { let fData = ["GRAND TOTAL", "", ""]; fData.push(footRow.querySelectorAll("td")[1].innerText.replace(/₹/g, '').trim()); fData.push(footRow.querySelectorAll("td")[2].innerText.replace(/₹/g, '').trim()); fData.push(footRow.querySelectorAll("td")[3].innerText.replace(/₹/g, '').trim()); fData.push(footRow.querySelectorAll("td")[4].innerText.replace(/₹/g, '').trim()); footData.push(fData); }
 
-    let footData = [];
-    let footRow = document.querySelector("#ledgerTableFoot tr");
-    if(footRow) {
-        let fData = ["GRAND TOTAL", "", ""];
-        fData.push(footRow.querySelectorAll("td")[1].innerText.replace(/₹/g, '').trim());
-        fData.push(footRow.querySelectorAll("td")[2].innerText.replace(/₹/g, '').trim());
-        fData.push(footRow.querySelectorAll("td")[3].innerText.replace(/₹/g, '').trim());
-        fData.push(footRow.querySelectorAll("td")[4].innerText.replace(/₹/g, '').trim());
-        footData.push(fData);
-    }
-
-    doc.autoTable({
-        head: [['Date', 'Appt ID', 'Type', 'Collected (INR)', 'Platform Fee (INR)', 'Refunded (INR)', 'Net Earning (INR)']],
-        body: bodyData,
-        foot: footData,
-        startY: 32,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 86, 179] },
-        footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-        styles: { fontSize: 9 }
-    });
-    
+    doc.autoTable({ head: [['Date', 'Appt ID', 'Type', 'Collected (INR)', 'Platform Fee (INR)', 'Refunded (INR)', 'Net Earning (INR)']], body: bodyData, foot: footData, startY: 32, theme: 'grid', headStyles: { fillColor: [0, 86, 179] }, footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }, styles: { fontSize: 9 } });
     doc.save(`BhavyaCare_Settlement_${fromStr}_to_${toStr}.pdf`);
 }
 
@@ -605,11 +424,7 @@ function logoutDoctor() { localStorage.clear(); window.location.href = "../index
 
 function openApproveModal(apptId, patientId, date, time, type) {
     document.getElementById("approveApptIdHidden").value = apptId;
-    document.getElementById("approveDetailsDiv").innerHTML = `
-        <strong>Patient ID:</strong> ${patientId}<br>
-        <strong>Date & Time:</strong> ${date} at ${time}<br>
-        <strong>Type:</strong> ${type}
-    `;
+    document.getElementById("approveDetailsDiv").innerHTML = `<strong>Patient ID:</strong> ${patientId}<br><strong>Date & Time:</strong> ${date} at ${time}<br><strong>Type:</strong> ${type}`;
     document.getElementById("approve-booking-modal").style.display = "block";
 }
 
@@ -619,13 +434,12 @@ function confirmApproveBooking() {
     updateApptStatus(apptId, 'approve');
 }
 
-// Background Polling for Handshake
+// Background Polling
 setInterval(silentDoctorPolling, 30000);
 
 async function silentDoctorPolling() {
     const docId = localStorage.getItem("bhavya_user_id");
     if(!docId || document.getElementById("loader").style.display === "block") return;
-
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -633,11 +447,8 @@ async function silentDoctorPolling() {
         });
         const resData = await response.json();
         if (resData.status === "success") {
-            allDoctorAppointments = resData.data.map(appt => {
-                appt.cleanDate = formatDate(appt.appt_date);
-                appt.cleanTime = formatTime(appt.appt_time);
-                return appt;
-            }).reverse();
+            allDoctorAppointments = resData.data.map(appt => { appt.cleanDate = formatDate(appt.appt_date); appt.cleanTime = formatTime(appt.appt_time); return appt; }).reverse();
+            renderAppointments(allDoctorAppointments); // Refresh UI to show buttons if ready
             checkDoctorHandshakeTrigger();
         }
     } catch(e) { console.log("Silent poll failed"); }
@@ -656,21 +467,25 @@ function checkDoctorHandshakeTrigger() {
             const apptDateTime = new Date(year, month - 1, day, hours, minutes);
             const diffInMinutes = (now - apptDateTime) / (1000 * 60);
 
-            // 10 Min Trigger
+            // Show Popup at <= 10 mins
             if (diffInMinutes >= -10 && diffInMinutes <= 45) {
-                // Show Popup if Handshake empty AND not triggered yet
                 if ((!appt.handshake_status || appt.handshake_status === "") && !handledDocTriggers.has(appt.appt_id)) {
                     if(document.getElementById("doctor-trigger-modal").style.display !== "block") {
                         document.getElementById("triggerApptIdHidden").value = appt.appt_id;
+                        
+                        // Update Modal Content dynamically in English
+                        document.getElementById("doctor-trigger-modal").innerHTML = `
+                            <div style="text-align: center; padding: 15px;">
+                                <i class="fas fa-bell" style="font-size: 40px; color: var(--primary); margin-bottom:15px;"></i>
+                                <h3 style="margin:0; color: #333; font-size: 22px;">Consultation Time!</h3>
+                                <p style="color:#555; font-size:14px; margin-top:10px;">Your consult time is here. Send notification to patient?</p>
+                                <button style="background:var(--primary); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:15px;" onclick="doctorStartsConsult()">OK, Notify Patient</button>
+                            </div>
+                        `;
                         document.getElementById("doctor-trigger-modal").style.display = "block";
-                        handledDocTriggers.add(appt.appt_id); // Add to local block list
+                        handledDocTriggers.add(appt.appt_id); 
                     }
                 } 
-                // Auto Join Video Call when Patient clicks Ready
-                else if (appt.handshake_status === "Patient_Ready" && activeVideoCallApptId !== appt.appt_id) {
-                    activeVideoCallApptId = appt.appt_id;
-                    joinVideoCall(appt.host_meet_link || appt.meet_link, appt.appt_id);
-                }
             }
         }
     });
@@ -678,11 +493,7 @@ function checkDoctorHandshakeTrigger() {
 
 async function doctorStartsConsult() {
     const apptId = document.getElementById("triggerApptIdHidden").value;
-    const btn = document.getElementById("btnStartConsult");
-    
-    // UI hide instantly
     document.getElementById("doctor-trigger-modal").style.display = "none";
-    btn.disabled = true;
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -691,19 +502,15 @@ async function doctorStartsConsult() {
         });
         const res = await response.json();
         if(res.status === "success") {
-            // Instantly update local array to prevent loop
             const appt = allDoctorAppointments.find(a => a.appt_id == apptId);
             if(appt) appt.handshake_status = "Doctor_Ready";
-            alert("Patient notified! Video call will start automatically as soon as patient connects.");
+            renderAppointments(allDoctorAppointments); // Refresh to show "Notified" text
         }
     } catch(e) { alert("Failed to notify patient."); } 
-    finally { btn.innerText = "Start Consult"; btn.disabled = false; }
 }
 
 function joinVideoCall(link, apptId) {
-    if (!link || link === "" || link === "N/A") {
-        alert("Video consultation link is not available yet."); return;
-    }
+    if (!link || link === "" || link === "N/A") { alert("Video consultation link is not available yet."); return; }
     
     activeVideoCallApptId = apptId; 
     const docName = localStorage.getItem("bhavya_name") || "Doctor";
@@ -722,7 +529,7 @@ function joinVideoCall(link, apptId) {
     document.body.appendChild(modal);
 }
 
-// Auto open prescription modal when call is closed
+// 🌟 AUTO OPEN PRESCRIPTION ON CALL CUT 🌟
 function closeVideoCall() {
     const endedApptId = activeVideoCallApptId;
     const modal = document.getElementById('video-modal');

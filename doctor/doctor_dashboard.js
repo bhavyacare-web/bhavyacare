@@ -457,7 +457,6 @@ async function submitPrescriptionAndComplete() {
 
 async function updateApptStatus(apptId, actionType) {
     if(!confirm("Are you sure you want to mark this as " + actionType.toUpperCase() + "?")) return;
-
     try {
         document.getElementById("loader").style.display = "block";
         document.getElementById("apptTable").style.display = "none";

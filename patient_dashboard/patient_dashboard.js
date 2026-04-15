@@ -401,29 +401,19 @@ function renderConsultCards(consults) {
     consults.forEach(c => {
         let safeStatus = (c.appt_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
-        if (safeStatus === "approved") { badgeClass = "status-primary"; statusText = "Approved"; } else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; } else if (safeStatus.includes("no-show") || safeStatus.includes("cancel") || safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
+        
+        if (safeStatus === "approved") { badgeClass = "status-primary"; statusText = "Approved"; } 
+        else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; } 
+        else if (safeStatus.includes("no-show") || safeStatus.includes("cancel") || safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
 
         let typeBadge = c.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
         let joinBtnHtml = ""; let postConsultHtml = ""; let cancelBtnHtml = "";
 
+        // Cancel Button sirf Pending / Approved state me dikhega
         if (safeStatus === "pending" || safeStatus === "approved") {
             cancelBtnHtml = `<button onclick="openConsultCancelModal('${c.appt_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Appointment</button>`;
         }
-        if (safeStatus.includes("cancel") || safeStatus === "cancelled") { 
-            badgeClass = "status-danger"; statusText = "Cancelled"; 
 
-            // 👇 NAYA CANCEL REASON & CLAIM REFUND UI 👇
-            let reasonHtml = c.cancel_reason ? `<div style="background:#ffebee; color:#d32f2f; padding:8px 10px; border-radius:6px; font-size:12px; margin-top:10px; border:1px solid #ffcdd2;"><strong>Cancel Reason:</strong> ${c.cancel_reason}</div>` : "";
-            
-            let claimHtml = "";
-            if (c.refund_status === "Action Required by Patient") {
-                claimHtml = `<button onclick="openClaimRefundModal('${c.appt_id}')" style="background:#f57c00; color:white; border:none; padding:10px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 2s infinite;">💸 Click Here to Claim Refund</button>`;
-            } else if (c.refund_status && c.refund_status !== "No Refund (Not Paid)") {
-                claimHtml = `<div style="font-size:12px; color:#2e7d32; margin-top:8px; font-weight:bold; background:#e8f5e9; padding:8px; border-radius:6px; text-align:center;">Refund Status: ${c.refund_status}</div>`;
-            }
-
-            postConsultHtml = reasonHtml + claimHtml;
-        }
         // 🌟 VIDEO BUTTON VISIBILITY LOGIC (Manual click only) 🌟
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             if (c.handshake_status === "Patient_Ready") {
@@ -434,6 +424,37 @@ function renderConsultCards(consults) {
                 joinBtnHtml = `<div style="text-align:center; font-size:11px; color:#888; margin-top:10px; padding: 10px; background: #f8f9fa; border-radius: 8px;">Video call button will appear here when the doctor is ready.</div>`;
             }
         } 
+        
+        // 🌟 CANCEL LOGIC & PAYMENT NOT RECEIVED UI 🌟
+        else if (safeStatus.includes("cancel") || safeStatus === "cancelled") { 
+            badgeClass = "status-danger"; statusText = "Cancelled"; 
+
+            // Agar payment not received hai toh do-do baar error na dikhe isliye isko filter kar diya
+            let reasonHtml = (c.cancel_reason && c.cancel_reason !== "Payment Not Received") ? `<div style="background:#ffebee; color:#d32f2f; padding:8px 10px; border-radius:6px; font-size:12px; margin-top:10px; border:1px solid #ffcdd2;"><strong>Cancel Reason:</strong> ${c.cancel_reason}</div>` : "";
+            
+            let claimHtml = "";
+            
+            // Payment Not Received logic (Show "Your Payment Not Received" & "Get Help" link)
+            if (c.cancel_reason === "Payment Not Received" || c.refund_status === "No Refund (Not Paid)") {
+                claimHtml = `
+                <div style="margin-top:10px; padding: 12px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:var(--danger); font-size:13px;">Your Payment Not Received</strong> 
+                    <a href="../help/patient_help.html" style="color:#0056b3; font-weight:bold; font-size:13px; text-decoration:none; padding: 5px 10px; background: white; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-question-circle"></i> Get Help</a>
+                </div>`;
+            }
+            // Refund Claim logic (Agar Doctor Available nahi tha)
+            else if (c.refund_status === "Action Required by Patient") {
+                claimHtml = `<button onclick="openClaimRefundModal('${c.appt_id}')" style="background:#f57c00; color:white; border:none; padding:10px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 2s infinite;">💸 Click Here to Claim Refund</button>`;
+            } 
+            // Regular Refund Status
+            else if (c.refund_status && c.refund_status !== "No Refund (Not Paid)") {
+                claimHtml = `<div style="font-size:12px; color:#2e7d32; margin-top:8px; font-weight:bold; background:#e8f5e9; padding:8px; border-radius:6px; text-align:center;">Refund Status: ${c.refund_status}</div>`;
+            }
+
+            postConsultHtml = reasonHtml + claimHtml;
+        }
+
+        // 🌟 COMPLETED LOGIC (Prescription & Review) 🌟
         else if (c.appt_status === "Completed") {
             let rxHtml = "";
             if (c.prescription_link) {
@@ -444,16 +465,30 @@ function renderConsultCards(consults) {
             postConsultHtml = `<div style="display:flex; gap:10px; margin-top:10px; align-items:flex-start;">${rxHtml}${revHtml}</div>`;
         }
 
+        // Building the final Card HTML
         html += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                <div><div style="font-size:11px; color:#888; margin-bottom:2px;">Appt ID</div><strong style="color:#333; font-size:14px;">${c.appt_id}</strong><div style="margin-top:4px;"><strong style="font-size:14px; color:#2e7d32;">Dr. ${c.doctor_name}</strong></div></div>
-                <div style="text-align:right;"><span class="status-badge ${badgeClass}" style="margin-bottom:6px;">${statusText.toUpperCase()}</span><br><span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-calendar-alt"></i> ${c.appt_date} | ${c.appt_time}</span></div>
+                <div>
+                    <div style="font-size:11px; color:#888; margin-bottom:2px;">Appt ID</div>
+                    <strong style="color:#333; font-size:14px;">${c.appt_id}</strong>
+                    <div style="margin-top:4px;"><strong style="font-size:14px; color:#2e7d32;">Dr. ${c.doctor_name}</strong></div>
+                </div>
+                <div style="text-align:right;">
+                    <span class="status-badge ${badgeClass}" style="margin-bottom:6px;">${statusText.toUpperCase()}</span><br>
+                    <span style="font-size:11px; color:var(--primary); font-weight:bold;"><i class="far fa-calendar-alt"></i> ${c.appt_date} | ${c.appt_time}</span>
+                </div>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#555; background:#f8f9fa; padding:10px; border-radius:8px;"><div><strong>Type:</strong> ${typeBadge}</div><div><strong>Fee Paid:</strong> ₹${c.fee_paid} <del style="font-size:10px; color:#999; margin-left:3px;">₹${c.total_mrp}</del></div></div>
-            ${joinBtnHtml}${postConsultHtml}${cancelBtnHtml}
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#555; background:#f8f9fa; padding:10px; border-radius:8px;">
+                <div><strong>Type:</strong> ${typeBadge}</div>
+                <div><strong>Fee Paid:</strong> ₹${c.fee_paid} <del style="font-size:10px; color:#999; margin-left:3px;">₹${c.total_mrp}</del></div>
+            </div>
+            ${joinBtnHtml}
+            ${postConsultHtml}
+            ${cancelBtnHtml}
         </div>`;
     });
+
     container.innerHTML = html;
 }
 

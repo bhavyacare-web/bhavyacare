@@ -234,7 +234,21 @@ function renderAppointments(appointments) {
         if (appt.appt_status === "Pending") {
             actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
         } else if (appt.appt_status === "Approved") {
-            
+            if (appt.appt_status === "Pending") {
+            actionHTML = `
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-approve" style="flex:1;" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ Approve</button>
+                <button class="btn btn-noshow" style="flex:1;" onclick="openDoctorRejectModal('${appt.appt_id}')">❌ Cancel</button>
+            </div>`;
+        } else if (appt.appt_status === "Approved") {
+            // ... video button logic ...
+            actionHTML += `
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-complete" style="flex:1;" onclick="handleCompleteAction('${appt.appt_id}', '${appt.consult_type}')">✔️ Done</button>
+                    <button class="btn btn-noshow" style="flex:1;" onclick="openDoctorRejectModal('${appt.appt_id}')">❌ Cancel</button>
+                </div>
+            `;
+        }
             // 🌟 VIDEO BUTTON VISIBILITY LOGIC 🌟
             if (appt.consult_type === "Online") {
                 if (appt.handshake_status === "Patient_Ready") {
@@ -543,4 +557,31 @@ function closeVideoCall() {
         document.getElementById("prescription-modal").style.display = "block";
     }
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
+}
+function openDoctorRejectModal(apptId) {
+    document.getElementById("rejectApptIdHidden").value = apptId;
+    document.getElementById("doctorRejectReason").value = "payment_not_received";
+    document.getElementById("doctor-reject-modal").style.display = "block";
+}
+
+async function submitRejectBooking() {
+    const apptId = document.getElementById("rejectApptIdHidden").value;
+    const reason = document.getElementById("doctorRejectReason").value;
+    const btn = document.getElementById("btnConfirmReject");
+    
+    btn.innerText = "Processing..."; btn.disabled = true;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "processAppointmentAction", appt_id: apptId, appt_action: "reject", cancel_reason: reason })
+        });
+        const resData = await response.json();
+        if(resData.status === "success") { 
+            alert("Appointment Cancelled Successfully!");
+            document.getElementById("doctor-reject-modal").style.display = "none";
+            fetchDoctorAppointments(localStorage.getItem("bhavya_user_id")); 
+        } else { alert("Error: " + resData.message); }
+    } catch (e) { alert("Network Error."); } 
+    finally { btn.innerText = "Confirm Cancel"; btn.disabled = false; }
 }

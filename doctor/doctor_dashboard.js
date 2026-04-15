@@ -304,17 +304,9 @@ function renderAppointments(appointments) {
         let typeBadge = appt.consult_type === "Online" ? "💻 Online" : "🏥 Clinic";
         let actionHTML = "";
         
-        // Global variable for active calls
-let activeVideoCallApptId = null;
-
-// Replace ActionHTML logic in renderAppointments() (Line ~285):
+        // --- NAYA POPUP LOGIC YAHAN HAI ---
         if (appt.appt_status === "Pending") {
-            // NAYA: Proper Popup ke liye updateApptStatus ki jagah openApproveModal call karein
             actionHTML = `<button class="btn btn-approve" onclick="openApproveModal('${appt.appt_id}', '${appt.patient_id}', '${appt.cleanDate}', '${appt.cleanTime}', '${appt.consult_type}')">✅ View & Approve</button>`;
-        } else if (appt.appt_status === "Approved") {
-            // Check Diff logic remains same...
-        if (appt.appt_status === "Pending") {
-            actionHTML = `<button class="btn btn-approve" onclick="updateApptStatus('${appt.appt_id}', 'approve')">✅ Approve</button>`;
         } else if (appt.appt_status === "Approved") {
             const now = new Date();
             const [day, month, year] = appt.cleanDate.split("-");

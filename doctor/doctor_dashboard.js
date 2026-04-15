@@ -646,3 +646,104 @@ function closeVideoCall() {
 }
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
+// --- NAYA WORKFLOW LOGIC ---
+
+// 1. Doctor Confirmation Popup Open
+function openApproveModal(apptId, patientId, date, time, type) {
+    document.getElementById("approveApptIdHidden").value = apptId;
+    document.getElementById("approveDetailsDiv").innerHTML = `
+        <strong>Patient ID:</strong> ${patientId}<br>
+        <strong>Date & Time:</strong> ${date} at ${time}<br>
+        <strong>Type:</strong> ${type}
+    `;
+    document.getElementById("approve-booking-modal").style.display = "block";
+}
+
+function confirmApproveBooking() {
+    const apptId = document.getElementById("approveApptIdHidden").value;
+    document.getElementById("approve-booking-modal").style.display = "none";
+    updateApptStatus(apptId, 'approve');
+}
+
+// 2. Background Polling for Handshake
+setInterval(silentDoctorPolling, 30000);
+
+async function silentDoctorPolling() {
+    const docId = localStorage.getItem("bhavya_user_id");
+    if(!docId || document.getElementById("loader").style.display === "block") return; // Don't interrupt if main loader is active
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getDoctorAppointments", doctor_id: docId })
+        });
+        const resData = await response.json();
+        if (resData.status === "success") {
+            allDoctorAppointments = resData.data.map(appt => {
+                appt.cleanDate = formatDate(appt.appt_date);
+                appt.cleanTime = formatTime(appt.appt_time);
+                return appt;
+            }).reverse();
+            
+            checkDoctorHandshakeTrigger();
+            // Optional: You can call renderAppointments(allDoctorAppointments) here, but it might refresh UI while doctor is clicking. 
+            // Better to just let handshake trigger work invisibly.
+        }
+    } catch(e) { console.log("Silent poll failed"); }
+}
+
+function checkDoctorHandshakeTrigger() {
+    const now = new Date();
+    allDoctorAppointments.forEach(appt => {
+        if (appt.appt_status === "Approved" && appt.consult_type === "Online") {
+            const [day, month, year] = appt.cleanDate.split("-");
+            let [timePart, modifier] = appt.cleanTime.split(" ");
+            let [hours, minutes] = timePart ? timePart.split(":") : [0,0];
+            hours = parseInt(hours, 10);
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            const apptDateTime = new Date(year, month - 1, day, hours, minutes);
+            const diffInMinutes = (now - apptDateTime) / (1000 * 60);
+
+            // Trigger 10 minutes BEFORE (-10) to 45 minutes AFTER
+            if (diffInMinutes >= -10 && diffInMinutes <= 45) {
+                if (!appt.handshake_status || appt.handshake_status === "") {
+                    // Show Doctor Trigger Popup
+                    if(document.getElementById("doctor-trigger-modal").style.display !== "block") {
+                        document.getElementById("triggerApptIdHidden").value = appt.appt_id;
+                        document.getElementById("doctor-trigger-modal").style.display = "block";
+                    }
+                } 
+                else if (appt.handshake_status === "Patient_Ready" && activeVideoCallApptId !== appt.appt_id) {
+                    // Both Ready -> 100ms Video Call Active!
+                    activeVideoCallApptId = appt.appt_id;
+                    joinVideoCall(appt.host_meet_link || appt.meet_link);
+                }
+            }
+        }
+    });
+}
+
+async function doctorStartsConsult() {
+    const apptId = document.getElementById("triggerApptIdHidden").value;
+    const btn = document.getElementById("btnStartConsult");
+    btn.innerText = "Notifying Patient...";
+    btn.disabled = true;
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Doctor_Ready" })
+        });
+        document.getElementById("doctor-trigger-modal").style.display = "none";
+        alert("Patient notified! Video call will start automatically as soon as patient connects.");
+    } catch(e) { alert("Failed to notify patient."); } 
+    finally { btn.innerText = "Start Consult"; btn.disabled = false; }
+}
+
+// Video call close hook - reset active session
+const originalCloseVideoCall = closeVideoCall;
+closeVideoCall = function() {
+    activeVideoCallApptId = null; 
+    originalCloseVideoCall();
+}

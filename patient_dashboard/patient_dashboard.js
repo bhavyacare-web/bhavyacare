@@ -409,7 +409,21 @@ function renderConsultCards(consults) {
         if (safeStatus === "pending" || safeStatus === "approved") {
             cancelBtnHtml = `<button onclick="openConsultCancelModal('${c.appt_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Appointment</button>`;
         }
+        if (safeStatus.includes("cancel") || safeStatus === "cancelled") { 
+            badgeClass = "status-danger"; statusText = "Cancelled"; 
 
+            // 👇 NAYA CANCEL REASON & CLAIM REFUND UI 👇
+            let reasonHtml = c.cancel_reason ? `<div style="background:#ffebee; color:#d32f2f; padding:8px 10px; border-radius:6px; font-size:12px; margin-top:10px; border:1px solid #ffcdd2;"><strong>Cancel Reason:</strong> ${c.cancel_reason}</div>` : "";
+            
+            let claimHtml = "";
+            if (c.refund_status === "Action Required by Patient") {
+                claimHtml = `<button onclick="openClaimRefundModal('${c.appt_id}')" style="background:#f57c00; color:white; border:none; padding:10px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 2s infinite;">💸 Click Here to Claim Refund</button>`;
+            } else if (c.refund_status && c.refund_status !== "No Refund (Not Paid)") {
+                claimHtml = `<div style="font-size:12px; color:#2e7d32; margin-top:8px; font-weight:bold; background:#e8f5e9; padding:8px; border-radius:6px; text-align:center;">Refund Status: ${c.refund_status}</div>`;
+            }
+
+            postConsultHtml = reasonHtml + claimHtml;
+        }
         // 🌟 VIDEO BUTTON VISIBILITY LOGIC (Manual click only) 🌟
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             if (c.handshake_status === "Patient_Ready") {
@@ -627,4 +641,44 @@ function closeVideoCall() {
     const modal = document.getElementById('video-modal');
     if (modal) modal.remove();
     fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
+}
+function openClaimRefundModal(apptId) {
+    document.getElementById("claimRefundApptId").value = apptId;
+    document.getElementById("claimRefundQrInput").value = "";
+    document.querySelector('input[name="claimRefundMethod"][value="Wallet"]').checked = true; 
+    toggleClaimRefundMethod();
+    document.getElementById("claim-refund-modal").style.display = "block";
+}
+
+function toggleClaimRefundMethod() {
+    const method = document.querySelector('input[name="claimRefundMethod"]:checked').value;
+    document.getElementById("claimBankRefundSection").style.display = method === "Bank" ? "block" : "none";
+}
+
+async function submitClaimRefund() {
+    const apptId = document.getElementById("claimRefundApptId").value;
+    const method = document.querySelector('input[name="claimRefundMethod"]:checked').value;
+    const qrInput = document.getElementById("claimRefundQrInput");
+    const btn = document.getElementById("btnConfirmClaim");
+
+    let qrBase64 = ""; let qrMime = "";
+    if (method === "Bank") {
+        if (!qrInput.files || qrInput.files.length === 0) { alert("Please upload your UPI QR Code for the bank refund."); return; }
+        const file = qrInput.files[0]; try { qrBase64 = await getBase64(file); qrMime = file.type; } catch(e) { return; }
+    }
+
+    btn.innerText = "Processing..."; btn.disabled = true;
+
+    try {
+        const payload = { action: "claimConsultRefund", user_id: localStorage.getItem("bhavya_user_id"), appt_id: apptId, refund_choice: method, qr_base64: qrBase64, qr_mime: qrMime };
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        
+        if (result.status === "success") { 
+            alert("Refund Claimed Successfully!"); 
+            document.getElementById("claim-refund-modal").style.display = "none"; 
+            fetchPatientConsults(localStorage.getItem("bhavya_user_id")); 
+            checkLoginAndFetchData(); // Refresh Wallet Balance
+        } else { alert("Error: " + result.message); }
+    } catch(e) { alert("Network error."); } finally { btn.innerText = "Submit Refund Request"; btn.disabled = false; }
 }

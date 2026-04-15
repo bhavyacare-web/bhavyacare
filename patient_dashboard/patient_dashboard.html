@@ -379,7 +379,32 @@
         <input type="hidden" id="readyMeetLinkHidden">
         <button id="btnPatientReady" style="background:var(--success); width:100%; color:white; border:none; font-weight:bold; padding:15px; border-radius:8px; cursor:pointer; margin-top:15px; font-size: 16px;" onclick="patientConfirmsReady()">I Am Ready</button>
     </div>
-
+<div id="claim-refund-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('claim-refund-modal').style.display='none'">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <i class="fas fa-hand-holding-usd" style="font-size: 30px; color: #f57c00; margin-bottom:10px;"></i>
+            <h3 style="margin:0; color: var(--text-main);">Claim Your Refund</h3>
+            <p style="font-size:12px; color:#666; margin-top:5px;">Select how you want to receive your money.</p>
+        </div>
+        <input type="hidden" id="claimRefundApptId">
+        <div style="margin-top:15px; text-align:left;">
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <input type="radio" name="claimRefundMethod" value="Wallet" checked onchange="toggleClaimRefundMethod()">
+                    <div><strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong><div style="font-size:11px; color:#777;">Refund added immediately.</div></div>
+                </label>
+                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <input type="radio" name="claimRefundMethod" value="Bank" onchange="toggleClaimRefundMethod()">
+                    <div><strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong><div style="font-size:11px; color:#777;">Processed on 1st of next month.</div></div>
+                </label>
+            </div>
+        </div>
+        <div id="claimBankRefundSection" style="display:none; margin-top:15px; background:#fff8e1; padding:10px; border-radius:8px; border:1px solid #ffeeba;">
+            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code.</p>
+            <input type="file" id="claimRefundQrInput" class="input-box" accept="image/*" style="font-size:12px; background:white;">
+        </div>
+        <button id="btnConfirmClaim" style="background:#f57c00; width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitClaimRefund()">Submit Refund Request</button>
+    </div>
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

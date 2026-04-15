@@ -718,23 +718,35 @@ function checkDoctorHandshakeTrigger() {
 async function doctorStartsConsult() {
     const apptId = document.getElementById("triggerApptIdHidden").value;
     const btn = document.getElementById("btnStartConsult");
-    btn.innerText = "Notifying Patient...";
+    
+    // UI se turant hatane ke liye
+    document.getElementById("doctor-trigger-modal").style.display = "none";
     btn.disabled = true;
 
     try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Doctor_Ready" })
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "updateHandshakeStatus", 
+                appt_id: apptId, 
+                handshake_status: "Doctor_Ready" 
+            })
         });
-        document.getElementById("doctor-trigger-modal").style.display = "none";
-        alert("Patient notified! Video call will start automatically as soon as patient connects.");
-    } catch(e) { alert("Failed to notify patient."); } 
-    finally { btn.innerText = "Start Consult"; btn.disabled = false; }
-}
-
-// Video call close hook - reset active session
-const originalCloseVideoCall = closeVideoCall;
-closeVideoCall = function() {
-    activeVideoCallApptId = null; 
-    originalCloseVideoCall();
+        
+        const res = await response.json();
+        if(res.status === "success") {
+            // Local data ko turant update karein taaki poll hone tak popup na aaye
+            const appt = allDoctorAppointments.find(a => a.appt_id == apptId);
+            if(appt) appt.handshake_status = "Doctor_Ready";
+            
+            alert("Patient ko notify kar diya gaya hai!");
+        } else {
+            alert("Sheet me save nahi ho paya: " + res.message);
+        }
+    } catch(e) { 
+        alert("Network error: Check internet or Script URL"); 
+    } finally { 
+        btn.disabled = false; 
+    }
 }

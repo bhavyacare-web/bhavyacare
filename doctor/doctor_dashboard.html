@@ -286,42 +286,38 @@
         </div>
         <button id="btnUploadPrescription" style="background:#28a745; width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPrescriptionAndComplete()">Upload & Mark Completed</button>
     </div>
-<div id="approve-booking-modal" class="modal-overlay">
+
+    <div id="approve-booking-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('approve-booking-modal').style.display='none'">✖</button>
         <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-calendar-plus" style="font-size: 26px; color: var(--primary);"></i></div>
+            <div style="background: #e6f0fa; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                <i class="fas fa-calendar-plus" style="font-size: 26px; color: var(--primary);"></i>
+            </div>
             <h3 style="margin:0; color: #333;">New Appointment Request</h3>
         </div>
         <input type="hidden" id="approveApptIdHidden">
         <div style="background:#f8fafc; padding:15px; border-radius:8px; font-size:14px; color:#555; margin-bottom:15px;" id="approveDetailsDiv"></div>
-        <button style="background:var(--success); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="confirmApproveBooking()">Approve Appointment</button>
+        
+        <div style="display: flex; gap: 10px;">
+            <button style="background:var(--success); flex:1; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="confirmApproveBooking()">Approve</button>
+            <button style="background:var(--danger); flex:1; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitRejectFromApprove()">Cancel & Refund</button>
+        </div>
     </div>
 
     <div id="doctor-trigger-modal" class="modal-overlay" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);">
-        <div style="text-align: center;">
-            <i class="fas fa-video" style="font-size: 40px; color: #fd7e14; animation: pulse 1.5s infinite; margin-bottom:15px;"></i>
-            <h3 style="margin:0; color: #333; font-size: 22px;">Consultation Time!</h3>
-            <p style="color:#555; font-size:14px; margin-top:10px;">Patient consult is pending. Click 'Start Consult' to notify the patient and prepare the clinic room.</p>
         </div>
-        <input type="hidden" id="triggerApptIdHidden">
-        <button id="btnStartConsult" style="background:var(--primary); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:15px;" onclick="doctorStartsConsult()">Start Consult</button>
-    </div>
+
     <div id="doctor-reject-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('doctor-reject-modal').style.display='none'">✖</button>
         <div style="text-align: center; margin-bottom: 15px;">
-            <i class="fas fa-ban" style="font-size: 30px; color: var(--danger); margin-bottom:10px;"></i>
+            <i class="fas fa-ban" style="font-size: 40px; color: var(--danger); margin-bottom:10px;"></i>
             <h3 style="margin:0; color: var(--text-main);">Cancel Appointment</h3>
+            <p style="font-size: 13px; color: #555; margin-top: 10px;">Are you sure you want to cancel this appointment? The patient will be notified to claim their refund.</p>
         </div>
         <input type="hidden" id="rejectApptIdHidden">
-        <div class="form-group" style="text-align:left;">
-            <label style="font-size: 13px; font-weight: bold; color: #555;">Select Reason for Cancellation *</label>
-            <select id="doctorRejectReason" class="input-box" style="margin-top:8px;">
-                <option value="payment_not_received">Payment Not Received</option>
-                <option value="doctor_unavailable">Payment Received (Cancel from my side)</option>
-            </select>
-        </div>
-        <button id="btnConfirmReject" style="background:var(--danger); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:20px;" onclick="submitRejectBooking()">Confirm Cancel</button>
+        <button id="btnConfirmReject" style="background:var(--danger); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:15px;" onclick="submitRejectBooking()">Confirm Cancel & Refund</button>
     </div>
+
     <script src="doctor_dashboard.js"></script>
 </body>
 </html>

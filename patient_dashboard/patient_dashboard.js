@@ -917,3 +917,76 @@ function updateRecentActivityMixed() {
     const rcContainer = document.getElementById("recentActivityContainer");
     if(rcContainer) rcContainer.innerHTML = recentHtml;
 }
+// --- NAYA PATIENT WORKFLOW LOGIC ---
+
+let activeVideoCallApptId = null;
+
+setInterval(silentPatientPolling, 30000);
+
+async function silentPatientPolling() {
+    const userId = localStorage.getItem("bhavya_user_id");
+    if(!userId) return;
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getPatientConsults", user_id: userId })
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            globalConsultsData = result.data;
+            checkPatientHandshakeTrigger();
+        }
+    } catch(e) { console.log("Silent patient poll failed"); }
+}
+
+function checkPatientHandshakeTrigger() {
+    globalConsultsData.forEach(c => {
+        if (c.appt_status === "Approved" && c.consult_type === "Online") {
+            if (c.handshake_status === "Doctor_Ready") {
+                // Show "I am ready" modal if not already open
+                if (document.getElementById("patient-ready-modal").style.display !== "block" && activeVideoCallApptId !== c.appt_id) {
+                    document.getElementById("readyApptIdHidden").value = c.appt_id;
+                    document.getElementById("readyMeetLinkHidden").value = c.meet_link;
+                    document.getElementById("patient-ready-modal").style.display = "block";
+                }
+            } 
+            else if (c.handshake_status === "Patient_Ready" && activeVideoCallApptId !== c.appt_id) {
+                // Failsafe auto-join
+                activeVideoCallApptId = c.appt_id;
+                joinVideoCall(c.meet_link);
+            }
+        }
+    });
+}
+
+async function patientConfirmsReady() {
+    const apptId = document.getElementById("readyApptIdHidden").value;
+    const meetLink = document.getElementById("readyMeetLinkHidden").value;
+    const btn = document.getElementById("btnPatientReady");
+    
+    btn.innerText = "Connecting..."; btn.disabled = true;
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "updateHandshakeStatus", appt_id: apptId, handshake_status: "Patient_Ready" })
+        });
+        
+        document.getElementById("patient-ready-modal").style.display = "none";
+        
+        // 100ms Video Call Active Immediately!
+        activeVideoCallApptId = apptId;
+        joinVideoCall(meetLink);
+
+    } catch(e) { alert("Network error while connecting."); }
+    finally { btn.innerText = "I Am Ready"; btn.disabled = false; }
+}
+
+// Reset active tracking on close
+const originalPatientCloseVideoCall = closeVideoCall;
+closeVideoCall = function() {
+    activeVideoCallApptId = null; 
+    originalPatientCloseVideoCall();
+}

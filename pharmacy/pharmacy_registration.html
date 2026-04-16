@@ -1,143 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharmacy Registration - BhavyaCare</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        /* Same modern UI as your lab design */
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 30px 15px; color: #0f172a; margin: 0; min-height: 100vh;}
-        
-        .form-container { background: white; max-width: 950px; margin: auto; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; display: none; }
-        
-        .status-screen { max-width: 600px; width: 90%; margin: 10vh auto; background: white; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; display: none;}
-        .status-screen i { font-size: 60px; margin-bottom: 20px; }
-        .status-screen h2 { color: #0f172a; margin-bottom: 15px; font-size: 24px; margin-top:0;}
-        .status-screen p { color: #64748b; font-size: 16px; line-height: 1.6;}
-
-        h1 { text-align: center; color: #0f172a; margin-top: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;}
-        p.subtitle { text-align: center; color: #64748b; margin-bottom: 40px; font-size: 15px; line-height: 1.5;}
-        
-        h2 { color: #0f172a; font-size: 18px; margin-top: 45px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 12px; line-height: 1.4;}
-        h2 span.step { background: #059669; color: white; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; flex-shrink: 0;}
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .form-group { margin-bottom: 20px; width: 100%;}
-        
-        label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #334155;}
-        input[type="text"], input[type="email"], input[type="time"], input[type="file"], input[type="number"], select { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; transition: all 0.3s ease; background: #f8fafc;}
-        input[type="file"] { padding: 10px; font-size: 14px; background: white;}
-        input:focus, select:focus { border-color: #059669; background: white; outline: none; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); }
-        
-        .timing-row { display: grid; grid-template-columns: 130px 1fr 1fr; align-items: center; gap: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; transition: 0.2s;}
-        .timing-day { font-weight: 600; color: #0f172a; font-size: 15px; }
-
-        button.submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; border: none; font-size: 18px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 40px; transition: 0.3s; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3); min-height: 56px;}
-        button.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4); }
-        button.submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-        
-        .input-with-button { display: flex; gap: 10px; margin-bottom: 10px; align-items: stretch; flex-wrap: wrap;}
-        .input-with-button input { flex: 1; margin: 0; min-width: 130px; background: white;}
-        .add-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 18px; height: 48px; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
-        
-        .ai-controls { display: flex; gap: 10px; flex: 1; min-width: 250px;}
-        .ai-controls select { width: 90px; height: 48px; background: white; margin: 0;}
-        .ai-btn { flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; height: 48px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 20px;}
-        .tag { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd;}
-        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px;}
-
-        @media (max-width: 768px) {
-            .grid-2, .grid-3, .timing-row { grid-template-columns: 1fr; gap: 10px; }
-            .timing-row { position: relative; padding: 15px;}
-            .timing-day { border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #059669; }
-            .input-with-button { flex-direction: column; gap: 12px; }
-        }
-    </style>
-</head>
-<body>
-
-<div id="statusChecker" class="status-screen">
-    <i class="fas fa-spinner fa-spin" style="color: #3b82f6;"></i>
-    <h2>Checking Account Status...</h2>
-    <p>Please wait while we verify your details securely.</p>
-</div>
-
-<div class="form-container" id="mainFormContainer">
-    <h1>Complete Your Pharmacy Profile</h1>
-    <p class="subtitle">Join BhavyaCare's network of trusted medicine delivery partners.</p>
-
-    <form id="pharmacyRegForm">
-        <h2><span class="step">1</span> Basic Details</h2>
-        <div class="grid-2">
-            <div class="form-group"><label>Pharmacy Name *</label><input type="text" id="pharmacy_name" readonly></div>
-            <div class="form-group"><label>Email Address *</label><input type="email" id="email" required></div>
-        </div>
-        
-        <div class="grid-2">
-            <div class="form-group"><label>Registration Document 1 (Required) *</label><input type="file" id="doc1" accept=".pdf" required></div>
-            <div class="form-group"><label>Registration Document 2 (Optional)</label><input type="file" id="doc2" accept=".pdf"></div>
-        </div>
-
-        <div class="form-group"><label>Full Address *</label><input type="text" id="address" required></div>
-        <div class="grid-2">
-            <div class="form-group"><label>City *</label><input type="text" id="city" required></div>
-            <div class="form-group"><label>Main Pincode *</label><input type="number" id="pincode" required></div>
-        </div>
-
-        <h2><span class="step">2</span> Home Delivery Areas</h2>
-        
-        <div class="form-group tag-input-container">
-            <label>Available Pincodes * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press +)</span></label>
-            <div class="input-with-button">
-                <div style="display: flex; gap: 10px; flex: 1;">
-                    <input type="number" id="pincodeInput" placeholder="Add pincode manually">
-                    <button type="button" class="add-btn" onclick="addTag('pincode')" title="Add Pincode">+</button>
-                </div>
-                
-                <div class="ai-controls">
-                    <select id="radiusSelect">
-                        <option value="5">5 km</option>
-                        <option value="10">10 km</option>
-                        <option value="20" selected>20 km</option>
-                        <option value="30">30 km</option>
-                    </select>
-                    <button type="button" class="ai-btn" onclick="aiAutoFillPincodes()"><i class="fas fa-magic"></i> Auto-Fill Area</button>
-                </div>
-            </div>
-            <div id="pincodeTags" class="tags-wrapper"></div>
-        </div>
-
-        <div class="form-group tag-input-container">
-            <label>Available Cities/Localities * <span style="font-weight:normal; font-size:12px; color:#64748b;">(Type and press +)</span></label>
-            <div class="input-with-button">
-                <div style="display: flex; gap: 10px; flex: 1; width: 100%;">
-                    <input type="text" id="cityInput" placeholder="Add city manually">
-                    <button type="button" class="add-btn" onclick="addTag('city')" title="Add City">+</button>
-                </div>
-            </div>
-            <div id="cityTags" class="tags-wrapper"></div>
-        </div>
-
-        <h2><span class="step">3</span> Working Timings <span style="font-size: 13px; font-weight: normal; color: #64748b;">(Fill at least 1 day)</span></h2>
-        <div id="timingsContainer"></div>
-
-        <h2><span class="step">4</span> Pharmacy Store Images</h2>
-        <div class="grid-2">
-            <div class="form-group"><label>Store Image 1 (Required) *</label><input type="file" id="img1" accept="image/*" required></div>
-            <div class="form-group"><label>Store Image 2 (Optional)</label><input type="file" id="img2" accept="image/*"></div>
-        </div>
-
-        <button type="submit" class="submit-btn" id="submitBtn">Submit Profile for Verification</button>
-    </form>
-</div>
-
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0YBo69ZZ-5HxWOSC-6W06jsk9I9_N4Ds&libraries=places&v=weekly"></script>
 
 <script>
@@ -154,21 +14,33 @@
         }
 
         document.getElementById("statusChecker").style.display = "block";
+        document.getElementById("mainFormContainer").style.display = "none";
 
+        // ==========================================
+        // STATUS CHECK & REDIRECT LOGIC
+        // ==========================================
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST', body: JSON.stringify({ action: "checkPharmacyStatus", user_id: userId })
         })
         .then(res => res.json())
         .then(data => {
             const statusBox = document.getElementById("statusChecker");
+            
             if (data.status === "ACTIVE") {
-                window.location.href = "pharmacy_dashboard.html"; // Change path when dashboard is ready
-            } else if (data.status === "INACTIVE" || data.status === "PENDING") {
+                // Agar active hai toh sidha dashboard par bhejo
+                window.location.href = "pharmacy_dashboard.html"; 
+            } 
+            else if (data.status === "INACTIVE" || data.status === "PENDING") {
+                // Agar form bhar chuka hai par inactive hai, toh form mat dikhao
                 statusBox.innerHTML = `
-                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    <i class="fas fa-clock" style="color: #f59e0b; font-size: 50px;"></i>
                     <h2>Application Under Review</h2>
-                    <p style="margin-top:10px;">Your pharmacy application is under process by Admin. You will be able to access the dashboard once approved.</p>`;
-            } else {
+                    <p style="margin-top:10px; font-size: 16px; font-weight: 600; color: #dc2626;">
+                        Your request is currently in process, please try again after some time.
+                    </p>`;
+            } 
+            else {
+                // Agar NOT_FOUND hai (nayi pharmacy hai), toh form dikhao
                 statusBox.style.display = "none";
                 document.getElementById("mainFormContainer").style.display = "block";
                 document.getElementById("pharmacy_name").value = pName;
@@ -184,14 +56,18 @@
                     </div>`;
                 });
             }
-        }).catch(err => { console.error(err); document.getElementById("statusChecker").style.display = "none"; document.getElementById("mainFormContainer").style.display = "block"; });
+        }).catch(err => { 
+            console.error(err); 
+            document.getElementById("statusChecker").style.display = "none"; 
+            document.getElementById("mainFormContainer").style.display = "block"; 
+        });
 
         document.getElementById("pincodeInput").addEventListener("keypress", e => { if (e.key === "Enter") { e.preventDefault(); addTag('pincode'); } });
         document.getElementById("cityInput").addEventListener("keypress", e => { if (e.key === "Enter") { e.preventDefault(); addTag('city'); } });
         document.getElementById("pharmacyRegForm").addEventListener("submit", handleFormSubmit);
     });
 
-    // --- TAG SYSTEM & MAPS API ---
+    // --- TAG SYSTEM ---
     function addTag(type, aiValue = null) {
         let inputElem = document.getElementById(type + "Input"); let val = aiValue ? aiValue : inputElem.value.trim();
         if (!val) return;
@@ -208,32 +84,80 @@
         list.forEach((item, index) => { wrapper.innerHTML += `<div class="tag">${item} <span onclick="removeTag('${type}', ${index})">×</span></div>`; });
     }
 
+    // ==========================================
+    // AUTO-FILL AI LOGIC (Distance -> Pincode -> City)
+    // ==========================================
     async function aiAutoFillPincodes() {
-        const basePincode = document.getElementById("pincode").value.trim(); const city = document.getElementById("city").value.trim();
+        const basePincode = document.getElementById("pincode").value.trim(); 
+        const city = document.getElementById("city").value.trim();
         const radiusKm = parseInt(document.getElementById("radiusSelect").value);
-        if (!basePincode || !city) { alert("Enter City and Main Pincode first."); return; }
+        
+        if (!basePincode || !city) { 
+            alert("Please enter both 'City' and 'Main Pincode' in Basic Details first."); 
+            return; 
+        }
 
-        const btn = document.querySelector(".ai-btn"); btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning..."; btn.disabled = true;
+        const btn = document.querySelector(".ai-btn"); 
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Radius..."; 
+        btn.disabled = true;
+        
+        // Pehle lists ko clear kar do taaki fresh scan ho
+        pincodeList = []; cityList = [];
+        updateTagsUI('pincode'); updateTagsUI('city');
+
         const geocoder = new google.maps.Geocoder();
         
         geocoder.geocode({ address: `${city}, ${basePincode}, India` }, async function(results, status) {
             if (status === 'OK') {
                 try {
                     const loc = results[0].geometry.location;
-                    const { places } = await google.maps.places.Place.searchNearby({ fields: ['addressComponents'], locationRestriction: { center: loc, radius: radiusKm * 1000 }});
-                    let discoveredPincodes = new Set(); discoveredPincodes.add(basePincode);
-                    if (places) places.forEach(p => { if (p.addressComponents) p.addressComponents.forEach(c => { if (c.types.includes('postal_code')) discoveredPincodes.add(c.longText); }); });
+                    const { places } = await google.maps.places.Place.searchNearby({ 
+                        fields: ['addressComponents'], 
+                        locationRestriction: { center: loc, radius: radiusKm * 1000 }
+                    });
+                    
+                    let discoveredPincodes = new Set(); 
+                    discoveredPincodes.add(basePincode); // Add main pincode
+                    
+                    if (places) {
+                        places.forEach(p => { 
+                            if (p.addressComponents) {
+                                p.addressComponents.forEach(c => { 
+                                    if (c.types.includes('postal_code')) discoveredPincodes.add(c.longText); 
+                                }); 
+                            }
+                        });
+                    }
 
+                    // Pincodes milne ke baad Postal API se Cities nikalna
                     for (const pin of Array.from(discoveredPincodes)) {
                         addTag('pincode', pin);
                         try {
-                            let res = await fetch(`https://api.postalpincode.in/pincode/${pin}`); let data = await res.json();
-                            if(data[0] && data[0].Status === "Success") data[0].PostOffice.forEach(po => { if(po.Name.toLowerCase() !== city.toLowerCase()) addTag('city', po.Name); });
+                            let res = await fetch(`https://api.postalpincode.in/pincode/${pin}`); 
+                            let data = await res.json();
+                            if(data[0] && data[0].Status === "Success") {
+                                data[0].PostOffice.forEach(po => { 
+                                    // Duplicate main city ka naam bypass karna
+                                    if(po.Name.toLowerCase() !== city.toLowerCase()) {
+                                        addTag('city', po.Name); 
+                                    }
+                                });
+                            }
                         } catch(e) {}
                     }
-                    addTag('city', city); btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false;
-                } catch (e) { addTag('pincode', basePincode); addTag('city', city); btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false;}
-            } else { alert("Maps could not locate."); addTag('pincode', basePincode); addTag('city', city); btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false; }
+                    addTag('city', city); // Main city ko end me add karna
+                    
+                    btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; 
+                    btn.disabled = false;
+                } catch (e) { 
+                    addTag('pincode', basePincode); addTag('city', city); 
+                    btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false;
+                }
+            } else { 
+                alert("Maps could not locate your main pincode. Try adding manually."); 
+                addTag('pincode', basePincode); addTag('city', city); 
+                btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false; 
+            }
         });
     }
 
@@ -255,7 +179,7 @@
         days.forEach(day => { if (document.getElementById(day + "_open").value && document.getElementById(day + "_close").value) hasTime = true; });
         if (!hasTime) { alert("Provide timings for at least 1 day."); return; }
 
-        const btn = document.getElementById("submitBtn"); btn.innerText = "Saving Profile... Please wait"; btn.disabled = true;
+        const btn = document.getElementById("submitBtn"); btn.innerText = "Saving Profile & Sending Email... Please wait"; btn.disabled = true;
 
         try {
             let payload = {
@@ -291,5 +215,3 @@
         } catch (error) { alert("Network error. Try small size images."); btn.innerText = "Submit Profile for Verification"; btn.disabled = false; }
     }
 </script>
-</body>
-</html>

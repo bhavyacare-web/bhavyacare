@@ -157,30 +157,36 @@
         document.getElementById("mainFormContainer").style.display = "none";
 
         // ==========================================
-        // STATUS CHECK & REDIRECT LOGIC
+        // ✨ STATUS CHECK & REDIRECT FIX ✨
         // ==========================================
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST', body: JSON.stringify({ action: "checkPharmacyStatus", user_id: userId })
         })
         .then(res => res.json())
-        .then(data => {
+        .then(resData => {
             const statusBox = document.getElementById("statusChecker");
             
-            if (data.status === "ACTIVE") {
-                // Agar active hai toh sidha dashboard par bhejo
+            // Backend resData.data ke andar status bhejta hai
+            let pharmaStatus = "NOT_FOUND";
+            if (resData.data && resData.data.status) {
+                pharmaStatus = resData.data.status;
+            }
+
+            if (pharmaStatus === "ACTIVE") {
+                // Sidha dashboard par
                 window.location.href = "pharmacy_dashboard.html"; 
             } 
-            else if (data.status === "INACTIVE" || data.status === "PENDING") {
-                // Agar form bhar chuka hai par inactive hai, toh form mat dikhao
+            else if (pharmaStatus === "INACTIVE" || pharmaStatus === "PENDING" || pharmaStatus === "REJECTED") {
+                // Warning msg in Hindi/English mix
                 statusBox.innerHTML = `
-                    <i class="fas fa-clock" style="color: #f59e0b; font-size: 50px;"></i>
-                    <h2>Application Under Review</h2>
+                    <i class="fas fa-clock" style="color: #f59e0b; font-size: 55px;"></i>
+                    <h2 style="margin-top:20px;">Application Under Process</h2>
                     <p style="margin-top:10px; font-size: 16px; font-weight: 600; color: #dc2626;">
-                        Your request is currently in process, please try again after some time.
+                        Aapki request abhi process me hai, kripya kuch samay baad try karein.
                     </p>`;
             } 
             else {
-                // Agar NOT_FOUND hai (nayi pharmacy hai), toh form dikhao
+                // Naya User (Form dikhao)
                 statusBox.style.display = "none";
                 document.getElementById("mainFormContainer").style.display = "block";
                 document.getElementById("pharmacy_name").value = pName;
@@ -225,7 +231,7 @@
     }
 
     // ==========================================
-    // AUTO-FILL AI LOGIC (Distance -> Pincode -> City)
+    // ✨ ROBUST AUTO-FILL AI LOGIC (INDIAN POSTAL API) ✨
     // ==========================================
     async function aiAutoFillPincodes() {
         const basePincode = document.getElementById("pincode").value.trim(); 
@@ -238,67 +244,59 @@
         }
 
         const btn = document.querySelector(".ai-btn"); 
-        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Radius..."; 
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Scanning Area..."; 
         btn.disabled = true;
         
-        // Pehle lists ko clear kar do taaki fresh scan ho
         pincodeList = []; cityList = [];
         updateTagsUI('pincode'); updateTagsUI('city');
 
-        const geocoder = new google.maps.Geocoder();
-        
-        geocoder.geocode({ address: `${city}, ${basePincode}, India` }, async function(results, status) {
-            if (status === 'OK') {
-                try {
-                    const loc = results[0].geometry.location;
-                    const { places } = await google.maps.places.Place.searchNearby({ 
-                        fields: ['addressComponents'], 
-                        locationRestriction: { center: loc, radius: radiusKm * 1000 }
-                    });
-                    
-                    let discoveredPincodes = new Set(); 
-                    discoveredPincodes.add(basePincode); // Add main pincode
-                    
-                    if (places) {
-                        places.forEach(p => { 
-                            if (p.addressComponents) {
-                                p.addressComponents.forEach(c => { 
-                                    if (c.types.includes('postal_code')) discoveredPincodes.add(c.longText); 
-                                }); 
-                            }
-                        });
-                    }
+        try {
+            // Main Pincode aur City sabse pehle add karein
+            addTag('pincode', basePincode);
+            addTag('city', city);
 
-                    // Pincodes milne ke baad Postal API se Cities nikalna
-                    for (const pin of Array.from(discoveredPincodes)) {
-                        addTag('pincode', pin);
-                        try {
-                            let res = await fetch(`https://api.postalpincode.in/pincode/${pin}`); 
-                            let data = await res.json();
-                            if(data[0] && data[0].Status === "Success") {
-                                data[0].PostOffice.forEach(po => { 
-                                    // Duplicate main city ka naam bypass karna
-                                    if(po.Name.toLowerCase() !== city.toLowerCase()) {
-                                        addTag('city', po.Name); 
-                                    }
-                                });
-                            }
-                        } catch(e) {}
+            // 1. Fetching associated villages/areas for the main Pincode
+            let pinRes = await fetch(`https://api.postalpincode.in/pincode/${basePincode}`);
+            let pinData = await pinRes.json();
+            
+            if(pinData[0] && pinData[0].Status === "Success") {
+                pinData[0].PostOffice.forEach(po => {
+                    if (po.Name.toLowerCase() !== city.toLowerCase() && po.Name.toLowerCase() !== "india") {
+                        addTag('city', po.Name);
                     }
-                    addTag('city', city); // Main city ko end me add karna
-                    
-                    btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; 
-                    btn.disabled = false;
-                } catch (e) { 
-                    addTag('pincode', basePincode); addTag('city', city); 
-                    btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false;
-                }
-            } else { 
-                alert("Maps could not locate your main pincode. Try adding manually."); 
-                addTag('pincode', basePincode); addTag('city', city); 
-                btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; btn.disabled = false; 
+                });
             }
-        });
+
+            // 2. Fetching related Pincodes for the selected City 
+            // Distance limit ko array slice se mimic karenge taaki bahut zyada door ka data na aaye
+            let cityRes = await fetch(`https://api.postalpincode.in/postoffice/${city}`);
+            let cityData = await cityRes.json();
+            
+            if(cityData[0] && cityData[0].Status === "Success") {
+                let limit = radiusKm; // Using radius as a limit for number of surrounding areas
+                let count = 0;
+                
+                cityData[0].PostOffice.forEach(po => {
+                    if (count < limit) {
+                        if (!pincodeList.includes(po.Pincode)) {
+                            addTag('pincode', po.Pincode);
+                            count++;
+                        }
+                        if (po.Name.toLowerCase() !== city.toLowerCase() && po.Name.toLowerCase() !== "india") {
+                            addTag('city', po.Name);
+                        }
+                    }
+                });
+            }
+
+            btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; 
+            btn.disabled = false;
+        } catch (e) { 
+            console.error(e);
+            alert("Network error, could not fetch surrounding areas automatically.");
+            btn.innerHTML = "<i class='fas fa-magic'></i> Auto-Fill Area"; 
+            btn.disabled = false; 
+        }
     }
 
     // --- FORM SUBMIT ---
@@ -347,10 +345,15 @@
             const resData = await response.json();
 
             if (resData.status === "success") {
-                alert("Profile submitted successfully! Admin will verify soon.");
+                alert("Profile submitted successfully!");
                 window.location.reload(); 
             } else {
-                alert("Error: " + resData.message); btn.innerText = "Submit Profile for Verification"; btn.disabled = false;
+                alert("Alert: " + resData.message); 
+                btn.innerText = "Submit Profile for Verification"; 
+                btn.disabled = false;
+                if (resData.message.includes("process me hai")) {
+                    window.location.reload(); 
+                }
             }
         } catch (error) { alert("Network error. Try small size images."); btn.innerText = "Submit Profile for Verification"; btn.disabled = false; }
     }

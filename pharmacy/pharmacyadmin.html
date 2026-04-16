@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Admin - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; margin: 0; color: #0f172a; }
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
+        .logo h2 { color: #1d4ed8; margin: 0; font-size: 24px; font-weight: 800;}
+        .logo span { color: #059669; }
+        
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-section h1 { margin: 0; font-size: 26px; }
+        
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid #e2e8f0; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 14px;}
+        th { background-color: #f8fafc; font-weight: 700; color: #4a5568; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        tr:hover { background-color: #f8fafc; }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; display: inline-block; }
+        .bg-pending { background: #fef3c7; color: #d97706; }
+        .bg-active { background: #d1fae5; color: #059669; }
+        .bg-rejected { background: #fee2e2; color: #dc2626; }
+        
+        .btn { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s;}
+        .btn-view { background: #eff6ff; color: #2563eb; }
+        .btn-view:hover { background: #dbeafe; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px;}
+        .modal { background: white; width: 100%; max-width: 800px; border-radius: 16px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;}
+        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; background: none; border: none;}
+        
+        .modal-header { margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;}
+        .modal-header h2 { margin: 0; font-size: 22px; color: #0f172a;}
+        .modal-header p { margin: 5px 0 0 0; color: #64748b; font-size: 14px;}
+        
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;}
+        .detail-item { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;}
+        .detail-item label { display: block; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;}
+        .detail-item span { font-size: 15px; color: #0f172a; font-weight: 500;}
+        
+        .doc-links { display: flex; gap: 10px; margin-top: 10px;}
+        .doc-links a { background: #e0f2fe; color: #0284c7; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid #bae6fd;}
+        
+        .modal-actions { display: flex; gap: 15px; margin-top: 30px; border-top: 2px solid #f1f5f9; padding-top: 20px;}
+        .modal-actions button { flex: 1; padding: 12px; font-size: 15px;}
+        
+        #loader { text-align: center; padding: 40px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo"><h2>Bhavya<span>Care</span> Admin</h2></div>
+        <div>
+            <button class="btn btn-danger" onclick="window.location.href='../index.html'">Back to Home</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>Pharmacy Registrations</h1>
+            <button class="btn btn-view" onclick="fetchPharmacies()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+
+        <div class="card">
+            <table id="pharmacyTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pharmacy Name</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="5" id="loader"><i class="fas fa-spinner fa-spin"></i> Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <h2 id="m_name">Pharmacy Name</h2>
+                <p id="m_id">ID: </p>
+            </div>
+            
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Email Address</label>
+                    <span id="m_email"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Contact & Location</label>
+                    <span id="m_location"></span>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <label>Delivery Area (Cities)</label>
+                    <span id="m_cities"></span>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <label>Delivery Pincodes</label>
+                    <span id="m_pincodes" style="word-break: break-all;"></span>
+                </div>
+            </div>
+
+            <h3>Timings</h3>
+            <div class="detail-item" id="m_timings" style="margin-bottom: 25px; font-size: 14px; line-height: 1.8;">
+                </div>
+
+            <h3>Documents & Images</h3>
+            <div class="doc-links" id="m_docs">
+                </div>
+
+            <div class="modal-actions" id="actionButtons">
+                <button class="btn btn-success" id="btnApprove"><i class="fas fa-check"></i> Approve (Make Active)</button>
+                <button class="btn btn-danger" id="btnReject"><i class="fas fa-times"></i> Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="pharmacyadmin.js"></script>
+</body>
+</html>

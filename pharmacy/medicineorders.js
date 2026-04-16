@@ -28,38 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("orderForm").addEventListener("submit", submitOrder);
 });
 
-// 1. LIVE LOCATION LOGIC
-function getLiveLocation() {
-    if (!navigator.geolocation) { alert("Geolocation not supported by your browser"); return; }
-    
-    const btn = document.querySelector(".btn-location");
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Finding you...`;
-
-    navigator.geolocation.getCurrentPosition(position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const geocoder = new google.maps.Geocoder();
-
-        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-            if (status === "OK" && results[0]) {
-                const components = results[0].address_components;
-                let pin = "", city = "";
-                components.forEach(c => {
-                    if (c.types.includes("postal_code")) pin = c.long_name;
-                    if (c.types.includes("locality")) city = c.long_name;
-                });
-                document.getElementById("pincode").value = pin;
-                fetchCities(); 
-                btn.innerHTML = `<i class="fas fa-check"></i> Location Detected`;
-            }
-        });
-    }, () => { 
-        alert("Location access denied."); 
-        btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> Detect My Live Location`; 
-    });
-}
-
-// 2. POSTAL API FOR CITIES
+// 1. POSTAL API FOR CITIES (From Pincode)
 function fetchCities() {
     const pin = document.getElementById("pincode").value.trim();
     const citySelect = document.getElementById("citySelect");
@@ -99,7 +68,7 @@ function toggleManualCity() {
     }
 }
 
-// 3. SEARCH PHARMACIES 
+// 2. SEARCH PHARMACIES (Multi-Pharmacy Check)
 async function searchPharmacies() {
     const pin = document.getElementById("pincode").value;
     let city = document.getElementById("citySelect").value;
@@ -150,10 +119,10 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML += `<p style="font-size:13px; text-align:center;">Kripya timing ke anusaar apna time change karein ya order cancel karein.</p>`;
             } 
             else {
-                resultsDiv.innerHTML = `<div class="error-msg" style="display:block;">This service is not available in your area yet.</div>`;
+                resultsDiv.innerHTML = `<div style="color:#dc2626; font-weight:600; text-align:center;">This service is not available in your area yet.</div>`;
             }
         } else {
-            resultsDiv.innerHTML = `<div class="error-msg" style="display:block;">${data.message}</div>`;
+            resultsDiv.innerHTML = `<div style="color:#dc2626; font-weight:600; text-align:center;">${data.message}</div>`;
         }
     } catch(e) { alert("Network Error"); resultsDiv.innerHTML = ""; }
 }
@@ -184,7 +153,7 @@ function formatAMPM(t) {
     return `${h}:${m} ${ampm}`;
 }
 
-// 4. UPLOAD & SUBMIT ORDER 
+// 3. UPLOAD & SUBMIT ORDER 
 function getBase64(fileId) {
     return new Promise((resolve) => {
         const input = document.getElementById(fileId);
@@ -201,7 +170,7 @@ async function submitOrder(e) {
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing Request...`; btn.disabled = true;
 
     try {
-        const orderType = document.querySelector('input[name="orderType"]:checked').value;
+        const orderType = document.getElementById("orderType").value;
         const oDate = document.getElementById("orderDate").value;
         const oTime = document.getElementById("orderTime").value;
 
@@ -233,11 +202,5 @@ async function submitOrder(e) {
     } catch (error) {
         alert("Network error, please try again.");
         btn.innerHTML = "Place Order"; btn.disabled = false;
-    }
-}
-
-function cancelOrder() {
-    if(confirm("Are you sure you want to cancel this order?")) {
-        window.location.href = "../patient_dashboard/patient_dashboard.html";
     }
 }

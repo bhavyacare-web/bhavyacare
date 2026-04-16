@@ -1,1 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Dashboard - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #059669; /* Green shade for pharmacy */
+            --primary-hover: #047857;
+            --bg-color: #f4f7fb; 
+            --text-main: #0f172a; 
+            --text-muted: #64748b;
+            --card-bg: #ffffff; 
+            --border: #e2e8f0;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--text-main); 
+        }
+        
+        /* 🌟 NAVBAR 🌟 */
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background-color: #ffffff; padding: 15px 30px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo h2 { color: #1d4ed8; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;}
+        .logo span { color: var(--primary); }
+        
+        .logout-btn { 
+            background: #fee2e2; color: #dc2626; border: none; 
+            padding: 10px 18px; border-radius: 8px; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: #fca5a5; }
 
+        /* 🌟 MAIN DASHBOARD LAYOUT 🌟 */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        
+        .profile-banner {
+            background: var(--card-bg); padding: 25px 30px; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--border);
+        }
+        .profile-info h1 { margin: 0 0 5px 0; font-size: 24px; color: var(--text-main); }
+        .profile-info p { margin: 0; color: var(--text-muted); font-size: 15px; }
+        .pharmacy-id-badge {
+            background: #d1fae5; color: var(--primary); padding: 8px 16px;
+            border-radius: 20px; font-weight: 700; font-size: 14px;
+        }
+
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 25px; 
+        }
+        
+        /* 🌟 DASHBOARD CARDS 🌟 */
+        .dash-card { 
+            background: var(--card-bg); border-radius: 16px; padding: 35px 25px; 
+            text-align: center; text-decoration: none; border: 1px solid var(--border); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .dash-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 15px 30px rgba(5, 150, 105, 0.15); 
+            border-color: var(--primary); 
+        }
+        
+        .icon-wrapper { 
+            width: 80px; height: 80px; background: #ecfdf5; 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            margin-bottom: 20px; transition: 0.3s; 
+        }
+        .dash-card:hover .icon-wrapper { background: var(--primary); }
+        
+        .icon-wrapper i { font-size: 35px; color: var(--primary); transition: 0.3s; }
+        .dash-card:hover .icon-wrapper i { color: white; }
+        
+        .card-title { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0; }
+        .card-desc { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <i class="fas fa-pills" style="color: var(--primary); font-size: 26px;"></i>
+            <h2>Bhavya<span>Care</span></h2>
+        </div>
+        <button class="logout-btn" onclick="logoutPharmacy()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </header>
+
+    <div class="container">
+        
+        <div class="profile-banner">
+            <div class="profile-info">
+                <h1>Welcome, <span id="display-name">Pharmacy Partner</span> 👋</h1>
+                <p>Manage your medicine inventory, incoming orders, and earnings.</p>
+            </div>
+            <div class="pharmacy-id-badge" id="display-id">
+                ID: Loading...
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            
+            <a href="#" class="dash-card" onclick="alert('Manage Inventory module coming soon!')">
+                <div class="icon-wrapper"><i class="fas fa-boxes"></i></div>
+                <h3 class="card-title">Manage Inventory</h3>
+                <p class="card-desc">Add, edit or update stock availability and pricing for medicines.</p>
+            </a>
+
+            <a href="#" class="dash-card" onclick="alert('Incoming Orders module coming soon!')">
+                <div class="icon-wrapper"><i class="fas fa-receipt"></i></div>
+                <h3 class="card-title">Medicine Orders</h3>
+                <p class="card-desc">View and process incoming medicine orders from patients.</p>
+            </a>
+            
+            <a href="#" class="dash-card" onclick="alert('Wallet module coming soon!')">
+                <div class="icon-wrapper"><i class="fas fa-wallet"></i></div>
+                <h3 class="card-title">My Earnings</h3>
+                <p class="card-desc">Track your pharmacy sales, payouts and ledger statements.</p>
+            </a>
+
+        </div>
+    </div>
+
+    <script>
+        // Data fetch from LocalStorage (Saved during app.js login)
+        document.addEventListener("DOMContentLoaded", function() {
+            const pharmaName = localStorage.getItem("bhavya_name");
+            const pharmaId = localStorage.getItem("bhavya_user_id");
+
+            if(pharmaName) document.getElementById("display-name").innerText = pharmaName;
+            if(pharmaId) document.getElementById("display-id").innerText = "ID: " + pharmaId;
+        });
+
+        // Simple Logout
+        function logoutPharmacy() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.clear();
+                window.location.href = "../index.html"; // Adjust path back to main home page
+            }
+        }
+    </script>
+</body>
+</html>

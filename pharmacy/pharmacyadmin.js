@@ -7,6 +7,50 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchPharmacies();
 });
 
+// ==========================================
+// ✨ NAYA TIME FORMATTER LOGIC (am / pm) ✨
+// ==========================================
+function format12HourTime(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return timeStr || "Closed";
+    let [hours, minutes] = timeStr.split(':');
+    hours = parseInt(hours);
+    let ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 baje ko 12 banata hai
+    let strHours = hours < 10 ? '0' + hours : hours;
+    return `${strHours}:${minutes} ${ampm}`;
+}
+
+function formatTimingStr(timingStr) {
+    if (!timingStr || !timingStr.includes(" to ")) return "Closed";
+    let [open, close] = timingStr.split(" to ");
+    if (!open || !close || open === "undefined" || close === "undefined") return "<span style='color:#ef4444;'>Closed</span>";
+    return `${format12HourTime(open)} to ${format12HourTime(close)}`;
+}
+
+// Full Date-Time formatter (16-04-2026 02:00 pm) for future use
+function formatFullDateTime(dateString) {
+    if (!dateString) return "N/A";
+    const d = new Date(dateString);
+    if (isNaN(d)) return dateString;
+
+    const pad = (n) => n < 10 ? '0' + n : n;
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    const year = d.getFullYear();
+
+    let hours = d.getHours();
+    const minutes = pad(d.getMinutes());
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const strHours = pad(hours);
+
+    return `${day}-${month}-${year} ${strHours}:${minutes} ${ampm}`;
+}
+// ==========================================
+
 function fetchPharmacies() {
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = `<tr><td colspan="5" id="loader"><i class="fas fa-spinner fa-spin"></i> Loading data...</td></tr>`;
@@ -66,17 +110,16 @@ function viewDetails(id) {
     document.getElementById("m_location").innerText = `${pharma.address}, ${pharma.city} - ${pharma.pincode}`;
     document.getElementById("m_cities").innerText = pharma.available_city;
     
-    // Clean up pincode array display
     let pincodeArr = [];
     try { pincodeArr = JSON.parse(pharma.available_pincode); } catch(e) { pincodeArr = [pharma.available_pincode]; }
     document.getElementById("m_pincodes").innerText = pincodeArr.join(", ");
 
-    // Timings
+    // Timings Apply with Formatter
     const t = pharma.timings;
     document.getElementById("m_timings").innerHTML = `
-        <b>Mon:</b> ${t.monday} &nbsp;|&nbsp; <b>Tue:</b> ${t.tuesday} &nbsp;|&nbsp; <b>Wed:</b> ${t.wednesday} <br>
-        <b>Thu:</b> ${t.thursday} &nbsp;|&nbsp; <b>Fri:</b> ${t.friday} &nbsp;|&nbsp; <b>Sat:</b> ${t.saturday} <br>
-        <b>Sun:</b> ${t.sunday}
+        <b>Mon:</b> ${formatTimingStr(t.monday)} &nbsp;|&nbsp; <b>Tue:</b> ${formatTimingStr(t.tuesday)} &nbsp;|&nbsp; <b>Wed:</b> ${formatTimingStr(t.wednesday)} <br>
+        <b>Thu:</b> ${formatTimingStr(t.thursday)} &nbsp;|&nbsp; <b>Fri:</b> ${formatTimingStr(t.friday)} &nbsp;|&nbsp; <b>Sat:</b> ${formatTimingStr(t.saturday)} <br>
+        <b>Sun:</b> ${formatTimingStr(t.sunday)}
     `;
 
     // Documents
@@ -87,11 +130,10 @@ function viewDetails(id) {
     if (pharma.img2) docsHtml += `<a href="${pharma.img2}" target="_blank"><i class="fas fa-image"></i> Store Image 2</a>`;
     document.getElementById("m_docs").innerHTML = docsHtml || "No documents uploaded.";
 
-    // Action Buttons Logic
+    // Action Buttons
     const btnApprove = document.getElementById("btnApprove");
     const btnReject = document.getElementById("btnReject");
     
-    // Remove old listeners to avoid multiple fires
     btnApprove.replaceWith(btnApprove.cloneNode(true));
     btnReject.replaceWith(btnReject.cloneNode(true));
     
@@ -137,7 +179,7 @@ function changeStatus(newStatus) {
         if(resData.status === "success") {
             alert("Status updated successfully!");
             closeModal();
-            fetchPharmacies(); // Refresh table
+            fetchPharmacies(); 
         } else {
             alert("Error: " + resData.message);
             btnAction.innerHTML = originalBtns;

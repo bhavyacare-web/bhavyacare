@@ -302,8 +302,15 @@ function goToDashboard() {
             // Agar kabhi status undefined ho jaye toh default registration par
             window.location.href = "doctor/doctor_registration.html";
         }
+        // --- DASHBOARD ROUTING LOGIC --- (UPDATE KAREIN)
+    else if (role === "pharmacy") {
+        window.location.href = "pharmacy/pharmacy_registration.html"; // ✨ URL UPDATE
     }
-    else if (role === "pharmacy" || role === "hospital" || role === "executive") {
+    else if (role === "hospital" || role === "executive") {
+        alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
+    }
+    }
+    else if (role === "hospital" || role === "executive") {
         alert("Redirecting to " + role.toUpperCase() + " Dashboard... (Under Construction)");
     }
     else {

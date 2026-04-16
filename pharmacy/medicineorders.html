@@ -10,15 +10,21 @@
         /* Modern UI Styles */
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f4f7fb; margin: 0; padding-bottom: 50px;}
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .logo h2 { color: #1d4ed8; margin: 0; font-size: 24px; font-weight: 800;}
+        .logo span { color: #059669; }
+
         .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
         .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 25px;}
         .form-group { margin-bottom: 20px; }
         label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 14px; color: #334155;}
-        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px;}
+        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none;}
+        input:focus, select:focus, textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         
         .btn { padding: 15px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; width: 100%; transition: 0.3s;}
-        .btn-location { background: #8b5cf6; color: white; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;}
         .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
         
         /* Pharmacy Selection Cards */
         .pharma-option { border: 2px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
@@ -26,81 +32,80 @@
         .pharma-option.selected { border-color: #059669; background: #f0fdf4; box-shadow: 0 0 0 2px #059669;}
         .pharma-name { font-weight: 800; color: #0f172a; margin-bottom: 5px; display: block;}
         .pharma-time { font-size: 13px; color: #059669; font-weight: 600;}
-        .pharma-closed { color: #dc2626; font-size: 13px; font-weight: 600;}
 
         #step2-form { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card" id="step1-check">
-        <h2>Book Medicines</h2>
-        <p style="color: #64748b; margin-bottom: 25px;">Select your location and preferred time to see available pharmacies.</p>
+    <header class="navbar">
+        <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
+        <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="window.history.back()">Back</button>
+    </header>
 
-        <button class="btn btn-location" onclick="getLiveLocation()">
-            <i class="fas fa-map-marker-alt"></i> Detect My Live Location
-        </button>
+    <div class="container">
+        <div class="card" id="step1-check">
+            <h2>Book Medicines</h2>
+            <p style="color: #64748b; margin-bottom: 25px;">Enter your pincode and preferred time to see available pharmacies.</p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div class="form-group">
-                <label>Pincode *</label>
-                <input type="number" id="pincode" placeholder="110001" onkeyup="fetchCities()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Pincode *</label>
+                    <input type="number" id="pincode" placeholder="e.g. 110001" onkeyup="fetchCities()">
+                </div>
+                <div class="form-group">
+                    <label>City / Area *</label>
+                    <select id="citySelect" onchange="toggleManualCity()">
+                        <option value="">Enter pincode first...</option>
+                    </select>
+                    <input type="text" id="manualCity" placeholder="Type City Name manually" style="display:none; margin-top:8px;">
+                </div>
             </div>
-            <div class="form-group">
-                <label>City / Area *</label>
-                <select id="citySelect" onchange="toggleManualCity()">
-                    <option value="">Enter pincode...</option>
-                </select>
-                <input type="text" id="manualCity" placeholder="Type City Name" style="display:none; margin-top:8px;">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Order Date *</label>
+                    <input type="date" id="orderDate">
+                </div>
+                <div class="form-group">
+                    <label>Order Time *</label>
+                    <input type="time" id="orderTime">
+                </div>
             </div>
+
+            <button class="btn btn-primary" id="btnSearch" onclick="searchPharmacies()">Search Available Pharmacies</button>
+            
+            <div id="pharmaResults" style="margin-top: 25px;"></div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div class="form-group">
-                <label>Order Date *</label>
-                <input type="date" id="orderDate">
-            </div>
-            <div class="form-group">
-                <label>Order Time *</label>
-                <input type="time" id="orderTime">
-            </div>
+        <div class="card" id="step2-form">
+            <h3>Finalize Your Order</h3>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label>Order Type</label>
+                    <select id="orderType" style="margin-bottom: 15px;">
+                        <option value="Home Delivery">Home Delivery</option>
+                        <option value="Collect from Pharmacy">Self Pickup (Collect from Pharmacy)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Full Delivery Address</label>
+                    <textarea id="patientAddress" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Upload Prescription (Optional)</label>
+                    <input type="file" id="prescriptionFile" accept=".pdf,image/*" style="background: #f8fafc;">
+                </div>
+                <div class="form-group">
+                    <label>Medicine Names / Details</label>
+                    <textarea id="medicineDetails" rows="4" placeholder="Example: Tab Paracetamol 500mg - 10 qty..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background: #10b981;" id="btnSubmit">Place Order</button>
+                <button type="button" class="btn" style="margin-top:10px; background: #f1f5f9; color: #475569;" onclick="location.reload()">Cancel & Go Back</button>
+            </form>
         </div>
-
-        <button class="btn btn-primary" id="btnSearch" onclick="searchPharmacies()">Search Available Pharmacies</button>
-        
-        <div id="pharmaResults" style="margin-top: 25px;"></div>
     </div>
 
-    <div class="card" id="step2-form">
-        <h3>Finalize Your Order</h3>
-        <form id="orderForm">
-            <div class="form-group">
-                <label>Order Type</label>
-                <select id="orderType">
-                    <option value="Home Delivery">Home Delivery</option>
-                    <option value="Collect from Pharmacy">Self Pickup</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Full Delivery Address</label>
-                <textarea id="patientAddress" rows="3" required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Upload Prescription (Optional)</label>
-                <input type="file" id="prescriptionFile" accept=".pdf,image/*">
-            </div>
-            <div class="form-group">
-                <label>Medicine Names / Details</label>
-                <textarea id="medicineDetails" rows="4" placeholder="Tab Paracitamole - 10 qty..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" style="background: #10b981;">Place Order</button>
-            <button type="button" class="btn" style="margin-top:10px; background: #f1f5f9; color: #475569;" onclick="location.reload()">Cancel & Go Back</button>
-        </form>
-    </div>
-</div>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0YBo69ZZ-5HxWOSC-6W06jsk9I9_N4Ds&libraries=places"></script>
 <script src="medicineorders.js"></script>
 </body>
 </html>

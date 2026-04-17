@@ -3,6 +3,7 @@ let isUserVip = false;
 let globalBookingsData = [];
 let globalConsultsData = [];
 let globalCompletedReports = []; 
+let globalMedicineOrders = []; // Naya array for Medicine Orders
 
 // Variables for Handshake
 let activeVideoCallApptId = null;
@@ -120,7 +121,8 @@ async function checkLoginAndFetchData() {
             }
 
             fetchWalletHistory(userId);
-            await Promise.all([ fetchPatientBookings(userId), fetchPatientConsults(userId) ]);
+            // ✨ FIX: Medicine Orders bhi sath me fetch honge ✨
+            await Promise.all([ fetchPatientBookings(userId), fetchPatientConsults(userId), fetchPatientMedicines(userId) ]);
             updateRecentActivityMixed();
         } else {
             alert("Error: " + result.message);
@@ -199,6 +201,198 @@ async function fetchWalletHistory(userId) {
     } catch(e) { container.innerHTML = `<p style="color:red; text-align:center;">Network error.</p>`; }
 }
 
+// ==========================================
+// 🌟 PHARMACY/MEDICINES TAB (NAYA CODE YAHAN HAI) 🌟
+// ==========================================
+
+async function fetchPatientMedicines(userId) {
+    const container = document.getElementById("patientMedicinesContainer");
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getPatientOrders", user_id: userId })
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+            globalMedicineOrders = result.data.orders;
+            renderMedicineOrders(globalMedicineOrders);
+        } else {
+            if(container) container.innerHTML = `<p style="color:red; text-align:center;">Failed to load data: ${result.message}</p>`;
+        }
+    } catch(e) { 
+        if(container) container.innerHTML = `<p style="color:red; text-align:center;">Network error. Please check your connection.</p>`; 
+    }
+}
+
+function renderMedicineOrders(orders) {
+    const container = document.getElementById("patientMedicinesContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!orders || orders.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px; background:white; border-radius:15px;"><p>No medicine orders found.</p></div>`;
+        return;
+    }
+
+    orders.forEach(order => {
+        let badgeHtml = "";
+        let actionHtml = "";
+        
+        if (order.patient_status === "Pending") {
+            badgeHtml = `<span class="status-badge status-warning"><i class="fas fa-clock"></i> Waiting for Pharmacy</span>`;
+            actionHtml = `<p style="font-size:12px; color:#64748b; margin:0;"><i class="fas fa-info-circle"></i> Pharmacy is reviewing your request.</p>`;
+        } 
+        else if (order.patient_status === "confirm_for_patient") {
+            badgeHtml = `<span class="status-badge status-primary"><i class="fas fa-exclamation-circle"></i> Action Required</span>`;
+            actionHtml = `<button onclick="openConfirmMedicineModal('${order.order_id}', '${order.presc_req}')" style="background:var(--primary); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:5px;">
+                            <i class="fas fa-check-double"></i> Review & Confirm Order
+                          </button>`;
+        }
+        else if (order.patient_status === "Confirmed") {
+            badgeHtml = `<span class="status-badge status-success"><i class="fas fa-check"></i> Order Confirmed</span>`;
+            actionHtml = `<p style="font-size:13px; color:#059669; margin:0; font-weight:bold;"><i class="fas fa-box"></i> Order is being prepared.</p>`;
+        }
+
+        // Format dates
+        let orderDate = new Date(order.order_date).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+        
+        let formattedDelivery = order.delivery_date;
+        try {
+            if (order.delivery_date && String(order.delivery_date).includes('T')) {
+                let dObj = new Date(order.delivery_date);
+                formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`;
+            }
+        } catch(e) {}
+
+        let callBtn = order.pharma_mobile ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
+
+        // Pharmacy Response Section
+        let pharmaReplyHtml = "";
+        if (order.avail_meds) {
+            pharmaReplyHtml = `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
+                <h5 style="margin:0 0 10px 0; color:#0f172a;">Pharmacy Update</h5>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:#f8fafc; padding:10px; border-radius:8px;">
+                        <h6 style="margin:0 0 5px 0; font-size:11px; color:var(--text-light);">Available</h6>
+                        <p style="margin:0; font-size:12px; color:#059669; font-weight:bold;">${order.avail_meds}</p>
+                    </div>
+                    <div style="background:#f8fafc; padding:10px; border-radius:8px;">
+                        <h6 style="margin:0 0 5px 0; font-size:11px; color:var(--text-light);">Not Available</h6>
+                        <p style="margin:0; font-size:12px; color:#dc2626;">${order.not_avail_meds || "None"}</p>
+                    </div>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #10b981; padding:12px; border-radius:8px; text-align:center; margin-top:10px;">
+                    <p style="margin:0; font-size:12px; text-decoration:line-through; color:#64748b;">Total Bill: ₹${order.total_amt}</p>
+                    <p style="margin:2px 0 0 0; font-size:16px; font-weight:800; color:#065f46;">Payable Amount: ₹${order.payable_amt}</p>
+                </div>
+            </div>`;
+        }
+
+        let card = `
+        <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                <div>
+                    <strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong>
+                </div>
+                <div style="text-align:right;">
+                    ${badgeHtml}
+                </div>
+            </div>
+            <p style="font-size:12px; color:#64748b; margin:0 0 5px 0;"><i class="far fa-calendar-alt"></i> Ordered: ${orderDate}</p>
+            <p style="font-size:12px; color:#059669; margin:0 0 10px 0;"><i class="fas fa-truck"></i> Deliver By: ${formattedDelivery}</p>
+            
+            <div style="background:#f9fafb; padding:10px; border-radius:8px; font-size:13px; font-weight:600; color:#333;">
+                ${order.medicine_details}
+            </div>
+            
+            ${pharmaReplyHtml}
+
+            <div style="margin-top: 15px;">
+                ${actionHtml}
+                ${callBtn}
+            </div>
+        </div>`;
+        
+        container.innerHTML += card;
+    });
+}
+
+function openConfirmMedicineModal(orderId, prescReq) {
+    document.getElementById("modalMedOrderId").value = orderId;
+    
+    const prescGroup = document.getElementById("prescUploadGroup");
+    const prescAlert = document.getElementById("prescAlert");
+    const fileInput = document.getElementById("validPrescriptionFile");
+
+    // Agar Pharmacy ne 'Yes' bola hai toh upload mandatory ho jayega
+    if (prescReq === "Yes") {
+        prescGroup.style.display = "block";
+        prescAlert.style.display = "block";
+        fileInput.required = true;
+    } else {
+        prescGroup.style.display = "none";
+        prescAlert.style.display = "none";
+        fileInput.required = false;
+    }
+
+    document.getElementById("confirmMedicineModal").style.display = "flex";
+}
+
+function closeConfirmMedicineModal() {
+    document.getElementById("confirmMedicineModal").style.display = "none";
+    document.getElementById("confirmMedicineForm").reset();
+}
+
+async function submitConfirmMedicineForm() {
+    const btn = document.getElementById("btnSubmitConfirmMed");
+    const fileInput = document.getElementById("validPrescriptionFile");
+
+    // Check validation manually because we are not using standard submit event
+    if(fileInput.required && (!fileInput.files || fileInput.files.length === 0)) {
+        alert("Please upload the required prescription.");
+        return;
+    }
+
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Confirming...`; btn.disabled = true;
+
+    try {
+        let base64File = "";
+        if(fileInput.files && fileInput.files.length > 0){
+             base64File = await getBase64(fileInput.files[0]);
+        }
+
+        const payload = {
+            action: "confirmOrderPatient",
+            user_id: localStorage.getItem("bhavya_user_id"),
+            order_id: document.getElementById("modalMedOrderId").value,
+            prescription_base64: base64File
+        };
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+
+        if (resData.status === "success") {
+            alert("Order Confirmed Successfully!");
+            closeConfirmMedicineModal();
+            fetchPatientMedicines(localStorage.getItem("bhavya_user_id")); 
+            checkLoginAndFetchData(); // For activity update
+        } else {
+            alert("Error: " + resData.message);
+        }
+    } catch (error) {
+        alert("Network error, please try again.");
+    } finally {
+        btn.innerHTML = "Confirm & Place Order"; btn.disabled = false;
+    }
+}
+
+// ==========================================
+// 🌟 EXISTING LABS & DOCTORS LOGIC 🌟
+// ==========================================
+
 async function fetchPatientBookings(userId) {
     const bookingsContainer = document.getElementById("patientBookingsContainer");
     try {
@@ -257,7 +451,7 @@ function filterMyBookings() {
 
 function renderBookingCards(bookings) {
     const container = document.getElementById("patientBookingsContainer"); if (!container) return;
-    if (bookings.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No bookings found.</p></div>`; return; }
+    if (bookings.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i><p>No lab bookings found.</p></div>`; return; }
 
     let cardsHtml = "";
     bookings.forEach(bk => {
@@ -409,12 +603,10 @@ function renderConsultCards(consults) {
         let typeBadge = c.consult_type === "Online" ? "💻 Online Video" : "🏥 Clinic Visit";
         let joinBtnHtml = ""; let postConsultHtml = ""; let cancelBtnHtml = "";
 
-        // Cancel Button sirf Pending / Approved state me dikhega
         if (safeStatus === "pending" || safeStatus === "approved") {
             cancelBtnHtml = `<button onclick="openConsultCancelModal('${c.appt_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Appointment</button>`;
         }
 
-        // 🌟 VIDEO BUTTON VISIBILITY LOGIC (Manual click only) 🌟
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             if (c.handshake_status === "Patient_Ready") {
                 joinBtnHtml = `<button onclick="joinVideoCall('${c.meet_link}', '${c.appt_id}')" style="background:#fd7e14; color:white; border:none; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 1.5s infinite;">📹 Join Video Call</button>`;
@@ -425,16 +617,10 @@ function renderConsultCards(consults) {
             }
         } 
         
-        // 🌟 CANCEL LOGIC & PAYMENT NOT RECEIVED UI 🌟
         else if (safeStatus.includes("cancel") || safeStatus === "cancelled") { 
             badgeClass = "status-danger"; statusText = "Cancelled"; 
-
-            // Agar payment not received hai toh do-do baar error na dikhe isliye isko filter kar diya
             let reasonHtml = (c.cancel_reason && c.cancel_reason !== "Payment Not Received") ? `<div style="background:#ffebee; color:#d32f2f; padding:8px 10px; border-radius:6px; font-size:12px; margin-top:10px; border:1px solid #ffcdd2;"><strong>Cancel Reason:</strong> ${c.cancel_reason}</div>` : "";
-            
             let claimHtml = "";
-            
-            // Payment Not Received logic (Show "Your Payment Not Received" & "Get Help" link)
             if (c.cancel_reason === "Payment Not Received" || c.refund_status === "No Refund (Not Paid)") {
                 claimHtml = `
                 <div style="margin-top:10px; padding: 12px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
@@ -442,19 +628,15 @@ function renderConsultCards(consults) {
                     <a href="../help/patient_help.html" style="color:#0056b3; font-weight:bold; font-size:13px; text-decoration:none; padding: 5px 10px; background: white; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-question-circle"></i> Get Help</a>
                 </div>`;
             }
-            // Refund Claim logic (Agar Doctor Available nahi tha)
             else if (c.refund_status === "Action Required by Patient") {
                 claimHtml = `<button onclick="openClaimRefundModal('${c.appt_id}')" style="background:#f57c00; color:white; border:none; padding:10px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; animation: pulse 2s infinite;">💸 Click Here to Claim Refund</button>`;
             } 
-            // Regular Refund Status
             else if (c.refund_status && c.refund_status !== "No Refund (Not Paid)") {
                 claimHtml = `<div style="font-size:12px; color:#2e7d32; margin-top:8px; font-weight:bold; background:#e8f5e9; padding:8px; border-radius:6px; text-align:center;">Refund Status: ${c.refund_status}</div>`;
             }
-
             postConsultHtml = reasonHtml + claimHtml;
         }
 
-        // 🌟 COMPLETED LOGIC (Prescription & Review) 🌟
         else if (c.appt_status === "Completed") {
             let rxHtml = "";
             if (c.prescription_link) {
@@ -465,7 +647,6 @@ function renderConsultCards(consults) {
             postConsultHtml = `<div style="display:flex; gap:10px; margin-top:10px; align-items:flex-start;">${rxHtml}${revHtml}</div>`;
         }
 
-        // Building the final Card HTML
         html += `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
@@ -557,8 +738,11 @@ function renderPrescriptionsTab(consults) {
     container.innerHTML = `<div style="background:#fff; padding:0 15px; border-radius:12px;">${html}</div>`;
 }
 
+// ✨ FIX: MIXED ACTIVITY ME MEDICINES BHI JUD GAYI HAIN ✨
 function updateRecentActivityMixed() {
     let allActivity = [];
+    
+    // 1. Lab Bookings
     globalBookingsData.forEach(bk => {
         let safeStatus = (bk.status || "pending").toString().toLowerCase().trim(); let isComplete = (safeStatus.includes("complete") || safeStatus === "completed");
         let badgeClass = "status-warning"; let statusText = "Pending";
@@ -569,11 +753,30 @@ function updateRecentActivityMixed() {
         allActivity.push({ type: 'lab', id: bk.order_id, title: testSummary, dateTime: bk.date + " | " + bk.slot.split('-')[0], badgeClass: badgeClass, statusText: statusText, icon: '<i class="fas fa-microscope" style="color:var(--primary); font-size:18px;"></i>', timestamp: new Date(bk.date.split("-").reverse().join("-")).getTime() || 0 });
     });
 
+    // 2. Doctor Consults
     globalConsultsData.forEach(c => {
         let safeStatus = (c.appt_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
         if (safeStatus === "approved") { badgeClass = "status-primary"; statusText = "Approved"; } else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; } else if (safeStatus.includes("no-show") || safeStatus.includes("cancel") || safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
         allActivity.push({ type: 'doctor', id: c.appt_id, title: "Dr. " + c.doctor_name, dateTime: c.appt_date + " | " + c.appt_time, badgeClass: badgeClass, statusText: statusText, icon: '<i class="fas fa-user-md" style="color:#2e7d32; font-size:18px;"></i>', timestamp: new Date(c.appt_date.split("-").reverse().join("-")).getTime() || 0 });
+    });
+
+    // 3. ✨ Medicine Orders (NEW) ✨
+    globalMedicineOrders.forEach(med => {
+        let safeStatus = (med.patient_status || "Pending").toString().toLowerCase().trim();
+        let badgeClass = "status-warning"; let statusText = "Pending";
+        if (safeStatus === "confirmed") { badgeClass = "status-success"; statusText = "Confirmed"; }
+        else if (safeStatus === "confirm_for_patient") { badgeClass = "status-primary"; statusText = "Action Needed"; }
+        
+        let medSummary = med.medicine_details || "Medicines";
+        medSummary = medSummary.substring(0, 30) + (medSummary.length > 30 ? '...' : '');
+        allActivity.push({ 
+            type: 'medicine', id: med.order_id, title: medSummary, 
+            dateTime: new Date(med.order_date).toLocaleDateString('en-IN') + " (Pharmacy)", 
+            badgeClass: badgeClass, statusText: statusText, 
+            icon: '<i class="fas fa-pills" style="color:#0056b3; font-size:18px;"></i>', 
+            timestamp: new Date(med.order_date).getTime() || 0 
+        });
     });
 
     allActivity.sort((a, b) => b.timestamp - a.timestamp);
@@ -603,7 +806,7 @@ async function silentPatientPolling() {
         const result = await response.json();
         if (result.status === "success") {
             globalConsultsData = result.data;
-            renderConsultCards(globalConsultsData); // Refresh UI for buttons
+            renderConsultCards(globalConsultsData); 
             checkPatientHandshakeTrigger();
         }
     } catch(e) { console.log("Silent patient poll failed"); }
@@ -614,8 +817,6 @@ function checkPatientHandshakeTrigger() {
         if (c.appt_status === "Approved" && c.consult_type === "Online") {
             if (c.handshake_status === "Doctor_Ready" && !handledPatTriggers.has(c.appt_id)) {
                 if (document.getElementById("patient-ready-modal").style.display !== "block") {
-                    
-                    // YAHAN FIX KIYA HAI: <input type="hidden"> ko template ke andar wapas add kar diya hai
                     document.getElementById("patient-ready-modal").innerHTML = `
                         <div style="text-align: center; padding: 15px;">
                             <input type="hidden" id="readyApptIdHidden" value="${c.appt_id}">
@@ -646,7 +847,7 @@ async function patientConfirmsReady() {
         if(res.status === "success") {
             const consult = globalConsultsData.find(c => c.appt_id == apptId);
             if(consult) consult.handshake_status = "Patient_Ready";
-            renderConsultCards(globalConsultsData); // Refresh UI to show Video Button
+            renderConsultCards(globalConsultsData); 
         }
     } catch(e) { alert("Network error while connecting."); }
 }
@@ -713,7 +914,7 @@ async function submitClaimRefund() {
             alert("Refund Claimed Successfully!"); 
             document.getElementById("claim-refund-modal").style.display = "none"; 
             fetchPatientConsults(localStorage.getItem("bhavya_user_id")); 
-            checkLoginAndFetchData(); // Refresh Wallet Balance
+            checkLoginAndFetchData(); 
         } else { alert("Error: " + result.message); }
     } catch(e) { alert("Network error."); } finally { btn.innerText = "Submit Refund Request"; btn.disabled = false; }
 }

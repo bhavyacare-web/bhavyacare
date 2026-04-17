@@ -259,9 +259,15 @@
                 </div>
 
                 <div class="form-group" style="margin-top: 25px;">
-                    <label>Full Delivery Address *</label>
-                    <textarea id="patientAddress" rows="3" placeholder="Enter House No, Street, Landmark..." required></textarea>
-                </div>
+    <label>Delivery Area (Locked)</label>
+    <div style="background: #f1f5f9; padding: 14px 16px; border-radius: 10px; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-lock" style="color: #94a3b8;"></i> 
+        <span id="lockedLocationDisplay">City: -, Pincode: -</span>
+    </div>
+    
+    <label>House No, Building, Street, Landmark *</label>
+    <textarea id="patientAddress" rows="2" placeholder="e.g. Flat No 204, Shivam Appt, Near SBI Bank..." required></textarea>
+  </div>
 
                 <div class="form-group">
                     <label>Upload Prescription (PDF / Image) - Optional</label>

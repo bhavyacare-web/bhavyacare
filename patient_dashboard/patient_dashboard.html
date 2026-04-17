@@ -129,6 +129,7 @@
         <a class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
         <a class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Lab Tests</span></a>
         <a class="nav-item" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> <span>Consults</span></a>
+        <a class="nav-item desktop-only" onclick="switchTab('medicines')"><i class="fas fa-pills"></i> <span>Medicines</span></a>
         
         <a class="nav-item mobile-only" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i> <span>Menu</span></a>
         
@@ -143,10 +144,11 @@
         <div class="sheet-handle"></div>
         <h3 style="margin: 0 0 20px 0; color: var(--primary); font-size: 18px;">More Options</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button class="action-btn-main" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;" onclick="toggleMobileMenu(); switchTab('medicines')"><i class="fas fa-pills"></i> Pharmacy Orders</button>
             <button class="action-btn-main btn-rx" onclick="toggleMobileMenu(); switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> Prescriptions</button>
             <button class="action-btn-main" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;" onclick="toggleMobileMenu(); switchTab('reports')"><i class="fas fa-file-medical-alt"></i> Medical Reports</button>
             <button class="action-btn-main" style="background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;" onclick="toggleMobileMenu(); switchTab('profile')"><i class="fas fa-user"></i> My Profile Info</button>
-            <button class="action-btn-main" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> Logout Securely</button>
+            <button class="action-btn-main" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; grid-column: span 2;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> Logout Securely</button>
         </div>
     </div>
 
@@ -246,6 +248,18 @@
                     <div style="text-align: center; padding: 50px 20px; color: #2e7d32;">
                         <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
                         <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your consults...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="medicines" class="tab-content">
+            <div class="data-box">
+                <div class="section-title">My Pharmacy Orders</div>
+                <div id="patientMedicinesContainer">
+                    <div style="text-align: center; padding: 50px 20px; color: #0056b3;">
+                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your medicine orders...</p>
                     </div>
                 </div>
             </div>
@@ -369,6 +383,7 @@
         <div class="form-group"><textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..."></textarea></div>
         <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
     </div>
+    
     <div id="patient-ready-modal" class="modal-overlay" style="background: rgba(255,255,255,0.90); backdrop-filter: blur(10px); border: 2px solid var(--success);">
         <div style="text-align: center;">
             <div style="background: #e8f5e9; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;"><i class="fas fa-stethoscope" style="font-size: 30px; color: var(--success); animation: pulse 1.5s infinite;"></i></div>
@@ -379,7 +394,8 @@
         <input type="hidden" id="readyMeetLinkHidden">
         <button id="btnPatientReady" style="background:var(--success); width:100%; color:white; border:none; font-weight:bold; padding:15px; border-radius:8px; cursor:pointer; margin-top:15px; font-size: 16px;" onclick="patientConfirmsReady()">I Am Ready</button>
     </div>
-<div id="claim-refund-modal" class="modal-overlay">
+
+    <div id="claim-refund-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('claim-refund-modal').style.display='none'">✖</button>
         <div style="text-align: center; margin-bottom: 15px;">
             <i class="fas fa-hand-holding-usd" style="font-size: 30px; color: #f57c00; margin-bottom:10px;"></i>
@@ -405,6 +421,26 @@
         </div>
         <button id="btnConfirmClaim" style="background:#f57c00; width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitClaimRefund()">Submit Refund Request</button>
     </div>
+
+    <div id="confirmMedicineModal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="closeConfirmMedicineModal()">✖</button>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <i class="fas fa-pills" style="font-size: 30px; color: var(--primary); margin-bottom:10px;"></i>
+            <h3 style="margin:0; color: var(--text-main);">Confirm Medicine Order</h3>
+            <p id="prescAlert" style="color: #dc2626; font-size: 13px; font-weight: 600; display: none; background: #fee2e2; padding: 8px; border-radius: 8px; margin-top: 10px;">
+                <i class="fas fa-exclamation-triangle"></i> Pharmacy requires a valid prescription for these medicines.
+            </p>
+        </div>
+        <form id="confirmMedicineForm">
+            <input type="hidden" id="modalMedOrderId">
+            <div class="form-group" id="prescUploadGroup" style="display: none; margin-top: 15px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 13px; color:#555;">Upload Valid Prescription (PDF/Image) *</label>
+                <input type="file" id="validPrescriptionFile" accept=".pdf,image/*" style="width: 100%; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; font-size:12px;">
+            </div>
+            <button type="button" class="btn btn-confirm" id="btnSubmitConfirmMed" style="background: var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitConfirmMedicineForm()">Confirm & Place Order</button>
+        </form>
+    </div>
+
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

@@ -259,14 +259,22 @@ function selectPharma(elem, id) {
     selectedPharmaId = id;
 }
 
+// ✨ 1. UPDATE THIS FUNCTION ✨
 function goToForm() {
     if(!selectedPharmaId) { alert("Please select a pharmacy first!"); return; }
     document.getElementById("step1-check").style.display = "none";
     document.getElementById("step2-form").style.display = "block";
     
+    // City aur Pincode nikalna
     let city = document.getElementById("citySelect").value;
     if(city === "other") city = document.getElementById("manualCity").value;
-    document.getElementById("patientAddress").value = `City: ${city}, Pincode: ${document.getElementById("pincode").value}\nAddress: `;
+    let pin = document.getElementById("pincode").value;
+    
+    // Locked box me City/Pincode set karna
+    document.getElementById("lockedLocationDisplay").innerText = `City: ${city}, Pincode: ${pin}`;
+    
+    // Textarea ko khali chhodna taaki patient sirf apna ghar ka address dale
+    document.getElementById("patientAddress").value = ""; 
 }
 
 function formatAMPM(t) {
@@ -287,6 +295,7 @@ function getBase64(fileId) {
     });
 }
 
+// ✨ 2. UPDATE THIS FUNCTION ✨
 async function submitOrder(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmit");
@@ -297,13 +306,21 @@ async function submitOrder(e) {
         const oDate = document.getElementById("orderDate").value;
         const oTime = document.getElementById("orderTime").value;
 
+        // City aur Pincode wapas nikal kar User ke Address ke sath jodna
+        let city = document.getElementById("citySelect").value;
+        if(city === "other") city = document.getElementById("manualCity").value;
+        let pin = document.getElementById("pincode").value;
+        let localAddress = document.getElementById("patientAddress").value;
+        
+        let finalFullAddress = `City: ${city}, Pincode: ${pin}\nLocal Address: ${localAddress}`;
+
         const payload = {
             action: "submitMedicineOrder",
             user_id: localStorage.getItem("bhavya_user_id"),
             medicos_id: selectedPharmaId,
             order_type: orderType,
             delivery_date: `${oDate} ${formatAMPM(oTime)}`,
-            patient_address: document.getElementById("patientAddress").value,
+            patient_address: finalFullAddress, // <-- Yahan final address bheja
             medicine_details: document.getElementById("medicineDetails").value,
             prescription_base64: await getBase64("prescriptionFile")
         };

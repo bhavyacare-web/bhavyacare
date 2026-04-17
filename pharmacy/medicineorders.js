@@ -100,27 +100,46 @@ function getNextDateForDay(dayAbbr, openTime) {
     }
 }
 
-// ✨ FIX: Direct Continue Button on Click ✨
+// ✨ NAYA FUNCTION: Opening se Closing tak ke 30-min slots generate karna ✨
+function getSlotsForTimeRange(openTime, closeTime) {
+    let slots = [];
+    let [startH, startM] = openTime.split(':').map(Number);
+    let [endH, endM] = closeTime.split(':').map(Number);
+
+    let startMins = startH * 60 + startM;
+    let endMins = endH * 60 + endM;
+
+    // Nearest 30-min interval par set karna
+    let currMins = startMins;
+    if (currMins % 30 !== 0) currMins += (30 - (currMins % 30));
+
+    while (currMins <= endMins) {
+        let h = Math.floor(currMins / 60);
+        let m = currMins % 60;
+        let hh = h.toString().padStart(2, '0');
+        let mm = m.toString().padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+        currMins += 30;
+    }
+    return slots;
+}
+
 function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName) {
-    // 1. Date update karein
     document.getElementById('orderDate').value = dateStr;
     
-    // 2. Time update karein
     let timeSelect = document.getElementById('orderTime');
     let optionExists = Array.from(timeSelect.options).some(opt => opt.value === timeStr);
     if (!optionExists) {
         let [h, m] = timeStr.split(':');
         let ampm = h >= 12 ? 'PM' : 'AM';
         let displayH = h % 12 || 12;
-        let newOption = new Option(`${displayH}:${m} ${ampm} (Opening)`, timeStr);
+        let newOption = new Option(`${displayH}:${m} ${ampm}`, timeStr);
         timeSelect.add(newOption);
     }
     timeSelect.value = timeStr;
     
-    // 3. Pharmacy assign karein
     selectedPharmaId = pharmaId;
     
-    // 4. "Continue" ka green success card dikhayein
     const resultsDiv = document.getElementById("pharmaResults");
     resultsDiv.innerHTML = `
         <div class="pharma-option selected" style="cursor:default; text-align:center; padding:25px; border-color:#10b981; background:#f0fdf4;">
@@ -130,12 +149,11 @@ function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName) {
                 Date: <b>${dateStr}</b> <br> Time: <b>${formatAMPM(timeStr)}</b>
             </p>
             <button class="btn btn-primary" style="background:#10b981; font-size:16px;" onclick="goToForm()">
-                Continue with this Date & Time <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+                Continue to Booking <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
             </button>
         </div>
     `;
     
-    // Smooth scroll neeche karna
     resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -177,23 +195,50 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML = `<p style="font-weight:700; color:#dc2626; margin-bottom:10px;">Sorry, no pharmacy is open at your selected time. Select any available slot below to auto-book:</p>`;
                 
                 data.data.closedOnes.forEach(p => {
-                    let schedHtml = `<div style="margin-top:8px;">`;
+                    // ✨ NAYA LOGIC: Multiple Slots Dikhana ✨
+                    let schedHtml = `<div style="margin-top:10px; max-height: 180px; overflow-y: auto; padding-right: 5px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #fff;">`;
+                    let hasAnySlot = false;
+
                     Object.entries(p.fullSchedule).forEach(([day, times]) => {
                         if(times.open && times.close && times.open !== "" && times.open !== "undefined") {
                             let nextDate = getNextDateForDay(day, times.open);
                             if (nextDate) {
-                                schedHtml += `<span class="time-badge" onclick="autoFillAndContinue('${nextDate}', '${times.open}', '${p.id}', '${p.name}')" title="Click to auto-select and continue">
-                                    <i class="far fa-calendar-check"></i> ${day} at ${formatAMPM(times.open)}
-                                </span>`;
+                                let slots = getSlotsForTimeRange(times.open, times.close);
+                                
+                                // Aaj ki date ke liye past slots hatana
+                                let todayStr = new Date().toISOString().split('T')[0];
+                                if (nextDate === todayStr) {
+                                    let nowH = new Date().getHours();
+                                    let nowM = new Date().getMinutes();
+                                    slots = slots.filter(s => {
+                                        let [sh, sm] = s.split(':').map(Number);
+                                        return (sh > nowH) || (sh === nowH && sm > nowM);
+                                    });
+                                }
+
+                                if (slots.length > 0) {
+                                    hasAnySlot = true;
+                                    schedHtml += `<div style="margin-bottom: 10px;">`;
+                                    schedHtml += `<div style="font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;"><i class="far fa-calendar-alt"></i> ${day} (${nextDate})</div>`;
+                                    schedHtml += `<div style="display:flex; flex-wrap:wrap; gap:5px;">`;
+                                    slots.forEach(slot => {
+                                        schedHtml += `<span class="time-badge" onclick="autoFillAndContinue('${nextDate}', '${slot}', '${p.id}', '${p.name}')" title="Click to select">
+                                            ${formatAMPM(slot)}
+                                        </span>`;
+                                    });
+                                    schedHtml += `</div></div>`;
+                                }
                             }
                         }
                     });
+                    
+                    if(!hasAnySlot) schedHtml += `<p style="font-size:12px; color:#dc2626; margin:0;">No upcoming slots available for this week.</p>`;
                     schedHtml += `</div>`;
 
                     resultsDiv.innerHTML += `
                         <div class="pharma-option" style="cursor:default; background:#fff1f2;">
                             <span class="pharma-name">${p.name} (Currently Closed)</span>
-                            <p style="font-size:12px; color:#475569; margin:5px 0;">Click below to change your Date & Time automatically:</p>
+                            <p style="font-size:12px; color:#475569; margin:5px 0;">Click on a 30-min slot below to change your Date & Time automatically:</p>
                             ${schedHtml}
                         </div>`;
                 });

@@ -150,7 +150,40 @@
             </form>
         </div>
     </div>
+<div class="modal-overlay" id="cancelOrderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Cancel Order <span id="cancelModalOrderId" style="color:#dc2626;"></span></h3>
+                <button class="close-btn" onclick="closeCancelModal()">&times;</button>
+            </div>
+            <form id="cancelOrderForm">
+                <input type="hidden" id="cancelOrderIdHidden">
+                <div class="form-group">
+                    <label>Reason for Cancellation *</label>
+                    <textarea id="cancelReasonText" rows="3" placeholder="Example: Medicines out of stock, patient not reachable, etc." required style="border-color:#fca5a5;"></textarea>
+                    <p style="font-size:12px; color:#ef4444; margin-top:5px;">This reason will be emailed directly to the patient.</p>
+                </div>
+                <button type="submit" class="btn" id="btnSubmitCancel" style="background:#dc2626; color:white; width:100%; margin-top:10px;">
+                    Confirm Cancellation
+                </button>
+            </form>
+        </div>
+    </div>
 
+    <div class="modal-overlay" id="reminderAlertModal" style="z-index: 9999;">
+        <div class="modal" style="text-align: center; border: 3px solid #f59e0b;">
+            <div style="background: #fef3c7; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                <i class="fas fa-bell" style="font-size: 35px; color: #d97706; animation: shake 1s infinite;"></i>
+            </div>
+            <h2 style="margin:0 0 10px 0; color: #d97706;">Delivery Reminder!</h2>
+            <p id="reminderAlertMessage" style="font-size:15px; color:#475569; margin-bottom:20px;"></p>
+            <button class="btn btn-primary" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%;">Got it, I will check</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
+    </style>
     <script src="pharmacy_dashboard.js"></script>
 </body>
 </html>

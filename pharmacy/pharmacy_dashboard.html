@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Dashboard - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb; --secondary: #10b981; --bg-color: #f3f6f9; 
+            --text-dark: #0f172a; --text-muted: #64748b; --card-bg: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 50px; color: var(--text-dark);}
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 5%; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
+        .logo h2 { color: var(--primary); margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
+        .logo span { color: var(--secondary); }
+        .btn-logout { background: #fee2e2; color: #dc2626; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s;}
+        
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .dashboard-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;}
+        .dashboard-header h1 { margin: 0; font-size: 28px; font-weight: 800;}
+        .dashboard-header p { margin: 5px 0 0 0; color: var(--text-muted);}
+
+        /* Order Cards */
+        .order-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;}
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;}
+        .order-id { font-weight: 800; color: var(--primary); font-size: 18px;}
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;}
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-processed { background: #d1fae5; color: var(--secondary); }
+
+        .order-body { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .info-block h4 { margin: 0 0 5px 0; font-size: 13px; color: var(--text-muted); text-transform: uppercase;}
+        .info-block p { margin: 0; font-weight: 600; font-size: 15px; color: var(--text-dark); line-height: 1.5;}
+        
+        .order-actions { display: flex; gap: 15px; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 20px;}
+        .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; text-decoration: none; text-align: center; display: inline-flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-call { background: #e0e7ff; color: #4f46e5; flex: 1;}
+        .btn-call:hover { background: #c7d2fe; }
+        .btn-process { background: var(--secondary); color: white; flex: 2;}
+        .btn-view { background: #f1f5f9; color: var(--text-muted); flex: 2; cursor: not-allowed;}
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;}
+        .modal { background: white; width: 90%; max-width: 600px; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
+        .modal-header h3 { margin: 0; font-size: 22px;}
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);}
+        
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px; color: #475569;}
+        textarea, input, select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Plus Jakarta Sans'; font-size: 14px; outline: none;}
+        textarea:focus, input:focus, select:focus { border-color: var(--primary); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        @media (max-width: 768px) {
+            .order-body { grid-template-columns: 1fr; }
+            .order-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Pharmacy Dashboard</h1>
+                <p>Welcome, <span id="pharmaNameStr" style="font-weight: 700; color: #2563eb;"></span></p>
+            </div>
+            <button class="btn" style="background: white; border: 1px solid #cbd5e1;" onclick="fetchOrders()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <div id="ordersContainer">
+            <div style="text-align: center; padding: 50px; color: #64748b;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i>
+                <p>Loading your orders...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="processModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Process Order <span id="modalOrderId" style="color:#2563eb;"></span></h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="processForm">
+                <input type="hidden" id="processOrderId">
+                
+                <div class="form-group">
+                    <label>Available Medicines & Delivery Time *</label>
+                    <textarea id="availMeds" rows="3" placeholder="Example: Dolo 650 is available, will be delivered by 5:00 PM today" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Not Available Medicines (If any)</label>
+                    <textarea id="notAvailMeds" rows="2" placeholder="Example: Cough Syrup is out of stock"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Is Prescription Required for these medicines? *</label>
+                    <select id="prescReq" required>
+                        <option value="No">No, Not Required</option>
+                        <option value="Yes">Yes, Mandatory</option>
+                    </select>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Total Bill Amount (₹) *</label>
+                        <input type="number" id="totalAmt" placeholder="e.g. 500" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Payable Amount after Discount (₹) *</label>
+                        <input type="number" id="discountAmt" placeholder="e.g. 450" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-process" id="btnSubmitForm" style="width: 100%; margin-top: 10px;">
+                    Send Details to Patient
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="pharmacy_dashboard.js"></script>
+</body>
+</html>

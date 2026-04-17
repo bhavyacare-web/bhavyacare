@@ -7,14 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Please login first!"); window.location.href = "../index.html"; return;
     }
 
-    // Set Date min to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("orderDate").setAttribute('min', today);
 
-    // Auto Fetch patient's saved pincode
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "getPatientLocation", user_id: userId })
     })
     .then(res => res.json())
@@ -28,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("orderForm").addEventListener("submit", submitOrder);
 });
 
-// 1. POSTAL API FOR CITIES (From Pincode)
+// POSTAL API FOR CITIES
 function fetchCities() {
     const pin = document.getElementById("pincode").value.trim();
     const citySelect = document.getElementById("citySelect");
@@ -43,32 +40,63 @@ function fetchCities() {
                 data[0].PostOffice.forEach(po => {
                     citySelect.innerHTML += `<option value="${po.Name}">${po.Name}</option>`;
                 });
-                // ADD "OTHER" OPTION
                 citySelect.innerHTML += `<option value="other">Other (Type Manually)</option>`;
-            } else { 
-                citySelect.innerHTML = `<option value="">Invalid Pincode</option>`; 
-            }
+            } else { citySelect.innerHTML = `<option value="">Invalid Pincode</option>`; }
         }).catch(() => { citySelect.innerHTML = `<option value="">Error fetching areas</option>`; });
     } else {
         citySelect.innerHTML = `<option value="">Please enter a valid 6-digit pincode...</option>`;
     }
 }
 
-// SHOW/HIDE MANUAL CITY INPUT
 function toggleManualCity() {
     const citySelect = document.getElementById("citySelect").value;
     const manualInput = document.getElementById("manualCity");
     if (citySelect === "other") {
-        manualInput.style.display = "block";
-        manualInput.required = true;
+        manualInput.style.display = "block"; manualInput.required = true;
     } else {
-        manualInput.style.display = "none";
-        manualInput.required = false;
-        manualInput.value = "";
+        manualInput.style.display = "none"; manualInput.required = false; manualInput.value = "";
     }
 }
 
-// 2. SEARCH PHARMACIES (Multi-Pharmacy Check)
+// ✨ NEXT DATE CALCULATOR HELPER ✨
+function getNextDateForDay(dayAbbr, openTime) {
+    const dayMap = { "Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6 };
+    const targetDay = dayMap[dayAbbr];
+    let d = new Date(); 
+    
+    for(let i=0; i<=7; i++) {
+        let tempDate = new Date();
+        tempDate.setDate(d.getDate() + i);
+        if(tempDate.getDay() === targetDay) {
+            if(i === 0) {
+                let nowHour = d.getHours();
+                let nowMin = d.getMinutes();
+                let [openH, openM] = openTime.split(':').map(Number);
+                if(nowHour > openH || (nowHour === openH && nowMin >= openM)) {
+                    continue; // Aaj ka time nikal gaya, agle hafte ka check karo
+                }
+            }
+            // Date ko YYYY-MM-DD format me fix karna (timezones avoid karne ke lie)
+            let month = '' + (tempDate.getMonth() + 1), day = '' + tempDate.getDate(), year = tempDate.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+    }
+}
+
+// ✨ AUTO-FILL & RE-SEARCH FUNCTION ✨
+function autoFillDateTime(dateStr, timeStr) {
+    document.getElementById('orderDate').value = dateStr;
+    document.getElementById('orderTime').value = timeStr;
+    
+    // Automatically trigger search button
+    const btnSearch = document.getElementById('btnSearch');
+    btnSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    btnSearch.click();
+}
+
+// SEARCH PHARMACIES 
 async function searchPharmacies() {
     const pin = document.getElementById("pincode").value;
     let city = document.getElementById("citySelect").value;
@@ -83,8 +111,7 @@ async function searchPharmacies() {
 
     try {
         const res = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "checkPharmacyAvailability", pincode: pin, city: city, date: date, time: time })
         });
         const data = await res.json();
@@ -93,7 +120,6 @@ async function searchPharmacies() {
         
         if (data.status === "success") {
             if (data.data.openOnes.length > 0) {
-                // Available Pharmacies Found
                 resultsDiv.innerHTML = `<p style="font-weight:700; color:#059669; margin-bottom:10px;">Available Pharmacies (Choose One):</p>`;
                 data.data.openOnes.forEach(p => {
                     resultsDiv.innerHTML += `
@@ -106,23 +132,38 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML += `<button class="btn btn-primary" style="margin-top:10px; background:#10b981;" onclick="goToForm()">Continue with Selection</button>`;
             } 
             else if (data.data.closedOnes.length > 0) {
-                // Pharmacies are there but closed
-                resultsDiv.innerHTML = `<p style="font-weight:700; color:#dc2626; margin-bottom:10px;">Sorry, no pharmacy is open at your selected time. Here are the timings:</p>`;
+                // ✨ CLICKABLE TIMINGS UI ✨
+                resultsDiv.innerHTML = `<p style="font-weight:700; color:#dc2626; margin-bottom:10px;">Sorry, no pharmacy is open at your selected time. Select any available slot below to auto-book:</p>`;
+                
                 data.data.closedOnes.forEach(p => {
-                    let sched = Object.entries(p.fullSchedule).map(([d, t]) => `<b>${d}:</b> ${t}`).join(" | ");
+                    let schedHtml = `<div style="margin-top:8px;">`;
+                    
+                    Object.entries(p.fullSchedule).forEach(([day, times]) => {
+                        if(times.open && times.close && times.open !== "" && times.open !== "undefined") {
+                            let nextDate = getNextDateForDay(day, times.open);
+                            if (nextDate) {
+                                schedHtml += `<span class="time-badge" onclick="autoFillDateTime('${nextDate}', '${times.open}')" title="Click to auto-select and search">
+                                    <i class="far fa-calendar-check"></i> ${day} at ${formatAMPM(times.open)}
+                                </span>`;
+                            }
+                        }
+                    });
+                    schedHtml += `</div>`;
+
                     resultsDiv.innerHTML += `
                         <div class="pharma-option" style="cursor:default; background:#fff1f2;">
-                            <span class="pharma-name">${p.name} (CLOSED)</span>
-                            <p style="font-size:11px; line-height:1.4;">${sched}</p>
+                            <span class="pharma-name">${p.name} (Currently Closed)</span>
+                            <p style="font-size:12px; color:#475569; margin:5px 0;">Click below to change your Date & Time automatically:</p>
+                            ${schedHtml}
                         </div>`;
                 });
-                resultsDiv.innerHTML += `<p style="font-size:13px; text-align:center;">Kripya timing ke anusaar apna time change karein ya order cancel karein.</p>`;
+                resultsDiv.innerHTML += `<p style="font-size:13px; text-align:center; color:#64748b; margin-top:10px;">If you do not want to change time, you can Cancel the order.</p>`;
             } 
             else {
-                resultsDiv.innerHTML = `<div style="color:#dc2626; font-weight:600; text-align:center;">This service is not available in your area yet.</div>`;
+                resultsDiv.innerHTML = `<div class="error-msg" style="display:block;">This service is not available in your area yet.</div>`;
             }
         } else {
-            resultsDiv.innerHTML = `<div style="color:#dc2626; font-weight:600; text-align:center;">${data.message}</div>`;
+            resultsDiv.innerHTML = `<div class="error-msg" style="display:block;">${data.message}</div>`;
         }
     } catch(e) { alert("Network Error"); resultsDiv.innerHTML = ""; }
 }
@@ -138,10 +179,8 @@ function goToForm() {
     document.getElementById("step1-check").style.display = "none";
     document.getElementById("step2-form").style.display = "block";
     
-    // Auto fill address
     let city = document.getElementById("citySelect").value;
     if(city === "other") city = document.getElementById("manualCity").value;
-    
     document.getElementById("patientAddress").value = `City: ${city}, Pincode: ${document.getElementById("pincode").value}\nAddress: `;
 }
 
@@ -153,7 +192,7 @@ function formatAMPM(t) {
     return `${h}:${m} ${ampm}`;
 }
 
-// 3. UPLOAD & SUBMIT ORDER 
+// UPLOAD & SUBMIT ORDER 
 function getBase64(fileId) {
     return new Promise((resolve) => {
         const input = document.getElementById(fileId);
@@ -165,7 +204,6 @@ function getBase64(fileId) {
 
 async function submitOrder(e) {
     e.preventDefault();
-    
     const btn = document.getElementById("btnSubmit");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing Request...`; btn.disabled = true;
 
@@ -186,9 +224,7 @@ async function submitOrder(e) {
         };
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload)
         });
         const resData = await response.json();
 

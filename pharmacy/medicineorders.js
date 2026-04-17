@@ -7,11 +7,17 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Please login first!"); window.location.href = "../index.html"; return;
     }
 
+    // Set Date min to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("orderDate").setAttribute('min', today);
 
+    // ✨ GENERATE 30-MIN TIME SLOTS IN DROPDOWN ✨
+    generateTimeSlots();
+
+    // Auto Fetch patient's saved pincode
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "getPatientLocation", user_id: userId })
     })
     .then(res => res.json())
@@ -24,6 +30,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("orderForm").addEventListener("submit", submitOrder);
 });
+
+// ✨ FUNCTION: GENERATE 30-MIN SLOTS ✨
+function generateTimeSlots() {
+    const timeSelect = document.getElementById("orderTime");
+    for (let h = 0; h < 24; h++) {
+        for (let m of ['00', '30']) {
+            let hourStr = h.toString().padStart(2, '0');
+            let timeVal = `${hourStr}:${m}`; // For backend value (HH:mm)
+            
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            let displayH = h % 12 || 12;
+            let displayTime = `${displayH}:${m} ${ampm}`; // For user UI
+            
+            timeSelect.innerHTML += `<option value="${timeVal}">${displayTime}</option>`;
+        }
+    }
+}
 
 // POSTAL API FOR CITIES
 function fetchCities() {
@@ -58,7 +81,7 @@ function toggleManualCity() {
     }
 }
 
-// ✨ NEXT DATE CALCULATOR HELPER ✨
+// NEXT DATE CALCULATOR HELPER
 function getNextDateForDay(dayAbbr, openTime) {
     const dayMap = { "Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6 };
     const targetDay = dayMap[dayAbbr];
@@ -73,10 +96,9 @@ function getNextDateForDay(dayAbbr, openTime) {
                 let nowMin = d.getMinutes();
                 let [openH, openM] = openTime.split(':').map(Number);
                 if(nowHour > openH || (nowHour === openH && nowMin >= openM)) {
-                    continue; // Aaj ka time nikal gaya, agle hafte ka check karo
+                    continue; 
                 }
             }
-            // Date ko YYYY-MM-DD format me fix karna (timezones avoid karne ke lie)
             let month = '' + (tempDate.getMonth() + 1), day = '' + tempDate.getDate(), year = tempDate.getFullYear();
             if (month.length < 2) month = '0' + month;
             if (day.length < 2) day = '0' + day;
@@ -85,12 +107,24 @@ function getNextDateForDay(dayAbbr, openTime) {
     }
 }
 
-// ✨ AUTO-FILL & RE-SEARCH FUNCTION ✨
+// ✨ UPDATED: AUTO-FILL WITH DROPDOWN CHECK ✨
 function autoFillDateTime(dateStr, timeStr) {
     document.getElementById('orderDate').value = dateStr;
-    document.getElementById('orderTime').value = timeStr;
     
-    // Automatically trigger search button
+    // Check if the time slot exists in dropdown, if not, add it dynamically
+    let timeSelect = document.getElementById('orderTime');
+    let optionExists = Array.from(timeSelect.options).some(opt => opt.value === timeStr);
+    
+    if (!optionExists) {
+        let [h, m] = timeStr.split(':');
+        let ampm = h >= 12 ? 'PM' : 'AM';
+        let displayH = h % 12 || 12;
+        let newOption = new Option(`${displayH}:${m} ${ampm} (Opening)`, timeStr);
+        timeSelect.add(newOption);
+    }
+    
+    timeSelect.value = timeStr;
+    
     const btnSearch = document.getElementById('btnSearch');
     btnSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
     btnSearch.click();
@@ -132,12 +166,10 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML += `<button class="btn btn-primary" style="margin-top:10px; background:#10b981;" onclick="goToForm()">Continue with Selection</button>`;
             } 
             else if (data.data.closedOnes.length > 0) {
-                // ✨ CLICKABLE TIMINGS UI ✨
                 resultsDiv.innerHTML = `<p style="font-weight:700; color:#dc2626; margin-bottom:10px;">Sorry, no pharmacy is open at your selected time. Select any available slot below to auto-book:</p>`;
                 
                 data.data.closedOnes.forEach(p => {
                     let schedHtml = `<div style="margin-top:8px;">`;
-                    
                     Object.entries(p.fullSchedule).forEach(([day, times]) => {
                         if(times.open && times.close && times.open !== "" && times.open !== "undefined") {
                             let nextDate = getNextDateForDay(day, times.open);

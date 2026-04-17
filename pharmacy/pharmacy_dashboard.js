@@ -26,12 +26,8 @@ function fetchOrders() {
         </div>`;
 
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ 
-            action: "getPharmacyOrders", 
-            user_id: localStorage.getItem("bhavya_user_id") 
-        })
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "getPharmacyOrders", user_id: localStorage.getItem("bhavya_user_id") })
     })
     .then(res => res.json())
     .then(resData => {
@@ -68,16 +64,25 @@ function renderOrders(orders) {
             ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Prescription</a>` 
             : `<span style="color: #94a3b8; font-size: 13px;">No Prescription Uploaded</span>`;
 
-        // Direct Call Link Setup
+        // ✨ FIX: Mobile Number Buttons (Direct Call + Show/Copy for PC) ✨
         let callBtn = order.patient_mobile 
-            ? `<a href="tel:${order.patient_mobile}" class="btn btn-call"><i class="fas fa-phone-alt"></i> Call Patient</a>`
-            : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed;" title="Number not available"><i class="fas fa-phone-slash"></i> No Number</button>`;
+            ? `<div style="display:flex; gap:10px; flex:1;">
+                 <a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a>
+                 <button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" 
+                         onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');" title="Click to show and copy number">
+                     <i class="fas fa-eye"></i> Show No.
+                 </button>
+               </div>`
+            : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
 
         let actionBtn = isPending 
-            ? `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')"><i class="fas fa-clipboard-check"></i> Process Order</button>`
-            : `<button class="btn btn-view" disabled><i class="fas fa-check-double"></i> Awaiting Patient Reply</button>`;
+            ? `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`
+            : `<button class="btn btn-view" disabled style="flex:1.5;"><i class="fas fa-check-double"></i> Awaiting Patient Reply</button>`;
 
-        let dateStr = new Date(order.order_date).toLocaleString();
+        // ✨ FIX: Beautiful Date & Time Formatting ✨
+        let d = new Date(order.order_date);
+        let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+        let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
 
         let card = `
         <div class="order-card">
@@ -94,16 +99,20 @@ function renderOrders(orders) {
                         <div style="margin-top: 5px;">${prescHtml}</div>
                     </div>
                     <div class="info-block">
-                        <h4>Patient Address & Delivery</h4>
+                        <h4>Patient Address</h4>
                         <p style="font-size: 13px;">${order.patient_address}</p>
-                        <p style="font-size: 13px; color: #059669; margin-top: 3px;"><i class="fas fa-clock"></i> Requested Time: ${order.delivery_date}</p>
+                        <div style="margin-top: 8px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px;">
+                            <p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${order.delivery_date}</p>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px;">
+                <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
                     <h4>Order Info</h4>
-                    <p style="font-size: 13px;">Type: ${order.order_type}</p>
-                    <p style="font-size: 13px;">Date: ${dateStr}</p>
+                    <p style="font-size: 13px; margin-bottom: 8px;"><i class="fas fa-box"></i> Type: ${order.order_type}</p>
+                    <div style="background: #e0f2fe; color: #0284c7; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                        <i class="far fa-calendar-alt"></i> Ordered on:<br>${dateStr} at ${timeStr}
+                    </div>
                 </div>
             </div>
 
@@ -131,8 +140,7 @@ function closeModal() {
 async function submitProcessForm(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmitForm");
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
-    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`; btn.disabled = true;
 
     const payload = {
         action: "confirmPharmacyOrder",
@@ -154,15 +162,14 @@ async function submitProcessForm(e) {
         if (resData.status === "success") {
             alert("Details sent successfully! Status updated.");
             closeModal();
-            fetchOrders(); // Refresh table
+            fetchOrders(); 
         } else {
             alert("Error: " + resData.message);
         }
     } catch (error) {
         alert("Network error, please try again.");
     } finally {
-        btn.innerHTML = "Send Details to Patient";
-        btn.disabled = false;
+        btn.innerHTML = "Send Details to Patient"; btn.disabled = false;
     }
 }
 

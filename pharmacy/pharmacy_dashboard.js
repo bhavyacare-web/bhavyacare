@@ -64,7 +64,7 @@ function renderOrders(orders) {
             ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Prescription</a>` 
             : `<span style="color: #94a3b8; font-size: 13px;">No Prescription Uploaded</span>`;
 
-        // ✨ FIX: Mobile Number Buttons (Direct Call + Show/Copy for PC) ✨
+        // Mobile Number Buttons (Direct Call + Show/Copy for PC)
         let callBtn = order.patient_mobile 
             ? `<div style="display:flex; gap:10px; flex:1;">
                  <a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a>
@@ -79,10 +79,25 @@ function renderOrders(orders) {
             ? `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`
             : `<button class="btn btn-view" disabled style="flex:1.5;"><i class="fas fa-check-double"></i> Awaiting Patient Reply</button>`;
 
-        // ✨ FIX: Beautiful Date & Time Formatting ✨
+        // Order Date Formatting
         let d = new Date(order.order_date);
         let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
+
+        // ✨ FIX: Beautiful Delivery Date Formatting ✨
+        let formattedDelivery = order.delivery_date;
+        try {
+            if (order.delivery_date) {
+                let parts = order.delivery_date.split(' ');
+                if (parts.length >= 2) {
+                    let [year, month, day] = parts[0].split('-');
+                    let dObj = new Date(year, month - 1, day);
+                    let pDate = dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+                    let pTime = parts.slice(1).join(' '); // AM/PM wala time
+                    formattedDelivery = `${pDate} at ${pTime}`;
+                }
+            }
+        } catch(e) {}
 
         let card = `
         <div class="order-card">
@@ -102,7 +117,7 @@ function renderOrders(orders) {
                         <h4>Patient Address</h4>
                         <p style="font-size: 13px;">${order.patient_address}</p>
                         <div style="margin-top: 8px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px;">
-                            <p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${order.delivery_date}</p>
+                            <p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${formattedDelivery}</p>
                         </div>
                     </div>
                 </div>

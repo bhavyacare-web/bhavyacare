@@ -64,7 +64,7 @@ function renderOrders(orders) {
             ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Prescription</a>` 
             : `<span style="color: #94a3b8; font-size: 13px;">No Prescription Uploaded</span>`;
 
-        // Mobile Number Buttons (Direct Call + Show/Copy for PC)
+        // Mobile Number Buttons 
         let callBtn = order.patient_mobile 
             ? `<div style="display:flex; gap:10px; flex:1;">
                  <a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a>
@@ -84,20 +84,33 @@ function renderOrders(orders) {
         let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
 
-        // ✨ FIX: Beautiful Delivery Date Formatting ✨
+        // ✨ FIX: Fool-proof Delivery Date Formatting ✨
         let formattedDelivery = order.delivery_date;
         try {
             if (order.delivery_date) {
-                let parts = order.delivery_date.split(' ');
-                if (parts.length >= 2) {
-                    let [year, month, day] = parts[0].split('-');
-                    let dObj = new Date(year, month - 1, day);
+                let deliveryStr = String(order.delivery_date);
+                // Agar Google Sheet ne 'T' aur 'Z' wala object format diya (e.g. 2026-04-20T02:30:00.000Z)
+                if (deliveryStr.includes('T')) {
+                    let dObj = new Date(deliveryStr);
                     let pDate = dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
-                    let pTime = parts.slice(1).join(' '); // AM/PM wala time
+                    let pTime = dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
                     formattedDelivery = `${pDate} at ${pTime}`;
+                } 
+                // Agar normal text aaya (e.g. 2026-04-20 08:30 AM)
+                else {
+                    let parts = deliveryStr.split(' ');
+                    if (parts.length >= 2) {
+                        let [year, month, day] = parts[0].split('-');
+                        let dObj = new Date(year, month - 1, day);
+                        let pDate = dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+                        let pTime = parts.slice(1).join(' '); 
+                        formattedDelivery = `${pDate} at ${pTime}`;
+                    }
                 }
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error("Date format issue: ", e);
+        }
 
         let card = `
         <div class="order-card">

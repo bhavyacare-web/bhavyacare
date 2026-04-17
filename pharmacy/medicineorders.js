@@ -7,17 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Please login first!"); window.location.href = "../index.html"; return;
     }
 
-    // Set Date min to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("orderDate").setAttribute('min', today);
 
-    // ✨ GENERATE 30-MIN TIME SLOTS IN DROPDOWN ✨
     generateTimeSlots();
 
-    // Auto Fetch patient's saved pincode
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "getPatientLocation", user_id: userId })
     })
     .then(res => res.json())
@@ -31,24 +27,22 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("orderForm").addEventListener("submit", submitOrder);
 });
 
-// ✨ FUNCTION: GENERATE 30-MIN SLOTS ✨
 function generateTimeSlots() {
     const timeSelect = document.getElementById("orderTime");
     for (let h = 0; h < 24; h++) {
         for (let m of ['00', '30']) {
             let hourStr = h.toString().padStart(2, '0');
-            let timeVal = `${hourStr}:${m}`; // For backend value (HH:mm)
+            let timeVal = `${hourStr}:${m}`; 
             
             let ampm = h >= 12 ? 'PM' : 'AM';
             let displayH = h % 12 || 12;
-            let displayTime = `${displayH}:${m} ${ampm}`; // For user UI
+            let displayTime = `${displayH}:${m} ${ampm}`; 
             
             timeSelect.innerHTML += `<option value="${timeVal}">${displayTime}</option>`;
         }
     }
 }
 
-// POSTAL API FOR CITIES
 function fetchCities() {
     const pin = document.getElementById("pincode").value.trim();
     const citySelect = document.getElementById("citySelect");
@@ -81,7 +75,6 @@ function toggleManualCity() {
     }
 }
 
-// NEXT DATE CALCULATOR HELPER
 function getNextDateForDay(dayAbbr, openTime) {
     const dayMap = { "Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6 };
     const targetDay = dayMap[dayAbbr];
@@ -107,14 +100,14 @@ function getNextDateForDay(dayAbbr, openTime) {
     }
 }
 
-// ✨ UPDATED: AUTO-FILL WITH DROPDOWN CHECK ✨
-function autoFillDateTime(dateStr, timeStr) {
+// ✨ FIX: Direct Continue Button on Click ✨
+function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName) {
+    // 1. Date update karein
     document.getElementById('orderDate').value = dateStr;
     
-    // Check if the time slot exists in dropdown, if not, add it dynamically
+    // 2. Time update karein
     let timeSelect = document.getElementById('orderTime');
     let optionExists = Array.from(timeSelect.options).some(opt => opt.value === timeStr);
-    
     if (!optionExists) {
         let [h, m] = timeStr.split(':');
         let ampm = h >= 12 ? 'PM' : 'AM';
@@ -122,15 +115,30 @@ function autoFillDateTime(dateStr, timeStr) {
         let newOption = new Option(`${displayH}:${m} ${ampm} (Opening)`, timeStr);
         timeSelect.add(newOption);
     }
-    
     timeSelect.value = timeStr;
     
-    const btnSearch = document.getElementById('btnSearch');
-    btnSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    btnSearch.click();
+    // 3. Pharmacy assign karein
+    selectedPharmaId = pharmaId;
+    
+    // 4. "Continue" ka green success card dikhayein
+    const resultsDiv = document.getElementById("pharmaResults");
+    resultsDiv.innerHTML = `
+        <div class="pharma-option selected" style="cursor:default; text-align:center; padding:25px; border-color:#10b981; background:#f0fdf4;">
+            <i class="fas fa-check-circle" style="color:#10b981; font-size:40px; margin-bottom:15px;"></i>
+            <h3 style="margin:0 0 10px 0; color:#0f172a;">${pharmaName} Selected</h3>
+            <p style="color:#059669; font-size:15px; font-weight:600; margin-bottom:20px;">
+                Date: <b>${dateStr}</b> <br> Time: <b>${formatAMPM(timeStr)}</b>
+            </p>
+            <button class="btn btn-primary" style="background:#10b981; font-size:16px;" onclick="goToForm()">
+                Continue with this Date & Time <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+            </button>
+        </div>
+    `;
+    
+    // Smooth scroll neeche karna
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// SEARCH PHARMACIES 
 async function searchPharmacies() {
     const pin = document.getElementById("pincode").value;
     let city = document.getElementById("citySelect").value;
@@ -174,7 +182,7 @@ async function searchPharmacies() {
                         if(times.open && times.close && times.open !== "" && times.open !== "undefined") {
                             let nextDate = getNextDateForDay(day, times.open);
                             if (nextDate) {
-                                schedHtml += `<span class="time-badge" onclick="autoFillDateTime('${nextDate}', '${times.open}')" title="Click to auto-select and search">
+                                schedHtml += `<span class="time-badge" onclick="autoFillAndContinue('${nextDate}', '${times.open}', '${p.id}', '${p.name}')" title="Click to auto-select and continue">
                                     <i class="far fa-calendar-check"></i> ${day} at ${formatAMPM(times.open)}
                                 </span>`;
                             }

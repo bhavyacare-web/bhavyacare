@@ -57,14 +57,38 @@ function renderOrders(orders) {
     }
 
     orders.forEach(order => {
-        let isPending = order.patient_status !== "confirm_for_patient";
-        let badge = isPending ? `<span class="badge badge-pending">New Request</span>` : `<span class="badge badge-processed">Sent to Patient</span>`;
+        let badge = "";
+        let actionBtn = "";
         
-        let prescHtml = order.prescription 
-            ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Prescription</a>` 
-            : `<span style="color: #94a3b8; font-size: 13px;">No Prescription Uploaded</span>`;
+        // ✨ NAYA LOGIC: Patient Actions Handle Karna ✨
+        if (order.patient_status === "Pending") {
+            badge = `<span class="badge badge-pending">New Request</span>`;
+            actionBtn = `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`;
+        } 
+        else if (order.patient_status === "confirm_for_patient") {
+            badge = `<span class="badge" style="background:#e0e7ff; color:#4f46e5;">Sent to Patient</span>`;
+            actionBtn = `<button class="btn btn-view" disabled style="flex:1.5; background:#f1f5f9; color:#64748b;"><i class="fas fa-hourglass-half"></i> Awaiting Patient Reply</button>`;
+        } 
+        else if (order.patient_status === "Confirmed") {
+            badge = `<span class="badge badge-processed"><i class="fas fa-check-circle"></i> Confirmed by Patient</span>`;
+            actionBtn = `<button class="btn btn-success" disabled style="flex:1.5; background:#10b981; color:white; border:none; opacity:1;"><i class="fas fa-box"></i> Order is Confirmed</button>`;
+        }
 
-        // Mobile Number Buttons 
+        let prescHtml = order.prescription 
+            ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` 
+            : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
+
+        // ✨ NAYA LOGIC: Valid Prescription (jo patient ne confirm karte waqt daali)
+        let validPrescHtml = "";
+        if (order.valid_prescription && order.valid_prescription.trim() !== "") {
+            validPrescHtml = `
+            <div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                <h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6>
+                <a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download Valid Prescription</a>
+            </div>`;
+        }
+
+        // Mobile Number Buttons
         let callBtn = order.patient_mobile 
             ? `<div style="display:flex; gap:10px; flex:1;">
                  <a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a>
@@ -75,42 +99,28 @@ function renderOrders(orders) {
                </div>`
             : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
 
-        let actionBtn = isPending 
-            ? `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`
-            : `<button class="btn btn-view" disabled style="flex:1.5;"><i class="fas fa-check-double"></i> Awaiting Patient Reply</button>`;
-
-        // Order Date Formatting
+        // Date Formatting
         let d = new Date(order.order_date);
         let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
 
-        // ✨ FIX: Fool-proof Delivery Date Formatting ✨
         let formattedDelivery = order.delivery_date;
         try {
             if (order.delivery_date) {
                 let deliveryStr = String(order.delivery_date);
-                // Agar Google Sheet ne 'T' aur 'Z' wala object format diya (e.g. 2026-04-20T02:30:00.000Z)
                 if (deliveryStr.includes('T')) {
                     let dObj = new Date(deliveryStr);
-                    let pDate = dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
-                    let pTime = dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
-                    formattedDelivery = `${pDate} at ${pTime}`;
-                } 
-                // Agar normal text aaya (e.g. 2026-04-20 08:30 AM)
-                else {
+                    formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`;
+                } else {
                     let parts = deliveryStr.split(' ');
                     if (parts.length >= 2) {
                         let [year, month, day] = parts[0].split('-');
                         let dObj = new Date(year, month - 1, day);
-                        let pDate = dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
-                        let pTime = parts.slice(1).join(' '); 
-                        formattedDelivery = `${pDate} at ${pTime}`;
+                        formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${parts.slice(1).join(' ')}`;
                     }
                 }
             }
-        } catch(e) {
-            console.error("Date format issue: ", e);
-        }
+        } catch(e) {}
 
         let card = `
         <div class="order-card">
@@ -125,6 +135,7 @@ function renderOrders(orders) {
                         <h4>Medicine Details</h4>
                         <p>${order.medicine_details}</p>
                         <div style="margin-top: 5px;">${prescHtml}</div>
+                        ${validPrescHtml}
                     </div>
                     <div class="info-block">
                         <h4>Patient Address</h4>
@@ -188,7 +199,7 @@ async function submitProcessForm(e) {
         const resData = await response.json();
 
         if (resData.status === "success") {
-            alert("Details sent successfully! Status updated.");
+            alert("Details sent successfully! Patient has been notified.");
             closeModal();
             fetchOrders(); 
         } else {

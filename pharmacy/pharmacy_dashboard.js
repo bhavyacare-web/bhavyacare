@@ -77,7 +77,6 @@ function checkDeliveryReminders(orders) {
                     let parts = deliveryStr.split(' ');
                     if (parts.length >= 2) {
                         let [year, month, day] = parts[0].split('-');
-                        // Quick parsing logic (approximate for reminder alert)
                         dDate = new Date(`${year}-${month}-${day}T${parts[1]}`); 
                     }
                 }
@@ -178,16 +177,15 @@ function renderOrders(orders) {
     });
 }
 
-// ✨ SETTLEMENT REPORT LOGIC ✨
+// ✨ FIX: String backticks properly added for innerHTML ✨
 function renderSettlements() {
     const container = document.getElementById("settlementList");
     container.innerHTML = "";
     
-    // Sirf wahi orders jinka status Completed hai
     const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
     
     if(completed.length === 0) {
-        container.innerHTML = "<p style='text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;'><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show in report.</p>";
+        container.innerHTML = `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;"><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show in report.</div>`;
         return;
     }
 
@@ -241,7 +239,6 @@ function downloadSettlementCSV() {
     document.body.removeChild(a);
 }
 
-// ✨ MODAL AND API CALLS ✨
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
 function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
 
@@ -254,8 +251,8 @@ async function submitProcessForm(e) {
         available_meds: document.getElementById("availMeds").value, 
         not_available_meds: document.getElementById("notAvailMeds").value, 
         prescription_req: document.getElementById("prescReq").value, 
-        total_mrp: document.getElementById("totalMRP").value,       // NAYA LOGIC
-        purchase_rate: document.getElementById("purchaseRate").value // NAYA LOGIC
+        total_mrp: document.getElementById("totalMRP").value,
+        purchase_rate: document.getElementById("purchaseRate").value
     };
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });

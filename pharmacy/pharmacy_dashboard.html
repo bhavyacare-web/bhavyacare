@@ -20,12 +20,19 @@
         .btn-logout { background: #fee2e2; color: #dc2626; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s;}
         
         .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .dashboard-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;}
+        .dashboard-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;}
         .dashboard-header h1 { margin: 0; font-size: 28px; font-weight: 800;}
         .dashboard-header p { margin: 5px 0 0 0; color: var(--text-muted);}
 
+        /* ✨ NAYA: Navigation Tabs ✨ */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
+        .nav-btn { padding: 10px 20px; border-radius: 20px; border: 1px solid transparent; background: transparent; cursor: pointer; font-weight: 700; color: var(--text-muted); font-size: 15px; transition: 0.3s;}
+        .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);}
+        .nav-btn:hover:not(.active) { background: #f1f5f9; color: var(--text-dark);}
+        #settlementsSection { display: none; }
+
         /* Order Cards */
-        .order-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;}
+        .order-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px; transition: 0.3s;}
         .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;}
         .order-id { font-weight: 800; color: var(--primary); font-size: 18px;}
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;}
@@ -43,6 +50,11 @@
         .btn-process { background: var(--secondary); color: white; flex: 2;}
         .btn-view { background: #f1f5f9; color: var(--text-muted); flex: 2; cursor: not-allowed;}
 
+        /* Settlement Specific */
+        .settlement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px;}
+        .settlement-box { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #475569;}
+        .settlement-box strong { display: block; font-size: 15px; color: #0f172a; margin-top: 4px;}
+
         /* Modal Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;}
         .modal { background: white; width: 90%; max-width: 600px; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;}
@@ -56,27 +68,24 @@
         textarea:focus, input:focus, select:focus { border-color: var(--primary); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* ✨ MOBILE RESPONSIVENESS (MEDIA QUERIES) ✨ */
+        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
+
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
             .logo h2 { font-size: 20px; }
             .btn-logout { padding: 8px 15px; font-size: 14px; }
-            
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .dashboard-header h1 { font-size: 24px; }
-            
             .order-card { padding: 15px; }
             .order-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            
             .order-body { grid-template-columns: 1fr; gap: 15px; }
-            
             .order-actions { flex-direction: column; gap: 10px; }
             .order-actions .btn { width: 100%; padding: 14px; }
-            /* Mobile me Call button aur Show No. button ko ek ke neeche ek karne ke liye */
             .order-actions > div { flex-direction: column; } 
-            
             .modal { padding: 20px; width: 95%; }
             .grid-2 { grid-template-columns: 1fr; }
+            .settlement-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -93,16 +102,34 @@
                 <h1>Pharmacy Dashboard</h1>
                 <p>Welcome, <span id="pharmaNameStr" style="font-weight: 700; color: #2563eb;"></span></p>
             </div>
-            <button class="btn" style="background: white; border: 1px solid #cbd5e1; width: auto;" onclick="fetchOrders()">
+            <button class="btn" style="background: white; border: 1px solid #cbd5e1; width: auto; color: #475569;" onclick="fetchOrders()">
                 <i class="fas fa-sync-alt"></i> Refresh
             </button>
         </div>
 
-        <div id="ordersContainer">
-            <div style="text-align: center; padding: 50px; color: #64748b;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i>
-                <p>Loading your orders...</p>
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="showSection('orders', this)"><i class="fas fa-box-open"></i> Live Orders</button>
+            <button class="nav-btn" onclick="showSection('settlements', this)"><i class="fas fa-file-invoice-dollar"></i> Settlement Report</button>
+        </div>
+
+        <div id="ordersSection">
+            <div id="ordersContainer">
+                <div style="text-align: center; padding: 50px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i>
+                    <p>Loading your orders...</p>
+                </div>
             </div>
+        </div>
+
+        <div id="settlementsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-check-circle" style="color: #10b981;"></i> Completed Orders Ledger</h3>
+                <button class="btn" style="background: #1d4ed8; color: white; width: auto; padding: 10px 15px;" onclick="downloadSettlementCSV()">
+                    <i class="fas fa-file-download"></i> Export CSV
+                </button>
+            </div>
+            <div id="settlementList">
+                </div>
         </div>
     </div>
 
@@ -133,24 +160,28 @@
                     </select>
                 </div>
 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Total Bill Amount (₹) *</label>
-                        <input type="number" id="totalAmt" placeholder="e.g. 500" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Payable Amount after Discount (₹) *</label>
-                        <input type="number" id="discountAmt" placeholder="e.g. 450" required>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 10px 0;"><i class="fas fa-info-circle"></i> Enter details below. Discount & Final Payable will be auto-calculated by BhavyaCare.</p>
+                    <div class="grid-2">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="color: #0f172a;">Total MRP (₹) *</label>
+                            <input type="number" id="totalMRP" placeholder="e.g. 1000" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="color: #0f172a;">Purchase Rate (₹) *</label>
+                            <input type="number" id="purchaseRate" placeholder="e.g. 400" required>
+                        </div>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-process" id="btnSubmitForm" style="width: 100%; margin-top: 10px;">
-                    Send Details to Patient
+                    Send to Patient
                 </button>
             </form>
         </div>
     </div>
-<div class="modal-overlay" id="cancelOrderModal">
+
+    <div class="modal-overlay" id="cancelOrderModal">
         <div class="modal">
             <div class="modal-header">
                 <h3>Cancel Order <span id="cancelModalOrderId" style="color:#dc2626;"></span></h3>
@@ -176,14 +207,11 @@
                 <i class="fas fa-bell" style="font-size: 35px; color: #d97706; animation: shake 1s infinite;"></i>
             </div>
             <h2 style="margin:0 0 10px 0; color: #d97706;">Delivery Reminder!</h2>
-            <p id="reminderAlertMessage" style="font-size:15px; color:#475569; margin-bottom:20px;"></p>
-            <button class="btn btn-primary" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%;">Got it, I will check</button>
+            <p id="reminderAlertMessage" style="font-size:15px; color:#475569; margin-bottom:20px; line-height: 1.5;"></p>
+            <button class="btn btn-primary" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%; background: #d97706; color: white;">Got it, I will check</button>
         </div>
     </div>
 
-    <style>
-        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
-    </style>
     <script src="pharmacy_dashboard.js"></script>
 </body>
 </html>

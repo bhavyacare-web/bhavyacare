@@ -1,7 +1,7 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let globalPharmacyOrders = [];
-let remindedOrders = new Set(); // Taaki ek order ka popup baar-baar na aaye
+let remindedOrders = new Set(); 
 
 document.addEventListener("DOMContentLoaded", () => {
     const role = localStorage.getItem("bhavya_role");
@@ -20,9 +20,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("processForm").addEventListener("submit", submitProcessForm);
     document.getElementById("cancelOrderForm").addEventListener("submit", submitCancelOrder);
 
-    // Frontend par har 1 minute me check karna ki kya 30-min bache hain
+    // Front-end par har 1 minute me check karna ki kya 30-min bache hain
     setInterval(() => checkDeliveryReminders(globalPharmacyOrders), 60000); 
 });
+
+function showSection(section, btn) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    if(section === 'orders') {
+        document.getElementById('ordersSection').style.display = 'block';
+        document.getElementById('settlementsSection').style.display = 'none';
+    } else {
+        document.getElementById('ordersSection').style.display = 'none';
+        document.getElementById('settlementsSection').style.display = 'block';
+        renderSettlements();
+    }
+}
 
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
@@ -37,14 +51,17 @@ function fetchOrders() {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
             renderOrders(globalPharmacyOrders);
-            checkDeliveryReminders(globalPharmacyOrders); // Load hote hi check karo
+            // Agar pehle se us tab me hain toh update kar do
+            if(document.getElementById('settlementsSection').style.display === 'block') {
+                renderSettlements();
+            }
+            checkDeliveryReminders(globalPharmacyOrders); 
         } else {
             container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
         }
     }).catch(err => { container.innerHTML = `<p style="text-align:center; color:red;">Network Error.</p>`; });
 }
 
-// ✨ NAYA LOGIC: 30-Min On-Screen Alert Popup ✨
 function checkDeliveryReminders(orders) {
     if(!orders || orders.length === 0) return;
     let now = new Date();
@@ -52,15 +69,26 @@ function checkDeliveryReminders(orders) {
     orders.forEach(order => {
         if (order.patient_status === "Confirmed" && order.delivery_date) {
             try {
-                let dDate = new Date(order.delivery_date);
-                if (!isNaN(dDate)) {
+                let deliveryStr = String(order.delivery_date);
+                let dDate;
+                if (deliveryStr.includes('T')) {
+                    dDate = new Date(deliveryStr);
+                } else {
+                    let parts = deliveryStr.split(' ');
+                    if (parts.length >= 2) {
+                        let [year, month, day] = parts[0].split('-');
+                        // Quick parsing logic (approximate for reminder alert)
+                        dDate = new Date(`${year}-${month}-${day}T${parts[1]}`); 
+                    }
+                }
+
+                if (dDate && !isNaN(dDate)) {
                     let diffMins = (dDate - now) / 1000 / 60;
-                    
-                    // Agar 30 min se kam time bacha hai (0 to 30) aur popup nahi dikha
                     if (diffMins > 0 && diffMins <= 30 && !remindedOrders.has(order.order_id)) {
-                        document.getElementById("reminderAlertMessage").innerHTML = `Order <b>#${order.order_id}</b> is pending!<br>Delivery scheduled for <b>${order.delivery_date}</b>. Please deliver and complete the order.`;
+                        let formattedTime = dDate.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
+                        document.getElementById("reminderAlertMessage").innerHTML = `Order <b style="color:#0f172a;">#${order.order_id}</b> is pending!<br>Delivery scheduled for <b style="color:#dc2626;">Today at ${formattedTime}</b>.<br>Please deliver and mark it Complete.`;
                         document.getElementById("reminderAlertModal").style.display = "flex";
-                        remindedOrders.add(order.order_id); // Set me daal diya taaki dubara na aaye
+                        remindedOrders.add(order.order_id); 
                     }
                 }
             } catch(e) {}
@@ -80,7 +108,6 @@ function renderOrders(orders) {
     orders.forEach(order => {
         let badge = ""; let actionBtn = "";
         
-        // ✨ NAYA LOGIC: Buttons Update ✨
         if (order.patient_status === "Pending") {
             badge = `<span class="badge badge-pending">New Request</span>`;
             actionBtn = `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`;
@@ -91,17 +118,16 @@ function renderOrders(orders) {
         } 
         else if (order.patient_status === "Confirmed") {
             badge = `<span class="badge" style="background:#10b981; color:white;"><i class="fas fa-exclamation-circle"></i> Action Needed (Confirmed)</span>`;
-            // Cancel and Complete Buttons
             actionBtn = `
                 <div style="display:flex; gap:10px; flex:1.5;">
                     <button class="btn" style="flex:1; background:#dc2626; color:white;" onclick="openCancelModal('${order.order_id}')"><i class="fas fa-times"></i> Cancel</button>
-                    <button class="btn" style="flex:1.5; background:#10b981; color:white; animation: pulse 2s infinite;" onclick="markOrderComplete('${order.order_id}')"><i class="fas fa-check-double"></i> Delivered?</button>
+                    <button class="btn" style="flex:1.5; background:#10b981; color:white;" onclick="markOrderComplete('${order.order_id}')"><i class="fas fa-check-double"></i> Delivered?</button>
                 </div>
             `;
         }
         else if (order.patient_status === "Completed") {
             badge = `<span class="badge" style="background:#ecfdf5; color:#065f46;"><i class="fas fa-check-circle"></i> Completed</span>`;
-            actionBtn = `<button class="btn" disabled style="flex:1.5; background:#f1f5f9; color:#065f46; font-weight:800;"><i class="fas fa-award"></i> Order Completed Successfully</button>`;
+            actionBtn = `<button class="btn" disabled style="flex:1.5; background:#f1f5f9; color:#065f46; font-weight:800;"><i class="fas fa-award"></i> Order Completed</button>`;
         }
         else if (order.patient_status === "Cancelled") {
             badge = `<span class="badge" style="background:#fee2e2; color:#b91c1c;"><i class="fas fa-ban"></i> Cancelled</span>`;
@@ -111,7 +137,7 @@ function renderOrders(orders) {
         let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
         let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
 
-        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
+        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');" title="Copy Number"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
 
         let d = new Date(order.order_date);
         let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
@@ -152,49 +178,108 @@ function renderOrders(orders) {
     });
 }
 
-// ✨ PROCESS MODAL (Old Logic) ✨
-function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
-function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
-async function submitProcessForm(e) {
-    e.preventDefault(); const btn = document.getElementById("btnSubmitForm"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`; btn.disabled = true;
-    const payload = { action: "confirmPharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: document.getElementById("processOrderId").value, available_meds: document.getElementById("availMeds").value, not_available_meds: document.getElementById("notAvailMeds").value, prescription_req: document.getElementById("prescReq").value, amount: document.getElementById("totalAmt").value, discount_amount: document.getElementById("discountAmt").value };
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        const resData = await response.json();
-        if (resData.status === "success") { alert("Details sent successfully! Patient has been notified."); closeModal(); fetchOrders(); } else { alert("Error: " + resData.message); }
-    } catch (error) { alert("Network error, please try again."); } finally { btn.innerHTML = "Send Details to Patient"; btn.disabled = false; }
+// ✨ SETTLEMENT REPORT LOGIC ✨
+function renderSettlements() {
+    const container = document.getElementById("settlementList");
+    container.innerHTML = "";
+    
+    // Sirf wahi orders jinka status Completed hai
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+    
+    if(completed.length === 0) {
+        container.innerHTML = "<p style='text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;'><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show in report.</p>";
+        return;
+    }
+
+    completed.forEach(order => {
+        let mrp = parseFloat(order.total_mrp) || 0;
+        let pRate = parseFloat(order.purchase_rate) || 0;
+        let profit = parseFloat(order.total_profit) || 0;
+        let myShare = parseFloat(order.pharma_profit_share) || 0;
+        let delCharge = parseFloat(order.delivery_charge) || 0;
+        let comm = parseFloat(order.bhavya_care_commission) || 0;
+
+        let html = `
+        <div class="order-card" style="border-left: 6px solid #10b981; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px;">
+                <strong style="color:#0f172a; font-size:16px;">Order #${order.order_id}</strong>
+                <span style="color:#059669; font-weight:800; font-size:12px; background:#d1fae5; padding:4px 8px; border-radius:4px;">COMPLETED</span>
+            </div>
+            <div class="settlement-grid">
+                <div class="settlement-box">Total MRP <strong>₹${mrp.toFixed(2)}</strong></div>
+                <div class="settlement-box">Purchase Rate <strong style="color:#ef4444;">₹${pRate.toFixed(2)}</strong></div>
+                <div class="settlement-box">Total Profit <strong>₹${profit.toFixed(2)}</strong></div>
+                <div class="settlement-box" style="background:#f0fdf4; border-color:#10b981;">Your Profit Share <strong style="color:#059669;">₹${myShare.toFixed(2)}</strong></div>
+                <div class="settlement-box">Delivery Charge <strong style="color:#059669;">+ ₹${delCharge.toFixed(2)}</strong></div>
+                <div class="settlement-box" style="background:#eff6ff; border-color:#3b82f6;">BhavyaCare Comm. <strong style="color:#1d4ed8;">- ₹${comm.toFixed(2)}</strong></div>
+            </div>
+        </div>`;
+        container.innerHTML += html;
+    });
 }
 
-// ✨ NAYA LOGIC: CANCEL ORDER ✨
-function openCancelModal(orderId) {
-    document.getElementById("cancelOrderIdHidden").value = orderId;
-    document.getElementById("cancelModalOrderId").innerText = "#" + orderId;
-    document.getElementById("cancelOrderModal").style.display = "flex";
+function downloadSettlementCSV() {
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+    if(completed.length === 0) { alert("No completed orders available to download."); return; }
+
+    let csv = "Order ID,Order Date,Total MRP,Purchase Rate,Total Profit,Pharma Profit Share,Delivery Charge,BhavyaCare Commission\n";
+    
+    completed.forEach(o => {
+        let dateObj = new Date(o.order_date);
+        let dateStr = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
+        csv += `${o.order_id},${dateStr},${o.total_mrp||0},${o.purchase_rate||0},${o.total_profit||0},${o.pharma_profit_share||0},${o.delivery_charge||0},${o.bhavya_care_commission||0}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `BhavyaCare_Settlement_Report_${new Date().getTime()}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
-function closeCancelModal() {
-    document.getElementById("cancelOrderModal").style.display = "none";
-    document.getElementById("cancelOrderForm").reset();
-}
-async function submitCancelOrder(e) {
-    e.preventDefault();
-    const btn = document.getElementById("btnSubmitCancel"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Cancelling...`; btn.disabled = true;
-    const payload = {
-        action: "cancelPharmacyOrder",
-        user_id: localStorage.getItem("bhavya_user_id"),
-        order_id: document.getElementById("cancelOrderIdHidden").value,
-        cancel_reason: document.getElementById("cancelReasonText").value
+
+// ✨ MODAL AND API CALLS ✨
+function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
+function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
+
+async function submitProcessForm(e) {
+    e.preventDefault(); const btn = document.getElementById("btnSubmitForm"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`; btn.disabled = true;
+    const payload = { 
+        action: "confirmPharmacyOrder", 
+        user_id: localStorage.getItem("bhavya_user_id"), 
+        order_id: document.getElementById("processOrderId").value, 
+        available_meds: document.getElementById("availMeds").value, 
+        not_available_meds: document.getElementById("notAvailMeds").value, 
+        prescription_req: document.getElementById("prescReq").value, 
+        total_mrp: document.getElementById("totalMRP").value,       // NAYA LOGIC
+        purchase_rate: document.getElementById("purchaseRate").value // NAYA LOGIC
     };
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
-        if (resData.status === "success") { alert("Order Cancelled. Patient has been notified."); closeCancelModal(); fetchOrders(); } else { alert("Error: " + resData.message); }
-    } catch (error) { alert("Network error, please try again."); } finally { btn.innerHTML = "Confirm Cancellation"; btn.disabled = false; }
+        if (resData.status === "success") { alert("Details sent successfully! Patient has been notified."); closeModal(); fetchOrders(); } else { alert("Error: " + resData.message); }
+    } catch (error) { alert("Network error, please try again."); } finally { btn.innerHTML = "Send to Patient"; btn.disabled = false; }
 }
 
-// ✨ NAYA LOGIC: COMPLETE ORDER ✨
+function openCancelModal(orderId) { document.getElementById("cancelOrderIdHidden").value = orderId; document.getElementById("cancelModalOrderId").innerText = "#" + orderId; document.getElementById("cancelOrderModal").style.display = "flex"; }
+function closeCancelModal() { document.getElementById("cancelOrderModal").style.display = "none"; document.getElementById("cancelOrderForm").reset(); }
+
+async function submitCancelOrder(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSubmitCancel"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Cancelling...`; btn.disabled = true;
+    const payload = { action: "cancelPharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: document.getElementById("cancelOrderIdHidden").value, cancel_reason: document.getElementById("cancelReasonText").value };
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const resData = await response.json();
+        if (resData.status === "success") { alert("Order Cancelled. Patient has been notified."); closeCancelModal(); fetchOrders(); } else { alert("Error: " + resData.message); }
+    } catch (error) { alert("Network error."); } finally { btn.innerHTML = "Confirm Cancellation"; btn.disabled = false; }
+}
+
 async function markOrderComplete(orderId) {
-    if(!confirm("Are you sure this order is delivered and complete?")) return;
-    
+    if(!confirm("Are you sure you have delivered the medicines and received the payment?")) return;
     try {
         const payload = { action: "completePharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId };
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });

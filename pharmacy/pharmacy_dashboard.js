@@ -50,10 +50,9 @@ function fetchOrders() {
     .then(resData => {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
-            renderOrders(globalPharmacyOrders);
-            // Agar pehle se us tab me hain toh update kar do
+            renderOrders(globalPharmacyOrders); // Default render
             if(document.getElementById('settlementsSection').style.display === 'block') {
-                renderSettlements();
+                renderSettlements(); // Agar tab khula hai to update karo
             }
             checkDeliveryReminders(globalPharmacyOrders); 
         } else {
@@ -61,6 +60,93 @@ function fetchOrders() {
         }
     }).catch(err => { container.innerHTML = `<p style="text-align:center; color:red;">Network Error.</p>`; });
 }
+
+// ✨ LIVE ORDERS SEARCH & FILTER LOGIC ✨
+function filterLiveOrders() {
+    const searchText = document.getElementById("searchOrderInput").value.toLowerCase().trim();
+    const statusVal = document.getElementById("statusFilter").value;
+    const dateVal = document.getElementById("dateFilter").value;
+
+    const filtered = globalPharmacyOrders.filter(order => {
+        let matchText = true;
+        if (searchText !== "") {
+            const orderIdStr = (order.order_id || "").toLowerCase();
+            const patMobile = (order.patient_mobile || "").toLowerCase();
+            matchText = orderIdStr.includes(searchText) || patMobile.includes(searchText);
+        }
+
+        let matchStatus = true;
+        if (statusVal !== "All") {
+            matchStatus = order.patient_status === statusVal;
+        }
+
+        let matchDate = true;
+        if (dateVal !== "") {
+            const [year, month, day] = dateVal.split('-');
+            const orderDateStr = order.order_date || "";
+            matchDate = orderDateStr.includes(`${year}-${month}-${day}`);
+        }
+
+        return matchText && matchStatus && matchDate;
+    });
+
+    renderOrders(filtered);
+}
+
+function clearOrderFilters() {
+    document.getElementById("searchOrderInput").value = "";
+    document.getElementById("statusFilter").value = "All";
+    document.getElementById("dateFilter").value = "";
+    renderOrders(globalPharmacyOrders);
+}
+
+// ✨ SETTLEMENT LEDGER SEARCH & FILTER LOGIC ✨
+function filterSettlements() {
+    const searchText = document.getElementById("searchSettlementInput").value.toLowerCase().trim();
+    const startDateVal = document.getElementById("settlementStartDate").value;
+    const endDateVal = document.getElementById("settlementEndDate").value;
+
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+
+    const filtered = completed.filter(order => {
+        let matchText = true;
+        if (searchText !== "") {
+            const orderIdStr = (order.order_id || "").toLowerCase();
+            matchText = orderIdStr.includes(searchText);
+        }
+
+        let matchDate = true;
+        if (startDateVal !== "" || endDateVal !== "") {
+            const orderDate = new Date(order.order_date);
+            orderDate.setHours(0, 0, 0, 0); 
+            
+            if (startDateVal !== "") {
+                const sDate = new Date(startDateVal);
+                sDate.setHours(0, 0, 0, 0);
+                if (orderDate < sDate) matchDate = false;
+            }
+            if (endDateVal !== "") {
+                const eDate = new Date(endDateVal);
+                eDate.setHours(0, 0, 0, 0);
+                if (orderDate > eDate) matchDate = false;
+            }
+        }
+
+        return matchText && matchDate;
+    });
+
+    renderSettlementsList(filtered); 
+}
+
+function clearSettlementFilters() {
+    document.getElementById("searchSettlementInput").value = "";
+    document.getElementById("settlementStartDate").value = "";
+    document.getElementById("settlementEndDate").value = "";
+    
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+    renderSettlementsList(completed);
+}
+
 
 function checkDeliveryReminders(orders) {
     if(!orders || orders.length === 0) return;
@@ -100,7 +186,7 @@ function renderOrders(orders) {
     container.innerHTML = "";
 
     if (!orders || orders.length === 0) {
-        container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Yet</h3></div>`;
+        container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`;
         return;
     }
 
@@ -177,19 +263,21 @@ function renderOrders(orders) {
     });
 }
 
-// ✨ FIX: String backticks properly added for innerHTML ✨
 function renderSettlements() {
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+    renderSettlementsList(completed);
+}
+
+function renderSettlementsList(ordersToRender) {
     const container = document.getElementById("settlementList");
     container.innerHTML = "";
     
-    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
-    
-    if(completed.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;"><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show in report.</div>`;
+    if(ordersToRender.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;"><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show. Try changing dates.</div>`;
         return;
     }
 
-    completed.forEach(order => {
+    ordersToRender.forEach(order => {
         let mrp = parseFloat(order.total_mrp) || 0;
         let pRate = parseFloat(order.purchase_rate) || 0;
         let profit = parseFloat(order.total_profit) || 0;
@@ -216,22 +304,43 @@ function renderSettlements() {
     });
 }
 
-// ✨ NAYA LOGIC: BEAUTIFUL PDF GENERATOR ✨
+// ✨ DOWNLOAD PDF LOGIC ✨
 function downloadSettlementPDF() {
-    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
-    if(completed.length === 0) { alert("No completed orders available to download."); return; }
+    const searchText = document.getElementById("searchSettlementInput").value.toLowerCase().trim();
+    const startDateVal = document.getElementById("settlementStartDate").value;
+    const endDateVal = document.getElementById("settlementEndDate").value;
 
-    // Ek nayi print window open karenge
+    const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
+
+    const filteredOrders = completed.filter(order => {
+        let matchText = true;
+        if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText); }
+
+        let matchDate = true;
+        if (startDateVal !== "" || endDateVal !== "") {
+            const orderDate = new Date(order.order_date); orderDate.setHours(0, 0, 0, 0); 
+            if (startDateVal !== "") { const sDate = new Date(startDateVal); sDate.setHours(0, 0, 0, 0); if (orderDate < sDate) matchDate = false; }
+            if (endDateVal !== "") { const eDate = new Date(endDateVal); eDate.setHours(0, 0, 0, 0); if (orderDate > eDate) matchDate = false; }
+        }
+        return matchText && matchDate;
+    });
+
+    if(filteredOrders.length === 0) { alert("No orders found for the selected date range."); return; }
+
     let printWindow = window.open('', '', 'width=900,height=700');
     
-    // PDF ki styling aur table
+    let reportTitle = "Pharmacy Settlement Report";
+    if (startDateVal && endDateVal) reportTitle += ` (${startDateVal} to ${endDateVal})`;
+    else if (startDateVal) reportTitle += ` (From ${startDateVal})`;
+    else if (endDateVal) reportTitle += ` (Until ${endDateVal})`;
+
     let html = `
-    <html><head><title>Pharmacy Settlement Report</title>
+    <html><head><title>${reportTitle}</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
         .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px;}
         h1 { color: #2563eb; margin: 0; font-size: 28px; }
-        .meta { color: #555; font-size: 14px; }
+        .meta { color: #555; font-size: 14px; margin-top: 5px;}
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
         th { background-color: #f8fafc; color: #0f172a; font-weight: bold; }
@@ -241,7 +350,7 @@ function downloadSettlementPDF() {
         <div class="header">
             <div>
                 <h1>BhavyaCare Pharmacy Ledger</h1>
-                <div class="meta">Pharmacy Settlement Report</div>
+                <div class="meta">${reportTitle}</div>
             </div>
             <div class="meta">Generated on: ${new Date().toLocaleString('en-IN')}</div>
         </div>
@@ -254,17 +363,16 @@ function downloadSettlementPDF() {
                     <th>Purchase Rate (₹)</th>
                     <th>Total Profit (₹)</th>
                     <th>Your Share (₹)</th>
-                    <th>Delivery Charge (₹)</th>
+                    <th>Del. Charge (₹)</th>
                     <th>BhavyaCare Comm. (₹)</th>
                 </tr>
             </thead>
             <tbody>
     `;
     
-    // Totals calculate karne ke liye variables
     let tMrp=0, tPur=0, tProf=0, tShare=0, tDel=0, tComm=0;
 
-    completed.forEach(o => {
+    filteredOrders.forEach(o => {
         let dateObj = new Date(o.order_date);
         let dateStr = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
         
@@ -302,14 +410,11 @@ function downloadSettlementPDF() {
         <p style="text-align:center; font-size:12px; color:#888; margin-top:30px;">This is a computer-generated report.</p>
     </body></html>`;
     
-    // Window me document write karke Print prompt open karna
     printWindow.document.write(html);
     printWindow.document.close();
-    
     printWindow.onload = function() {
         printWindow.focus();
-        printWindow.print(); // Ye seedha "Save as PDF" ka option dega
-        // Print ke baad window close kar do (Optional)
+        printWindow.print(); 
         setTimeout(() => printWindow.close(), 100);
     };
 }

@@ -216,27 +216,102 @@ function renderSettlements() {
     });
 }
 
-function downloadSettlementCSV() {
+// ✨ NAYA LOGIC: BEAUTIFUL PDF GENERATOR ✨
+function downloadSettlementPDF() {
     const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
     if(completed.length === 0) { alert("No completed orders available to download."); return; }
 
-    let csv = "Order ID,Order Date,Total MRP,Purchase Rate,Total Profit,Pharma Profit Share,Delivery Charge,BhavyaCare Commission\n";
+    // Ek nayi print window open karenge
+    let printWindow = window.open('', '', 'width=900,height=700');
     
+    // PDF ki styling aur table
+    let html = `
+    <html><head><title>Pharmacy Settlement Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px;}
+        h1 { color: #2563eb; margin: 0; font-size: 28px; }
+        .meta { color: #555; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+        th { background-color: #f8fafc; color: #0f172a; font-weight: bold; }
+        .totals { font-weight: bold; background-color: #e0f2fe; color: #0369a1; }
+    </style>
+    </head><body>
+        <div class="header">
+            <div>
+                <h1>BhavyaCare Pharmacy Ledger</h1>
+                <div class="meta">Pharmacy Settlement Report</div>
+            </div>
+            <div class="meta">Generated on: ${new Date().toLocaleString('en-IN')}</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Total MRP (₹)</th>
+                    <th>Purchase Rate (₹)</th>
+                    <th>Total Profit (₹)</th>
+                    <th>Your Share (₹)</th>
+                    <th>Delivery Charge (₹)</th>
+                    <th>BhavyaCare Comm. (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // Totals calculate karne ke liye variables
+    let tMrp=0, tPur=0, tProf=0, tShare=0, tDel=0, tComm=0;
+
     completed.forEach(o => {
         let dateObj = new Date(o.order_date);
         let dateStr = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-        csv += `${o.order_id},${dateStr},${o.total_mrp||0},${o.purchase_rate||0},${o.total_profit||0},${o.pharma_profit_share||0},${o.delivery_charge||0},${o.bhavya_care_commission||0}\n`;
+        
+        tMrp += Number(o.total_mrp) || 0;
+        tPur += Number(o.purchase_rate) || 0;
+        tProf += Number(o.total_profit) || 0;
+        tShare += Number(o.pharma_profit_share) || 0;
+        tDel += Number(o.delivery_charge) || 0;
+        tComm += Number(o.bhavya_care_commission) || 0;
+
+        html += `<tr>
+            <td style="font-weight:bold;">#${o.order_id}</td>
+            <td>${dateStr}</td>
+            <td>${(Number(o.total_mrp)||0).toFixed(2)}</td>
+            <td style="color:#dc2626;">${(Number(o.purchase_rate)||0).toFixed(2)}</td>
+            <td>${(Number(o.total_profit)||0).toFixed(2)}</td>
+            <td style="color:#059669; font-weight:bold;">${(Number(o.pharma_profit_share)||0).toFixed(2)}</td>
+            <td>${(Number(o.delivery_charge)||0).toFixed(2)}</td>
+            <td style="color:#2563eb; font-weight:bold;">${(Number(o.bhavya_care_commission)||0).toFixed(2)}</td>
+        </tr>`;
     });
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `BhavyaCare_Settlement_Report_${new Date().getTime()}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    html += `
+            <tr class="totals">
+                <td colspan="2" style="text-align:right; padding-right:15px;">GRAND TOTAL</td>
+                <td>₹${tMrp.toFixed(2)}</td>
+                <td>₹${tPur.toFixed(2)}</td>
+                <td>₹${tProf.toFixed(2)}</td>
+                <td>₹${tShare.toFixed(2)}</td>
+                <td>₹${tDel.toFixed(2)}</td>
+                <td>₹${tComm.toFixed(2)}</td>
+            </tr>
+            </tbody>
+        </table>
+        <p style="text-align:center; font-size:12px; color:#888; margin-top:30px;">This is a computer-generated report.</p>
+    </body></html>`;
+    
+    // Window me document write karke Print prompt open karna
+    printWindow.document.write(html);
+    printWindow.document.close();
+    
+    printWindow.onload = function() {
+        printWindow.focus();
+        printWindow.print(); // Ye seedha "Save as PDF" ka option dega
+        // Print ke baad window close kar do (Optional)
+        setTimeout(() => printWindow.close(), 100);
+    };
 }
 
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }

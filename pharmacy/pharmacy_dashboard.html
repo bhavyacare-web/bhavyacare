@@ -24,12 +24,23 @@
         .dashboard-header h1 { margin: 0; font-size: 28px; font-weight: 800;}
         .dashboard-header p { margin: 5px 0 0 0; color: var(--text-muted);}
 
-        /* ✨ NAYA: Navigation Tabs ✨ */
+        /* Tabs */
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
         .nav-btn { padding: 10px 20px; border-radius: 20px; border: 1px solid transparent; background: transparent; cursor: pointer; font-weight: 700; color: var(--text-muted); font-size: 15px; transition: 0.3s;}
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);}
         .nav-btn:hover:not(.active) { background: #f1f5f9; color: var(--text-dark);}
         #settlementsSection { display: none; }
+
+        /* Filters */
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap;}
+        .search-wrapper { flex: 2; position: relative; min-width: 250px;}
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px;}
+        .filter-input { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif;}
+        .filter-input.with-icon { padding-left: 42px; }
+        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
+        .filter-actions { display: flex; gap: 10px; flex: 3; align-items: center; min-width: 300px;}
+        .date-input { flex: 1; }
+        .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;}
 
         /* Order Cards */
         .order-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px; transition: 0.3s;}
@@ -77,6 +88,7 @@
             .btn-logout { padding: 8px 15px; font-size: 14px; }
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .dashboard-header h1 { font-size: 24px; }
+            .filter-actions { flex-wrap: wrap; }
             .order-card { padding: 15px; }
             .order-header { flex-direction: column; align-items: flex-start; gap: 10px; }
             .order-body { grid-template-columns: 1fr; gap: 15px; }
@@ -113,6 +125,25 @@
         </div>
 
         <div id="ordersSection">
+            <div class="filter-bar">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Search Order ID, Patient Name or Mobile..." onkeyup="filterLiveOrders()">
+                </div>
+                <div class="filter-actions">
+                    <select id="statusFilter" class="filter-input" style="flex:1;" onchange="filterLiveOrders()">
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">New / Pending</option>
+                        <option value="confirm_for_patient">Sent to Patient</option>
+                        <option value="Confirmed">Confirmed (Action Needed)</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <input type="date" id="dateFilter" class="filter-input date-input" onchange="filterLiveOrders()">
+                    <button class="filter-btn" onclick="clearOrderFilters()"><i class="fas fa-times"></i> Clear</button>
+                </div>
+            </div>
+
             <div id="ordersContainer">
                 <div style="text-align: center; padding: 50px; color: #64748b;">
                     <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i>
@@ -125,9 +156,24 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-check-circle" style="color: #10b981;"></i> Completed Orders Ledger</h3>
                 <button class="btn" style="background: #ef4444; color: white; width: auto; padding: 10px 15px;" onclick="downloadSettlementPDF()">
-                <i class="fas fa-file-pdf"></i> Export PDF
-            </button>
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
             </div>
+            
+            <div class="filter-bar" style="background: #f8fafc;">
+                <div class="search-wrapper" style="flex: 1;">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchSettlementInput" class="filter-input with-icon" placeholder="Search Order ID..." onkeyup="filterSettlements()">
+                </div>
+                <div class="filter-actions" style="flex: 2;">
+                    <label style="margin: auto 5px; font-size: 13px; font-weight: bold; color: #64748b;">From:</label>
+                    <input type="date" id="settlementStartDate" class="filter-input date-input" onchange="filterSettlements()">
+                    <label style="margin: auto 5px; font-size: 13px; font-weight: bold; color: #64748b;">To:</label>
+                    <input type="date" id="settlementEndDate" class="filter-input date-input" onchange="filterSettlements()">
+                    <button class="filter-btn" onclick="clearSettlementFilters()"><i class="fas fa-times"></i> Clear</button>
+                </div>
+            </div>
+
             <div id="settlementList">
                 </div>
         </div>

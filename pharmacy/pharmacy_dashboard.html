@@ -6,6 +6,9 @@
     <title>Pharmacy Dashboard - BhavyaCare</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root { --primary: #2563eb; --secondary: #10b981; --bg-color: #f4f7fb; --text-dark: #0f172a; --text-muted: #64748b; --card-bg: #ffffff; }
         * { box-sizing: border-box; }
@@ -20,7 +23,6 @@
         .dashboard-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;}
         .dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b;}
         
-        /* Tabs */
         .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;}
         .nav-btn { padding: 10px 18px; border-radius: 20px; border: 1px solid transparent; background: #f8fafc; cursor: pointer; font-weight: 700; color: var(--text-muted); font-size: 14px; transition: 0.3s;}
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);}
@@ -29,17 +31,15 @@
         .tab-section.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform:translateY(10px); } to { opacity: 1; transform:translateY(0); } }
 
-        /* Filters */
         .filter-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
         .search-wrapper { position: relative; width: 100%;}
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px;}
         .filter-input { width: 100%; padding: 14px 15px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; transition: 0.2s;}
         .filter-input.with-icon { padding-left: 42px; }
         .filter-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%;}
+        .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; align-items: end;}
         .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; grid-column: span 2;}
 
-        /* ✨ Enhanced Premium Order Cards ✨ */
         .order-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary); display: flex; flex-direction: column; gap: 15px; transition: 0.2s;}
         .order-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed #cbd5e1; padding-bottom: 12px;}
         .order-id { font-weight: 800; color: var(--primary); font-size: 18px;}
@@ -56,12 +56,10 @@
         .btn-call { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe;}
         .btn-process { background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);}
 
-        /* Settlement Specific */
         .settlement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
         .settlement-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12px; color: var(--text-muted);}
         .settlement-box strong { display: block; font-size: 16px; color: var(--text-dark); margin-top: 4px; font-weight: 800;}
 
-        /* Modal Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px;}
         .modal { background: white; width: 100%; max-width: 500px; border-radius: 20px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;}
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
@@ -71,25 +69,25 @@
         .form-group { margin-bottom: 18px; }
         label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px; color: #334155;}
         textarea, input, select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; background: #f8fafc;}
-        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; } /* Stacked for mobile */
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
 
-        /* ✨ PROFILE SPECIFIC CSS ✨ */
         .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
         .tag { background: #eff6ff; color: var(--primary); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid #bfdbfe;}
         .tag span { cursor: pointer; color: #1d4ed8; font-size: 16px;}
 
-        /* ✨ TOAST NOTIFICATION CSS ✨ */
         #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px;}
         .toast { background: #1e293b; color: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
         .toast.success { background: #10b981; }
         .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast i { font-size: 20px; }
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
 
         @media (min-width: 768px) {
-            .filter-bar { flex-direction: row; }
-            .filter-actions { display: flex; width: auto; grid-template-columns: none; }
-            .filter-btn { grid-column: auto; }
+            .filter-bar { flex-direction: row; align-items: end;}
+            .filter-actions { display: flex; width: auto; grid-template-columns: none; align-items: end;}
+            .filter-btn { grid-column: auto; height: 50px; }
             .order-actions { flex-direction: row; }
             .grid-2 { grid-template-columns: 1fr 1fr; }
         }
@@ -108,6 +106,9 @@
                 <h1>Pharmacy Panel</h1>
                 <p style="margin:5px 0 0 0; color:#64748b; font-size:14px;">Welcome, <span id="pharmaNameStr" style="font-weight: 700; color: #2563eb;"></span></p>
             </div>
+            <button class="btn" style="background: white; border: 1px solid #cbd5e1; color: #475569; width:auto; padding: 10px 15px;" onclick="fetchOrders()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
         </div>
 
         <div class="nav-tabs">
@@ -119,18 +120,25 @@
         <div id="ordersSection" class="tab-section active">
             <div class="filter-bar">
                 <div class="search-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Search Order ID, Patient Mobile..." onkeyup="filterLiveOrders()">
+                    <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">Search Order</label>
+                    <i class="fas fa-search search-icon" style="top: 38px;"></i>
+                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Order ID, Patient Mobile..." onkeyup="filterLiveOrders()">
                 </div>
                 <div class="filter-actions">
-                    <select id="statusFilter" class="filter-input" onchange="filterLiveOrders()">
-                        <option value="All">All Statuses</option>
-                        <option value="Pending">New Orders</option>
-                        <option value="confirm_for_patient">Action Needed</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Completed">Completed</option>
-                    </select>
-                    <input type="date" id="dateFilter" class="filter-input date-input" onchange="filterLiveOrders()">
+                    <div style="width:100%;">
+                        <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">Status Filter</label>
+                        <select id="statusFilter" class="filter-input" onchange="filterLiveOrders()">
+                            <option value="All">All Statuses</option>
+                            <option value="Pending">New Orders</option>
+                            <option value="confirm_for_patient">Action Needed</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div style="width:100%;">
+                        <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">Date Filter</label>
+                        <input type="date" id="dateFilter" class="filter-input date-input" onchange="filterLiveOrders()">
+                    </div>
                     <button class="filter-btn" onclick="clearOrderFilters()"><i class="fas fa-times"></i> Clear</button>
                 </div>
             </div>
@@ -147,18 +155,25 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-check-circle" style="color: #10b981;"></i> Ledger</h3>
                 <button class="btn" style="background: #ef4444; color: white; padding: 10px 15px; width:auto;" onclick="downloadSettlementPDF()">
-                    <i class="fas fa-file-pdf"></i> PDF
+                    <i class="fas fa-download"></i> Download PDF
                 </button>
             </div>
             
             <div class="filter-bar" style="background: #f8fafc;">
                 <div class="search-wrapper" style="width: 100%;">
-                    <i class="fas fa-search search-icon"></i>
+                    <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">Search Order</label>
+                    <i class="fas fa-search search-icon" style="top: 38px;"></i>
                     <input type="text" id="searchSettlementInput" class="filter-input with-icon" placeholder="Search Order ID..." onkeyup="filterSettlements()">
                 </div>
                 <div class="filter-actions">
-                    <input type="date" id="settlementStartDate" class="filter-input date-input" onchange="filterSettlements()">
-                    <input type="date" id="settlementEndDate" class="filter-input date-input" onchange="filterSettlements()">
+                    <div style="width:100%;">
+                        <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">From Date</label>
+                        <input type="date" id="settlementStartDate" class="filter-input date-input" onchange="filterSettlements()">
+                    </div>
+                    <div style="width:100%;">
+                        <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">To Date</label>
+                        <input type="date" id="settlementEndDate" class="filter-input date-input" onchange="filterSettlements()">
+                    </div>
                     <button class="filter-btn" onclick="clearSettlementFilters()">Clear</button>
                 </div>
             </div>
@@ -170,7 +185,6 @@
             <div class="order-card">
                 <h3 style="margin-top:0; color:#0f172a;"><i class="fas fa-store-alt" style="color:var(--primary);"></i> Update Details</h3>
                 <form id="profileUpdateForm">
-                    
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Delivery Pincodes</label>
@@ -189,10 +203,8 @@
                             <div id="profCityTags" class="tags-wrapper"></div>
                         </div>
                     </div>
-
                     <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px; color:#475569;">Working Timings</h4>
                     <div id="profTimingsContainer"></div>
-
                     <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px; color:#475569;">Store Images</h4>
                     <div class="grid-2">
                         <div class="form-group">
@@ -206,7 +218,6 @@
                             <p id="currImg2" style="font-size:12px; color:var(--primary); margin-top:8px; font-weight:600;"></p>
                         </div>
                     </div>
-
                     <button type="submit" class="btn" id="btnUpdateProfile" style="width:100%; background:var(--primary); color:white; margin-top:20px; font-size:16px;">
                         <i class="fas fa-save"></i> Save Changes
                     </button>

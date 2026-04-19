@@ -9,6 +9,19 @@ let globalMedicineOrders = []; // Naya array for Medicine Orders
 let activeVideoCallApptId = null;
 let handledPatTriggers = new Set(); 
 
+// ✨ TOAST NOTIFICATION LOGIC ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'fa-check-circle'; 
+    if(type === 'error') icon = 'fa-exclamation-circle'; else if(type === 'info') icon = 'fa-info-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
 document.addEventListener("DOMContentLoaded", checkLoginAndFetchData);
 
 function getBase64(file) {
@@ -47,7 +60,7 @@ function logoutDashboard() { localStorage.clear(); window.location.href = "../in
 
 async function checkLoginAndFetchData() {
     const userId = localStorage.getItem("bhavya_user_id");
-    if (!userId) { alert("Please login first to access the dashboard."); window.location.href = "../index.html"; return; }
+    if (!userId) { showToast("Please login first to access the dashboard.", "error"); window.location.href = "../index.html"; return; }
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -125,7 +138,7 @@ async function checkLoginAndFetchData() {
             await Promise.all([ fetchPatientBookings(userId), fetchPatientConsults(userId), fetchPatientMedicines(userId) ]);
             updateRecentActivityMixed();
         } else {
-            alert("Error: " + result.message);
+            showToast("Error: " + result.message, "error");
             if(result.message === "Your account is blocked by Admin.") logoutDashboard();
         }
     } catch (error) { console.error("Fetch Error:", error); }
@@ -137,7 +150,7 @@ function handleVipCardClick() {
 
 function copyMyReferral() {
     const code = document.getElementById("refCode").innerText;
-    if (code && code !== "-----") { navigator.clipboard.writeText(code); alert("Referral Code '" + code + "' copied!"); }
+    if (code && code !== "-----") { navigator.clipboard.writeText(code); showToast("Referral Code '" + code + "' copied!", "success"); }
 }
 
 const fileInput = document.getElementById("profileImageInput");
@@ -170,9 +183,9 @@ async function savePatientProfile() {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
-        if (result.status === "success") { alert("Profile Details Saved Successfully!"); checkLoginAndFetchData(); switchTab('overview'); } 
-        else { alert("Error: " + result.message); }
-    } catch (error) { alert("Failed to save. Check your connection."); } 
+        if (result.status === "success") { showToast("Profile Details Saved Successfully!", "success"); checkLoginAndFetchData(); switchTab('overview'); } 
+        else { showToast("Error: " + result.message, "error"); }
+    } catch (error) { showToast("Failed to save. Check your connection.", "error"); } 
     finally { btn.innerText = "Save & Update Profile"; btn.disabled = false; }
 }
 
@@ -265,18 +278,18 @@ function renderMedicineOrders(orders) {
         else if (safeStatus === "Completed") {
             isComplete = true;
             badgeHtml = `<span class="status-badge" style="background:#ecfdf5; color:#065f46;"><i class="fas fa-check-circle"></i> Completed</span>`;
-            actionHtml = `<p style="font-size:13px; color:#065f46; margin:0; font-weight:bold;"><i class="fas fa-award"></i> Order Completed Successfully.</p>`;
             
             // ✨ NAYA LOGIC: View Bill Button ✨
-            if (order.medicine_bill && order.medicine_bill !== "") {
-                actionHtml += `<button onclick="window.open('${order.medicine_bill}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px;">
-                                <i class="fas fa-file-invoice"></i> Download Final Bill
-                               </button>`;
-            }
+            let billBtn = order.medicine_bill ? `<button onclick="window.open('${order.medicine_bill}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; flex:1;"><i class="fas fa-file-invoice"></i> Bill</button>` : "";
+            
+            // Rating button logic
+            let rateBtn = order.pharmacy_rating ? `<button disabled style="background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; flex:1;"><i class="fas fa-star"></i> Rated</button>` : `<button onclick="openPharmaReviewModal('${order.order_id}')" style="background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; flex:1;"><i class="fas fa-star"></i> Rate Pharmacy</button>`;
+
+            actionHtml = `<div style="display:flex; gap:10px; margin-top:10px;">${billBtn}${rateBtn}</div>`;
         }
         else if (safeStatus === "Cancelled") {
             badgeHtml = `<span class="status-badge status-danger"><i class="fas fa-ban"></i> Cancelled</span>`;
-            actionBtnHtml = `<p style="font-size:12px; color:#dc2626; margin:0;"><i class="fas fa-times-circle"></i> This order was cancelled.</p>`;
+            actionHtml = `<p style="font-size:12px; color:#dc2626; margin:0;"><i class="fas fa-times-circle"></i> This order was cancelled.</p>`;
         }
 
         // Format dates
@@ -331,8 +344,12 @@ function renderMedicineOrders(orders) {
         let card = `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                <div><strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong></div>
-                <div style="text-align:right;">${badgeHtml}</div>
+                <div>
+                    <strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong>
+                </div>
+                <div style="text-align:right;">
+                    ${badgeHtml}
+                </div>
             </div>
             <p style="font-size:12px; color:#64748b; margin:0 0 5px 0;"><i class="far fa-calendar-alt"></i> Ordered: ${orderDate}</p>
             <p style="font-size:12px; color:#059669; margin:0 0 10px 0;"><i class="fas fa-truck"></i> Deliver By: ${formattedDelivery}</p>
@@ -366,7 +383,7 @@ async function submitCancelMedicineOrder(e) {
     const reason = document.getElementById("cancelMedReasonInput").value.trim(); 
     const btn = document.getElementById("btnConfirmMedCancel");
 
-    if (!reason) { alert("Please enter a reason for cancellation."); return; }
+    if (!reason) { showToast("Please enter a reason for cancellation.", "error"); return; }
     
     btn.innerText = "Processing..."; btn.disabled = true;
     
@@ -383,15 +400,14 @@ async function submitCancelMedicineOrder(e) {
         const result = await response.json();
         
         if (result.status === "success") { 
-            alert("Order cancelled successfully."); 
+            showToast("Order cancelled successfully.", "success"); 
             document.getElementById("cancel-med-order-modal").style.display = "none"; 
             fetchPatientMedicines(localStorage.getItem("bhavya_user_id")); 
-        } else { alert("Error: " + result.message); }
-    } catch(e) { alert("Failed to cancel. Check your network."); } 
+        } else { showToast("Error: " + result.message, "error"); }
+    } catch(e) { showToast("Failed to cancel. Check your network.", "error"); } 
     finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
-// BAQI KA CODE WAISE HI RAHEGA JAISE THA...
 function openConfirmMedicineModal(orderId, prescReq) {
     document.getElementById("modalMedOrderId").value = orderId;
     
@@ -424,7 +440,7 @@ async function submitConfirmMedicineForm() {
 
     // Check validation manually because we are not using standard submit event
     if(fileInput.required && (!fileInput.files || fileInput.files.length === 0)) {
-        alert("Please upload the required prescription.");
+        showToast("Please upload the required prescription.", "error");
         return;
     }
 
@@ -449,19 +465,61 @@ async function submitConfirmMedicineForm() {
         const resData = await response.json();
 
         if (resData.status === "success") {
-            alert("Order Confirmed Successfully!");
+            showToast("Order Confirmed Successfully!", "success");
             closeConfirmMedicineModal();
             fetchPatientMedicines(localStorage.getItem("bhavya_user_id")); 
             checkLoginAndFetchData(); // For activity update
         } else {
-            alert("Error: " + resData.message);
+            showToast("Error: " + resData.message, "error");
         }
     } catch (error) {
-        alert("Network error, please try again.");
+        showToast("Network error, please try again.", "error");
     } finally {
         btn.innerHTML = "Confirm & Place Order"; btn.disabled = false;
     }
 }
+
+// ✨ PHARMACY RATING LOGIC ✨
+let currentPharmaRating = 0;
+function openPharmaReviewModal(orderId) { 
+    document.getElementById("pharmaReviewOrderIdHidden").value = orderId; 
+    document.getElementById("pharmaReviewCommentInput").value = ""; 
+    setPharmaRating(0); 
+    document.getElementById("pharma-review-modal").style.display = "block"; 
+}
+
+function setPharmaRating(stars) {
+    currentPharmaRating = stars; 
+    const icons = document.getElementById("pharmaStarRatingContainer").children;
+    for(let i=0; i<icons.length; i++) { 
+        if(i < stars) { icons[i].classList.add("active"); icons[i].style.color = "#ffc107"; } 
+        else { icons[i].classList.remove("active"); icons[i].style.color = "#ddd"; } 
+    }
+}
+
+async function submitPharmaReview() {
+    const orderId = document.getElementById("pharmaReviewOrderIdHidden").value; 
+    const comment = document.getElementById("pharmaReviewCommentInput").value.trim(); 
+    const btn = document.getElementById("btnSubmitPharmaReview");
+    
+    if(currentPharmaRating === 0) { showToast("Please select a star rating.", "error"); return; }
+    
+    btn.innerText = "Submitting..."; btn.disabled = true;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify({ action: "submitPharmacyReview", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId, rating: currentPharmaRating, comment: comment }) 
+        });
+        const result = await response.json();
+        if (result.status === "success") { 
+            showToast("Pharmacy rated successfully!", "success"); 
+            document.getElementById("pharma-review-modal").style.display = "none"; 
+            fetchPatientMedicines(localStorage.getItem("bhavya_user_id")); 
+        } else { showToast(result.message, "error"); }
+    } catch(e) { showToast("Failed to submit review.", "error"); } 
+    finally { btn.innerText = "Submit Rating"; btn.disabled = false; }
+}
+
 
 // ==========================================
 // 🌟 EXISTING LABS & DOCTORS LOGIC 🌟
@@ -595,14 +653,14 @@ function openCancelModal(orderId) {
 
 async function submitCancelOrder() {
     const orderId = document.getElementById("cancelOrderIdHidden").value; const reason = document.getElementById("cancelReasonInput").value.trim(); const btn = document.getElementById("btnConfirmCancel");
-    if (!reason) { alert("Please enter a reason for cancellation."); return; }
+    if (!reason) { showToast("Please enter a reason for cancellation.", "error"); return; }
     btn.innerText = "Processing..."; btn.disabled = true;
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "cancelPatientOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId, cancel_reason: reason }) });
         const result = await response.json();
-        if (result.status === "success") { alert("Order cancelled successfully."); document.getElementById("cancel-order-modal").style.display = "none"; fetchPatientBookings(localStorage.getItem("bhavya_user_id")); } 
-        else { alert("Error: " + result.message); }
-    } catch(e) { alert("Failed to cancel. Check your network."); } 
+        if (result.status === "success") { showToast("Order cancelled successfully.", "success"); document.getElementById("cancel-order-modal").style.display = "none"; fetchPatientBookings(localStorage.getItem("bhavya_user_id")); } 
+        else { showToast("Error: " + result.message, "error"); }
+    } catch(e) { showToast("Failed to cancel. Check your network.", "error"); } 
     finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
@@ -760,20 +818,20 @@ function toggleRefundMethod() {
 
 async function submitCancelConsult() {
     const apptId = document.getElementById("cancelConsultIdHidden").value; const reason = document.getElementById("cancelConsultReason").value.trim(); const method = document.querySelector('input[name="refundMethod"]:checked').value; const qrInput = document.getElementById("refundQrInput"); const btn = document.getElementById("btnConfirmConsultCancel");
-    if (!reason) { alert("Please provide a reason for cancellation."); return; }
+    if (!reason) { showToast("Please provide a reason for cancellation.", "error"); return; }
     let qrBase64 = ""; let qrMime = "";
     if (method === "Bank") {
-        if (!qrInput.files || qrInput.files.length === 0) { alert("Please upload your UPI QR Code for the bank refund."); return; }
-        const file = qrInput.files[0]; try { qrBase64 = await getBase64(file); qrMime = file.type; } catch(e) { alert("Failed to process QR image."); return; }
+        if (!qrInput.files || qrInput.files.length === 0) { showToast("Please upload your UPI QR Code for the bank refund.", "error"); return; }
+        const file = qrInput.files[0]; try { qrBase64 = await getBase64(file); qrMime = file.type; } catch(e) { showToast("Failed to process QR image.", "error"); return; }
     }
     btn.innerText = "Processing..."; btn.disabled = true;
     try {
         const payload = { action: "cancelDoctorConsult", user_id: localStorage.getItem("bhavya_user_id"), appt_id: apptId, cancel_reason: reason, refund_choice: method, qr_base64: qrBase64, qr_mime: qrMime };
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
-        if (result.status === "success") { alert("Appointment cancelled successfully. Refund method: " + method); document.getElementById("cancel-consult-modal").style.display = "none"; fetchPatientConsults(localStorage.getItem("bhavya_user_id")); checkLoginAndFetchData(); } 
-        else { alert("Error: " + result.message); }
-    } catch(e) { alert("Network error."); } finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
+        if (result.status === "success") { showToast("Appointment cancelled successfully. Refund method: " + method, "success"); document.getElementById("cancel-consult-modal").style.display = "none"; fetchPatientConsults(localStorage.getItem("bhavya_user_id")); checkLoginAndFetchData(); } 
+        else { showToast("Error: " + result.message, "error"); }
+    } catch(e) { showToast("Network error.", "error"); } finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
 }
 
 let currentRating = 0;
@@ -785,14 +843,14 @@ function setRating(stars) {
 
 async function submitReview() {
     const apptId = document.getElementById("reviewApptIdHidden").value; const comment = document.getElementById("reviewCommentInput").value.trim(); const btn = document.getElementById("btnSubmitReview");
-    if(currentRating === 0) { alert("Please select a star rating."); return; }
+    if(currentRating === 0) { showToast("Please select a star rating.", "error"); return; }
     btn.innerText = "Submitting..."; btn.disabled = true;
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submitConsultReview", user_id: localStorage.getItem("bhavya_user_id"), appt_id: apptId, rating: currentRating, comment: comment }) });
         const result = await response.json();
-        if (result.status === "success") { alert("Thank you for your feedback!"); document.getElementById("review-modal").style.display = "none"; fetchPatientConsults(localStorage.getItem("bhavya_user_id")); } 
-        else { alert("Error: " + result.message); }
-    } catch(e) { alert("Failed to submit review."); } finally { btn.innerText = "Submit Review"; btn.disabled = false; }
+        if (result.status === "success") { showToast("Thank you for your feedback!", "success"); document.getElementById("review-modal").style.display = "none"; fetchPatientConsults(localStorage.getItem("bhavya_user_id")); } 
+        else { showToast("Error: " + result.message, "error"); }
+    } catch(e) { showToast("Failed to submit review.", "error"); } finally { btn.innerText = "Submit Review"; btn.disabled = false; }
 }
 
 function renderPrescriptionsTab(consults) {
@@ -812,11 +870,9 @@ function renderPrescriptionsTab(consults) {
     container.innerHTML = `<div style="background:#fff; padding:0 15px; border-radius:12px;">${html}</div>`;
 }
 
-// ✨ FIX: MIXED ACTIVITY ME MEDICINES BHI JUD GAYI HAIN ✨
 function updateRecentActivityMixed() {
     let allActivity = [];
     
-    // 1. Lab Bookings
     globalBookingsData.forEach(bk => {
         let safeStatus = (bk.status || "pending").toString().toLowerCase().trim(); let isComplete = (safeStatus.includes("complete") || safeStatus === "completed");
         let badgeClass = "status-warning"; let statusText = "Pending";
@@ -827,7 +883,6 @@ function updateRecentActivityMixed() {
         allActivity.push({ type: 'lab', id: bk.order_id, title: testSummary, dateTime: bk.date + " | " + bk.slot.split('-')[0], badgeClass: badgeClass, statusText: statusText, icon: '<i class="fas fa-microscope" style="color:var(--primary); font-size:18px;"></i>', timestamp: new Date(bk.date.split("-").reverse().join("-")).getTime() || 0 });
     });
 
-    // 2. Doctor Consults
     globalConsultsData.forEach(c => {
         let safeStatus = (c.appt_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
@@ -835,7 +890,6 @@ function updateRecentActivityMixed() {
         allActivity.push({ type: 'doctor', id: c.appt_id, title: "Dr. " + c.doctor_name, dateTime: c.appt_date + " | " + c.appt_time, badgeClass: badgeClass, statusText: statusText, icon: '<i class="fas fa-user-md" style="color:#2e7d32; font-size:18px;"></i>', timestamp: new Date(c.appt_date.split("-").reverse().join("-")).getTime() || 0 });
     });
 
-    // 3. ✨ Medicine Orders (NEW) ✨
     globalMedicineOrders.forEach(med => {
         let safeStatus = (med.patient_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
@@ -862,10 +916,6 @@ function updateRecentActivityMixed() {
     if (recentHtml === "") recentHtml = `<div style="text-align: center; padding: 20px; color: #aaa;">No recent activities.</div>`;
     const rcContainer = document.getElementById("recentActivityContainer"); if(rcContainer) rcContainer.innerHTML = recentHtml;
 }
-
-// ==========================================
-// 🌟 NAYA HANDSHAKE WORKFLOW (Patient) 🌟
-// ==========================================
 
 setInterval(silentPatientPolling, 30000);
 
@@ -923,11 +973,11 @@ async function patientConfirmsReady() {
             if(consult) consult.handshake_status = "Patient_Ready";
             renderConsultCards(globalConsultsData); 
         }
-    } catch(e) { alert("Network error while connecting."); }
+    } catch(e) { showToast("Network error while connecting.", "error"); }
 }
 
 function joinVideoCall(link, apptId) {
-    if (!link || link === "" || link === "N/A") { alert("Video link is not ready yet."); return; }
+    if (!link || link === "" || link === "N/A") { showToast("Video link is not ready yet.", "error"); return; }
     
     activeVideoCallApptId = apptId;
     const patientName = localStorage.getItem("bhavya_name") || "Patient";
@@ -952,6 +1002,7 @@ function closeVideoCall() {
     if (modal) modal.remove();
     fetchPatientConsults(localStorage.getItem("bhavya_user_id"));
 }
+
 function openClaimRefundModal(apptId) {
     document.getElementById("claimRefundApptId").value = apptId;
     document.getElementById("claimRefundQrInput").value = "";
@@ -973,7 +1024,7 @@ async function submitClaimRefund() {
 
     let qrBase64 = ""; let qrMime = "";
     if (method === "Bank") {
-        if (!qrInput.files || qrInput.files.length === 0) { alert("Please upload your UPI QR Code for the bank refund."); return; }
+        if (!qrInput.files || qrInput.files.length === 0) { showToast("Please upload your UPI QR Code for the bank refund.", "error"); return; }
         const file = qrInput.files[0]; try { qrBase64 = await getBase64(file); qrMime = file.type; } catch(e) { return; }
     }
 
@@ -985,10 +1036,10 @@ async function submitClaimRefund() {
         const result = await response.json();
         
         if (result.status === "success") { 
-            alert("Refund Claimed Successfully!"); 
+            showToast("Refund Claimed Successfully!", "success"); 
             document.getElementById("claim-refund-modal").style.display = "none"; 
             fetchPatientConsults(localStorage.getItem("bhavya_user_id")); 
             checkLoginAndFetchData(); 
-        } else { alert("Error: " + result.message); }
-    } catch(e) { alert("Network error."); } finally { btn.innerText = "Submit Refund Request"; btn.disabled = false; }
+        } else { showToast("Error: " + result.message, "error"); }
+    } catch(e) { showToast("Network error.", "error"); } finally { btn.innerText = "Submit Refund Request"; btn.disabled = false; }
 }

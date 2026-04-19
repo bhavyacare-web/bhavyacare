@@ -1,8 +1,21 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-let pharmacyRegData = []; // For Approvals
-let allPharmacies = [];   // For Login list
-let allOrders = [];       // For Ledger
+let pharmacyRegData = []; 
+let allPharmacies = [];   
+let allOrders = [];       
+
+// ✨ TOAST NOTIFICATION LOGIC ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'fa-check-circle'; 
+    if(type === 'error') icon = 'fa-exclamation-circle'; else if(type === 'info') icon = 'fa-info-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     refreshAllData();
@@ -16,12 +29,12 @@ function switchTab(tabId, btn) {
 }
 
 function refreshAllData() {
-    fetchRegistrations(); // Fetches data for Registrations Tab
-    fetchAllAdminData();  // Fetches data for Orders, Ledger, Overview
+    fetchRegistrations(); 
+    fetchAllAdminData();  
 }
 
 // ==========================================
-// ✨ REGISTRATIONS LOGIC (OLD CODE INTACT) ✨
+// ✨ REGISTRATIONS LOGIC ✨
 // ==========================================
 function format12HourTime(timeStr) {
     if (!timeStr || !timeStr.includes(':')) return timeStr || "Closed";
@@ -148,14 +161,14 @@ function changeStatus(newStatus) {
     .then(res => res.json())
     .then(resData => {
         if(resData.status === "success") {
-            alert("Status updated successfully!"); closeModal(); fetchRegistrations(); 
-        } else { alert("Error: " + resData.message); btnAction.innerHTML = originalBtns; }
+            showToast("Status updated successfully!", "success"); closeModal(); fetchRegistrations(); 
+        } else { showToast("Error: " + resData.message, "error"); btnAction.innerHTML = originalBtns; }
     })
-    .catch(err => { alert("Network error occurred."); btnAction.innerHTML = originalBtns; });
+    .catch(err => { showToast("Network error occurred.", "error"); btnAction.innerHTML = originalBtns; });
 }
 
 // ==========================================
-// ✨ NAYA LOGIC: ORDERS & LEDGER ✨
+// ✨ ORDERS & LEDGER LOGIC ✨
 // ==========================================
 
 async function fetchAllAdminData() {
@@ -200,7 +213,6 @@ function updateOverviewStats() {
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
 }
 
-// ✨ 3. ALL ORDERS LOGIC (UPDATED WITH BILL BUTTON) ✨
 function renderAllOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("filterOrderStatus").value;
@@ -217,8 +229,7 @@ function renderAllOrders() {
         
         let matchDate = true;
         if(dateVal !== "") {
-            const [y, m, d] = dateVal.split('-');
-            matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
+            const [y, m, d] = dateVal.split('-'); matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
         }
         return matchText && matchStatus && matchPharma && matchDate;
     });
@@ -234,18 +245,13 @@ function renderAllOrders() {
         let dDate = o.order_date ? new Date(o.order_date).toLocaleDateString('en-IN') : "N/A";
         let mrp = Number(o.total_mrp) || 0;
 
-        // ✨ NAYA LOGIC: Bill Upload Button ✨
-        let billHtml = o.medicine_bill 
-            ? `<br><a href="${o.medicine_bill}" target="_blank" style="font-size:11px; background:#10b981; color:white; padding:4px 8px; border-radius:4px; text-decoration:none; display:inline-block; margin-top:5px; font-weight:bold;"><i class="fas fa-file-invoice"></i> View Bill</a>` 
-            : `<br><span style="font-size:11px; color:#94a3b8; display:inline-block; margin-top:5px;">No Bill Yet</span>`;
-
         tbody.innerHTML += `
         <tr>
             <td style="font-weight:700;">#${o.order_id}</td>
             <td>${dDate}</td>
             <td style="font-size:12px;"><b>${getPharmaName(o.medicos_id)}</b><br><span style="color:#64748b;">${o.medicos_id}</span></td>
             <td style="font-size:12px;">📞 ${o.patient_mobile}</td>
-            <td>₹${mrp.toFixed(2)}${billHtml}</td>
+            <td>₹${mrp.toFixed(2)}</td>
             <td><span class="badge" style="background:${badgeBg}; color:${badgeCol};">${o.patient_status}</span></td>
         </tr>`;
     });
@@ -280,16 +286,23 @@ function renderLedger() {
         return matchPharma && matchDate;
     });
 
-    if(filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No ledger records found.</td></tr>`; return; }
+    if(filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No ledger records found.</td></tr>`; return; }
 
-    let sumMrp = 0, sumProfit = 0, sumPhShare = 0, sumDel = 0, sumBhavya = 0;
+    let sumMrp = 0, sumProfit = 0, sumPhShare = 0, sumBhavya = 0;
 
     filtered.forEach(o => {
         let dateStr = o.order_date ? new Date(o.order_date).toLocaleDateString('en-IN') : "N/A";
         let mrp = Number(o.total_mrp)||0, profit = Number(o.total_profit)||0;
-        let phShare = Number(o.pharma_profit_share)||0, del = Number(o.delivery_charge)||0, comm = Number(o.bhavya_care_commission)||0;
+        let phShare = Number(o.pharma_profit_share)||0, comm = Number(o.bhavya_care_commission)||0;
 
-        sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumDel += del; sumBhavya += comm;
+        sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumBhavya += comm;
+
+        let payoutStatus = o.payout_status || "Pending";
+        let payoutBadge = payoutStatus === "Paid" ? `<span class="badge" style="background:#d1fae5; color:#059669;">Paid</span>` : `<span class="badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
+        
+        let payoutAction = payoutStatus === "Pending" ? 
+            `<button class="btn btn-success" style="padding:6px 10px; font-size:11px;" onclick="togglePayout('${o.order_id}', 'Paid')">Mark Paid</button>` : 
+            `<button class="btn" style="background:#f1f5f9; color:#64748b; padding:6px 10px; font-size:11px;" onclick="togglePayout('${o.order_id}', 'Pending')">Mark Pending</button>`;
 
         tbody.innerHTML += `
         <tr>
@@ -299,8 +312,9 @@ function renderLedger() {
             <td>₹${mrp.toFixed(2)}</td>
             <td>₹${profit.toFixed(2)}</td>
             <td style="color:#10b981; font-weight:700;">₹${phShare.toFixed(2)}</td>
-            <td>₹${del.toFixed(2)}</td>
             <td style="color:#2563eb; font-weight:700;">₹${comm.toFixed(2)}</td>
+            <td style="text-align: center;">${payoutBadge}</td>
+            <td>${payoutAction}</td>
         </tr>`;
     });
 
@@ -310,9 +324,24 @@ function renderLedger() {
         <td>₹${sumMrp.toFixed(2)}</td>
         <td>₹${sumProfit.toFixed(2)}</td>
         <td>₹${sumPhShare.toFixed(2)}</td>
-        <td>₹${sumDel.toFixed(2)}</td>
         <td style="color:#1d4ed8;">₹${sumBhavya.toFixed(2)}</td>
+        <td colspan="2"></td>
     </tr>`;
+}
+
+// ✨ NAYA: PAYOUT TOGGLE LOGIC ✨
+async function togglePayout(orderId, newStatus) {
+    if(!confirm(`Mark payout for ${orderId} as ${newStatus}?`)) return;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "updatePayoutStatus", order_id: orderId, payout_status: newStatus }) });
+        const res = await response.json();
+        if(res.status === "success") { 
+            showToast(`Payout marked as ${newStatus}`, "success"); 
+            fetchAllAdminData(); // Refresh the table
+        } else {
+            showToast(res.message, "error");
+        }
+    } catch(e) { showToast("Network error", "error"); }
 }
 
 function downloadAdminLedgerPDF() {
@@ -333,7 +362,7 @@ function downloadAdminLedgerPDF() {
         return matchPharma && matchDate;
     });
 
-    if(filteredOrders.length === 0) { alert("No records to export for selected filters."); return; }
+    if(filteredOrders.length === 0) { showToast("No records to export for selected filters.", "error"); return; }
 
     let printWindow = window.open('', '', 'width=1000,height=700');
     
@@ -365,22 +394,29 @@ function downloadAdminLedgerPDF() {
         <table>
             <thead>
                 <tr>
-                    <th>Order ID</th><th>Date</th><th>Pharmacy Detail</th>
-                    <th>Total MRP (₹)</th><th>Total Profit (₹)</th><th>Pharma Share (₹)</th>
-                    <th>Del. Charge (₹)</th><th>BhavyaCare Comm (₹)</th>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Pharmacy Detail</th>
+                    <th>Total MRP (₹)</th>
+                    <th>Total Profit (₹)</th>
+                    <th>Pharma Share (₹)</th>
+                    <th>BhavyaCare Comm (₹)</th>
+                    <th>Payout Status</th>
                 </tr>
             </thead>
             <tbody>
     `;
     
-    let sumMrp = 0, sumProfit = 0, sumPhShare = 0, sumDel = 0, sumBhavya = 0;
+    let sumMrp = 0, sumProfit = 0, sumPhShare = 0, sumBhavya = 0;
 
     filteredOrders.forEach(o => {
         let dateStr = o.order_date ? new Date(o.order_date).toLocaleDateString('en-IN') : "N/A";
         let mrp = Number(o.total_mrp)||0, profit = Number(o.total_profit)||0;
-        let phShare = Number(o.pharma_profit_share)||0, del = Number(o.delivery_charge)||0, comm = Number(o.bhavya_care_commission)||0;
+        let phShare = Number(o.pharma_profit_share)||0, comm = Number(o.bhavya_care_commission)||0;
 
-        sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumDel += del; sumBhavya += comm;
+        sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumBhavya += comm;
+
+        let payoutStatus = o.payout_status || "Pending";
 
         html += `<tr>
             <td style="font-weight:bold;">#${o.order_id}</td>
@@ -389,8 +425,8 @@ function downloadAdminLedgerPDF() {
             <td>${mrp.toFixed(2)}</td>
             <td>${profit.toFixed(2)}</td>
             <td style="color:#10b981;">${phShare.toFixed(2)}</td>
-            <td>${del.toFixed(2)}</td>
             <td style="color:#2563eb; font-weight:bold;">${comm.toFixed(2)}</td>
+            <td style="font-weight:bold; color:${payoutStatus==='Paid'?'#059669':'#d97706'}">${payoutStatus}</td>
         </tr>`;
     });
 
@@ -400,8 +436,8 @@ function downloadAdminLedgerPDF() {
                 <td>₹${sumMrp.toFixed(2)}</td>
                 <td>₹${sumProfit.toFixed(2)}</td>
                 <td>₹${sumPhShare.toFixed(2)}</td>
-                <td>₹${sumDel.toFixed(2)}</td>
                 <td>₹${sumBhavya.toFixed(2)}</td>
+                <td>-</td>
             </tr>
             </tbody>
         </table>

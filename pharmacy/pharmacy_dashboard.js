@@ -24,10 +24,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setupProfileTimings();
     fetchOrders();
 
+    // Event Listeners for all Forms
     document.getElementById("processForm").addEventListener("submit", submitProcessForm);
     document.getElementById("cancelOrderForm").addEventListener("submit", submitCancelOrder);
     document.getElementById("profileUpdateForm").addEventListener("submit", submitProfileUpdate);
+    document.getElementById("completeOrderForm").addEventListener("submit", submitCompleteOrder); // NAYA LOGIC
 
+    // Front-end par har 1 minute me check karna ki kya 30-min bache hain
     setInterval(() => checkDeliveryReminders(globalPharmacyOrders), 60000); 
 });
 
@@ -72,14 +75,12 @@ function fetchPharmacyProfile() {
         if (resData.status === "success") {
             const p = resData.data;
             
-            // Set Tags
             try { profPincodeList = JSON.parse(p.available_pincode); } catch(e) { profPincodeList = p.available_pincode ? p.available_pincode.split(',').map(x=>x.trim()) : []; }
             try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
             
             updateProfTagsUI('pincode');
             updateProfTagsUI('city');
 
-            // Set Timings
             days.forEach(day => {
                 if(p.timings[day]) {
                     document.getElementById("prof_"+day+"_open").value = p.timings[day].open || "";
@@ -87,7 +88,6 @@ function fetchPharmacyProfile() {
                 }
             });
 
-            // Images
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank">View Current Image 1</a>` : "No image";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank">View Current Image 2</a>` : "No image";
         }
@@ -165,7 +165,7 @@ async function submitProfileUpdate(e) {
 
 
 // ==========================================
-// ✨ ORDERS & LEDGER LOGIC (UNCHANGED) ✨
+// ✨ ORDERS & SETTLEMENT LOGIC ✨
 // ==========================================
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
@@ -283,7 +283,8 @@ function renderOrders(orders) {
         } 
         else if (order.patient_status === "Confirmed") {
             badge = `<span class="badge" style="background:#10b981; color:white;"><i class="fas fa-exclamation-circle"></i> Action Needed</span>`;
-            actionBtn = `<div style="display:flex; gap:10px; flex:1.5;"><button class="btn" style="flex:1; background:#dc2626; color:white;" onclick="openCancelModal('${order.order_id}')"><i class="fas fa-times"></i> Cancel</button><button class="btn" style="flex:1.5; background:#10b981; color:white;" onclick="markOrderComplete('${order.order_id}')"><i class="fas fa-check-double"></i> Delivered?</button></div>`;
+            // ✨ FIX: Yahan ab openCompleteModal(order_id) call hoga ✨
+            actionBtn = `<div style="display:flex; gap:10px; flex:1.5;"><button class="btn" style="flex:1; background:#dc2626; color:white;" onclick="openCancelModal('${order.order_id}')"><i class="fas fa-times"></i> Cancel</button><button class="btn" style="flex:1.5; background:#10b981; color:white;" onclick="openCompleteModal('${order.order_id}')"><i class="fas fa-check-double"></i> Delivered?</button></div>`;
         }
         else if (order.patient_status === "Completed") {
             badge = `<span class="badge" style="background:#ecfdf5; color:#065f46;"><i class="fas fa-check-circle"></i> Completed</span>`;
@@ -374,6 +375,10 @@ function downloadSettlementPDF() {
     printWindow.onload = function() { printWindow.focus(); printWindow.print(); setTimeout(() => printWindow.close(), 100); };
 }
 
+// ==========================================
+// ✨ MODALS & API CALLS ✨
+// ==========================================
+
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
 function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
 
@@ -400,14 +405,54 @@ async function submitCancelOrder(e) {
     } catch (error) { alert("Network error."); } finally { btn.innerHTML = "Confirm Cancellation"; btn.disabled = false; }
 }
 
-async function markOrderComplete(orderId) {
-    if(!confirm("Are you sure you have delivered the medicines and received the payment?")) return;
+// ✨ NAYA LOGIC: BILL UPLOAD & COMPLETE ORDER ✨
+function openCompleteModal(orderId) {
+    // Ye tabhi chalega jab aap HTML me iska Modal code daal lenge (Pichle step me bataya gaya tha)
+    let modal = document.getElementById("completeOrderModal");
+    if(!modal) { alert("Please update HTML with Complete Order Modal first."); return; }
+
+    document.getElementById("completeOrderIdHidden").value = orderId;
+    document.getElementById("completeModalOrderId").innerText = "#" + orderId;
+    document.getElementById("medicineBillFile").value = ""; 
+    modal.style.display = "flex";
+}
+
+function closeCompleteModal() {
+    document.getElementById("completeOrderModal").style.display = "none";
+    document.getElementById("completeOrderForm").reset();
+}
+
+async function submitCompleteOrder(e) {
+    e.preventDefault();
+    const orderId = document.getElementById("completeOrderIdHidden").value;
+    const fileInput = document.getElementById("medicineBillFile");
+    const btn = document.getElementById("btnSubmitComplete");
+    
+    if (!fileInput.files || fileInput.files.length === 0) { alert("Please upload the medicine bill."); return; }
+
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Bill & Completing...`; 
+    btn.disabled = true;
+
     try {
-        const payload = { action: "completePharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId };
+        let base64Bill = await getBase64("medicineBillFile");
+
+        const payload = { 
+            action: "completePharmacyOrder", 
+            user_id: localStorage.getItem("bhavya_user_id"), 
+            order_id: orderId,
+            bill_base64: base64Bill 
+        };
+
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
-        if (resData.status === "success") { alert("Great! Order marked as Completed."); fetchOrders(); } else { alert("Error: " + resData.message); }
-    } catch (error) { alert("Network error, please try again."); }
+        
+        if (resData.status === "success") { 
+            alert("Great! Bill uploaded and Order marked as Completed."); 
+            closeCompleteModal();
+            fetchOrders(); 
+        } else { alert("Error: " + resData.message); }
+    } catch (error) { alert("Network error, please try again."); } 
+    finally { btn.innerHTML = `<i class="fas fa-check-double"></i> Upload Bill & Mark Delivered`; btn.disabled = false; }
 }
 
 function logout() { localStorage.clear(); window.location.href = "../index.html"; }

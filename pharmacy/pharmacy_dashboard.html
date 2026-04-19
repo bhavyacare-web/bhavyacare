@@ -76,6 +76,16 @@
         .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px;}
         .timing-row { display: grid; grid-template-columns: 100px 1fr 1fr; align-items: center; gap: 15px; margin-bottom: 10px; background:#f8fafc; padding:10px; border-radius:8px;}
 
+        /* ✨ TOAST NOTIFICATION CSS ✨ */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; background: #333; color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast i { font-size: 20px; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+
         @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
 
         @media (max-width: 768px) {
@@ -254,7 +264,8 @@
             <button class="btn" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%; background:#d97706; color:white;">Got it, I will check</button>
         </div>
     </div>
-<div class="modal-overlay" id="completeOrderModal">
+
+    <div class="modal-overlay" id="completeOrderModal">
         <div class="modal">
             <div class="modal-header">
                 <h3>Complete Order <span id="completeModalOrderId" style="color:#10b981;"></span></h3>
@@ -275,7 +286,7 @@
             </form>
         </div>
     </div>
-    
+
     <script src="pharmacy_dashboard.js"></script>
 </body>
 </html>

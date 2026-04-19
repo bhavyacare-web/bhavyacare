@@ -224,6 +224,10 @@ async function fetchPatientMedicines(userId) {
     }
 }
 
+// ==========================================
+// 🌟 UPDATED: PHARMACY/MEDICINES TAB 🌟
+// ==========================================
+
 function renderMedicineOrders(orders) {
     const container = document.getElementById("patientMedicinesContainer");
     if (!container) return;
@@ -237,25 +241,46 @@ function renderMedicineOrders(orders) {
     orders.forEach(order => {
         let badgeHtml = "";
         let actionHtml = "";
+        let isComplete = false;
         
-        if (order.patient_status === "Pending") {
+        // Use status from backend logic
+        let safeStatus = (order.patient_status || "Pending").toString().trim();
+
+        if (safeStatus === "Pending") {
             badgeHtml = `<span class="status-badge status-warning"><i class="fas fa-clock"></i> Waiting for Pharmacy</span>`;
-            actionHtml = `<p style="font-size:12px; color:#64748b; margin:0;"><i class="fas fa-info-circle"></i> Pharmacy is reviewing your request.</p>`;
+            actionHtml = `<p style="font-size:12px; color:#64748b; margin:0;"><i class="fas fa-info-circle"></i> Pharmacy is reviewing your request.</p>
+                          <button onclick="openCancelMedicineModal('${order.order_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Order</button>`;
         } 
-        else if (order.patient_status === "confirm_for_patient") {
+        else if (safeStatus === "confirm_for_patient") {
             badgeHtml = `<span class="status-badge status-primary"><i class="fas fa-exclamation-circle"></i> Action Required</span>`;
             actionHtml = `<button onclick="openConfirmMedicineModal('${order.order_id}', '${order.presc_req}')" style="background:var(--primary); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:5px;">
                             <i class="fas fa-check-double"></i> Review & Confirm Order
-                          </button>`;
+                          </button>
+                          <button onclick="openCancelMedicineModal('${order.order_id}')" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; transition: 0.2s;">Cancel Order</button>`;
         }
-        else if (order.patient_status === "Confirmed") {
+        else if (safeStatus === "Confirmed") {
             badgeHtml = `<span class="status-badge status-success"><i class="fas fa-check"></i> Order Confirmed</span>`;
-            actionHtml = `<p style="font-size:13px; color:#059669; margin:0; font-weight:bold;"><i class="fas fa-box"></i> Order is being prepared.</p>`;
+            actionHtml = `<p style="font-size:13px; color:#059669; margin:0; font-weight:bold;"><i class="fas fa-box"></i> Order is being prepared by Pharmacy.</p>`;
+        }
+        else if (safeStatus === "Completed") {
+            isComplete = true;
+            badgeHtml = `<span class="status-badge" style="background:#ecfdf5; color:#065f46;"><i class="fas fa-check-circle"></i> Completed</span>`;
+            actionHtml = `<p style="font-size:13px; color:#065f46; margin:0; font-weight:bold;"><i class="fas fa-award"></i> Order Completed Successfully.</p>`;
+            
+            // ✨ NAYA LOGIC: View Bill Button ✨
+            if (order.medicine_bill && order.medicine_bill !== "") {
+                actionHtml += `<button onclick="window.open('${order.medicine_bill}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px;">
+                                <i class="fas fa-file-invoice"></i> Download Final Bill
+                               </button>`;
+            }
+        }
+        else if (safeStatus === "Cancelled") {
+            badgeHtml = `<span class="status-badge status-danger"><i class="fas fa-ban"></i> Cancelled</span>`;
+            actionBtnHtml = `<p style="font-size:12px; color:#dc2626; margin:0;"><i class="fas fa-times-circle"></i> This order was cancelled.</p>`;
         }
 
         // Format dates
         let orderDate = new Date(order.order_date).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
-        
         let formattedDelivery = order.delivery_date;
         try {
             if (order.delivery_date && String(order.delivery_date).includes('T')) {
@@ -266,25 +291,39 @@ function renderMedicineOrders(orders) {
 
         let callBtn = order.pharma_mobile ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
 
-        // Pharmacy Response Section
+        // Pharmacy Response Section (✨ UPDATED FOR VIP/BASIC LOGIC ✨)
         let pharmaReplyHtml = "";
-        if (order.avail_meds) {
+        if (order.total_mrp && Number(order.total_mrp) > 0) {
+            let planDisplay = isUserVip ? `<span style="background:#fff8e1; color:#f57c00; font-size:10px; padding:2px 5px; border-radius:4px; margin-left:5px;">VIP PLAN APPLIED</span>` : `<span style="background:#e6f0fa; color:#0056b3; font-size:10px; padding:2px 5px; border-radius:4px; margin-left:5px;">BASIC PLAN APPLIED</span>`;
+
             pharmaReplyHtml = `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
                 <h5 style="margin:0 0 10px 0; color:#0f172a;">Pharmacy Update</h5>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                     <div style="background:#f8fafc; padding:10px; border-radius:8px;">
                         <h6 style="margin:0 0 5px 0; font-size:11px; color:var(--text-light);">Available</h6>
-                        <p style="margin:0; font-size:12px; color:#059669; font-weight:bold;">${order.avail_meds}</p>
+                        <p style="margin:0; font-size:12px; color:#059669; font-weight:bold;">${order.avail_meds || "Yes"}</p>
                     </div>
                     <div style="background:#f8fafc; padding:10px; border-radius:8px;">
                         <h6 style="margin:0 0 5px 0; font-size:11px; color:var(--text-light);">Not Available</h6>
                         <p style="margin:0; font-size:12px; color:#dc2626;">${order.not_avail_meds || "None"}</p>
                     </div>
                 </div>
-                <div style="background:#f0fdf4; border:1px solid #10b981; padding:12px; border-radius:8px; text-align:center; margin-top:10px;">
-                    <p style="margin:0; font-size:12px; text-decoration:line-through; color:#64748b;">Total Bill: ₹${order.total_amt}</p>
-                    <p style="margin:2px 0 0 0; font-size:16px; font-weight:800; color:#065f46;">Payable Amount: ₹${order.payable_amt}</p>
+                
+                <div style="background:#fff; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
+                    <h6 style="margin:0 0 10px 0; font-size:12px; color:var(--text-main);">Bill Summary ${planDisplay}</h6>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; margin-bottom:5px;">
+                        <span>Total MRP:</span> <span>₹${Number(order.total_mrp).toFixed(2)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#10b981; margin-bottom:5px;">
+                        <span>Discount Applied:</span> <span>- ₹${Number(order.patient_discount).toFixed(2)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:5px;">
+                        <span>Delivery Charge:</span> <span>+ ₹${Number(order.delivery_charge).toFixed(2)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:15px; color:#0f172a; font-weight:800;">
+                        <span>Final Payable:</span> <span>₹${Number(order.final_payable).toFixed(2)}</span>
+                    </div>
                 </div>
             </div>`;
         }
@@ -292,12 +331,8 @@ function renderMedicineOrders(orders) {
         let card = `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                <div>
-                    <strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong>
-                </div>
-                <div style="text-align:right;">
-                    ${badgeHtml}
-                </div>
+                <div><strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong></div>
+                <div style="text-align:right;">${badgeHtml}</div>
             </div>
             <p style="font-size:12px; color:#64748b; margin:0 0 5px 0;"><i class="far fa-calendar-alt"></i> Ordered: ${orderDate}</p>
             <p style="font-size:12px; color:#059669; margin:0 0 10px 0;"><i class="fas fa-truck"></i> Deliver By: ${formattedDelivery}</p>
@@ -310,7 +345,7 @@ function renderMedicineOrders(orders) {
 
             <div style="margin-top: 15px;">
                 ${actionHtml}
-                ${callBtn}
+                ${!isComplete && safeStatus !== "Cancelled" ? callBtn : ''}
             </div>
         </div>`;
         
@@ -318,6 +353,45 @@ function renderMedicineOrders(orders) {
     });
 }
 
+// ✨ NAYA LOGIC: PATIENT CANCEL MEDICINE ORDER ✨
+function openCancelMedicineModal(orderId) {
+    document.getElementById("cancelMedOrderIdHidden").value = orderId; 
+    document.getElementById("cancelMedReasonInput").value = ""; 
+    document.getElementById("cancel-med-order-modal").style.display = "block";
+}
+
+async function submitCancelMedicineOrder(e) {
+    e.preventDefault();
+    const orderId = document.getElementById("cancelMedOrderIdHidden").value; 
+    const reason = document.getElementById("cancelMedReasonInput").value.trim(); 
+    const btn = document.getElementById("btnConfirmMedCancel");
+
+    if (!reason) { alert("Please enter a reason for cancellation."); return; }
+    
+    btn.innerText = "Processing..."; btn.disabled = true;
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify({ 
+                action: "cancelMedicineOrderPatient", 
+                user_id: localStorage.getItem("bhavya_user_id"), 
+                order_id: orderId, 
+                cancel_reason: reason 
+            }) 
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") { 
+            alert("Order cancelled successfully."); 
+            document.getElementById("cancel-med-order-modal").style.display = "none"; 
+            fetchPatientMedicines(localStorage.getItem("bhavya_user_id")); 
+        } else { alert("Error: " + result.message); }
+    } catch(e) { alert("Failed to cancel. Check your network."); } 
+    finally { btn.innerText = "Confirm Cancellation"; btn.disabled = false; }
+}
+
+// BAQI KA CODE WAISE HI RAHEGA JAISE THA...
 function openConfirmMedicineModal(orderId, prescReq) {
     document.getElementById("modalMedOrderId").value = orderId;
     

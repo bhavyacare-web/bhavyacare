@@ -80,6 +80,17 @@
         .modal-actions button { flex: 1; padding: 12px; font-size: 15px;}
         
         #loader { text-align: center; padding: 40px; color: #64748b; }
+
+        /* ✨ TOAST NOTIFICATION CSS ✨ */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; background: #333; color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast i { font-size: 20px; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+
     </style>
 </head>
 <body>
@@ -167,15 +178,7 @@
             </div>
             <div class="card">
                 <table>
-                   <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Pharmacy</th>
-                            <th>Patient Mobile</th>
-                            <th>MRP & Bill</th> <th>Status</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Order ID</th><th>Date</th><th>Pharmacy</th><th>Patient Mobile</th><th>MRP</th><th>Status</th></tr></thead>
                     <tbody id="ordersTableBody"><tr><td colspan="6" style="text-align:center;">Loading orders...</td></tr></tbody>
                 </table>
             </div>
@@ -208,10 +211,10 @@
                         <tr>
                             <th>Order ID</th><th>Date</th><th>Pharmacy</th>
                             <th>Total MRP</th><th>Total Profit</th><th>Pharma Share</th>
-                            <th>Del. Charge</th><th style="color:#2563eb;">BhavyaCare Comm.</th>
+                            <th>BhavyaCare Comm.</th><th style="text-align: center;">Payout Status</th><th>Action</th>
                         </tr>
                     </thead>
-                    <tbody id="ledgerTableBody"><tr><td colspan="8" style="text-align:center;">Loading ledger...</td></tr></tbody>
+                    <tbody id="ledgerTableBody"><tr><td colspan="9" style="text-align:center;">Loading ledger...</td></tr></tbody>
                     <tfoot id="ledgerTableFoot" style="font-weight:bold; background:#e0f2fe; color:#0369a1;"></tfoot>
                 </table>
             </div>

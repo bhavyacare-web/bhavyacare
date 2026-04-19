@@ -3,12 +3,10 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let globalPharmacyOrders = [];
 let remindedOrders = new Set(); 
 
-// Profile Variables
 let profPincodeList = [];
 let profCityList = [];
 const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-// ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
@@ -19,6 +17,34 @@ function showToast(message, type = 'success') {
     toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 3000);
+}
+
+// ✨ NAYA: Robust Date Formatter (Outputs: DD-MM-YYYY 02:30 PM) ✨
+function formatCustomDate(isoString) {
+    if (!isoString || isoString === "undefined") return "Not set";
+    try {
+        // Agar date already format me hai ya simple string hai
+        if (isoString.includes('-') && isoString.split('-')[0].length === 2) return isoString;
+
+        let d = new Date(isoString);
+        if (isNaN(d.getTime())) return isoString; 
+
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+        
+        let hours = d.getHours();
+        let minutes = String(d.getMinutes()).padStart(2, '0');
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        let strHours = String(hours).padStart(2, '0');
+        
+        return `${day}-${month}-${year} ${strHours}:${minutes} ${ampm}`;
+    } catch(e) {
+        return isoString;
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -54,16 +80,11 @@ function showSection(sectionId, btn) {
     if(sectionId === 'profileSection') fetchPharmacyProfile();
 }
 
-// ==========================================
-// ✨ PROFILE EDIT LOGIC (FIXED MISSING LABELS) ✨
-// ==========================================
 function setupProfileTimings() {
     const container = document.getElementById("profTimingsContainer");
     container.innerHTML = "";
     days.forEach(day => {
         let dayName = day.charAt(0).toUpperCase() + day.slice(1);
-        
-        // ✨ NAYA LOGIC: Clear labels for Opening & Closing Time ✨
         container.innerHTML += `
         <div style="background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
             <div style="font-weight:800; color:#0f172a; font-size:15px; margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
@@ -95,20 +116,16 @@ function fetchPharmacyProfile() {
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
         if (resData.status === "success") {
             const p = resData.data;
-            
             try { profPincodeList = JSON.parse(p.available_pincode); } catch(e) { profPincodeList = p.available_pincode ? p.available_pincode.split(',').map(x=>x.trim()) : []; }
             try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
             
-            updateProfTagsUI('pincode');
-            updateProfTagsUI('city');
-
+            updateProfTagsUI('pincode'); updateProfTagsUI('city');
             days.forEach(day => {
                 if(p.timings[day]) {
                     document.getElementById("prof_"+day+"_open").value = p.timings[day].open || "";
                     document.getElementById("prof_"+day+"_close").value = p.timings[day].close || "";
                 }
             });
-
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Image 1</a>` : "No image uploaded";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Image 2</a>` : "No image uploaded";
         }
@@ -116,28 +133,15 @@ function fetchPharmacyProfile() {
 }
 
 function addProfTag(type) {
-    let inputElem = document.getElementById(type === 'pincode' ? 'profPincode' : 'profCity');
-    let val = inputElem.value.trim();
-    if (!val) return;
-    
+    let inputElem = document.getElementById(type === 'pincode' ? 'profPincode' : 'profCity'); let val = inputElem.value.trim(); if (!val) return;
     if (type === 'pincode' && !profPincodeList.includes(val)) { profPincodeList.push(val); updateProfTagsUI('pincode'); } 
-    else if (type === 'city') {
-        val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-        if (!profCityList.includes(val)) { profCityList.push(val); updateProfTagsUI('city'); }
-    }
+    else if (type === 'city') { val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase(); if (!profCityList.includes(val)) { profCityList.push(val); updateProfTagsUI('city'); } }
     inputElem.value = ""; 
 }
-
-function removeProfTag(type, index) { 
-    type === 'pincode' ? profPincodeList.splice(index, 1) : profCityList.splice(index, 1); 
-    updateProfTagsUI(type); 
-}
-
+function removeProfTag(type, index) { type === 'pincode' ? profPincodeList.splice(index, 1) : profCityList.splice(index, 1); updateProfTagsUI(type); }
 function updateProfTagsUI(type) {
-    let wrapper = document.getElementById(type === 'pincode' ? 'profPincodeTags' : 'profCityTags'); 
-    let list = type === 'pincode' ? profPincodeList : profCityList; 
-    wrapper.innerHTML = "";
-    list.forEach((item, index) => { wrapper.innerHTML += `<div class="tag">${item} <span onclick="removeProfTag('${type}', ${index})">×</span></div>`; });
+    let wrapper = document.getElementById(type === 'pincode' ? 'profPincodeTags' : 'profCityTags'); let list = type === 'pincode' ? profPincodeList : profCityList; 
+    wrapper.innerHTML = ""; list.forEach((item, index) => { wrapper.innerHTML += `<div class="tag">${item} <span onclick="removeProfTag('${type}', ${index})">×</span></div>`; });
 }
 
 function getBase64(fileId) {
@@ -152,59 +156,30 @@ function getBase64(fileId) {
 async function submitProfileUpdate(e) {
     e.preventDefault();
     if(profPincodeList.length === 0 || profCityList.length === 0) { showToast("At least 1 Delivery Pincode and City is required.", "error"); return; }
-
-    const btn = document.getElementById("btnUpdateProfile"); 
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; btn.disabled = true;
+    const btn = document.getElementById("btnUpdateProfile"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; btn.disabled = true;
 
     try {
-        let payload = {
-            action: "updatePharmacyProfile",
-            user_id: localStorage.getItem("bhavya_user_id"),
-            available_city: profCityList.join(', '),
-            available_pincode: JSON.stringify(profPincodeList),
-            img1: await getBase64("profImg1"),
-            img2: await getBase64("profImg2")
-        };
-
-        days.forEach(day => {
-            payload[day + "_opening_time"] = document.getElementById("prof_"+day+"_open").value;
-            payload[day + "_closing_time"] = document.getElementById("prof_"+day+"_close").value;
-        });
-
+        let payload = { action: "updatePharmacyProfile", user_id: localStorage.getItem("bhavya_user_id"), available_city: profCityList.join(', '), available_pincode: JSON.stringify(profPincodeList), img1: await getBase64("profImg1"), img2: await getBase64("profImg2") };
+        days.forEach(day => { payload[day + "_opening_time"] = document.getElementById("prof_"+day+"_open").value; payload[day + "_closing_time"] = document.getElementById("prof_"+day+"_close").value; });
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
-
-        if (resData.status === "success") {
-            showToast("Profile updated successfully!", "success");
-            fetchPharmacyProfile(); 
-        } else {
-            showToast("Error: " + resData.message, "error"); 
-        }
+        if (resData.status === "success") { showToast("Profile updated successfully!", "success"); fetchPharmacyProfile(); } else { showToast("Error: " + resData.message, "error"); }
     } catch (error) { showToast("Network error while updating profile.", "error"); } 
     finally { btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`; btn.disabled = false; }
 }
 
-
-// ==========================================
-// ✨ ORDERS & SETTLEMENT LOGIC ✨
-// ==========================================
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
     container.innerHTML = `<div style="text-align: center; padding: 50px; color: #64748b;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><p>Loading your orders...</p></div>`;
 
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "getPharmacyOrders", user_id: localStorage.getItem("bhavya_user_id") })
-    })
+    fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getPharmacyOrders", user_id: localStorage.getItem("bhavya_user_id") }) })
     .then(res => res.json())
     .then(resData => {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
             renderOrders(globalPharmacyOrders);
             if(document.getElementById('settlementsSection').classList.contains('active')) renderSettlements();
-        } else {
-            container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
-        }
+        } else { container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`; }
     }).catch(err => { container.innerHTML = `<p style="text-align:center; color:red;">Network Error.</p>`; });
 }
 
@@ -214,15 +189,10 @@ function filterLiveOrders() {
     const dateVal = document.getElementById("dateFilter").value;
 
     const filtered = globalPharmacyOrders.filter(order => {
-        let matchText = true;
-        if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText) || (order.patient_mobile || "").toLowerCase().includes(searchText); }
-        let matchStatus = true;
-        if (statusVal !== "All") { matchStatus = order.patient_status === statusVal; }
-        let matchDate = true;
-        if (dateVal !== "") {
-            const [year, month, day] = dateVal.split('-');
-            const orderDateStr = order.order_date || "";
-            matchDate = orderDateStr.includes(`${year}-${month}-${day}`);
+        let matchText = true; if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText) || (order.patient_mobile || "").toLowerCase().includes(searchText); }
+        let matchStatus = true; if (statusVal !== "All") { matchStatus = order.patient_status === statusVal; }
+        let matchDate = true; if (dateVal !== "") {
+            const [year, month, day] = dateVal.split('-'); const orderDateStr = order.order_date || ""; matchDate = orderDateStr.includes(`${year}-${month}-${day}`);
         }
         return matchText && matchStatus && matchDate;
     });
@@ -230,9 +200,7 @@ function filterLiveOrders() {
 }
 
 function clearOrderFilters() {
-    document.getElementById("searchOrderInput").value = "";
-    document.getElementById("statusFilter").value = "All";
-    document.getElementById("dateFilter").value = "";
+    document.getElementById("searchOrderInput").value = ""; document.getElementById("statusFilter").value = "All"; document.getElementById("dateFilter").value = "";
     renderOrders(globalPharmacyOrders);
 }
 
@@ -243,10 +211,8 @@ function filterSettlements() {
     const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
 
     const filtered = completed.filter(order => {
-        let matchText = true;
-        if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText); }
-        let matchDate = true;
-        if (startDateVal !== "" || endDateVal !== "") {
+        let matchText = true; if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText); }
+        let matchDate = true; if (startDateVal !== "" || endDateVal !== "") {
             const orderDate = new Date(order.order_date); orderDate.setHours(0, 0, 0, 0); 
             if (startDateVal !== "") { const sDate = new Date(startDateVal); sDate.setHours(0, 0, 0, 0); if (orderDate < sDate) matchDate = false; }
             if (endDateVal !== "") { const eDate = new Date(endDateVal); eDate.setHours(0, 0, 0, 0); if (orderDate > eDate) matchDate = false; }
@@ -257,13 +223,10 @@ function filterSettlements() {
 }
 
 function clearSettlementFilters() {
-    document.getElementById("searchSettlementInput").value = "";
-    document.getElementById("settlementStartDate").value = "";
-    document.getElementById("settlementEndDate").value = "";
+    document.getElementById("searchSettlementInput").value = ""; document.getElementById("settlementStartDate").value = ""; document.getElementById("settlementEndDate").value = "";
     renderSettlementsList(globalPharmacyOrders.filter(o => o.patient_status === "Completed"));
 }
 
-// ✨ UPDATED RENDER ORDERS (Mobile Optimized UI) ✨
 function renderOrders(orders) {
     const container = document.getElementById("ordersContainer"); container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
@@ -317,10 +280,13 @@ function renderOrders(orders) {
             </div>`;
         }
 
-        let callBtn = order.patient_mobile ? `<a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1;"><i class="fas fa-phone-alt"></i> Call Patient</a>` : ``;
+        let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
+        let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
+        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
 
-        let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
-        let formattedDelivery = order.delivery_date || "Not set";
+        // ✨ FIX: Format date using new formatter ✨
+        let displayOrderDate = formatCustomDate(order.order_date);
+        let displayDeliveryDate = formatCustomDate(order.delivery_date);
 
         let orderTypeDisplay = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup") 
             ? `<span style="color: #d97706; font-weight: 800; font-size: 12px; background: #fef3c7; padding: 4px 8px; border-radius: 6px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
@@ -344,12 +310,17 @@ function renderOrders(orders) {
                 <p style="font-size: 13px;">${order.patient_address}</p>
                 <div style="margin-top: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px; border-radius: 8px; display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-truck-fast" style="color: #10b981; font-size:16px;"></i> 
-                    <span style="font-size: 13px; color: #065f46; font-weight:700;">Deliver By: ${formattedDelivery}</span>
+                    <span style="font-size: 13px; color: #065f46; font-weight:700;">Deliver By: ${displayDeliveryDate}</span>
                 </div>
             </div>
 
             ${cancelReasonHtml}
             ${ratingHtml}
+
+            <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 10px;">
+                <h4>Order Timeline</h4>
+                <div style="background: #e0f2fe; color: #0284c7; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;"><i class="far fa-calendar-alt"></i> Ordered on: ${displayOrderDate}</div>
+            </div>
 
             <div class="order-actions">
                 ${order.patient_status !== "Completed" && order.patient_status !== "Cancelled" ? callBtn : ''}
@@ -391,8 +362,12 @@ function renderSettlementsList(ordersToRender) {
     });
 }
 
+// ✨ NAYA LOGIC: DIRECT PDF DOWNLOAD ✨
 function downloadSettlementPDF() {
-    const searchText = document.getElementById("searchSettlementInput").value.toLowerCase().trim(); const startDateVal = document.getElementById("settlementStartDate").value; const endDateVal = document.getElementById("settlementEndDate").value;
+    const searchText = document.getElementById("searchSettlementInput").value.toLowerCase().trim(); 
+    const startDateVal = document.getElementById("settlementStartDate").value; 
+    const endDateVal = document.getElementById("settlementEndDate").value;
+    
     const completed = globalPharmacyOrders.filter(o => o.patient_status === "Completed");
     const filteredOrders = completed.filter(order => {
         let matchText = true; if (searchText !== "") { matchText = (order.order_id || "").toLowerCase().includes(searchText); }
@@ -403,29 +378,76 @@ function downloadSettlementPDF() {
         }
         return matchText && matchDate;
     });
+    
     if(filteredOrders.length === 0) { showToast("No orders found for the selected date range.", "error"); return; }
 
-    let printWindow = window.open('', '', 'width=900,height=700');
     let reportTitle = "Pharmacy Settlement Report";
     if (startDateVal && endDateVal) reportTitle += ` (${startDateVal} to ${endDateVal})`; else if (startDateVal) reportTitle += ` (From ${startDateVal})`; else if (endDateVal) reportTitle += ` (Until ${endDateVal})`;
 
-    let html = `<html><head><title>${reportTitle}</title><style>body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#333;}.header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #2563eb;padding-bottom:15px;margin-bottom:20px;}h1{color:#2563eb;margin:0;font-size:28px;}.meta{color:#555;font-size:14px;margin-top:5px;}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:12px;text-align:center;}th{background-color:#f8fafc;color:#0f172a;font-weight:bold;}.totals{font-weight:bold;background-color:#e0f2fe;color:#0369a1;}</style></head><body><div class="header"><div><h1>BhavyaCare Pharmacy Ledger</h1><div class="meta">${reportTitle}</div></div><div class="meta">Generated on: ${new Date().toLocaleString('en-IN')}</div></div><table><thead><tr><th>Order ID</th><th>Date</th><th>Total MRP (₹)</th><th>Total Profit (₹)</th><th>Your Share (₹)</th><th>Del. Charge (₹)</th><th>BhavyaCare Comm. (₹)</th></tr></thead><tbody>`;
+    let htmlStr = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background: #fff;">
+        <div style="border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="color: #2563eb; margin: 0; font-size: 24px;">BhavyaCare Pharmacy Ledger</h1>
+            <div style="color: #555; font-size: 12px; margin-top: 5px;">${reportTitle} | Generated: ${new Date().toLocaleString('en-IN')}</div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+                <tr style="background-color: #f8fafc; color: #0f172a;">
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Order ID</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Date</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Total MRP</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Profit</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Your Share</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Del. Charge</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Comm.</th>
+                </tr>
+            </thead>
+            <tbody>`;
     
     let tMrp=0, tProf=0, tShare=0, tDel=0, tComm=0;
     filteredOrders.forEach(o => {
         let dateObj = new Date(o.order_date); let dateStr = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
         tMrp += Number(o.total_mrp) || 0; tProf += Number(o.total_profit) || 0; tShare += Number(o.pharma_profit_share) || 0; tDel += Number(o.delivery_charge) || 0; tComm += Number(o.bhavya_care_commission) || 0;
-        html += `<tr><td style="font-weight:bold;">#${o.order_id}</td><td>${dateStr}</td><td>${(Number(o.total_mrp)||0).toFixed(2)}</td><td>${(Number(o.total_profit)||0).toFixed(2)}</td><td style="color:#059669; font-weight:bold;">${(Number(o.pharma_profit_share)||0).toFixed(2)}</td><td>${(Number(o.delivery_charge)||0).toFixed(2)}</td><td style="color:#2563eb; font-weight:bold;">${(Number(o.bhavya_care_commission)||0).toFixed(2)}</td></tr>`;
+        htmlStr += `<tr>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight:bold;">#${o.order_id}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${dateStr}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${(Number(o.total_mrp)||0).toFixed(2)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${(Number(o.total_profit)||0).toFixed(2)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color:#059669; font-weight:bold;">${(Number(o.pharma_profit_share)||0).toFixed(2)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${(Number(o.delivery_charge)||0).toFixed(2)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color:#2563eb; font-weight:bold;">${(Number(o.bhavya_care_commission)||0).toFixed(2)}</td>
+        </tr>`;
     });
-    html += `<tr class="totals"><td colspan="2" style="text-align:right; padding-right:15px;">GRAND TOTAL</td><td>₹${tMrp.toFixed(2)}</td><td>₹${tProf.toFixed(2)}</td><td>₹${tShare.toFixed(2)}</td><td>₹${tDel.toFixed(2)}</td><td>₹${tComm.toFixed(2)}</td></tr></tbody></table><p style="text-align:center; font-size:12px; color:#888; margin-top:30px;">This is a computer-generated report.</p></body></html>`;
+    htmlStr += `
+            <tr style="background-color: #e0f2fe; color: #0369a1; font-weight: bold;">
+                <td colspan="2" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">GRAND TOTAL</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">₹${tMrp.toFixed(2)}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">₹${tProf.toFixed(2)}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">₹${tShare.toFixed(2)}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">₹${tDel.toFixed(2)}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">₹${tComm.toFixed(2)}</td>
+            </tr>
+        </tbody></table>
+        <p style="text-align:center; font-size:10px; color:#888; margin-top:20px;">This is a computer-generated report.</p>
+    </div>`;
     
-    printWindow.document.write(html); printWindow.document.close();
-    printWindow.onload = function() { printWindow.focus(); printWindow.print(); setTimeout(() => printWindow.close(), 100); };
+    // Create a temporary hidden div to hold the HTML
+    let wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlStr;
+    
+    let opt = {
+      margin:       10,
+      filename:     'Pharmacy_Settlement_Report.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    showToast("Generating PDF, please wait...", "info");
+    html2pdf().set(opt).from(wrapper).save().then(() => {
+        showToast("PDF Downloaded successfully!", "success");
+    });
 }
-
-// ==========================================
-// ✨ MODALS & API CALLS ✨
-// ==========================================
 
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
 function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
@@ -437,57 +459,6 @@ async function submitProcessForm(e) {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
         if (resData.status === "success") { showToast("Details sent successfully! Patient has been notified.", "success"); closeModal(); fetchOrders(); } else { showToast("Error: " + resData.message, "error"); }
-    } catch (error) { showToast("Network error, please try again.", "error"); } finally { btn.innerHTML = "Send to Patient"; btn.disabled = false; }
-}
-
-function openCancelModal(orderId) { document.getElementById("cancelOrderIdHidden").value = orderId; document.getElementById("cancelModalOrderId").innerText = "#" + orderId; document.getElementById("cancelOrderModal").style.display = "flex"; }
-function closeCancelModal() { document.getElementById("cancelOrderModal").style.display = "none"; document.getElementById("cancelOrderForm").reset(); }
-
-async function submitCancelOrder(e) {
-    e.preventDefault(); const btn = document.getElementById("btnSubmitCancel"); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Cancelling...`; btn.disabled = true;
-    const payload = { action: "cancelPharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: document.getElementById("cancelOrderIdHidden").value, cancel_reason: document.getElementById("cancelReasonText").value };
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        const resData = await response.json();
-        if (resData.status === "success") { showToast("Order Cancelled. Patient has been notified.", "success"); closeCancelModal(); fetchOrders(); } else { showToast("Error: " + resData.message, "error"); }
-    } catch (error) { showToast("Network error.", "error"); } finally { btn.innerHTML = "Confirm Cancellation"; btn.disabled = false; }
-}
-
-function openCompleteModal(orderId) {
-    let modal = document.getElementById("completeOrderModal");
-    if(!modal) { showToast("Please update HTML with Complete Order Modal first.", "error"); return; }
-    document.getElementById("completeOrderIdHidden").value = orderId;
-    document.getElementById("completeModalOrderId").innerText = "#" + orderId;
-    document.getElementById("medicineBillFile").value = ""; 
-    modal.style.display = "flex";
-}
-
-function closeCompleteModal() {
-    document.getElementById("completeOrderModal").style.display = "none";
-    document.getElementById("completeOrderForm").reset();
-}
-
-async function submitCompleteOrder(e) {
-    e.preventDefault();
-    const orderId = document.getElementById("completeOrderIdHidden").value;
-    const fileInput = document.getElementById("medicineBillFile");
-    const btn = document.getElementById("btnSubmitComplete");
-    
-    if (!fileInput.files || fileInput.files.length === 0) { showToast("Please upload the medicine bill.", "error"); return; }
-
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Bill...`; 
-    btn.disabled = true;
-
-    try {
-        let base64Bill = await getBase64("medicineBillFile");
-        const payload = { action: "completePharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId, bill_base64: base64Bill };
-        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        const resData = await response.json();
-        
-        if (resData.status === "success") { 
-            showToast("Bill uploaded and Order Complete!", "success"); 
-            closeCompleteModal(); fetchOrders(); 
-        } else { showToast("Error: " + resData.message, "error"); }
     } catch (error) { showToast("Network error, please try again.", "error"); } 
     finally { btn.innerHTML = `<i class="fas fa-check-double"></i> Upload Bill & Mark Delivered`; btn.disabled = false; }
 }

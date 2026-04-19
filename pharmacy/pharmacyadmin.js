@@ -28,9 +28,15 @@ function switchTab(tabId, btn) {
     document.getElementById(tabId).classList.add('active');
 }
 
-function refreshAllData() {
+// ✨ NAYA REFRESH LOGIC (With Toast) ✨
+async function refreshAllData() {
+    showToast("Refreshing data...", "info");
+    
+    // Dono functions ko call karna
     fetchRegistrations(); 
-    fetchAllAdminData();  
+    await fetchAllAdminData();  
+    
+    showToast("Data refreshed successfully!", "success");
 }
 
 // ==========================================
@@ -213,7 +219,7 @@ function updateOverviewStats() {
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
 }
 
-// ✨ ADMIN DASHBOARD: ALL ORDERS (Show Reviews & Cancel Reason) ✨
+// ✨ NAYA RENDER ALL ORDERS (With Order Type) ✨
 function renderAllOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("filterOrderStatus").value;
@@ -251,7 +257,6 @@ function renderAllOrders() {
             ? `<br><a href="${o.medicine_bill}" target="_blank" style="font-size:11px; background:#10b981; color:white; padding:4px 8px; border-radius:4px; text-decoration:none; display:inline-block; margin-top:5px; font-weight:bold;"><i class="fas fa-file-invoice"></i> View Bill</a>` 
             : `<br><span style="font-size:11px; color:#94a3b8; display:inline-block; margin-top:5px;">No Bill Yet</span>`;
 
-        // ✨ NAYA LOGIC: Show Rating and Cancel Reason in Admin Table ✨
         let extraInfo = "";
         if(o.patient_status === "Cancelled" && o.cancel_reason) {
             extraInfo += `<div style="color:#dc2626; font-size:11px; margin-top:6px; background:#ffebee; padding:4px; border-radius:4px;"><b>Reason:</b> ${o.cancel_reason}</div>`;
@@ -260,9 +265,14 @@ function renderAllOrders() {
             extraInfo += `<div style="color:#f59e0b; font-size:11px; margin-top:6px; background:#fff8e1; padding:4px; border-radius:4px;"><b>Rated:</b> ${o.pharmacy_rating}⭐ <br><i>${o.pharmacy_comment || ""}</i></div>`;
         }
 
+        // ✨ ORDER TYPE BADGE ✨
+        let typeBadge = (o.order_type === "Collect from Pharmacy" || o.order_type === "Self Pickup") 
+            ? `<span style="background:#fef3c7; color:#d97706; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-store-alt"></i> Self Pickup</span>` 
+            : `<span style="background:#e0e7ff; color:#4f46e5; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+
         tbody.innerHTML += `
         <tr>
-            <td style="font-weight:700;">#${o.order_id}</td>
+            <td style="font-weight:700;">#${o.order_id}<br>${typeBadge}</td>
             <td>${dDate}</td>
             <td style="font-size:12px;"><b>${getPharmaName(o.medicos_id)}</b><br><span style="color:#64748b;">${o.medicos_id}</span>${extraInfo}</td>
             <td style="font-size:12px;">📞 ${o.patient_mobile}</td>
@@ -271,7 +281,6 @@ function renderAllOrders() {
         </tr>`;
     });
 }
-
 function clearLedgerFilters() {
     document.getElementById("ledgerPharmaFilter").value = "All";
     document.getElementById("ledgerStartDate").value = "";

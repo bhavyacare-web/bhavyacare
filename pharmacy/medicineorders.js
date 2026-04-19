@@ -1,5 +1,6 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 let selectedPharmaId = "";
+let selectedPharmaAddress = ""; // ✨ NAYA: Pharmacy ka address store karega
 
 document.addEventListener("DOMContentLoaded", () => {
     const userId = localStorage.getItem("bhavya_user_id");
@@ -100,7 +101,6 @@ function getNextDateForDay(dayAbbr, openTime) {
     }
 }
 
-// ✨ NAYA FUNCTION: Opening se Closing tak ke 30-min slots generate karna ✨
 function getSlotsForTimeRange(openTime, closeTime) {
     let slots = [];
     let [startH, startM] = openTime.split(':').map(Number);
@@ -109,7 +109,6 @@ function getSlotsForTimeRange(openTime, closeTime) {
     let startMins = startH * 60 + startM;
     let endMins = endH * 60 + endM;
 
-    // Nearest 30-min interval par set karna
     let currMins = startMins;
     if (currMins % 30 !== 0) currMins += (30 - (currMins % 30));
 
@@ -124,7 +123,8 @@ function getSlotsForTimeRange(openTime, closeTime) {
     return slots;
 }
 
-function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName) {
+// ✨ FIX: Accept encoded Pharmacy Address ✨
+function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName, encodedAddress) {
     document.getElementById('orderDate').value = dateStr;
     
     let timeSelect = document.getElementById('orderTime');
@@ -139,6 +139,7 @@ function autoFillAndContinue(dateStr, timeStr, pharmaId, pharmaName) {
     timeSelect.value = timeStr;
     
     selectedPharmaId = pharmaId;
+    selectedPharmaAddress = decodeURIComponent(encodedAddress); // Save Pharmacy Address
     
     const resultsDiv = document.getElementById("pharmaResults");
     resultsDiv.innerHTML = `
@@ -183,7 +184,7 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML = `<p style="font-weight:700; color:#059669; margin-bottom:10px;">Available Pharmacies (Choose One):</p>`;
                 data.data.openOnes.forEach(p => {
                     resultsDiv.innerHTML += `
-                        <div class="pharma-option" onclick="selectPharma(this, '${p.id}')">
+                        <div class="pharma-option" onclick="selectPharma(this, '${p.id}', encodeURIComponent('${p.address}'))">
                             <span class="pharma-name">${p.name}</span>
                             <span class="pharma-time">Open Now: ${formatAMPM(p.timings.open)} to ${formatAMPM(p.timings.close)}</span>
                             <p style="font-size:12px; color:#64748b; margin:5px 0 0 0;">${p.address}</p>
@@ -195,7 +196,6 @@ async function searchPharmacies() {
                 resultsDiv.innerHTML = `<p style="font-weight:700; color:#dc2626; margin-bottom:10px;">Sorry, no pharmacy is open at your selected time. Select any available slot below to auto-book:</p>`;
                 
                 data.data.closedOnes.forEach(p => {
-                    // ✨ NAYA LOGIC: Multiple Slots Dikhana ✨
                     let schedHtml = `<div style="margin-top:10px; max-height: 180px; overflow-y: auto; padding-right: 5px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #fff;">`;
                     let hasAnySlot = false;
 
@@ -205,7 +205,6 @@ async function searchPharmacies() {
                             if (nextDate) {
                                 let slots = getSlotsForTimeRange(times.open, times.close);
                                 
-                                // Aaj ki date ke liye past slots hatana
                                 let todayStr = new Date().toISOString().split('T')[0];
                                 if (nextDate === todayStr) {
                                     let nowH = new Date().getHours();
@@ -222,7 +221,7 @@ async function searchPharmacies() {
                                     schedHtml += `<div style="font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;"><i class="far fa-calendar-alt"></i> ${day} (${nextDate})</div>`;
                                     schedHtml += `<div style="display:flex; flex-wrap:wrap; gap:5px;">`;
                                     slots.forEach(slot => {
-                                        schedHtml += `<span class="time-badge" onclick="autoFillAndContinue('${nextDate}', '${slot}', '${p.id}', '${p.name}')" title="Click to select">
+                                        schedHtml += `<span class="time-badge" onclick="autoFillAndContinue('${nextDate}', '${slot}', '${p.id}', '${p.name}', encodeURIComponent('${p.address}'))" title="Click to select">
                                             ${formatAMPM(slot)}
                                         </span>`;
                                     });
@@ -253,28 +252,45 @@ async function searchPharmacies() {
     } catch(e) { alert("Network Error"); resultsDiv.innerHTML = ""; }
 }
 
-function selectPharma(elem, id) {
+function selectPharma(elem, id, addressEncoded) {
     document.querySelectorAll(".pharma-option").forEach(el => el.classList.remove("selected"));
     elem.classList.add("selected");
     selectedPharmaId = id;
+    if(addressEncoded) selectedPharmaAddress = decodeURIComponent(addressEncoded); // Address store kar liya
 }
 
-// ✨ 1. UPDATE THIS FUNCTION ✨
+// ✨ FIX: Address Toggle Logic for Self Pickup ✨
+function toggleDeliveryMode() {
+    const isPickup = document.getElementById("typePickup").checked;
+    const addrSec = document.getElementById("addressSection");
+    const pickSec = document.getElementById("pickupSection");
+    const patAddr = document.getElementById("patientAddress");
+
+    if (isPickup) {
+        addrSec.style.display = "none";
+        patAddr.required = false;
+        pickSec.style.display = "block";
+        document.getElementById("pickupLocationDisplay").innerText = selectedPharmaAddress || "Pharmacy Address";
+    } else {
+        addrSec.style.display = "block";
+        patAddr.required = true;
+        pickSec.style.display = "none";
+    }
+}
+
 function goToForm() {
     if(!selectedPharmaId) { alert("Please select a pharmacy first!"); return; }
     document.getElementById("step1-check").style.display = "none";
     document.getElementById("step2-form").style.display = "block";
     
-    // City aur Pincode nikalna
     let city = document.getElementById("citySelect").value;
     if(city === "other") city = document.getElementById("manualCity").value;
     let pin = document.getElementById("pincode").value;
     
-    // Locked box me City/Pincode set karna
     document.getElementById("lockedLocationDisplay").innerText = `City: ${city}, Pincode: ${pin}`;
-    
-    // Textarea ko khali chhodna taaki patient sirf apna ghar ka address dale
     document.getElementById("patientAddress").value = ""; 
+    
+    toggleDeliveryMode(); // UI toggle set karne ke liye
 }
 
 function formatAMPM(t) {
@@ -285,7 +301,6 @@ function formatAMPM(t) {
     return `${h}:${m} ${ampm}`;
 }
 
-// UPLOAD & SUBMIT ORDER 
 function getBase64(fileId) {
     return new Promise((resolve) => {
         const input = document.getElementById(fileId);
@@ -295,32 +310,36 @@ function getBase64(fileId) {
     });
 }
 
-// ✨ 2. UPDATE THIS FUNCTION ✨
+// ✨ FIX: Proper Order Type & Address submission ✨
 async function submitOrder(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmit");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing Request...`; btn.disabled = true;
 
     try {
-        const orderType = document.getElementById("orderType").value;
+        // Naya method to get selected radio button value
+        const orderType = document.querySelector('input[name="orderType"]:checked').value;
         const oDate = document.getElementById("orderDate").value;
         const oTime = document.getElementById("orderTime").value;
 
-        // City aur Pincode wapas nikal kar User ke Address ke sath jodna
-        let city = document.getElementById("citySelect").value;
-        if(city === "other") city = document.getElementById("manualCity").value;
-        let pin = document.getElementById("pincode").value;
-        let localAddress = document.getElementById("patientAddress").value;
-        
-        let finalFullAddress = `City: ${city}, Pincode: ${pin}\nLocal Address: ${localAddress}`;
+        let finalFullAddress = "";
+        if (orderType === "Collect from Pharmacy") {
+            finalFullAddress = `Self Pickup at: ${selectedPharmaAddress}`;
+        } else {
+            let city = document.getElementById("citySelect").value;
+            if(city === "other") city = document.getElementById("manualCity").value;
+            let pin = document.getElementById("pincode").value;
+            let localAddress = document.getElementById("patientAddress").value;
+            finalFullAddress = `City: ${city}, Pincode: ${pin}\nLocal Address: ${localAddress}`;
+        }
 
         const payload = {
             action: "submitMedicineOrder",
             user_id: localStorage.getItem("bhavya_user_id"),
             medicos_id: selectedPharmaId,
-            order_type: orderType,
+            order_type: orderType, // Now it will correctly send "Collect from Pharmacy"
             delivery_date: `${oDate} ${formatAMPM(oTime)}`,
-            patient_address: finalFullAddress, // <-- Yahan final address bheja
+            patient_address: finalFullAddress,
             medicine_details: document.getElementById("medicineDetails").value,
             prescription_base64: await getBase64("prescriptionFile")
         };

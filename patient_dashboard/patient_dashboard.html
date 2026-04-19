@@ -97,6 +97,16 @@
         .star-rating { display: flex; justify-content: center; gap: 8px; font-size: 30px; color: #ddd; margin: 15px 0; cursor: pointer; }
         .star-rating i:hover, .star-rating i.active { color: #ffc107; }
 
+        /* ✨ TOAST NOTIFICATION CSS ✨ */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; background: #333; color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast i { font-size: 20px; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+
         /* Mobile vs Desktop Display Logic */
         .mobile-only { display: flex; }
         .desktop-only { display: none; }
@@ -196,8 +206,8 @@
                     <h4>Wallet Balance</h4>
                     <div class="value">₹<span id="walletBal"><i class="fas fa-circle-notch fa-spin" style="font-size: 16px;"></i></span></div>
                     <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 2;">
-                        <button class="card-action-btn" style="color: var(--success); flex: 1;" onclick="event.stopPropagation(); alert('Add money feature coming soon!')">Top Up</button>
-                        <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); alert('Withdraw request page coming soon!')">Withdraw</button>
+                        <button class="card-action-btn" style="color: var(--success); flex: 1;" onclick="event.stopPropagation(); showToast('Add money feature coming soon!', 'info')">Top Up</button>
+                        <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); showToast('Withdraw request page coming soon!', 'info')">Withdraw</button>
                     </div>
                 </div>
                 
@@ -207,7 +217,7 @@
                     <div class="value" id="vipStatus" style="font-size: 22px;">Loading...</div>
                     <p class="sub-text" id="vipSubText">Checking VIP Status...</p>
                     <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px; display: none;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
-                    <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="event.stopPropagation(); alert('Booking system coming soon!')">
+                    <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="event.stopPropagation(); showToast('Booking system coming soon!', 'info')">
                         🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
                     </div>
                 </div>
@@ -440,7 +450,8 @@
             <button type="button" class="btn btn-confirm" id="btnSubmitConfirmMed" style="background: var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitConfirmMedicineForm()">Confirm & Place Order</button>
         </form>
     </div>
-<div id="cancel-med-order-modal" class="modal-overlay">
+
+    <div id="cancel-med-order-modal" class="modal-overlay">
         <div class="modal">
             <button class="close-btn-modal" onclick="document.getElementById('cancel-med-order-modal').style.display='none'">✖</button>
             <div style="text-align: center; margin-bottom: 15px;">
@@ -460,7 +471,24 @@
             </form>
         </div>
     </div>
-    
+
+    <div id="pharma-review-modal" class="modal-overlay">
+        <div class="modal">
+            <button class="close-btn-modal" onclick="document.getElementById('pharma-review-modal').style.display='none'">✖</button>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-store" style="font-size: 26px; color: #ffc107;"></i></div>
+                <h3 style="margin:0; color: var(--text-main);">Rate Pharmacy</h3>
+                <p style="font-size:12px; color:#888;">How was your medicine delivery experience?</p>
+            </div>
+            <input type="hidden" id="pharmaReviewOrderIdHidden">
+            <div class="star-rating" id="pharmaStarRatingContainer">
+                <i class="fas fa-star" onclick="setPharmaRating(1)"></i><i class="fas fa-star" onclick="setPharmaRating(2)"></i><i class="fas fa-star" onclick="setPharmaRating(3)"></i><i class="fas fa-star" onclick="setPharmaRating(4)"></i><i class="fas fa-star" onclick="setPharmaRating(5)"></i>
+            </div>
+            <div class="form-group"><textarea id="pharmaReviewCommentInput" class="input-box" rows="3" placeholder="Leave a review (Optional)..."></textarea></div>
+            <button id="btnSubmitPharmaReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPharmaReview()">Submit Rating</button>
+        </div>
+    </div>
+
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

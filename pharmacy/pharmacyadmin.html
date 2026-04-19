@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; margin: 0; color: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; margin: 0; color: #0f172a; padding-bottom: 50px;}
         
         .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
         .logo h2 { color: #1d4ed8; margin: 0; font-size: 24px; font-weight: 800;}
@@ -16,20 +16,44 @@
         
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
         
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-section h1 { margin: 0; font-size: 26px; }
         
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid #e2e8f0; }
+        /* NAYA: Tabs Navigation */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto;}
+        .nav-btn { padding: 10px 20px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-weight: 700; color: #64748b; font-size: 15px; transition: 0.3s;}
+        .nav-btn.active { background: #1d4ed8; color: white; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);}
+        .nav-btn:hover:not(.active) { background: #e0e7ff; color: #1d4ed8;}
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;}
+        .stat-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+        .stat-card h3 { margin: 0 0 10px 0; font-size: 13px; color: #64748b; text-transform: uppercase;}
+        .stat-card .value { font-size: 32px; font-weight: 800; color: #0f172a;}
+
+        /* Filters */
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap;}
+        .search-wrapper { flex: 1; min-width: 250px; position: relative;}
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;}
+        .filter-input { width: 100%; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; font-family: inherit;}
+        .filter-input.with-icon { padding-left: 40px; }
+        .filter-actions { display: flex; gap: 10px; flex: 2; min-width: 300px; align-items: center;}
+
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow-x: auto; border: 1px solid #e2e8f0; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 14px;}
+        table { width: 100%; border-collapse: collapse; min-width: 800px;}
+        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 13px;}
         th { background-color: #f8fafc; font-weight: 700; color: #4a5568; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
         tr:hover { background-color: #f8fafc; }
         
-        .badge { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; display: inline-block; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 11px; display: inline-block; }
         .bg-pending { background: #fef3c7; color: #d97706; }
         .bg-active { background: #d1fae5; color: #059669; }
         .bg-rejected { background: #fee2e2; color: #dc2626; }
+        .bg-primary { background: #e0e7ff; color: #4f46e5; }
         
         .btn { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s;}
         .btn-view { background: #eff6ff; color: #2563eb; }
@@ -43,19 +67,15 @@
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px;}
         .modal { background: white; width: 100%; max-width: 800px; border-radius: 16px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;}
         .close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; background: none; border: none;}
-        
         .modal-header { margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;}
         .modal-header h2 { margin: 0; font-size: 22px; color: #0f172a;}
         .modal-header p { margin: 5px 0 0 0; color: #64748b; font-size: 14px;}
-        
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;}
         .detail-item { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;}
         .detail-item label { display: block; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;}
         .detail-item span { font-size: 15px; color: #0f172a; font-weight: 500;}
-        
         .doc-links { display: flex; gap: 10px; margin-top: 10px;}
         .doc-links a { background: #e0f2fe; color: #0284c7; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid #bae6fd;}
-        
         .modal-actions { display: flex; gap: 15px; margin-top: 30px; border-top: 2px solid #f1f5f9; padding-top: 20px;}
         .modal-actions button { flex: 1; padding: 12px; font-size: 15px;}
         
@@ -73,26 +93,122 @@
 
     <div class="container">
         <div class="header-section">
-            <h1>Pharmacy Registrations</h1>
-            <button class="btn btn-view" onclick="fetchPharmacies()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <h1>Pharmacy Master Panel</h1>
+            <button class="btn btn-view" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
         </div>
 
-        <div class="card">
-            <table id="pharmacyTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Pharmacy Name</th>
-                        <th>City</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="5" id="loader"><i class="fas fa-spinner fa-spin"></i> Loading data...</td></tr>
-                </tbody>
-            </table>
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('overview', this)"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button class="nav-btn" onclick="switchTab('registrations', this)"><i class="fas fa-user-check"></i> Registrations</button>
+            <button class="nav-btn" onclick="switchTab('orders', this)"><i class="fas fa-box"></i> All Orders</button>
+            <button class="nav-btn" onclick="switchTab('ledger', this)"><i class="fas fa-book"></i> Settlement Ledger</button>
         </div>
+
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3><i class="fas fa-store" style="color:#4f46e5;"></i> Total Pharmacies</h3>
+                    <div class="value" id="statPharmacies">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-shopping-cart" style="color:#10b981;"></i> Total Orders</h3>
+                    <div class="value" id="statOrders">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-check-circle" style="color:#0ea5e9;"></i> Completed Orders</h3>
+                    <div class="value" id="statCompleted">0</div>
+                </div>
+                <div class="stat-card" style="border-left: 5px solid #f59e0b;">
+                    <h3><i class="fas fa-wallet" style="color:#f59e0b;"></i> Net BhavyaCare Comm.</h3>
+                    <div class="value" style="color:#f59e0b;">₹<span id="statComm">0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="registrations" class="tab-content">
+            <div class="card">
+                <table id="pharmacyTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pharmacy Name</th>
+                            <th>City</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="5" id="loader"><i class="fas fa-spinner fa-spin"></i> Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="orders" class="tab-content">
+            <div class="filter-bar">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Search Order ID, Patient Mobile..." onkeyup="renderAllOrders()">
+                </div>
+                <div class="filter-actions">
+                    <select id="filterOrderStatus" class="filter-input" onchange="renderAllOrders()">
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="confirm_for_patient">Sent to Patient</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <select id="filterOrderPharma" class="filter-input" onchange="renderAllOrders()">
+                        <option value="All">All Pharmacies</option>
+                    </select>
+                    <input type="date" id="filterOrderDate" class="filter-input" onchange="renderAllOrders()">
+                </div>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Order ID</th><th>Date</th><th>Pharmacy</th><th>Patient Mobile</th><th>MRP</th><th>Status</th></tr></thead>
+                    <tbody id="ordersTableBody"><tr><td colspan="6" style="text-align:center;">Loading orders...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="ledger" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;"><i class="fas fa-file-invoice-dollar" style="color:#10b981;"></i> Ledger (Completed Orders Only)</h3>
+                <button class="btn btn-danger" onclick="downloadAdminLedgerPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+            <div class="filter-bar" style="background:#f8fafc;">
+                <div class="search-wrapper" style="flex:1;">
+                    <select id="ledgerPharmaFilter" class="filter-input" onchange="renderLedger()">
+                        <option value="All">All Pharmacies</option>
+                    </select>
+                </div>
+                <div class="filter-actions" style="flex:2;">
+                    <label style="font-size:13px; font-weight:700; color:#64748b;">From:</label>
+                    <input type="date" id="ledgerStartDate" class="filter-input" onchange="renderLedger()">
+                    <label style="font-size:13px; font-weight:700; color:#64748b;">To:</label>
+                    <input type="date" id="ledgerEndDate" class="filter-input" onchange="renderLedger()">
+                    <button class="btn" style="background:#cbd5e1; color:#0f172a;" onclick="clearLedgerFilters()">Clear</button>
+                </div>
+            </div>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th><th>Date</th><th>Pharmacy</th>
+                            <th>Total MRP</th><th>Total Profit</th><th>Pharma Share</th>
+                            <th>Del. Charge</th><th style="color:#2563eb;">BhavyaCare Comm.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody"><tr><td colspan="8" style="text-align:center;">Loading ledger...</td></tr></tbody>
+                    <tfoot id="ledgerTableFoot" style="font-weight:bold; background:#e0f2fe; color:#0369a1;"></tfoot>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <div class="modal-overlay" id="detailModal">

@@ -2,98 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pharmacy Dashboard - BhavyaCare</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2563eb; --secondary: #10b981; --bg-color: #f3f6f9; --text-dark: #0f172a; --text-muted: #64748b; --card-bg: #ffffff; }
+        :root { --primary: #2563eb; --secondary: #10b981; --bg-color: #f4f7fb; --text-dark: #0f172a; --text-muted: #64748b; --card-bg: #ffffff; }
         * { box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 50px; color: var(--text-dark);}
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 70px; color: var(--text-dark);}
         
-        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 5%; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 5%; box-shadow: 0 4px 20px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
         .logo h2 { color: var(--primary); margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
         .logo span { color: var(--secondary); }
-        .btn-logout { background: #fee2e2; color: #dc2626; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s;}
+        .btn-logout { background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px;}
         
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .dashboard-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;}
-        .dashboard-header h1 { margin: 0; font-size: 28px; font-weight: 800;}
+        .container { max-width: 1000px; margin: 25px auto; padding: 0 15px; }
+        .dashboard-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;}
+        .dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b;}
         
         /* Tabs */
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
-        .nav-btn { padding: 10px 20px; border-radius: 20px; border: 1px solid transparent; background: transparent; cursor: pointer; font-weight: 700; color: var(--text-muted); font-size: 15px; transition: 0.3s;}
-        .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);}
-        .nav-btn:hover:not(.active) { background: #f1f5f9; color: var(--text-dark);}
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;}
+        .nav-btn { padding: 10px 18px; border-radius: 20px; border: 1px solid transparent; background: #f8fafc; cursor: pointer; font-weight: 700; color: var(--text-muted); font-size: 14px; transition: 0.3s;}
+        .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);}
         
         .tab-section { display: none; }
         .tab-section.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform:translateY(10px); } to { opacity: 1; transform:translateY(0); } }
 
         /* Filters */
-        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap;}
-        .search-wrapper { flex: 2; position: relative; min-width: 250px;}
+        .filter-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .search-wrapper { position: relative; width: 100%;}
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px;}
-        .filter-input { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none;}
+        .filter-input { width: 100%; padding: 14px 15px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; transition: 0.2s;}
         .filter-input.with-icon { padding-left: 42px; }
-        .filter-actions { display: flex; gap: 10px; flex: 3; align-items: center; min-width: 300px;}
-        .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px;}
+        .filter-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%;}
+        .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; grid-column: span 2;}
 
-        /* Order Cards */
-        .order-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;}
-        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;}
+        /* ✨ Enhanced Premium Order Cards ✨ */
+        .order-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary); display: flex; flex-direction: column; gap: 15px; transition: 0.2s;}
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed #cbd5e1; padding-bottom: 12px;}
         .order-id { font-weight: 800; color: var(--primary); font-size: 18px;}
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;}
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; display: inline-block; text-align: center;}
         .badge-pending { background: #fef3c7; color: #d97706; }
         
-        .order-body { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .info-block h4 { margin: 0 0 5px 0; font-size: 13px; color: var(--text-muted); text-transform: uppercase;}
-        .info-block p { margin: 0; font-weight: 600; font-size: 15px; color: var(--text-dark);}
+        .info-block { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; }
+        .info-block h4 { margin: 0 0 8px 0; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        .info-block p { margin: 0; font-weight: 600; font-size: 14px; color: var(--text-dark); line-height: 1.5;}
         
-        .order-actions { display: flex; gap: 15px; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 20px;}
-        .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; text-align: center; display: inline-flex; justify-content: center; align-items: center; gap: 8px;}
-        .btn-call { background: #e0e7ff; color: #4f46e5; flex: 1;}
-        .btn-process { background: var(--secondary); color: white; flex: 2;}
+        .order-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 5px;}
+        .btn { padding: 14px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; text-align: center; display: inline-flex; justify-content: center; align-items: center; gap: 8px; font-size: 14px; transition: 0.2s;}
+        .btn:active { transform: scale(0.98); }
+        .btn-call { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe;}
+        .btn-process { background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);}
 
         /* Settlement Specific */
-        .settlement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px;}
-        .settlement-box { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px;}
+        .settlement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
+        .settlement-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12px; color: var(--text-muted);}
+        .settlement-box strong { display: block; font-size: 16px; color: var(--text-dark); margin-top: 4px; font-weight: 800;}
 
         /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;}
-        .modal { background: white; width: 90%; max-width: 600px; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;}
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px;}
+        .modal { background: white; width: 100%; max-width: 500px; border-radius: 20px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;}
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer;}
+        .modal-header h3 { margin: 0; font-size: 20px; color: #0f172a;}
+        .close-btn { background: #f1f5f9; border: none; font-size: 20px; color: #64748b; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;}
         
-        .form-group { margin-bottom: 15px; }
-        label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px;}
-        textarea, input, select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none;}
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 18px; }
+        label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px; color: #334155;}
+        textarea, input, select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; background: #f8fafc;}
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; } /* Stacked for mobile */
 
         /* ✨ PROFILE SPECIFIC CSS ✨ */
         .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
-        .tag { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd;}
-        .tag span { cursor: pointer; color: #0284c7; font-weight: 800; font-size: 16px;}
-        .timing-row { display: grid; grid-template-columns: 100px 1fr 1fr; align-items: center; gap: 15px; margin-bottom: 10px; background:#f8fafc; padding:10px; border-radius:8px;}
+        .tag { background: #eff6ff; color: var(--primary); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid #bfdbfe;}
+        .tag span { cursor: pointer; color: #1d4ed8; font-size: 16px;}
 
         /* ✨ TOAST NOTIFICATION CSS ✨ */
-        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 300px; background: #333; color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px;}
+        .toast { background: #1e293b; color: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
         .toast.success { background: #10b981; }
         .toast.error { background: #ef4444; }
-        .toast.info { background: #3b82f6; }
-        .toast i { font-size: 20px; }
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
 
-        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
-
-        @media (max-width: 768px) {
-            .dashboard-header { flex-direction: column; align-items: flex-start;}
-            .filter-actions { flex-wrap: wrap; }
-            .order-body { grid-template-columns: 1fr; }
-            .order-actions { flex-direction: column; }
-            .timing-row { grid-template-columns: 1fr; }
+        @media (min-width: 768px) {
+            .filter-bar { flex-direction: row; }
+            .filter-actions { display: flex; width: auto; grid-template-columns: none; }
+            .filter-btn { grid-column: auto; }
+            .order-actions { flex-direction: row; }
+            .grid-2 { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -107,17 +105,14 @@
     <div class="container">
         <div class="dashboard-header">
             <div>
-                <h1>Pharmacy Dashboard</h1>
-                <p>Welcome, <span id="pharmaNameStr" style="font-weight: 700; color: #2563eb;"></span></p>
+                <h1>Pharmacy Panel</h1>
+                <p style="margin:5px 0 0 0; color:#64748b; font-size:14px;">Welcome, <span id="pharmaNameStr" style="font-weight: 700; color: #2563eb;"></span></p>
             </div>
-            <button class="btn" style="background: white; border: 1px solid #cbd5e1; color: #475569;" onclick="fetchOrders()">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
         </div>
 
         <div class="nav-tabs">
             <button class="nav-btn active" onclick="showSection('ordersSection', this)"><i class="fas fa-box-open"></i> Live Orders</button>
-            <button class="nav-btn" onclick="showSection('settlementsSection', this)"><i class="fas fa-file-invoice-dollar"></i> Settlement Report</button>
+            <button class="nav-btn" onclick="showSection('settlementsSection', this)"><i class="fas fa-file-invoice-dollar"></i> Settlements</button>
             <button class="nav-btn" onclick="showSection('profileSection', this)"><i class="fas fa-store"></i> Edit Profile</button>
         </div>
 
@@ -125,16 +120,15 @@
             <div class="filter-bar">
                 <div class="search-wrapper">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Search Order ID, Patient Name or Mobile..." onkeyup="filterLiveOrders()">
+                    <input type="text" id="searchOrderInput" class="filter-input with-icon" placeholder="Search Order ID, Patient Mobile..." onkeyup="filterLiveOrders()">
                 </div>
                 <div class="filter-actions">
-                    <select id="statusFilter" class="filter-input" style="flex:1;" onchange="filterLiveOrders()">
+                    <select id="statusFilter" class="filter-input" onchange="filterLiveOrders()">
                         <option value="All">All Statuses</option>
-                        <option value="Pending">New / Pending</option>
-                        <option value="confirm_for_patient">Sent to Patient</option>
-                        <option value="Confirmed">Confirmed (Action Needed)</option>
+                        <option value="Pending">New Orders</option>
+                        <option value="confirm_for_patient">Action Needed</option>
+                        <option value="Confirmed">Confirmed</option>
                         <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
                     </select>
                     <input type="date" id="dateFilter" class="filter-input date-input" onchange="filterLiveOrders()">
                     <button class="filter-btn" onclick="clearOrderFilters()"><i class="fas fa-times"></i> Clear</button>
@@ -151,23 +145,21 @@
 
         <div id="settlementsSection" class="tab-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-check-circle" style="color: #10b981;"></i> Completed Orders Ledger</h3>
-                <button class="btn" style="background: #ef4444; color: white;" onclick="downloadSettlementPDF()">
-                    <i class="fas fa-file-pdf"></i> Export PDF
+                <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-check-circle" style="color: #10b981;"></i> Ledger</h3>
+                <button class="btn" style="background: #ef4444; color: white; padding: 10px 15px; width:auto;" onclick="downloadSettlementPDF()">
+                    <i class="fas fa-file-pdf"></i> PDF
                 </button>
             </div>
             
             <div class="filter-bar" style="background: #f8fafc;">
-                <div class="search-wrapper" style="flex: 1;">
+                <div class="search-wrapper" style="width: 100%;">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="searchSettlementInput" class="filter-input with-icon" placeholder="Search Order ID..." onkeyup="filterSettlements()">
                 </div>
-                <div class="filter-actions" style="flex: 2;">
-                    <label style="margin: auto 5px; font-size: 13px; font-weight: bold; color: #64748b;">From:</label>
+                <div class="filter-actions">
                     <input type="date" id="settlementStartDate" class="filter-input date-input" onchange="filterSettlements()">
-                    <label style="margin: auto 5px; font-size: 13px; font-weight: bold; color: #64748b;">To:</label>
                     <input type="date" id="settlementEndDate" class="filter-input date-input" onchange="filterSettlements()">
-                    <button class="filter-btn" onclick="clearSettlementFilters()"><i class="fas fa-times"></i> Clear</button>
+                    <button class="filter-btn" onclick="clearSettlementFilters()">Clear</button>
                 </div>
             </div>
 
@@ -175,8 +167,8 @@
         </div>
 
         <div id="profileSection" class="tab-section">
-            <div class="order-card" style="border-top: 4px solid var(--primary);">
-                <h3 style="margin-top:0;">Update Pharmacy Details</h3>
+            <div class="order-card">
+                <h3 style="margin-top:0; color:#0f172a;"><i class="fas fa-store-alt" style="color:var(--primary);"></i> Update Details</h3>
                 <form id="profileUpdateForm">
                     
                     <div class="grid-2">
@@ -184,7 +176,7 @@
                             <label>Delivery Pincodes</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="number" id="profPincode" class="filter-input" placeholder="Type pincode">
-                                <button type="button" class="btn btn-process" style="width:auto;" onclick="addProfTag('pincode')">+</button>
+                                <button type="button" class="btn btn-process" style="width:auto; padding: 14px 20px;" onclick="addProfTag('pincode')">+</button>
                             </div>
                             <div id="profPincodeTags" class="tags-wrapper"></div>
                         </div>
@@ -192,26 +184,26 @@
                             <label>Delivery Cities / Localities</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="profCity" class="filter-input" placeholder="Type city">
-                                <button type="button" class="btn btn-process" style="width:auto;" onclick="addProfTag('city')">+</button>
+                                <button type="button" class="btn btn-process" style="width:auto; padding: 14px 20px;" onclick="addProfTag('city')">+</button>
                             </div>
                             <div id="profCityTags" class="tags-wrapper"></div>
                         </div>
                     </div>
 
-                    <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px;">Working Timings</h4>
+                    <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px; color:#475569;">Working Timings</h4>
                     <div id="profTimingsContainer"></div>
 
-                    <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px;">Store Images</h4>
+                    <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:20px; color:#475569;">Store Images</h4>
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Update Image 1 (Optional)</label>
-                            <input type="file" id="profImg1" class="filter-input" accept="image/*">
-                            <p id="currImg1" style="font-size:12px; color:var(--primary); margin-top:5px;"></p>
+                            <input type="file" id="profImg1" class="filter-input" accept="image/*" style="background:white;">
+                            <p id="currImg1" style="font-size:12px; color:var(--primary); margin-top:8px; font-weight:600;"></p>
                         </div>
                         <div class="form-group">
                             <label>Update Image 2 (Optional)</label>
-                            <input type="file" id="profImg2" class="filter-input" accept="image/*">
-                            <p id="currImg2" style="font-size:12px; color:var(--primary); margin-top:5px;"></p>
+                            <input type="file" id="profImg2" class="filter-input" accept="image/*" style="background:white;">
+                            <p id="currImg2" style="font-size:12px; color:var(--primary); margin-top:8px; font-weight:600;"></p>
                         </div>
                     </div>
 
@@ -231,10 +223,8 @@
                 <input type="hidden" id="processOrderId">
                 <div class="form-group"><label>Available Medicines & Delivery Time *</label><textarea id="availMeds" rows="3" required></textarea></div>
                 <div class="form-group"><label>Not Available Medicines (If any)</label><textarea id="notAvailMeds" rows="2"></textarea></div>
-                <div class="form-group"><label>Is Prescription Required for these medicines? *</label>
-                    <select id="prescReq" required><option value="No">No, Not Required</option><option value="Yes">Yes, Mandatory</option></select>
-                </div>
-                <div style="background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                <div class="form-group"><label>Prescription Required? *</label><select id="prescReq" required><option value="No">No, Not Required</option><option value="Yes">Yes, Mandatory</option></select></div>
+                <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
                     <div class="grid-2">
                         <div class="form-group" style="margin-bottom:0;"><label>Total MRP (₹) *</label><input type="number" id="totalMRP" required></div>
                         <div class="form-group" style="margin-bottom:0;"><label>Purchase Rate (₹) *</label><input type="number" id="purchaseRate" required></div>
@@ -256,33 +246,14 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="reminderAlertModal" style="z-index:9999;">
-        <div class="modal" style="text-align:center; border:3px solid #f59e0b;">
-            <div style="background:#fef3c7; width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px auto;"><i class="fas fa-bell" style="font-size:35px; color:#d97706; animation:shake 1s infinite;"></i></div>
-            <h2 style="margin:0 0 10px 0; color:#d97706;">Delivery Reminder!</h2>
-            <p id="reminderAlertMessage" style="font-size:15px; color:#475569; margin-bottom:20px; line-height:1.5;"></p>
-            <button class="btn" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%; background:#d97706; color:white;">Got it, I will check</button>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="completeOrderModal">
         <div class="modal">
-            <div class="modal-header">
-                <h3>Complete Order <span id="completeModalOrderId" style="color:#10b981;"></span></h3>
-                <button class="close-btn" onclick="closeCompleteModal()">&times;</button>
-            </div>
+            <div class="modal-header"><h3>Complete Order <span id="completeModalOrderId" style="color:#10b981;"></span></h3><button class="close-btn" onclick="closeCompleteModal()">&times;</button></div>
             <form id="completeOrderForm">
                 <input type="hidden" id="completeOrderIdHidden">
-                <p style="font-size:13px; color:#64748b; margin-bottom: 15px;">
-                    Please upload the final medicine bill (Invoice) before marking this order as delivered.
-                </p>
-                <div class="form-group">
-                    <label>Upload Medicine Bill (PDF/Image) *</label>
-                    <input type="file" id="medicineBillFile" accept=".pdf,image/*" required style="border: 2px dashed #10b981; background: #f0fdf4;">
-                </div>
-                <button type="submit" class="btn" id="btnSubmitComplete" style="background:#10b981; color:white; width:100%; margin-top:10px;">
-                    <i class="fas fa-check-double"></i> Upload Bill & Mark Delivered
-                </button>
+                <p style="font-size:13px; color:#64748b; margin-bottom: 15px;">Please upload the final medicine bill (Invoice) before marking this order as delivered.</p>
+                <div class="form-group"><label>Upload Medicine Bill (PDF/Image) *</label><input type="file" id="medicineBillFile" accept=".pdf,image/*" required style="border: 2px dashed #10b981; background: #f0fdf4;"></div>
+                <button type="submit" class="btn" id="btnSubmitComplete" style="background:#10b981; color:white; width:100%; margin-top:10px;"><i class="fas fa-check-double"></i> Upload Bill & Mark Delivered</button>
             </form>
         </div>
     </div>

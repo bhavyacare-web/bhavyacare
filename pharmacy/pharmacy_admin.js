@@ -4,13 +4,7 @@ let allPharmacies = [];
 let allOrders = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Basic Admin Role Check (Add actual security as needed)
-    const role = localStorage.getItem("bhavya_role");
-    if (role !== "admin") {
-        alert("Unauthorized Access! Please login as Admin.");
-        window.location.href = "../index.html";
-        return;
-    }
+    // Login restriction removed. Direct data fetch for testing.
     fetchAllData();
 });
 

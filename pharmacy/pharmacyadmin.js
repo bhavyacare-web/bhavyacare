@@ -200,6 +200,7 @@ function updateOverviewStats() {
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
 }
 
+// ✨ 3. ALL ORDERS LOGIC (UPDATED WITH BILL BUTTON) ✨
 function renderAllOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("filterOrderStatus").value;
@@ -216,7 +217,8 @@ function renderAllOrders() {
         
         let matchDate = true;
         if(dateVal !== "") {
-            const [y, m, d] = dateVal.split('-'); matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
+            const [y, m, d] = dateVal.split('-');
+            matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
         }
         return matchText && matchStatus && matchPharma && matchDate;
     });
@@ -232,13 +234,18 @@ function renderAllOrders() {
         let dDate = o.order_date ? new Date(o.order_date).toLocaleDateString('en-IN') : "N/A";
         let mrp = Number(o.total_mrp) || 0;
 
+        // ✨ NAYA LOGIC: Bill Upload Button ✨
+        let billHtml = o.medicine_bill 
+            ? `<br><a href="${o.medicine_bill}" target="_blank" style="font-size:11px; background:#10b981; color:white; padding:4px 8px; border-radius:4px; text-decoration:none; display:inline-block; margin-top:5px; font-weight:bold;"><i class="fas fa-file-invoice"></i> View Bill</a>` 
+            : `<br><span style="font-size:11px; color:#94a3b8; display:inline-block; margin-top:5px;">No Bill Yet</span>`;
+
         tbody.innerHTML += `
         <tr>
             <td style="font-weight:700;">#${o.order_id}</td>
             <td>${dDate}</td>
             <td style="font-size:12px;"><b>${getPharmaName(o.medicos_id)}</b><br><span style="color:#64748b;">${o.medicos_id}</span></td>
             <td style="font-size:12px;">📞 ${o.patient_mobile}</td>
-            <td>₹${mrp.toFixed(2)}</td>
+            <td>₹${mrp.toFixed(2)}${billHtml}</td>
             <td><span class="badge" style="background:${badgeBg}; color:${badgeCol};">${o.patient_status}</span></td>
         </tr>`;
     });

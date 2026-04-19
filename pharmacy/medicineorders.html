@@ -9,156 +9,67 @@
     <style>
         /* === PREMIUM MODERN UI CSS === */
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --secondary: #10b981;
-            --secondary-hover: #059669;
-            --bg-color: #f3f6f9;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --card-bg: #ffffff;
-            --border-light: #e2e8f0;
-            --input-bg: #f8fafc;
+            --primary: #2563eb; --primary-hover: #1d4ed8; --secondary: #10b981; --secondary-hover: #059669;
+            --bg-color: #f3f6f9; --text-dark: #0f172a; --text-muted: #64748b; --card-bg: #ffffff;
+            --border-light: #e2e8f0; --input-bg: #f8fafc;
         }
-
         * { box-sizing: border-box; }
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--bg-color); 
-            margin: 0; 
-            padding-bottom: 60px;
-            color: var(--text-dark);
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 60px; color: var(--text-dark); }
         
-        /* Navbar */
-        .navbar { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: var(--card-bg); padding: 15px 5%; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
-            position: sticky; top: 0; z-index: 100;
-        }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 5%; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; }
         .logo h2 { color: var(--primary); margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;}
         .logo span { color: var(--secondary); }
-        .btn-back {
-            background: #eff6ff; color: var(--primary); border: none;
-            padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;
-            transition: 0.3s; display: flex; align-items: center; gap: 8px;
-        }
+        .btn-back { background: #eff6ff; color: var(--primary); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .btn-back:hover { background: #dbeafe; }
 
-        /* Layout */
         .container { max-width: 850px; margin: 40px auto; padding: 0 20px; }
         
-        /* Stepper UI */
-        .stepper {
-            display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 15px;
-        }
-        .step {
-            display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-weight: 600;
-        }
+        .stepper { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 15px; }
+        .step { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-weight: 600; }
         .step.active { color: var(--primary); }
-        .step-circle {
-            width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; 
-            display: flex; justify-content: center; align-items: center; font-size: 14px;
-        }
+        .step-circle { width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; display: flex; justify-content: center; align-items: center; font-size: 14px; }
         .step.active .step-circle { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);}
         .step-line { width: 50px; height: 3px; background: #e2e8f0; border-radius: 2px;}
         .step.active ~ .step-line { background: var(--primary); }
 
-        /* Cards */
-        .card { 
-            background: var(--card-bg); border-radius: 20px; padding: 40px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.5); 
-            margin-bottom: 25px; transition: 0.3s;
-        }
+        .card { background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 25px; transition: 0.3s; }
         .card-header { margin-bottom: 30px; text-align: center; }
         .card-header h2 { margin: 0 0 10px 0; font-size: 28px; font-weight: 800; color: var(--text-dark);}
         .card-header p { margin: 0; color: var(--text-muted); font-size: 15px;}
         
-        /* Forms */
         .form-group { margin-bottom: 24px; position: relative;}
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         label { font-weight: 700; display: block; margin-bottom: 10px; font-size: 14px; color: #475569;}
         
-        input, select, textarea { 
-            width: 100%; padding: 16px 16px 16px 45px; border: 2px solid var(--border-light); 
-            border-radius: 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; 
-            outline: none; background: var(--input-bg); transition: 0.3s; color: var(--text-dark);
-            font-weight: 500;
-        }
-        textarea { padding-left: 16px; }
-        input[type="date"], input[type="file"] { padding-left: 16px; }
-        
-        input:focus, select:focus, textarea:focus { 
-            border-color: var(--primary); background: white; 
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); 
-        }
-        
+        input, select, textarea { width: 100%; padding: 16px 16px 16px 45px; border: 2px solid var(--border-light); border-radius: 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; outline: none; background: var(--input-bg); transition: 0.3s; color: var(--text-dark); font-weight: 500; }
+        textarea, input[type="date"], input[type="file"] { padding-left: 16px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
         .input-icon { position: absolute; left: 16px; top: 43px; color: #94a3b8; font-size: 16px; }
         
-        /* Buttons */
-        .btn { 
-            padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; 
-            cursor: pointer; border: none; width: 100%; transition: 0.3s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; 
-            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25);
-        }
+        .btn { padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; border: none; width: 100%; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); }
-        
-        .btn-success { 
-            background: linear-gradient(135deg, var(--secondary) 0%, #34d399 100%); color: white; 
-            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
-        }
+        .btn-success { background: linear-gradient(135deg, var(--secondary) 0%, #34d399 100%); color: white; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25); }
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35); }
 
-        /* Order Type Radio Cards */
         .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
-        .radio-box { 
-            border: 2px solid var(--border-light); border-radius: 12px; padding: 20px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            gap: 12px; cursor: pointer; transition: 0.2s; background: white; text-align: center;
-        }
+        .radio-box { border: 2px solid var(--border-light); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: 0.2s; background: white; text-align: center; }
         .radio-box:hover { border-color: #cbd5e1; background: var(--input-bg);}
         .radio-box input { display: none; }
         .radio-box i { font-size: 30px; color: #94a3b8; transition: 0.2s;}
         .radio-box span { font-weight: 700; color: var(--text-dark); }
-        
-        /* Checked State for Radio */
         .radio-box input:checked + i { color: var(--primary); }
-        .radio-box:has(input:checked) { 
-            border-color: var(--primary); background: #eff6ff; 
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-        }
+        .radio-box:has(input:checked) { border-color: var(--primary); background: #eff6ff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
         
-        /* Pharmacy Selection Cards */
-        .pharma-option { 
-            border: 2px solid var(--border-light); padding: 20px; border-radius: 16px; 
-            margin-bottom: 15px; cursor: pointer; transition: 0.3s; background: white;
-            position: relative; overflow: hidden;
-        }
+        .pharma-option { border: 2px solid var(--border-light); padding: 20px; border-radius: 16px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; background: white; position: relative; overflow: hidden; }
         .pharma-option:hover { border-color: #93c5fd; background: #f8fafc; transform: translateY(-2px);}
-        .pharma-option.selected { 
-            border-color: var(--secondary); background: #f0fdf4; 
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
-        }
-        
+        .pharma-option.selected { border-color: var(--secondary); background: #f0fdf4; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15); }
         .pharma-name { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;}
         .pharma-time { font-size: 14px; color: var(--secondary); font-weight: 700; display: flex; align-items: center; gap: 5px;}
         .pharma-address { font-size: 13px; color: var(--text-muted); margin-top: 8px; display: flex; align-items: center; gap: 5px;}
 
-        /* Time Badges */
-        .time-badge {
-            background: white; color: var(--primary); padding: 10px 16px; border-radius: 10px; 
-            font-size: 14px; font-weight: 700; cursor: pointer; border: 2px solid #bfdbfe; 
-            transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; margin: 6px 6px 0 0;
-        }
-        .time-badge:hover { 
-            background: var(--primary); color: white; border-color: var(--primary);
-            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25); transform: translateY(-2px);
-        }
+        .time-badge { background: white; color: var(--primary); padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: 2px solid #bfdbfe; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; margin: 6px 6px 0 0; }
+        .time-badge:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25); transform: translateY(-2px); }
 
         #step2-form { display: none; }
 
@@ -173,13 +84,10 @@
 
     <header class="navbar">
         <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
-        <button class="btn-back" onclick="window.history.back()">
-            <i class="fas fa-arrow-left"></i> Back
-        </button>
+        <button class="btn-back" onclick="window.history.back()"><i class="fas fa-arrow-left"></i> Back</button>
     </header>
 
     <div class="container">
-        
         <div class="stepper" id="stepperContainer">
             <div class="step active" id="step1-indicator">
                 <div class="step-circle">1</div>
@@ -246,28 +154,36 @@
                     <label>Order Preference *</label>
                     <div class="radio-group">
                         <label class="radio-box">
-                            <input type="radio" name="orderType" id="orderType" value="Home Delivery" checked>
+                            <input type="radio" name="orderType" id="typeDelivery" value="Home Delivery" checked onchange="toggleDeliveryMode()">
                             <i class="fas fa-motorcycle"></i>
                             <span>Home Delivery</span>
                         </label>
                         <label class="radio-box">
-                            <input type="radio" name="orderType" value="Collect from Pharmacy">
+                            <input type="radio" name="orderType" id="typePickup" value="Collect from Pharmacy" onchange="toggleDeliveryMode()">
                             <i class="fas fa-store-alt"></i>
                             <span>Self Pickup</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 25px;">
-    <label>Delivery Area (Locked)</label>
-    <div style="background: #f1f5f9; padding: 14px 16px; border-radius: 10px; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-lock" style="color: #94a3b8;"></i> 
-        <span id="lockedLocationDisplay">City: -, Pincode: -</span>
-    </div>
-    
-    <label>House No, Building, Street, Landmark *</label>
-    <textarea id="patientAddress" rows="2" placeholder="e.g. Flat No 204, Shivam Appt, Near SBI Bank..." required></textarea>
-  </div>
+                <div id="addressSection" class="form-group" style="margin-top: 25px;">
+                    <label>Delivery Area (Locked)</label>
+                    <div style="background: #f1f5f9; padding: 14px 16px; border-radius: 10px; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-lock" style="color: #94a3b8;"></i> 
+                        <span id="lockedLocationDisplay">City: -, Pincode: -</span>
+                    </div>
+                    <label>House No, Building, Street, Landmark *</label>
+                    <textarea id="patientAddress" rows="2" placeholder="e.g. Flat No 204, Shivam Appt, Near SBI Bank..." required></textarea>
+                </div>
+
+                <div id="pickupSection" class="form-group" style="margin-top: 25px; display: none;">
+                    <label>Pickup Location (Pharmacy Address)</label>
+                    <div style="background: #f0fdf4; padding: 14px 16px; border-radius: 10px; border: 1px solid #10b981; color: #065f46; font-weight: 600; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-map-marker-alt" style="color: #10b981;"></i> 
+                        <span id="pickupLocationDisplay">Loading pharmacy address...</span>
+                    </div>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 0;">You have selected Self Pickup. Please visit the pharmacy at the time selected to collect your order. No delivery charges will apply.</p>
+                </div>
 
                 <div class="form-group">
                     <label>Upload Prescription (PDF / Image) - Optional</label>
@@ -280,9 +196,7 @@
                 </div>
 
                 <div class="grid-2" style="margin-top: 30px;">
-                    <button type="button" class="btn" style="background: #f1f5f9; color: var(--text-dark);" onclick="location.reload()">
-                        Cancel
-                    </button>
+                    <button type="button" class="btn" style="background: #f1f5f9; color: var(--text-dark);" onclick="location.reload()">Cancel</button>
                     <button type="submit" class="btn btn-success" id="btnSubmit">
                         <i class="fas fa-check-circle"></i> Place Order
                     </button>
@@ -293,10 +207,9 @@
 
 <script src="medicineorders.js"></script>
 <script>
-    // Small UI script to update stepper when moving to Step 2
     const originalGoToForm = goToForm;
     goToForm = function() {
-        originalGoToForm(); // Call the logic from your external JS file
+        originalGoToForm();
         document.getElementById('step1-indicator').classList.remove('active');
         document.getElementById('step1-indicator').style.color = '#10b981';
         document.querySelector('#step1-indicator .step-circle').style.background = '#10b981';

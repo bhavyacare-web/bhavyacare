@@ -279,7 +279,7 @@ function checkDeliveryReminders(orders) {
     });
 }
 
-// ✨ PHARMACY DASHBOARD: RENDER ORDERS (Show Reviews & Cancel Reason) ✨
+// ✨ PHARMACY DASHBOARD: RENDER ORDERS (With Cancel Button & Order Type) ✨
 function renderOrders(orders) {
     const container = document.getElementById("ordersContainer"); container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
@@ -287,9 +287,15 @@ function renderOrders(orders) {
     orders.forEach(order => {
         let badge = ""; let actionBtn = "";
         
+        // ✨ NAYA LOGIC: Pending status me bhi Cancel button aa gaya ✨
         if (order.patient_status === "Pending") {
             badge = `<span class="badge badge-pending">New Request</span>`;
-            actionBtn = `<button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:1.5;"><i class="fas fa-clipboard-check"></i> Process Order</button>`;
+            actionBtn = `
+                <div style="display:flex; gap:10px; flex:1.5;">
+                    <button class="btn" style="flex:1; background:#dc2626; color:white;" onclick="openCancelModal('${order.order_id}')"><i class="fas fa-times"></i> Cancel</button>
+                    <button class="btn btn-process" onclick="openProcessModal('${order.order_id}')" style="flex:2;"><i class="fas fa-clipboard-check"></i> Process Order</button>
+                </div>
+            `;
         } 
         else if (order.patient_status === "confirm_for_patient") {
             badge = `<span class="badge" style="background:#e0e7ff; color:#4f46e5;">Sent to Patient</span>`;
@@ -308,13 +314,11 @@ function renderOrders(orders) {
             actionBtn = `<button class="btn" disabled style="flex:1.5; background:#fef2f2; color:#dc2626;"><i class="fas fa-ban"></i> Order Cancelled</button>`;
         }
 
-        // ✨ CANCEL REASON HTML ✨
         let cancelReasonHtml = "";
         if (order.patient_status === "Cancelled" && order.cancel_reason) {
             cancelReasonHtml = `<div style="background:#ffebee; color:#d32f2f; padding:10px; border-radius:8px; font-size:13px; margin-top:10px; border:1px dashed #ef4444;"><strong>Cancel Reason:</strong> ${order.cancel_reason}</div>`;
         }
 
-        // ✨ RATING & COMMENT HTML ✨
         let ratingHtml = "";
         if (order.pharmacy_rating && order.pharmacy_rating !== "") {
             let stars = parseInt(order.pharmacy_rating); let starIcons = "";
@@ -335,18 +339,24 @@ function renderOrders(orders) {
         let formattedDelivery = order.delivery_date;
         try { if (order.delivery_date) { let deliveryStr = String(order.delivery_date); if (deliveryStr.includes('T')) { let dObj = new Date(deliveryStr); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`; } else { let parts = deliveryStr.split(' '); if (parts.length >= 2) { let [year, month, day] = parts[0].split('-'); let dObj = new Date(year, month - 1, day); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${parts.slice(1).join(' ')}`; } } } } catch(e) {}
 
+        // ✨ NAYA LOGIC: ORDER TYPE DISPLAY ✨
+        let orderTypeDisplay = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup") 
+            ? `<span style="color: #d97706; font-weight: bold;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
+            : `<span style="color: #2563eb; font-weight: bold;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+
         let card = `
         <div class="order-card" ${order.patient_status === "Cancelled" ? 'style="opacity:0.7;"' : ''}>
             <div class="order-header"><span class="order-id">#${order.order_id}</span>${badge}</div>
             <div class="order-body">
                 <div>
                     <div class="info-block" style="margin-bottom: 15px;"><h4>Medicine Details</h4><p>${order.medicine_details}</p><div style="margin-top: 5px;">${prescHtml}</div>${validPrescHtml}</div>
-                    <div class="info-block"><h4>Patient Address</h4><p style="font-size: 13px;">${order.patient_address}</p><div style="margin-top: 8px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px;"><p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${formattedDelivery}</p></div></div>
+                    <div class="info-block"><h4>Patient Address / Delivery Area</h4><p style="font-size: 13px;">${order.patient_address}</p><div style="margin-top: 8px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px;"><p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${formattedDelivery}</p></div></div>
                     ${cancelReasonHtml}
                     ${ratingHtml}
                 </div>
                 <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                    <h4>Order Info</h4><p style="font-size: 13px; margin-bottom: 8px;"><i class="fas fa-box"></i> Type: ${order.order_type}</p>
+                    <h4>Order Info</h4>
+                    <p style="font-size: 13px; margin-bottom: 8px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;"><b>Type:</b> ${orderTypeDisplay}</p>
                     <div style="background: #e0f2fe; color: #0284c7; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;"><i class="far fa-calendar-alt"></i> Ordered on:<br>${dateStr} at ${timeStr}</div>
                 </div>
             </div>

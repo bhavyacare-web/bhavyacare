@@ -238,7 +238,7 @@ async function fetchPatientMedicines(userId) {
 }
 
 // ==========================================
-// 🌟 UPDATED: PHARMACY/MEDICINES TAB 🌟
+// 🌟 UPDATED: PHARMACY/MEDICINES TAB (With Address & Order Type) 🌟
 // ==========================================
 
 function renderMedicineOrders(orders) {
@@ -256,7 +256,6 @@ function renderMedicineOrders(orders) {
         let actionHtml = "";
         let isComplete = false;
         
-        // Use status from backend logic
         let safeStatus = (order.patient_status || "Pending").toString().trim();
 
         if (safeStatus === "Pending") {
@@ -279,10 +278,7 @@ function renderMedicineOrders(orders) {
             isComplete = true;
             badgeHtml = `<span class="status-badge" style="background:#ecfdf5; color:#065f46;"><i class="fas fa-check-circle"></i> Completed</span>`;
             
-            // ✨ NAYA LOGIC: View Bill Button ✨
             let billBtn = order.medicine_bill ? `<button onclick="window.open('${order.medicine_bill}', '_blank')" style="background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; flex:1;"><i class="fas fa-file-invoice"></i> Bill</button>` : "";
-            
-            // Rating button logic
             let rateBtn = order.pharmacy_rating ? `<button disabled style="background:#f4f4f4; color:#aaa; border:1px solid #ddd; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; flex:1;"><i class="fas fa-star"></i> Rated</button>` : `<button onclick="openPharmaReviewModal('${order.order_id}')" style="background:#fff8e1; color:#f57c00; border:1px solid #f57c00; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; flex:1;"><i class="fas fa-star"></i> Rate Pharmacy</button>`;
 
             actionHtml = `<div style="display:flex; gap:10px; margin-top:10px;">${billBtn}${rateBtn}</div>`;
@@ -292,7 +288,6 @@ function renderMedicineOrders(orders) {
             actionHtml = `<p style="font-size:12px; color:#dc2626; margin:0;"><i class="fas fa-times-circle"></i> This order was cancelled.</p>`;
         }
 
-        // Format dates
         let orderDate = new Date(order.order_date).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         let formattedDelivery = order.delivery_date;
         try {
@@ -304,7 +299,6 @@ function renderMedicineOrders(orders) {
 
         let callBtn = order.pharma_mobile ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
 
-        // Pharmacy Response Section (✨ UPDATED FOR VIP/BASIC LOGIC ✨)
         let pharmaReplyHtml = "";
         if (order.total_mrp && Number(order.total_mrp) > 0) {
             let planDisplay = isUserVip ? `<span style="background:#fff8e1; color:#f57c00; font-size:10px; padding:2px 5px; border-radius:4px; margin-left:5px;">VIP PLAN APPLIED</span>` : `<span style="background:#e6f0fa; color:#0056b3; font-size:10px; padding:2px 5px; border-radius:4px; margin-left:5px;">BASIC PLAN APPLIED</span>`;
@@ -341,6 +335,23 @@ function renderMedicineOrders(orders) {
             </div>`;
         }
 
+        // ✨ NAYA LOGIC: Order Type aur Address ka Box ✨
+        let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");
+        let orderTypeDisplay = isPickup 
+            ? `<span style="color: #d97706; font-weight: bold; font-size: 11px; background: #fef3c7; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
+            : `<span style="color: #2563eb; font-weight: bold; font-size: 11px; background: #e0e7ff; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+
+        let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
+
+        let addressHtml = `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:12px; margin-top:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h6 style="margin:0; color:#475569; font-size:11px; text-transform:uppercase;">${addressLabel}</h6>
+                ${orderTypeDisplay}
+            </div>
+            <p style="margin:0; font-size:13px; color:#334155; font-weight:600; line-height: 1.4;">${order.patient_address || "Address not provided"}</p>
+        </div>`;
+
         let card = `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
@@ -354,7 +365,10 @@ function renderMedicineOrders(orders) {
             <p style="font-size:12px; color:#64748b; margin:0 0 5px 0;"><i class="far fa-calendar-alt"></i> Ordered: ${orderDate}</p>
             <p style="font-size:12px; color:#059669; margin:0 0 10px 0;"><i class="fas fa-truck"></i> Deliver By: ${formattedDelivery}</p>
             
+            ${addressHtml}
+
             <div style="background:#f9fafb; padding:10px; border-radius:8px; font-size:13px; font-weight:600; color:#333;">
+                <div style="font-size:11px; color:#888; margin-bottom:4px; text-transform:uppercase;">Medicine Details:</div>
                 ${order.medicine_details}
             </div>
             

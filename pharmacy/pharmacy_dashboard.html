@@ -254,7 +254,28 @@
             <button class="btn" onclick="document.getElementById('reminderAlertModal').style.display='none'" style="width:100%; background:#d97706; color:white;">Got it, I will check</button>
         </div>
     </div>
-
+<div class="modal-overlay" id="completeOrderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Complete Order <span id="completeModalOrderId" style="color:#10b981;"></span></h3>
+                <button class="close-btn" onclick="closeCompleteModal()">&times;</button>
+            </div>
+            <form id="completeOrderForm">
+                <input type="hidden" id="completeOrderIdHidden">
+                <p style="font-size:13px; color:#64748b; margin-bottom: 15px;">
+                    Please upload the final medicine bill (Invoice) before marking this order as delivered.
+                </p>
+                <div class="form-group">
+                    <label>Upload Medicine Bill (PDF/Image) *</label>
+                    <input type="file" id="medicineBillFile" accept=".pdf,image/*" required style="border: 2px dashed #10b981; background: #f0fdf4;">
+                </div>
+                <button type="submit" class="btn" id="btnSubmitComplete" style="background:#10b981; color:white; width:100%; margin-top:10px;">
+                    <i class="fas fa-check-double"></i> Upload Bill & Mark Delivered
+                </button>
+            </form>
+        </div>
+    </div>
+    
     <script src="pharmacy_dashboard.js"></script>
 </body>
 </html>

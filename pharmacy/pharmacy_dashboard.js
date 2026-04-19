@@ -279,6 +279,7 @@ function checkDeliveryReminders(orders) {
     });
 }
 
+// ✨ PHARMACY DASHBOARD: RENDER ORDERS (Show Reviews & Cancel Reason) ✨
 function renderOrders(orders) {
     const container = document.getElementById("ordersContainer"); container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
@@ -307,26 +308,17 @@ function renderOrders(orders) {
             actionBtn = `<button class="btn" disabled style="flex:1.5; background:#fef2f2; color:#dc2626;"><i class="fas fa-ban"></i> Order Cancelled</button>`;
         }
 
-        let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
-        let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
-        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
+        // ✨ CANCEL REASON HTML ✨
+        let cancelReasonHtml = "";
+        if (order.patient_status === "Cancelled" && order.cancel_reason) {
+            cancelReasonHtml = `<div style="background:#ffebee; color:#d32f2f; padding:10px; border-radius:8px; font-size:13px; margin-top:10px; border:1px dashed #ef4444;"><strong>Cancel Reason:</strong> ${order.cancel_reason}</div>`;
+        }
 
-        let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
-        let formattedDelivery = order.delivery_date;
-        try { if (order.delivery_date) { let deliveryStr = String(order.delivery_date); if (deliveryStr.includes('T')) { let dObj = new Date(deliveryStr); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`; } else { let parts = deliveryStr.split(' '); if (parts.length >= 2) { let [year, month, day] = parts[0].split('-'); let dObj = new Date(year, month - 1, day); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${parts.slice(1).join(' ')}`; } } } } catch(e) {}
-
-        // Add the star rating visual if a rating exists
+        // ✨ RATING & COMMENT HTML ✨
         let ratingHtml = "";
-        if (order.pharmacy_rating) {
-            let stars = parseInt(order.pharmacy_rating);
-            let starIcons = "";
-            for (let i = 1; i <= 5; i++) {
-                if (i <= stars) {
-                    starIcons += `<i class="fas fa-star" style="color: #f59e0b;"></i>`;
-                } else {
-                    starIcons += `<i class="fas fa-star" style="color: #cbd5e1;"></i>`;
-                }
-            }
+        if (order.pharmacy_rating && order.pharmacy_rating !== "") {
+            let stars = parseInt(order.pharmacy_rating); let starIcons = "";
+            for (let i = 1; i <= 5; i++) { starIcons += `<i class="fas fa-star" style="color: ${i <= stars ? '#f59e0b' : '#cbd5e1'};"></i>`; }
             ratingHtml = `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
                 <h4 style="margin: 0 0 5px 0; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Patient Review</h4>
@@ -335,6 +327,14 @@ function renderOrders(orders) {
             </div>`;
         }
 
+        let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
+        let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
+        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
+
+        let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
+        let formattedDelivery = order.delivery_date;
+        try { if (order.delivery_date) { let deliveryStr = String(order.delivery_date); if (deliveryStr.includes('T')) { let dObj = new Date(deliveryStr); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`; } else { let parts = deliveryStr.split(' '); if (parts.length >= 2) { let [year, month, day] = parts[0].split('-'); let dObj = new Date(year, month - 1, day); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${parts.slice(1).join(' ')}`; } } } } catch(e) {}
+
         let card = `
         <div class="order-card" ${order.patient_status === "Cancelled" ? 'style="opacity:0.7;"' : ''}>
             <div class="order-header"><span class="order-id">#${order.order_id}</span>${badge}</div>
@@ -342,6 +342,7 @@ function renderOrders(orders) {
                 <div>
                     <div class="info-block" style="margin-bottom: 15px;"><h4>Medicine Details</h4><p>${order.medicine_details}</p><div style="margin-top: 5px;">${prescHtml}</div>${validPrescHtml}</div>
                     <div class="info-block"><h4>Patient Address</h4><p style="font-size: 13px;">${order.patient_address}</p><div style="margin-top: 8px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px;"><p style="font-size: 13px; color: #065f46; margin: 0;"><i class="fas fa-truck-fast"></i> <b>Deliver By:</b> ${formattedDelivery}</p></div></div>
+                    ${cancelReasonHtml}
                     ${ratingHtml}
                 </div>
                 <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">

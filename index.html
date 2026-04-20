@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <script>
-        (function() {
-            const userId = localStorage.getItem("bhavya_user_id");
-            const role = localStorage.getItem("bhavya_role");
-            const docStatus = localStorage.getItem("doc_status"); // Doctor ka status fetch karein
-            
-            if (userId) {
-                if (role === "lab") {
-                    window.location.replace("Lab/lab_dashboard.html"); 
-                } else if (role === "doctor") {
-                    // 🌟 NAYA LOGIC: Status Active hone par hi dashboard bhejein
-                    let safeStatus = (docStatus || "not_registered").toString().trim().toLowerCase();
-                    
-                    if (safeStatus === "active") {
-                        window.location.replace("doctor/doctor_dashboard.html"); 
-                    } else {
-                        window.location.replace("doctor/doctor_registration.html"); 
-                    }
-                } else if (role === "patient") {
-                    // Agar patient ko bhi redirect karna ho toh yahan URL daal sakte hain
-                    // window.location.replace("patient_dashboard/patient_dashboard.html");
-                }
+  <script>
+    // ✨ SESSION PROTECTION LOGIC ✨
+    // Agar user pehle se logged in hai, toh use direct uske dashboard par bhej do
+    document.addEventListener("DOMContentLoaded", () => {
+        const userId = localStorage.getItem("bhavya_user_id");
+        const role = localStorage.getItem("bhavya_role");
+
+        // Agar dono details localStorage me hain, matlab user logged in hai
+        if (userId && role) {
+            // window.location.replace use kar rahe hain taaki "Back" button ki history me index.html save na ho
+            if (role === "lab") {
+                window.location.replace("labs/lab_dashboard.html"); // Apne lab folder ka sahi path dalein
+            } 
+            else if (role === "pharmacy") {
+                window.location.replace("pharmacy/pharmacy_dashboard.html");
+            } 
+            else if (role === "patient") {
+                window.location.replace("patient_dashboard/patient_dashboard.html");
+            } 
+            else if (role === "doctor") {
+                window.location.replace("doctor/doctor_dashboard.html"); // Doctor ka sahi path dalein
             }
-        })();
-    </script>
+            else if (role === "admin") {
+                window.location.replace("admin/admin_dashboard.html"); // Admin ka sahi path dalein
+            }
+        }
+    });
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bhavyacare.com - Home</title>

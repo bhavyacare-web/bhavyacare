@@ -60,6 +60,10 @@
         .btn-doctor { background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%); box-shadow: 0 6px 15px rgba(23, 162, 184, 0.3); }
         .btn-doctor:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(23, 162, 184, 0.5); }
 
+        /* ✨ NAYA PHARMACY BUTTON STYLE ✨ */
+        .btn-pharmacy { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3); }
+        .btn-pharmacy:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5); }
+
         .btn-vip { background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); }
         .btn-vip:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(245, 124, 0, 0.6); }
     </style>
@@ -79,6 +83,10 @@
             
             <a href="bookdoctor/bookdoctor.html" class="btn-home btn-doctor">
                 <i class="fas fa-user-md"></i> Consult Doctor
+            </a>
+
+            <a href="#" onclick="handlePharmacyClick(event)" class="btn-home btn-pharmacy">
+                <i class="fas fa-pills"></i> Order Medicines
             </a>
             
             <a href="#" onclick="handleVipClick(event)" class="btn-home btn-vip">
@@ -104,6 +112,21 @@
             event.preventDefault(); 
             // Seedha booking page par bhejo, koi login check nahi!
             window.location.href = "booking/booking.html";
+        }
+
+        // ✨ PHARMACY BUTTON LOGIC: Login zaroori hai ✨
+        function handlePharmacyClick(event) {
+            event.preventDefault(); 
+            const userId = localStorage.getItem("bhavya_user_id");
+            if (userId) {
+                window.location.href = "pharmacy/medicineorders.html";
+            } else {
+                if (typeof openPatientLogin === "function") {
+                    openPatientLogin();
+                } else {
+                    alert("Please login first to order medicines.");
+                }
+            }
         }
 
         // 2. VIP Button Logic: Isme login jaruri hai

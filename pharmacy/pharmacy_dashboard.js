@@ -493,6 +493,7 @@ function closeCompleteModal() {
     document.getElementById("completeOrderForm").reset();
 }
 
+// ✨ FIXED: Pharmacy Complete Order (File Size Limit & Wait Text) ✨
 async function submitCompleteOrder(e) {
     e.preventDefault();
     const orderId = document.getElementById("completeOrderIdHidden").value;
@@ -501,12 +502,21 @@ async function submitCompleteOrder(e) {
     
     if (!fileInput.files || fileInput.files.length === 0) { showToast("Please upload the medicine bill.", "error"); return; }
 
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Bill...`; 
+    // ✨ NAYA LOGIC: File size limit to prevent freezing (Max 3MB) ✨
+    const fileSizeMB = fileInput.files[0].size / (1024 * 1024);
+    if (fileSizeMB > 3) {
+        showToast("File is too large! Please upload a file smaller than 3MB.", "error");
+        return;
+    }
+
+    // ✨ NAYA LOGIC: Button par clear message taaki pharmacy wait kare ✨
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading securely (Takes 10-15s)...`; 
     btn.disabled = true;
 
     try {
         let base64Bill = await getBase64("medicineBillFile");
         const payload = { action: "completePharmacyOrder", user_id: localStorage.getItem("bhavya_user_id"), order_id: orderId, bill_base64: base64Bill };
+        
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const resData = await response.json();
         
@@ -514,10 +524,13 @@ async function submitCompleteOrder(e) {
             showToast("Bill uploaded and Order Complete!", "success"); 
             closeCompleteModal(); fetchOrders(); 
         } else { showToast("Error: " + resData.message, "error"); }
-    } catch (error) { showToast("Network error, please try again.", "error"); } 
-    finally { btn.innerHTML = `<i class="fas fa-check-double"></i> Upload Bill & Mark Delivered`; btn.disabled = false; }
+    } catch (error) { 
+        showToast("Network error, please try again.", "error"); 
+    } finally { 
+        btn.innerHTML = `<i class="fas fa-check-double"></i> Upload Bill & Mark Delivered`; 
+        btn.disabled = false; 
+    }
 }
-
 function checkDeliveryReminders(orders) {
     if(!orders || orders.length === 0) return;
     let now = new Date();

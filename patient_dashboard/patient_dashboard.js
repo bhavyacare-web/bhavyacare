@@ -286,7 +286,7 @@ function renderMedicineOrders(orders) {
         let formattedDelivery = order.delivery_date;
         try { if (order.delivery_date && String(order.delivery_date).includes('T')) { let dObj = new Date(order.delivery_date); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`; } } catch(e) {}
 
-        let callBtn = order.pharma_mobile && !order.pharma_mobile.includes("Hidden") ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
+       let callBtn = order.pharma_mobile && !String(order.pharma_mobile).includes("Hidden") ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : ``;
 
         // ✨ NAYA LOGIC: Payment Badge, Order Type Badge & Delivery/Pickup Text ✨
         let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");

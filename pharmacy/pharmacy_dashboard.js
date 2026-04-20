@@ -227,6 +227,7 @@ function clearSettlementFilters() {
     renderSettlementsList(globalPharmacyOrders.filter(o => o.patient_status === "Completed"));
 }
 
+// ✨ PHARMACY DASHBOARD: RENDER ORDERS (With Address & Order Type Fix) ✨
 function renderOrders(orders) {
     const container = document.getElementById("ordersContainer"); container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
@@ -282,15 +283,35 @@ function renderOrders(orders) {
 
         let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
         let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
-        let callBtn = order.patient_mobile ? `<div style="display:flex; gap:10px; flex:1;"><a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1; padding: 12px 10px; font-size: 14px;"><i class="fas fa-phone-alt"></i> Call</a><button class="btn btn-call" style="flex:1; background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; padding: 12px 10px; font-size: 14px;" onclick="this.innerHTML='<i class=\\'fas fa-check\\'></i> ${order.patient_mobile}'; navigator.clipboard.writeText('${order.patient_mobile}');"><i class="fas fa-eye"></i> Show</button></div>` : `<button class="btn btn-call" style="opacity:0.5; cursor:not-allowed; flex:1;"><i class="fas fa-phone-slash"></i> No Number</button>`;
+        let callBtn = order.patient_mobile && !order.patient_mobile.includes("Hidden") ? `<a href="tel:${order.patient_mobile}" class="btn btn-call" style="flex:1;"><i class="fas fa-phone-alt"></i> Call Patient</a>` : ``;
 
-        // ✨ FIX: Format date using new formatter ✨
-        let displayOrderDate = formatCustomDate(order.order_date);
-        let displayDeliveryDate = formatCustomDate(order.delivery_date);
+        let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
+        let formattedDelivery = order.delivery_date || "Not set";
 
-        let orderTypeDisplay = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup") 
+        // ✨ NAYA LOGIC: Order Type, Delivery Mode Text, Payment Status Badge ✨
+        let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");
+        let orderTypeDisplay = isPickup 
             ? `<span style="color: #d97706; font-weight: 800; font-size: 12px; background: #fef3c7; padding: 4px 8px; border-radius: 6px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
             : `<span style="color: var(--primary); font-weight: 800; font-size: 12px; background: #eff6ff; padding: 4px 8px; border-radius: 6px;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+
+        let deliveryIconText = isPickup ? `<i class="fas fa-walking"></i> <b>Pickup By:</b>` : `<i class="fas fa-truck-fast"></i> <b>Deliver By:</b>`;
+        let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
+
+        let payStatusBadge = "";
+        if(order.patient_status !== "Pending" && order.patient_status !== "Cancelled") {
+             payStatusBadge = (order.payment_status === "Completed" || order.payment_status === "Paid") 
+                ? `<span style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:8px;">PAID</span>` 
+                : `<span style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:8px;">DUE</span>`;
+        }
+
+        let addressHtml = `
+        <div class="info-block">
+            <h4>${addressLabel}</h4>
+            <p style="font-size: 13px;">${order.patient_address}</p>
+            <div style="margin-top: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px; border-radius: 8px; color: #065f46;">
+                <p style="font-size: 13px; margin: 0;">${deliveryIconText} ${formattedDelivery}</p>
+            </div>
+        </div>`;
 
         let card = `
         <div class="order-card" ${order.patient_status === "Cancelled" ? 'style="opacity:0.8; border-top-color:#ef4444;"' : ''}>
@@ -305,21 +326,16 @@ function renderOrders(orders) {
                 ${order.prescription ? `<a href="${order.prescription}" target="_blank" style="display:inline-block; margin-top:10px; font-size:12px; background:#eff6ff; color:var(--primary); padding:6px 12px; border-radius:6px; text-decoration:none; font-weight:700;"><i class="fas fa-file-pdf"></i> View Prescription</a>` : ''}
             </div>
 
-            <div class="info-block">
-                <h4>${(order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup") ? 'Pharmacy Address' : 'Delivery Address'}</h4>
-                <p style="font-size: 13px;">${order.patient_address}</p>
-                <div style="margin-top: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px; border-radius: 8px; display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-truck-fast" style="color: #10b981; font-size:16px;"></i> 
-                    <span style="font-size: 13px; color: #065f46; font-weight:700;">Deliver By: ${displayDeliveryDate}</span>
-                </div>
-            </div>
-
+            ${addressHtml}
             ${cancelReasonHtml}
             ${ratingHtml}
 
-            <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 10px;">
-                <h4>Order Timeline</h4>
-                <div style="background: #e0f2fe; color: #0284c7; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;"><i class="far fa-calendar-alt"></i> Ordered on: ${displayOrderDate}</div>
+            <div class="info-block" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h4>Order Info</h4>
+                    <div style="color: #0284c7; font-size: 12px; font-weight: 600;"><i class="far fa-calendar-alt"></i> ${dateStr} at ${timeStr}</div>
+                </div>
+                ${order.final_payable ? `<div style="text-align:right;"><div style="font-size:10px; color:var(--text-muted); font-weight:700; margin-bottom:2px;">AMOUNT</div><div style="font-size:18px; font-weight:800; color:#0f172a;">₹${order.final_payable}</div>${payStatusBadge}</div>` : ''}
             </div>
 
             <div class="order-actions">

@@ -237,10 +237,7 @@ async function fetchPatientMedicines(userId) {
     }
 }
 
-// ==========================================
-// 🌟 UPDATED: PHARMACY/MEDICINES TAB (With Address & Order Type) 🌟
-// ==========================================
-
+// ✨ PATIENT DASHBOARD: RENDER MEDICINE ORDERS ✨
 function renderMedicineOrders(orders) {
     const container = document.getElementById("patientMedicinesContainer");
     if (!container) return;
@@ -252,10 +249,7 @@ function renderMedicineOrders(orders) {
     }
 
     orders.forEach(order => {
-        let badgeHtml = "";
-        let actionHtml = "";
-        let isComplete = false;
-        
+        let badgeHtml = ""; let actionHtml = ""; let isComplete = false;
         let safeStatus = (order.patient_status || "Pending").toString().trim();
 
         if (safeStatus === "Pending") {
@@ -290,14 +284,22 @@ function renderMedicineOrders(orders) {
 
         let orderDate = new Date(order.order_date).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         let formattedDelivery = order.delivery_date;
-        try {
-            if (order.delivery_date && String(order.delivery_date).includes('T')) {
-                let dObj = new Date(order.delivery_date);
-                formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`;
-            }
-        } catch(e) {}
+        try { if (order.delivery_date && String(order.delivery_date).includes('T')) { let dObj = new Date(order.delivery_date); formattedDelivery = `${dObj.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})} at ${dObj.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true})}`; } } catch(e) {}
 
-        let callBtn = order.pharma_mobile ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
+        let callBtn = order.pharma_mobile && !order.pharma_mobile.includes("Hidden") ? `<a href="tel:${order.pharma_mobile}" style="display:block; text-align:center; text-decoration:none; background:#eff6ff; color:var(--primary); padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:10px;"><i class="fas fa-phone-alt"></i> Call Pharmacy</a>` : "";
+
+        // ✨ NAYA LOGIC: Payment Badge, Order Type Badge & Delivery/Pickup Text ✨
+        let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");
+        let orderTypeDisplay = isPickup 
+            ? `<span style="color: #d97706; font-weight: bold; font-size: 11px; background: #fef3c7; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
+            : `<span style="color: var(--primary); font-weight: bold; font-size: 11px; background: #e0e7ff; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+            
+        let deliveryIconText = isPickup ? `<i class="fas fa-walking"></i> <b>Pickup By:</b>` : `<i class="fas fa-truck-fast"></i> <b>Deliver By:</b>`;
+        let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
+        
+        let payStatusBadge = (order.payment_status === "Completed" || order.payment_status === "Paid") 
+            ? `<span style="background:#d1fae5; color:#059669; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:800; margin-left:8px;">PAID</span>` 
+            : `<span style="background:#fee2e2; color:#dc2626; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:800; margin-left:8px;">DUE</span>`;
 
         let pharmaReplyHtml = "";
         if (order.total_mrp && Number(order.total_mrp) > 0) {
@@ -328,28 +330,22 @@ function renderMedicineOrders(orders) {
                     <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:5px;">
                         <span>Delivery Charge:</span> <span>+ ₹${Number(order.delivery_charge).toFixed(2)}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size:15px; color:#0f172a; font-weight:800;">
-                        <span>Final Payable:</span> <span>₹${Number(order.final_payable).toFixed(2)}</span>
+                    <div style="display:flex; justify-content:space-between; font-size:15px; color:#0f172a; font-weight:800; align-items:center;">
+                        <span>Final Payable:</span> <span>₹${Number(order.final_payable).toFixed(2)} ${payStatusBadge}</span>
                     </div>
                 </div>
             </div>`;
         }
 
-        // ✨ NAYA LOGIC: Order Type aur Address ka Box ✨
-        let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");
-        let orderTypeDisplay = isPickup 
-            ? `<span style="color: #d97706; font-weight: bold; font-size: 11px; background: #fef3c7; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
-            : `<span style="color: #2563eb; font-weight: bold; font-size: 11px; background: #e0e7ff; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
-
-        let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
-
         let addressHtml = `
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:12px; margin-top:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <h6 style="margin:0; color:#475569; font-size:11px; text-transform:uppercase;">${addressLabel}</h6>
-                ${orderTypeDisplay}
             </div>
             <p style="margin:0; font-size:13px; color:#334155; font-weight:600; line-height: 1.4;">${order.patient_address || "Address not provided"}</p>
+            <div style="margin-top: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px; border-radius: 8px; color: #065f46;">
+                <p style="font-size: 13px; margin: 0;">${deliveryIconText} ${formattedDelivery}</p>
+            </div>
         </div>`;
 
         let card = `
@@ -357,13 +353,11 @@ function renderMedicineOrders(orders) {
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                 <div>
                     <strong style="color:#2563eb; font-size:15px;">#${order.order_id}</strong>
+                    <div style="margin-top:4px;">${orderTypeDisplay}</div>
                 </div>
-                <div style="text-align:right;">
-                    ${badgeHtml}
-                </div>
+                <div style="text-align:right;">${badgeHtml}</div>
             </div>
             <p style="font-size:12px; color:#64748b; margin:0 0 5px 0;"><i class="far fa-calendar-alt"></i> Ordered: ${orderDate}</p>
-            <p style="font-size:12px; color:#059669; margin:0 0 10px 0;"><i class="fas fa-truck"></i> Deliver By: ${formattedDelivery}</p>
             
             ${addressHtml}
 
@@ -383,7 +377,6 @@ function renderMedicineOrders(orders) {
         container.innerHTML += card;
     });
 }
-
 // ✨ NAYA LOGIC: PATIENT CANCEL MEDICINE ORDER ✨
 function openCancelMedicineModal(orderId) {
     document.getElementById("cancelMedOrderIdHidden").value = orderId; 

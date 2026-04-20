@@ -897,11 +897,16 @@ function updateRecentActivityMixed() {
         allActivity.push({ type: 'doctor', id: c.appt_id, title: "Dr. " + c.doctor_name, dateTime: c.appt_date + " | " + c.appt_time, badgeClass: badgeClass, statusText: statusText, icon: '<i class="fas fa-user-md" style="color:#2e7d32; font-size:18px;"></i>', timestamp: new Date(c.appt_date.split("-").reverse().join("-")).getTime() || 0 });
     });
 
+    // ✨ FIXED: Recent Activity Medicine Orders ✨
     globalMedicineOrders.forEach(med => {
         let safeStatus = (med.patient_status || "Pending").toString().toLowerCase().trim();
         let badgeClass = "status-warning"; let statusText = "Pending";
+        
+        // YAHAN COMPLETED AUR CANCELLED MISSING THA JO AB ADD HO GAYA HAI
         if (safeStatus === "confirmed") { badgeClass = "status-success"; statusText = "Confirmed"; }
         else if (safeStatus === "confirm_for_patient") { badgeClass = "status-primary"; statusText = "Action Needed"; }
+        else if (safeStatus === "completed") { badgeClass = "status-success"; statusText = "Completed"; }
+        else if (safeStatus === "cancelled") { badgeClass = "status-danger"; statusText = "Cancelled"; }
         
         let medSummary = med.medicine_details || "Medicines";
         medSummary = medSummary.substring(0, 30) + (medSummary.length > 30 ? '...' : '');
@@ -913,7 +918,6 @@ function updateRecentActivityMixed() {
             timestamp: new Date(med.order_date).getTime() || 0 
         });
     });
-
     allActivity.sort((a, b) => b.timestamp - a.timestamp);
     let recentHtml = "";
     allActivity.slice(0, 3).forEach(act => {

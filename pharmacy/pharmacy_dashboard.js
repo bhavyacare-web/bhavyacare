@@ -174,9 +174,7 @@ async function submitProfileUpdate(e) {
 }
 
 
-// ==========================================
-// ✨ ORDERS & SETTLEMENT LOGIC ✨
-// ==========================================
+// ✨ ADVANCED FETCH ORDERS (Logs Real Error to Console) ✨
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
     container.innerHTML = `<div style="text-align: center; padding: 50px; color: #64748b;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><p>Loading your orders...</p></div>`;
@@ -185,7 +183,16 @@ function fetchOrders() {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "getPharmacyOrders", user_id: localStorage.getItem("bhavya_user_id") })
     })
-    .then(res => res.json())
+    .then(async res => {
+        if (!res.ok) throw new Error(`Server returned status: ${res.status}`);
+        const text = await res.text();
+        try {
+            return JSON.parse(text); // Try parsing JSON
+        } catch (e) {
+            console.error("Backend sent HTML instead of JSON! Backend Error/Crash:", text);
+            throw new Error("JSON Parse Failed - Backend Deployment Issue");
+        }
+    })
     .then(resData => {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
@@ -194,9 +201,11 @@ function fetchOrders() {
         } else {
             container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
         }
-    }).catch(err => { container.innerHTML = `<p style="text-align:center; color:red;">Network Error.</p>`; });
+    }).catch(err => { 
+        console.error("Fetch Error Trace:", err);
+        container.innerHTML = `<p style="text-align:center; color:red; font-weight:bold;">Network Error: Backend crashed or not deployed correctly. Check console.</p>`; 
+    });
 }
-
 function filterLiveOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("statusFilter").value;

@@ -219,7 +219,7 @@ function updateOverviewStats() {
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
 }
 
-// ✨ NAYA RENDER ALL ORDERS (With Order Type) ✨
+// ✨ ADMIN DASHBOARD: ALL ORDERS (With Payment Status Badge) ✨
 function renderAllOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("filterOrderStatus").value;
@@ -265,10 +265,14 @@ function renderAllOrders() {
             extraInfo += `<div style="color:#f59e0b; font-size:11px; margin-top:6px; background:#fff8e1; padding:4px; border-radius:4px;"><b>Rated:</b> ${o.pharmacy_rating}⭐ <br><i>${o.pharmacy_comment || ""}</i></div>`;
         }
 
-        // ✨ ORDER TYPE BADGE ✨
         let typeBadge = (o.order_type === "Collect from Pharmacy" || o.order_type === "Self Pickup") 
             ? `<span style="background:#fef3c7; color:#d97706; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-store-alt"></i> Self Pickup</span>` 
             : `<span style="background:#e0e7ff; color:#4f46e5; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
+
+        // ✨ NAYA LOGIC: Payment Status Badge for Admin Table ✨
+        let payStatusBadge = (o.payment_status === "Completed" || o.payment_status === "Paid") 
+            ? `<span style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">PAID</span>` 
+            : `<span style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">DUE</span>`;
 
         tbody.innerHTML += `
         <tr>
@@ -276,7 +280,7 @@ function renderAllOrders() {
             <td>${dDate}</td>
             <td style="font-size:12px;"><b>${getPharmaName(o.medicos_id)}</b><br><span style="color:#64748b;">${o.medicos_id}</span>${extraInfo}</td>
             <td style="font-size:12px;">📞 ${o.patient_mobile}</td>
-            <td>₹${mrp.toFixed(2)}${billHtml}</td>
+            <td>₹${mrp.toFixed(2)} ${payStatusBadge}${billHtml}</td>
             <td><span class="badge" style="background:${badgeBg}; color:${badgeCol};">${o.patient_status}</span></td>
         </tr>`;
     });

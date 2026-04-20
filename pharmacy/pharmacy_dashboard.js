@@ -294,7 +294,7 @@ function renderOrders(orders) {
 
         let prescHtml = order.prescription ? `<a href="${order.prescription}" target="_blank" style="color: #2563eb; font-size: 14px; font-weight:600;"><i class="fas fa-file-pdf"></i> View Old Prescription</a>` : `<span style="color: #94a3b8; font-size: 13px;">No Old Prescription</span>`;
         let validPrescHtml = order.valid_prescription ? `<div style="margin-top: 15px; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;"><h6 style="margin: 0 0 5px 0; color: #d97706; font-size: 12px;"><i class="fas fa-certificate"></i> Patient Uploaded New Valid Prescription</h6><a href="${order.valid_prescription}" target="_blank" style="color: #059669; font-size: 13px; font-weight: 700; text-decoration: none;"><i class="fas fa-download"></i> View & Download</a></div>` : "";
-        let callBtn = order.patient_mobile && !order.patient_mobile.includes("Hidden") ? `<a href="tel:${order.patient_mobile}" class="btn btn-call" style="width:100%; margin-bottom:10px;"><i class="fas fa-phone-alt"></i> Call Patient</a>` : ``;
+        let callBtn = order.patient_mobile && !String(order.patient_mobile).includes("Hidden") ? `<a href="tel:${order.patient_mobile}" class="btn btn-call" style="width:100%; margin-bottom:10px;"><i class="fas fa-phone-alt"></i> Call Patient</a>` : ``;
 
         let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
         let formattedDelivery = order.delivery_date || "Not set";

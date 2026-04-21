@@ -311,18 +311,10 @@ function updateOverviewStats() {
     });
 }
 
-function renderAllOrders() {
-    const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
-    const statusVal = document.getElementById("filterOrderStatus").value;
-    const pharmaVal = document.getElementById("filterOrderPharma").value;
-    const dateVal = document.getElementById("filterOrderDate").value;
-
-    const tbody = document.getElementById("ordersTableBody");
-    tbody.innerHTML = "";
+// pharmacyadmin.js me renderAllOrders() ke andar ye update karein:
 
     const filtered = allOrders.filter(o => {
         let matchText = (o.order_id || "").toLowerCase().includes(search) || (o.patient_mobile || "").toLowerCase().includes(search);
-        let matchStatus = statusVal === "All" ? true : o.patient_status === statusVal;
         let matchPharma = pharmaVal === "All" ? true : o.medicos_id === pharmaVal;
         
         let matchDate = true;
@@ -330,6 +322,29 @@ function renderAllOrders() {
             const [y, m, d] = dateVal.split('-');
             matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
         }
+
+        // ✨ NAYA STATUS FILTER LOGIC (For Delayed Orders) ✨
+        let matchStatus = true;
+        if (statusVal === "Delayed") {
+            let isClosed = (o.patient_status === "Completed" || o.patient_status === "Cancelled");
+            let isOverdue = false;
+            let now = new Date();
+            let oDate = new Date(o.order_date);
+            let diffHours = (now - oDate) / (1000 * 60 * 60); // Check hours difference
+
+            if (!isClosed) {
+                // Rule 1: Pharmacy ne 24 ghante tak accept nahi kiya
+                if (o.patient_status === "Pending" && diffHours > 24) isOverdue = true;
+                // Rule 2: Patient ne 48 ghante tak confirm/pay nahi kiya
+                else if (o.patient_status === "confirm_for_patient" && diffHours > 48) isOverdue = true;
+                // Rule 3: Confirmed hai par 48 ghante se delivered nahi hua
+                else if (o.patient_status === "Confirmed" && diffHours > 48) isOverdue = true;
+            }
+            matchStatus = isOverdue;
+        } else if (statusVal !== "All") {
+            matchStatus = o.patient_status === statusVal;
+        }
+
         return matchText && matchStatus && matchPharma && matchDate;
     });
 

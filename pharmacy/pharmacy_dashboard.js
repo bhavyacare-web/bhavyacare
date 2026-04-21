@@ -95,28 +95,41 @@ function fetchPharmacyProfile() {
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading Profile...`;
     
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", body: JSON.stringify({ action: "getPharmacyProfile", user_id: localStorage.getItem("bhavya_user_id") })
+        method: "POST", 
+        body: JSON.stringify({ action: "getPharmacyProfile", user_id: localStorage.getItem("bhavya_user_id") })
     })
     .then(res => res.json())
     .then(resData => {
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
         if (resData.status === "success") {
             const p = resData.data;
+            
+            // Pincodes aur Cities fill karna
             try { profPincodeList = JSON.parse(p.available_pincode); } catch(e) { profPincodeList = p.available_pincode ? p.available_pincode.split(',').map(x=>x.trim()) : []; }
             try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
             
-            updateProfTagsUI('pincode'); updateProfTagsUI('city');
+            updateProfTagsUI('pincode');
+            updateProfTagsUI('city');
 
+            // ✨ FIXED: Timings Pre-fill Logic ✨
             days.forEach(day => {
-                if(p.timings[day]) {
-                    document.getElementById("prof_"+day+"_open").value = p.timings[day].open || "";
-                    document.getElementById("prof_"+day+"_close").value = p.timings[day].close || "";
+                if(p.timings && p.timings[day]) {
+                    // Timing format 'HH:mm' hona chahiye input[type="time"] ke liye
+                    let openVal = p.timings[day].open || "";
+                    let closeVal = p.timings[day].close || "";
+                    
+                    document.getElementById("prof_" + day + "_open").value = openVal;
+                    document.getElementById("prof_" + day + "_close").value = closeVal;
                 }
             });
 
-            document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Image 1</a>` : "No image uploaded";
-            document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Image 2</a>` : "No image uploaded";
+            document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 1</a>` : "No image";
+            document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 2</a>` : "No image";
         }
+    })
+    .catch(err => {
+        console.error("Profile Fetch Error:", err);
+        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
     });
 }
 

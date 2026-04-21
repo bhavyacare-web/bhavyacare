@@ -4,6 +4,11 @@ let pharmacyRegData = [];
 let allPharmacies = [];   
 let allOrders = [];       
 
+// ✨ NAYE CHARTS VARIABLES & REGISTER ✨
+let adminOrderStatusChart = null;
+let adminRevenueChart = null;
+Chart.register(ChartDataLabels);
+
 // ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
@@ -28,14 +33,10 @@ function switchTab(tabId, btn) {
     document.getElementById(tabId).classList.add('active');
 }
 
-// ✨ NAYA REFRESH LOGIC (With Toast) ✨
 async function refreshAllData() {
     showToast("Refreshing data...", "info");
-    
-    // Dono functions ko call karna
     fetchRegistrations(); 
     await fetchAllAdminData();  
-    
     showToast("Data refreshed successfully!", "success");
 }
 
@@ -174,7 +175,7 @@ function changeStatus(newStatus) {
 }
 
 // ==========================================
-// ✨ ORDERS & LEDGER LOGIC ✨
+// ✨ ORDERS, LEDGER & CHARTS LOGIC ✨
 // ==========================================
 
 async function fetchAllAdminData() {
@@ -188,7 +189,7 @@ async function fetchAllAdminData() {
         if(ordData.status === "success") allOrders = ordData.data;
 
         populatePharmaDropdowns();
-        updateOverviewStats();
+        updateOverviewStats(); // Ye Function ab Charts bhi draw karega
         renderAllOrders();
         renderLedger();
     } catch(err) { console.error("Error fetching admin data"); }
@@ -208,7 +209,9 @@ function getPharmaName(id) {
     return p ? p.name : id;
 }
 
+// ✨ NAYA LOGIC: Numbers + Doughnut Chart + Bar Chart update karega ✨
 function updateOverviewStats() {
+    // 1. Basic Stats
     document.getElementById("statPharmacies").innerText = allPharmacies.length;
     document.getElementById("statOrders").innerText = allOrders.length;
     const completed = allOrders.filter(o => o.patient_status === "Completed");
@@ -217,9 +220,97 @@ function updateOverviewStats() {
     let totalComm = 0;
     completed.forEach(o => { totalComm += (Number(o.bhavya_care_commission) || 0); });
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
+
+    // 2. Order Status Doughnut Chart Logic
+    let pendingCount = 0;
+    let confirmedCount = 0; 
+    let completedCount = 0;
+    let cancelledCount = 0;
+
+    allOrders.forEach(o => {
+        let s = o.patient_status;
+        if(s === "Completed") completedCount++;
+        else if(s === "Cancelled") cancelledCount++;
+        else if(s === "Confirmed" || s === "confirm_for_patient") confirmedCount++;
+        else pendingCount++; // Any other status is Pending
+    });
+
+    const ctx1 = document.getElementById('adminOrderStatusChart').getContext('2d');
+    if (adminOrderStatusChart) adminOrderStatusChart.destroy();
+    
+    adminOrderStatusChart = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['New/Pending', 'Action Needed', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: [pendingCount, confirmedCount, completedCount, cancelledCount],
+                backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, 
+            plugins: {
+                legend: { position: 'bottom' },
+                datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 16 },
+                    formatter: (value) => { return value > 0 ? value : ''; }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+
+    // 3. Commission Revenue Bar Chart Logic
+    let revenueByDate = {};
+    completed.forEach(o => {
+        if(!o.order_date) return;
+        let d = new Date(o.order_date);
+        let dateStr = `${d.getDate()}/${d.getMonth()+1}`;
+        let comm = Number(o.bhavya_care_commission) || 0;
+        
+        if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
+        revenueByDate[dateStr] += comm;
+    });
+
+    let labels = Object.keys(revenueByDate).reverse(); // Reverse for Oldest to Newest
+    let dataValues = Object.values(revenueByDate).reverse();
+
+    const ctx2 = document.getElementById('adminRevenueChart').getContext('2d');
+    if (adminRevenueChart) adminRevenueChart.destroy();
+    
+    adminRevenueChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Data'],
+            datasets: [{
+                label: 'Commission Earned (₹)',
+                data: dataValues.length > 0 ? dataValues : [0],
+                backgroundColor: '#10b981',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    align: 'end',
+                    anchor: 'end',
+                    color: '#10b981',
+                    font: { weight: 'bold' },
+                    formatter: (value) => { return value > 0 ? '₹' + value.toFixed(0) : ''; }
+                }
+            },
+            scales: { y: { beginAtZero: true, display: false } } // Hide vertical numbers for clean look
+        }
+    });
 }
 
-// ✨ ADMIN DASHBOARD: ALL ORDERS (With Payment Status Badge) ✨
 function renderAllOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("filterOrderStatus").value;
@@ -269,7 +360,6 @@ function renderAllOrders() {
             ? `<span style="background:#fef3c7; color:#d97706; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-store-alt"></i> Self Pickup</span>` 
             : `<span style="background:#e0e7ff; color:#4f46e5; font-size:10px; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;"><i class="fas fa-motorcycle"></i> Home Delivery</span>`;
 
-        // ✨ NAYA LOGIC: Payment Status Badge for Admin Table ✨
         let payStatusBadge = (o.payment_status === "Completed" || o.payment_status === "Paid") 
             ? `<span style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">PAID</span>` 
             : `<span style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">DUE</span>`;
@@ -357,7 +447,6 @@ function renderLedger() {
     </tr>`;
 }
 
-// ✨ NAYA: PAYOUT TOGGLE LOGIC ✨
 async function togglePayout(orderId, newStatus) {
     if(!confirm(`Mark payout for ${orderId} as ${newStatus}?`)) return;
     try {

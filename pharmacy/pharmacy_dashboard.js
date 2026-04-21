@@ -2,7 +2,11 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 
 let globalPharmacyOrders = [];
 let remindedOrders = new Set(); 
-let myOrderStatusChart = null; // ✨ NAYA CHART VARIABLE ✨
+let myOrderStatusChart = null; 
+let myRevenueChart = null; // ✨ NAYA REVENUE CHART VARIABLE ✨
+
+// Register Chart DataLabels Plugin for numbers
+Chart.register(ChartDataLabels);
 
 // Profile Variables
 let profPincodeList = [];
@@ -175,7 +179,7 @@ async function submitProfileUpdate(e) {
 }
 
 
-// ✨ ADVANCED FETCH ORDERS (Logs Real Error to Console) ✨
+// ✨ ADVANCED FETCH ORDERS ✨
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
     container.innerHTML = `<div style="text-align: center; padding: 50px; color: #64748b;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><p>Loading your orders...</p></div>`;
@@ -188,7 +192,7 @@ function fetchOrders() {
         if (!res.ok) throw new Error(`Server returned status: ${res.status}`);
         const text = await res.text();
         try {
-            return JSON.parse(text); // Try parsing JSON
+            return JSON.parse(text); 
         } catch (e) {
             console.error("Backend sent HTML instead of JSON! Backend Error/Crash:", text);
             throw new Error("JSON Parse Failed - Backend Deployment Issue");
@@ -199,7 +203,7 @@ function fetchOrders() {
             globalPharmacyOrders = resData.data.orders;
             renderOrders(globalPharmacyOrders);
             
-            renderOverviewDashboard(); // ✨ CHART DATA RENDER ✨
+            renderOverviewDashboard(); // Chart Render
             
             if(document.getElementById('settlementsSection').classList.contains('active')) renderSettlements();
         } else {
@@ -241,7 +245,6 @@ function clearOrderFilters() {
     renderOrders(globalPharmacyOrders);
 }
 
-// ✨ UPDATED RENDER ORDERS ✨
 function renderOrders(orders) {
     const container = document.getElementById("ordersContainer"); container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
@@ -389,12 +392,17 @@ function clearSettlementFilters() {
 
 function renderSettlements() { renderSettlementsList(globalPharmacyOrders.filter(o => o.patient_status === "Completed")); }
 
+// ✨ UPDATED: Render Settlements & Draw Bar Chart ✨
 function renderSettlementsList(ordersToRender) {
     const container = document.getElementById("settlementList"); container.innerHTML = "";
+    
+    // 1. Draw Revenue Chart
+    drawRevenueChart(ordersToRender);
+
     if(ordersToRender.length === 0) { container.innerHTML = `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;"><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show. Try changing dates.</div>`; return; }
 
     ordersToRender.forEach(order => {
-        let mrp = parseFloat(order.total_mrp) || 0; let pRate = parseFloat(order.purchase_rate) || 0; let profit = parseFloat(order.total_profit) || 0; let myShare = parseFloat(order.pharma_profit_share) || 0; let delCharge = parseFloat(order.delivery_charge) || 0; let comm = parseFloat(order.bhavya_care_commission) || 0;
+        let mrp = parseFloat(order.total_mrp) || 0; let profit = parseFloat(order.total_profit) || 0; let myShare = parseFloat(order.pharma_profit_share) || 0; let delCharge = parseFloat(order.delivery_charge) || 0; 
         
         let payoutStatus = order.payout_status || "Pending";
         let payoutBadge = payoutStatus === "Paid" ? `<span class="badge" style="background:#d1fae5; color:#059669; font-size: 11px;">PAID</span>` : `<span class="badge" style="background:#fef3c7; color:#d97706; font-size: 11px;">PENDING</span>`;
@@ -415,6 +423,55 @@ function renderSettlementsList(ordersToRender) {
             </div>
         </div>`;
         container.innerHTML += html;
+    });
+}
+
+// ✨ NAYA LOGIC: BAR CHART FOR LEDGER ✨
+function drawRevenueChart(orders) {
+    const ctx = document.getElementById('revenueBarChart').getContext('2d');
+    if (myRevenueChart) myRevenueChart.destroy();
+
+    // Grouping revenue by Date
+    let revenueByDate = {};
+    orders.forEach(o => {
+        let d = new Date(o.order_date);
+        let dateStr = `${d.getDate()}/${d.getMonth()+1}`; // format: DD/MM
+        let share = parseFloat(o.pharma_profit_share) || 0;
+        
+        if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
+        revenueByDate[dateStr] += share;
+    });
+
+    let labels = Object.keys(revenueByDate).reverse(); // Reverse to show oldest to newest
+    let dataValues = Object.values(revenueByDate).reverse();
+
+    myRevenueChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Data'],
+            datasets: [{
+                label: 'Earnings (₹)',
+                data: dataValues.length > 0 ? dataValues : [0],
+                backgroundColor: '#3b82f6',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                datalabels: { // Numbers on top of the bars
+                    align: 'end',
+                    anchor: 'end',
+                    color: '#2563eb',
+                    font: { weight: 'bold' },
+                    formatter: (value) => { return value > 0 ? '₹' + value.toFixed(0) : ''; }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, display: false } // Hide Y axis numbers to make it cleaner
+            }
+        }
     });
 }
 
@@ -554,7 +611,7 @@ function checkDeliveryReminders(orders) {
 }
 
 // ==========================================
-// ✨ CHART.JS OVERVIEW RENDER LOGIC ✨
+// ✨ CHART.JS OVERVIEW & DATALABELS ✨
 // ==========================================
 function renderOverviewDashboard() {
     if (!globalPharmacyOrders) return;
@@ -562,7 +619,7 @@ function renderOverviewDashboard() {
     let total = globalPharmacyOrders.length;
     let completed = 0;
     let cancelled = 0;
-    let pending = 0; // Jisme Pending + Confirmed dono aayenge
+    let pending = 0; 
     let earnings = 0;
 
     globalPharmacyOrders.forEach(o => {
@@ -578,26 +635,20 @@ function renderOverviewDashboard() {
         }
     });
 
-    // 1. Text Numbers Update karna
     document.getElementById("statTotalOrders").innerText = total;
     document.getElementById("statCompletedOrders").innerText = completed;
     document.getElementById("statTotalEarnings").innerText = "₹" + earnings.toFixed(2);
 
-    // 2. Chart.js ko Draw karna
     const ctx = document.getElementById('orderStatusChart').getContext('2d');
-    
-    // Purana chart destroy karna zaroori hai warna naya chart overlap kar jayega
-    if (myOrderStatusChart) {
-        myOrderStatusChart.destroy(); 
-    }
+    if (myOrderStatusChart) { myOrderStatusChart.destroy(); }
 
     myOrderStatusChart = new Chart(ctx, {
-        type: 'doughnut', // Gol chart
+        type: 'doughnut',
         data: {
             labels: ['Active/Pending', 'Completed', 'Cancelled'],
             datasets: [{
                 data: [pending, completed, cancelled],
-                backgroundColor: ['#f59e0b', '#10b981', '#ef4444'], // Orange, Green, Red
+                backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
                 borderWidth: 0,
                 hoverOffset: 6
             }]
@@ -605,9 +656,14 @@ function renderOverviewDashboard() {
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: { position: 'bottom' },
+                datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 16 },
+                    formatter: (value) => { return value > 0 ? value : ''; } // Sirf tab dikhao agar value 0 se jyada ho
+                }
             },
-            cutout: '65%' // Chart ko andar se kitna khali rakhna hai
+            cutout: '60%' 
         }
     });
 }

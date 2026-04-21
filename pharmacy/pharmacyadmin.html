@@ -181,11 +181,12 @@
                 <div class="filter-actions">
                     <select id="filterOrderStatus" class="filter-input" onchange="renderAllOrders()">
                         <option value="All">All Statuses</option>
-                        <option value="Pending">Pending</option>
-                        <option value="confirm_for_patient">Sent to Patient</option>
+                        <option value="Pending">New Orders</option>
+                        <option value="confirm_for_patient">Action Needed</option>
                         <option value="Confirmed">Confirmed</option>
                         <option value="Completed">Completed</option>
                         <option value="Cancelled">Cancelled</option>
+                        <option value="Delayed" style="color: #dc2626; font-weight: bold;">⚠️ Delayed / Overdue</option>
                     </select>
                     <select id="filterOrderPharma" class="filter-input" onchange="renderAllOrders()">
                         <option value="All">All Pharmacies</option>

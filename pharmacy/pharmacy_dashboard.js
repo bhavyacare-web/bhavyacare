@@ -167,30 +167,66 @@ function getBase64(fileId) {
 
 async function submitProfileUpdate(e) {
     e.preventDefault();
-    if(profPincodeList.length === 0 || profCityList.length === 0) { showToast("At least 1 Delivery Pincode and City is required.", "error"); return; }
+    
+    if(profPincodeList.length === 0 || profCityList.length === 0) { 
+        showToast("At least 1 Delivery Pincode and City is required.", "error"); 
+        return; 
+    }
+
+    // ✨ NAYA CHECK: Kya timings fill hain? ✨
+    let timingsMissing = false;
+    days.forEach(day => {
+        let open = document.getElementById("prof_"+day+"_open").value;
+        let close = document.getElementById("prof_"+day+"_close").value;
+        if(!open || !close) timingsMissing = true;
+    });
+
+    if(timingsMissing) {
+        showToast("Please fill all Working Timings before saving.", "error");
+        return;
+    }
+
     const btn = document.getElementById("btnUpdateProfile"); 
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; btn.disabled = true;
 
     try {
         let payload = {
-            action: "updatePharmacyProfile", user_id: localStorage.getItem("bhavya_user_id"),
-            available_city: profCityList.join(', '), available_pincode: JSON.stringify(profPincodeList),
-            img1: await getBase64("profImg1"), img2: await getBase64("profImg2")
+            action: "updatePharmacyProfile",
+            user_id: localStorage.getItem("bhavya_user_id"),
+            available_city: profCityList.join(', '),
+            available_pincode: JSON.stringify(profPincodeList),
+            img1: await getBase64("profImg1"),
+            img2: await getBase64("profImg2")
         };
 
+        // Days ki values add karna
         days.forEach(day => {
             payload[day + "_opening_time"] = document.getElementById("prof_"+day+"_open").value;
             payload[day + "_closing_time"] = document.getElementById("prof_"+day+"_close").value;
         });
 
-        const response = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify(payload) 
+        });
+        
         const resData = await response.json();
-        if (resData.status === "success") { showToast("Profile updated successfully!", "success"); fetchPharmacyProfile(); } 
-        else { showToast("Error: " + resData.message, "error"); }
-    } catch (error) { showToast("Network error while updating profile.", "error"); } 
-    finally { btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`; btn.disabled = false; }
-}
 
+        if (resData.status === "success") {
+            showToast("Profile updated successfully!", "success");
+            // Wapas fetch karein taaki UI confirm ho jaye
+            setTimeout(fetchPharmacyProfile, 500); 
+        } else {
+            showToast("Error: " + resData.message, "error"); 
+        }
+    } catch (error) { 
+        showToast("Network error while updating profile.", "error"); 
+    } finally { 
+        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`; 
+        btn.disabled = false; 
+    }
+}
 
 // ✨ ADVANCED FETCH ORDERS ✨
 function fetchOrders() {

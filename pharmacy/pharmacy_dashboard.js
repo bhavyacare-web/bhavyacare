@@ -2,6 +2,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 
 let globalPharmacyOrders = [];
 let remindedOrders = new Set(); 
+let myOrderStatusChart = null; // ✨ NAYA CHART VARIABLE ✨
 
 // Profile Variables
 let profPincodeList = [];
@@ -37,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupProfileTimings();
     fetchOrders();
 
-    // Event Listeners for Modals (FIXED: Missing references added)
     document.getElementById("processForm").addEventListener("submit", submitProcessForm);
     document.getElementById("cancelOrderForm").addEventListener("submit", submitCancelOrder);
     document.getElementById("profileUpdateForm").addEventListener("submit", submitProfileUpdate);
@@ -54,6 +54,7 @@ function showSection(sectionId, btn) {
     btn.classList.add('active');
     document.getElementById(sectionId).classList.add('active');
     
+    if(sectionId === 'overviewSection') renderOverviewDashboard();
     if(sectionId === 'settlementsSection') renderSettlements();
     if(sectionId === 'profileSection') fetchPharmacyProfile();
 }
@@ -197,13 +198,16 @@ function fetchOrders() {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
             renderOrders(globalPharmacyOrders);
+            
+            renderOverviewDashboard(); // ✨ CHART DATA RENDER ✨
+            
             if(document.getElementById('settlementsSection').classList.contains('active')) renderSettlements();
         } else {
             container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
         }
     }).catch(err => { 
         console.error("Fetch Error Trace:", err);
-        container.innerHTML = `<p style="text-align:center; color:red; font-weight:bold;">Network Error: Backend crashed or not deployed correctly. Check console.</p>`; 
+        container.innerHTML = `<p style="text-align:center; color:red; font-weight:bold;">Network Error: Check console.</p>`; 
     });
 }
 function filterLiveOrders() {
@@ -212,7 +216,6 @@ function filterLiveOrders() {
     const dateVal = document.getElementById("dateFilter").value;
 
     const filtered = globalPharmacyOrders.filter(order => {
-        // ✨ FIX: String() added to prevent mobile number .includes TypeError ✨
         let matchText = true;
         if (search !== "") { 
             matchText = String(order.order_id || "").toLowerCase().includes(search) || 
@@ -299,7 +302,6 @@ function renderOrders(orders) {
         let d = new Date(order.order_date); let dateStr = d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}); let timeStr = d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true});
         let formattedDelivery = order.delivery_date || "Not set";
 
-        // ✨ FIX: Order Type aur "Pickup By" logic update kiya gaya ✨
         let isPickup = (order.order_type === "Collect from Pharmacy" || order.order_type === "Self Pickup");
         let orderTypeDisplay = isPickup 
             ? `<span style="color: #d97706; font-weight: 800; font-size: 12px; background: #fef3c7; padding: 4px 8px; border-radius: 6px;"><i class="fas fa-store-alt"></i> Self Pickup</span>`
@@ -308,7 +310,6 @@ function renderOrders(orders) {
         let deliveryIconText = isPickup ? `<i class="fas fa-walking"></i> <b>Pickup By:</b>` : `<i class="fas fa-truck-fast"></i> <b>Deliver By:</b>`;
         let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
 
-        // ✨ FIX: Payment Status DUE/PAID logic update ✨
         let payStatusBadge = "";
         if(order.patient_status !== "Pending" && order.patient_status !== "Cancelled" && order.patient_status !== "confirm_for_patient") {
              payStatusBadge = (order.payment_status === "Completed" || order.payment_status === "Paid") 
@@ -450,7 +451,7 @@ function downloadSettlementPDF() {
 }
 
 // ==========================================
-// ✨ MODALS & API CALLS (Fixed ReferenceErrors) ✨
+// ✨ MODALS & API CALLS ✨
 // ==========================================
 
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
@@ -493,7 +494,6 @@ function closeCompleteModal() {
     document.getElementById("completeOrderForm").reset();
 }
 
-// ✨ FIXED: Pharmacy Complete Order (File Size Limit & Wait Text) ✨
 async function submitCompleteOrder(e) {
     e.preventDefault();
     const orderId = document.getElementById("completeOrderIdHidden").value;
@@ -502,14 +502,12 @@ async function submitCompleteOrder(e) {
     
     if (!fileInput.files || fileInput.files.length === 0) { showToast("Please upload the medicine bill.", "error"); return; }
 
-    // ✨ NAYA LOGIC: File size limit to prevent freezing (Max 3MB) ✨
     const fileSizeMB = fileInput.files[0].size / (1024 * 1024);
     if (fileSizeMB > 3) {
         showToast("File is too large! Please upload a file smaller than 3MB.", "error");
         return;
     }
 
-    // ✨ NAYA LOGIC: Button par clear message taaki pharmacy wait kare ✨
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading securely (Takes 10-15s)...`; 
     btn.disabled = true;
 
@@ -531,6 +529,7 @@ async function submitCompleteOrder(e) {
         btn.disabled = false; 
     }
 }
+
 function checkDeliveryReminders(orders) {
     if(!orders || orders.length === 0) return;
     let now = new Date();
@@ -550,6 +549,65 @@ function checkDeliveryReminders(orders) {
                     }
                 }
             } catch(e) {}
+        }
+    });
+}
+
+// ==========================================
+// ✨ CHART.JS OVERVIEW RENDER LOGIC ✨
+// ==========================================
+function renderOverviewDashboard() {
+    if (!globalPharmacyOrders) return;
+
+    let total = globalPharmacyOrders.length;
+    let completed = 0;
+    let cancelled = 0;
+    let pending = 0; // Jisme Pending + Confirmed dono aayenge
+    let earnings = 0;
+
+    globalPharmacyOrders.forEach(o => {
+        if (o.patient_status === "Completed") {
+            completed++;
+            earnings += Number(o.pharma_profit_share) || 0;
+        } 
+        else if (o.patient_status === "Cancelled") {
+            cancelled++;
+        } 
+        else {
+            pending++; 
+        }
+    });
+
+    // 1. Text Numbers Update karna
+    document.getElementById("statTotalOrders").innerText = total;
+    document.getElementById("statCompletedOrders").innerText = completed;
+    document.getElementById("statTotalEarnings").innerText = "₹" + earnings.toFixed(2);
+
+    // 2. Chart.js ko Draw karna
+    const ctx = document.getElementById('orderStatusChart').getContext('2d');
+    
+    // Purana chart destroy karna zaroori hai warna naya chart overlap kar jayega
+    if (myOrderStatusChart) {
+        myOrderStatusChart.destroy(); 
+    }
+
+    myOrderStatusChart = new Chart(ctx, {
+        type: 'doughnut', // Gol chart
+        data: {
+            labels: ['Active/Pending', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: [pending, completed, cancelled],
+                backgroundColor: ['#f59e0b', '#10b981', '#ef4444'], // Orange, Green, Red
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '65%' // Chart ko andar se kitna khali rakhna hai
         }
     });
 }

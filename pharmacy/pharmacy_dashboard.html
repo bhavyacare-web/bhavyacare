@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -112,12 +113,35 @@
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-btn active" onclick="showSection('ordersSection', this)"><i class="fas fa-box-open"></i> Live Orders</button>
+            <button class="nav-btn active" onclick="showSection('overviewSection', this)"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button class="nav-btn" onclick="showSection('ordersSection', this)"><i class="fas fa-box-open"></i> Live Orders</button>
             <button class="nav-btn" onclick="showSection('settlementsSection', this)"><i class="fas fa-file-invoice-dollar"></i> Settlements</button>
             <button class="nav-btn" onclick="showSection('profileSection', this)"><i class="fas fa-store"></i> Edit Profile</button>
         </div>
 
-        <div id="ordersSection" class="tab-section active">
+        <div id="overviewSection" class="tab-section active">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6;">
+                    <h4 style="margin:0 0 10px 0; color:#64748b; font-size:13px; text-transform:uppercase;">Total Orders</h4>
+                    <h2 id="statTotalOrders" style="margin:0; font-size:28px; color:#0f172a;">0</h2>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; border-left: 4px solid #10b981;">
+                    <h4 style="margin:0 0 10px 0; color:#64748b; font-size:13px; text-transform:uppercase;">Completed Orders</h4>
+                    <h2 id="statCompletedOrders" style="margin:0; font-size:28px; color:#0f172a;">0</h2>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b;">
+                    <h4 style="margin:0 0 10px 0; color:#64748b; font-size:13px; text-transform:uppercase;">Total Earnings</h4>
+                    <h2 id="statTotalEarnings" style="margin:0; font-size:28px; color:#0f172a;">₹0</h2>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; max-width: 400px; margin: auto;">
+                <h3 style="text-align: center; margin-top: 0; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px;">Order Status Analysis</h3>
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+        </div>
+
+        <div id="ordersSection" class="tab-section">
             <div class="filter-bar">
                 <div class="search-wrapper">
                     <label style="font-size:12px; color:#64748b; font-weight:700; display:block; margin-bottom:6px;">Search Order</label>
@@ -266,6 +290,17 @@
                 <div class="form-group"><label>Upload Medicine Bill (PDF/Image) *</label><input type="file" id="medicineBillFile" accept=".pdf,image/*" required style="border: 2px dashed #10b981; background: #f0fdf4;"></div>
                 <button type="submit" class="btn" id="btnSubmitComplete" style="background:#10b981; color:white; width:100%; margin-top:10px;"><i class="fas fa-check-double"></i> Upload Bill & Mark Delivered</button>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="reminderAlertModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-bell" style="color:#f59e0b;"></i> Delivery Reminder</h3>
+                <button class="close-btn" onclick="document.getElementById('reminderAlertModal').style.display='none'">&times;</button>
+            </div>
+            <div id="reminderAlertMessage" style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;"></div>
+            <button class="btn" style="background:#f59e0b; color:white; width:100%;" onclick="document.getElementById('reminderAlertModal').style.display='none'">Got it</button>
         </div>
     </div>
 

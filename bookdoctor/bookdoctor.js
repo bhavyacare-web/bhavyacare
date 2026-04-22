@@ -360,8 +360,8 @@ function formatTimeDisplay(input) {
     }
 }
 
-// ✨ SMART DYNAMIC TIME SLOTS GENERATOR ✨
-function checkSchedule() {
+// ✨ SMART DYNAMIC TIME SLOTS GENERATOR (WITH DOUBLE BOOKING PREVENTION) ✨
+async function checkSchedule() {
     const dateVal = document.getElementById("apptDate").value;
     const typeVal = document.getElementById("consultType").value;
     const msgDiv = document.getElementById("availabilityMsg");
@@ -371,7 +371,7 @@ function checkSchedule() {
     hiddenTimeInput.value = ""; // Reset selection
     
     if(!dateVal || !typeVal) {
-        container.innerHTML = `<div style="font-size: 13px; color: #64748b; font-style: italic;">Please select date and consult type first.</div>`;
+        container.innerHTML = `<div style="font-size: 13px; color: #64748b; font-style: italic; background: #f8fafc; padding: 10px; border-radius: 8px; width: 100%;">Please select date and consult type first.</div>`;
         msgDiv.style.display = "none";
         return;
     }
@@ -383,23 +383,55 @@ function checkSchedule() {
     let outTime = typeVal === "Offline" ? selectedDoctor[`off_${dayKey}_out`] : selectedDoctor[`on_${dayKey}_out`];
 
     if (inTime && outTime) {
-        msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Doctor available today. Choose a slot below.`;
-        msgDiv.style.color = "#155724"; msgDiv.style.background = "#d4edda"; msgDiv.style.borderLeftColor = "#28a745";
+        // UI ko Loading state mein dalna API call se pehle
+        msgDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking available slots...`;
+        msgDiv.style.color = "#0056b3"; msgDiv.style.background = "#e2e8f0"; msgDiv.style.borderLeftColor = "#3b82f6";
         msgDiv.style.display = "block";
-        
-        // 🌟 GENERATING SLOTS 🌟
-        let slotDuration = parseInt(selectedDoctor.slot_duration) || 15; // default 15 mins
-        generateTimeSlots(inTime, outTime, slotDuration, container);
+        container.innerHTML = `<div style="padding: 10px; color: #64748b; font-size: 13px;"><i class="fas fa-circle-notch fa-spin"></i> Syncing with Doctor's Calendar...</div>`;
+
+        try {
+            // Date ko DD-MM-YYYY format mein convert karna backend check ke liye
+            let formattedDate = dateVal.split('-').reverse().join('-');
+
+            // API Call: Booked Slots mangwana
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: "getBookedSlots",
+                    doctor_id: selectedDoctor.doctor_id,
+                    date: formattedDate
+                })
+            });
+
+            const resData = await response.json();
+            let bookedSlots = [];
+            if (resData.status === "success") {
+                bookedSlots = resData.data; // Example: ["10:00 AM", "10:15 AM"]
+            }
+
+            msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Doctor available today. Choose a slot below.`;
+            msgDiv.style.color = "#155724"; msgDiv.style.background = "#d4edda"; msgDiv.style.borderLeftColor = "#28a745";
+
+            // Slots Generate Karna
+            let slotDuration = parseInt(selectedDoctor.slot_duration) || 15;
+            generateTimeSlots(inTime, outTime, slotDuration, container, bookedSlots);
+
+        } catch (e) {
+            msgDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed to check availability. Please try again.`;
+            msgDiv.style.color = "#721c24"; msgDiv.style.background = "#f8d7da"; msgDiv.style.borderLeftColor = "#dc3545";
+            container.innerHTML = "";
+            showToast("Network error checking slots", "error");
+        }
         
     } else {
         msgDiv.innerHTML = `<i class="fas fa-times-circle"></i> Not available for ${typeVal} consultation on this day.`;
         msgDiv.style.color = "#721c24"; msgDiv.style.background = "#f8d7da"; msgDiv.style.borderLeftColor = "#dc3545";
         msgDiv.style.display = "block";
-        container.innerHTML = `<div style="font-size: 13px; color: #dc2626; font-weight: bold;">No slots available.</div>`;
+        container.innerHTML = `<div style="font-size: 13px; color: #dc2626; font-weight: bold; background: #fef2f2; padding: 10px; border-radius: 8px;">No slots available.</div>`;
     }
 }
 
-function generateTimeSlots(start, end, durationMins, container) {
+function generateTimeSlots(start, end, durationMins, container, bookedSlots) {
     container.innerHTML = "";
     let [startH, startM] = start.split(':').map(Number);
     let [endH, endM] = end.split(':').map(Number);
@@ -417,20 +449,35 @@ function generateTimeSlots(start, end, durationMins, container) {
         let val24 = `${h}:${m}`;
         let display12 = formatTime12H(val24);
         
+        // Check karna ki kya yeh slot pehle se booked hai
+        let isBooked = bookedSlots.includes(display12);
+        
         // Creating Button
         let btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "slot-btn";
-        btn.innerText = display12;
-        btn.dataset.val24 = val24;
         
-        btn.onclick = function() {
-            // Remove active class from all
-            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
-            // Add to clicked
-            this.classList.add('active');
-            document.getElementById("apptTime").value = this.dataset.val24; // Save 24h format to hidden input
-        };
+        if (isBooked) {
+            // Booked Slot CSS (Red & Unclickable)
+            btn.className = "slot-btn disabled";
+            btn.disabled = true;
+            btn.title = "Already Booked";
+            btn.innerHTML = `<span style="text-decoration: line-through;">${display12}</span> <i class="fas fa-ban" style="margin-left:4px; font-size:10px; color:#ef4444;"></i>`;
+            btn.style.color = "#ef4444";
+            btn.style.borderColor = "#fecaca";
+            btn.style.background = "#fef2f2";
+            btn.style.cursor = "not-allowed";
+        } else {
+            // Available Slot CSS
+            btn.className = "slot-btn";
+            btn.innerText = display12;
+            btn.dataset.val24 = val24;
+            
+            btn.onclick = function() {
+                document.querySelectorAll('.slot-btn:not(.disabled)').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById("apptTime").value = this.dataset.val24;
+            };
+        }
         
         container.appendChild(btn);
         

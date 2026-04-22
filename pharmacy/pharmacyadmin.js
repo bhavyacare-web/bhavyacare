@@ -584,3 +584,81 @@ function downloadAdminLedgerPDF() {
         setTimeout(() => printWindow.close(), 100);
     };
 }
+// ==========================================
+// ✨ NAYA: ADMIN PAYOUT VERIFICATION LOGIC ✨
+// ==========================================
+function renderVerifications() {
+    const container = document.getElementById("verificationContainer");
+    container.innerHTML = "";
+    
+    let groupedRequests = {};
+
+    // Grouping orders by Pharmacy ID where status is Verification Pending
+    allOrders.forEach(o => {
+        if(o.payment_status === "Verification Pending") {
+            if(!groupedRequests[o.medicos_id]) {
+                groupedRequests[o.medicos_id] = { 
+                    name: getPharmaName(o.medicos_id), 
+                    totalAmount: 0, 
+                    screenshot: o.payment_screenshot || "", 
+                    orderCount: 0 
+                };
+            }
+            groupedRequests[o.medicos_id].totalAmount += parseFloat(o.bhavya_care_commission) || 0;
+            groupedRequests[o.medicos_id].orderCount++;
+            if(o.payment_screenshot) groupedRequests[o.medicos_id].screenshot = o.payment_screenshot;
+        }
+    });
+
+    const pharmacies = Object.keys(groupedRequests);
+
+    if(pharmacies.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No pending verifications.</div>`;
+        return;
+    }
+
+    pharmacies.forEach(pharmaId => {
+        let data = groupedRequests[pharmaId];
+        let imgHtml = data.screenshot ? `<a href="${data.screenshot}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Screenshot</a>` : `<p style="color:#dc2626; font-size:12px;">No screenshot uploaded</p>`;
+
+        let card = `
+        <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+            <h3 style="margin: 0 0 5px 0; color: #0f172a;">${data.name}</h3>
+            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 13px;">ID: ${pharmaId} • Orders: ${data.orderCount}</p>
+            
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid to Admin</p>
+                <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.totalAmount.toFixed(2)}</h2>
+            </div>
+            
+            ${imgHtml}
+            
+            <button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approvePharmacyPayout('${pharmaId}')">
+                <i class="fas fa-check-circle"></i> Verify & Mark Paid
+            </button>
+        </div>`;
+        container.innerHTML += card;
+    });
+}
+
+// Call this function inside fetchAllAdminData() along with others
+// (Aap `updateOverviewStats();` ke theek neeche `renderVerifications();` likh dijiye)
+
+async function approvePharmacyPayout(pharmaId) {
+    if(!confirm(`Approve payment verification for ${pharmaId}? This will mark all their pending dues as PAID.`)) return;
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", 
+            body: JSON.stringify({ action: "approvePayoutRequest", pharmacy_id: pharmaId }) 
+        });
+        const res = await response.json();
+        
+        if(res.status === "success") { 
+            showToast("Payment Verified Successfully!", "success"); 
+            refreshAllData(); 
+        } else {
+            showToast(res.message, "error");
+        }
+    } catch(e) { showToast("Network error", "error"); }
+}

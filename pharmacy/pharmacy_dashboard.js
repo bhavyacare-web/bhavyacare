@@ -63,92 +63,86 @@ function showSection(sectionId, btn) {
     if(sectionId === 'profileSection') fetchPharmacyProfile();
 }
 
-// ==========================================
-// ✨ PROFILE EDIT LOGIC ✨
-// ==========================================
+// ✨ 1. TIMINGS SETUP (Ensure IDs are correct) ✨
 function setupProfileTimings() {
     const container = document.getElementById("profTimingsContainer");
     container.innerHTML = "";
     days.forEach(day => {
         let dayName = day.charAt(0).toUpperCase() + day.slice(1);
         container.innerHTML += `
-        <div style="background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="font-weight:800; color:#0f172a; font-size:15px; margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
-                <i class="far fa-calendar-check" style="color:var(--primary);"></i> ${dayName}
-            </div>
-            <div style="display:flex; gap:15px;">
+        <div style="background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <div style="font-weight:800; color:#0f172a; font-size:14px; margin-bottom:10px;">${dayName}</div>
+            <div style="display:flex; gap:10px;">
                 <div style="flex:1;">
-                    <label style="font-size:12px; color:#64748b; font-weight:700; margin-bottom:5px; display:block;">Opening Time</label>
-                    <input type="time" id="prof_${day}_open" class="filter-input" style="padding:12px; background:#f8fafc; font-weight:bold;">
+                    <label style="font-size:11px; color:#64748b;">Opening</label>
+                    <input type="time" id="prof_${day}_open" class="filter-input">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:12px; color:#64748b; font-weight:700; margin-bottom:5px; display:block;">Closing Time</label>
-                    <input type="time" id="prof_${day}_close" class="filter-input" style="padding:12px; background:#f8fafc; font-weight:bold;">
+                    <label style="font-size:11px; color:#64748b;">Closing</label>
+                    <input type="time" id="prof_${day}_close" class="filter-input">
                 </div>
             </div>
         </div>`;
     });
 }
 
+// ✨ 2. FETCH PROFILE (With Force Logs & Correct Mapping) ✨
 function fetchPharmacyProfile() {
+    console.log("--- Profile Fetch Started ---"); // Agat ye console me nahi dikha, matlab file update nahi hui
     const btn = document.getElementById("btnUpdateProfile");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
     
-    const userId = localStorage.getItem("bhavya_user_id");
-    console.log("Fetching profile for ID:", userId);
+    const uId = localStorage.getItem("bhavya_user_id");
 
     fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "getPharmacyProfile", user_id: userId })
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "getPharmacyProfile", user_id: uId })
     })
     .then(res => res.json())
     .then(resData => {
-        console.log("Full Data from Backend:", resData); // 👈 Yeh check karna hai
+        console.log("Raw Response From Backend:", resData);
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
 
         if (resData.status === "success") {
             const p = resData.data;
-            
-            // 1. Pincodes & Cities Setup
+
+            // Pincodes Handle karna
             if (p.available_pincode) {
-                try { 
-                    profPincodeList = JSON.parse(p.available_pincode); 
-                } catch(e) { 
-                    profPincodeList = p.available_pincode.split(',').map(x=>x.trim()); 
+                try {
+                    let parsed = JSON.parse(p.available_pincode);
+                    profPincodeList = Array.isArray(parsed) ? parsed : [parsed];
+                } catch(e) {
+                    profPincodeList = p.available_pincode.toString().split(',').map(x => x.trim()).filter(x => x !== "");
                 }
             }
+
+            // Cities Handle karna
             if (p.available_city) {
-                profCityList = p.available_city.split(',').map(x=>x.trim());
+                profCityList = p.available_city.split(',').map(x => x.trim()).filter(x => x !== "");
             }
 
-            // UI Refresh
-            updateProfTagsUI('pincode'); 
+            // UI Tags Update karna
+            updateProfTagsUI('pincode');
             updateProfTagsUI('city');
 
-            // 2. Timings Setup
-            const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-            daysArr.forEach(day => {
-                if(p.timings && p.timings[day]) {
-                    let openInp = document.getElementById("prof_" + day + "_open");
-                    let closeInp = document.getElementById("prof_" + day + "_close");
-                    
-                    if(openInp) openInp.value = p.timings[day].open || "";
-                    if(closeInp) closeInp.value = p.timings[day].close || "";
+            // Timings fill karna (24-hour format HH:mm)
+            days.forEach(day => {
+                if (p.timings && p.timings[day]) {
+                    if (p.timings[day].open) document.getElementById(`prof_${day}_open`).value = p.timings[day].open;
+                    if (p.timings[day].close) document.getElementById(`prof_${day}_close`).value = p.timings[day].close;
                 }
             });
 
-            if(p.img1) document.getElementById("currImg1").innerHTML = `<a href="${p.img1}" target="_blank">View Image 1</a>`;
-            if(p.img2) document.getElementById("currImg2").innerHTML = `<a href="${p.img2}" target="_blank">View Image 2</a>`;
+            // Images UI
+            document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank">View Image 1</a>` : "No image";
+            document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank">View Image 2</a>` : "No image";
             
-            showToast("Profile loaded!", "info");
-        } else {
-            console.error("Backend Error:", resData.message);
-            showToast(resData.message, "error");
+            console.log("UI Update Complete");
         }
     })
     .catch(err => {
-        console.error("Fetch failed:", err);
+        console.error("Fetch Error:", err);
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
     });
 }

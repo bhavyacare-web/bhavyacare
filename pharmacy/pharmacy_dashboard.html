@@ -315,7 +315,26 @@
             <button class="btn" style="background:#f59e0b; color:white; width:100%;" onclick="document.getElementById('reminderAlertModal').style.display='none'">Got it</button>
         </div>
     </div>
+<div class="modal-overlay" id="payoutModal">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <button class="close-btn" onclick="document.getElementById('payoutModal').style.display='none'">&times;</button>
+            <h2 style="margin-top:0; color:#0f172a;"><i class="fas fa-wallet" style="color:#2563eb;"></i> Clear Dues</h2>
+            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Amount to Pay to BhavyaCare:<br><strong id="modalPayAmount" style="color:#10b981; font-size:28px;">₹0.00</strong></p>
+            
+            <div id="paymentContainer" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px dashed #cbd5e1; margin-bottom:20px;">
+                </div>
 
+            <form id="payoutForm">
+                <div class="form-group" style="text-align: left;">
+                    <label>Upload Payment Screenshot *</label>
+                    <input type="file" id="payoutScreenshot" accept="image/*" required style="border: 2px dashed #3b82f6; background: #eff6ff;">
+                </div>
+                <button type="submit" class="btn" id="btnSubmitPayout" style="background:#2563eb; color:white; width:100%;">
+                    <i class="fas fa-upload"></i> Submit for Verification
+                </button>
+            </form>
+        </div>
+    </div>
     <script src="pharmacy_dashboard.js"></script>
 </body>
 </html>

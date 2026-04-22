@@ -441,40 +441,110 @@ function clearSettlementFilters() {
 
 function renderSettlements() { renderSettlementsList(globalPharmacyOrders.filter(o => o.patient_status === "Completed")); }
 
-// ✨ UPDATED: Render Settlements & Draw Bar Chart ✨
+// ✨ UPDATED: RENDER SETTLEMENTS (With Total Dues & Payment Button) ✨
 function renderSettlementsList(ordersToRender) {
     const container = document.getElementById("settlementList"); container.innerHTML = "";
-    
-    // 1. Draw Revenue Chart
     drawRevenueChart(ordersToRender);
 
-    if(ordersToRender.length === 0) { container.innerHTML = `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;"><i class="fas fa-file-invoice-dollar" style="font-size:30px; margin-bottom:10px; display:block;"></i>No completed orders to show. Try changing dates.</div>`; return; }
+    let totalDueAmount = 0;
+    let hasVerificationPending = false;
+
+    // Due amount calculate karna
+    ordersToRender.forEach(o => {
+        if (o.payment_status === "Due") totalDueAmount += parseFloat(o.bhavya_care_commission) || 0;
+        if (o.payment_status === "Verification Pending") hasVerificationPending = true;
+    });
+
+    // Top Dues Card Banner
+    let duesCardHtml = `
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div>
+            <h4 style="margin: 0 0 5px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Outstanding Comm. Dues</h4>
+            <h2 style="margin: 0; font-size: 32px; font-weight: 800;">₹${totalDueAmount.toFixed(2)}</h2>
+        </div>
+        <div>
+            ${hasVerificationPending 
+                ? `<span style="background: #f59e0b; color: white; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: bold;"><i class="fas fa-hourglass-half"></i> Verification Pending</span>` 
+                : (totalDueAmount > 0 
+                    ? `<button class="btn" style="background: #10b981; color: white; font-size: 15px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);" onclick="openPayoutModal(${totalDueAmount})"><i class="fas fa-qrcode"></i> Pay Now</button>` 
+                    : `<span style="color: #10b981; font-weight: bold;"><i class="fas fa-check-circle"></i> All Clear</span>`
+                  )
+            }
+        </div>
+    </div>`;
+    container.innerHTML += duesCardHtml;
+
+    if(ordersToRender.length === 0) { container.innerHTML += `<div style="text-align:center; padding:50px; background:white; border-radius:12px; color:#64748b;">No completed orders to show.</div>`; return; }
 
     ordersToRender.forEach(order => {
-        let mrp = parseFloat(order.total_mrp) || 0; let profit = parseFloat(order.total_profit) || 0; let myShare = parseFloat(order.pharma_profit_share) || 0; let delCharge = parseFloat(order.delivery_charge) || 0; 
+        let mrp = parseFloat(order.total_mrp) || 0; let profit = parseFloat(order.total_profit) || 0; let myShare = parseFloat(order.pharma_profit_share) || 0; let delCharge = parseFloat(order.delivery_charge) || 0; let comm = parseFloat(order.bhavya_care_commission) || 0;
         
-        let payoutStatus = order.payout_status || "Pending";
-        let payoutBadge = payoutStatus === "Paid" ? `<span class="badge" style="background:#d1fae5; color:#059669; font-size: 11px;">PAID</span>` : `<span class="badge" style="background:#fef3c7; color:#d97706; font-size: 11px;">PENDING</span>`;
+        let payStatusBadge = (order.payment_status === "Completed" || order.payment_status === "Paid") ? `<span class="badge" style="background:#d1fae5; color:#059669; font-size: 11px;">PAID</span>` 
+            : (order.payment_status === "Verification Pending" ? `<span class="badge" style="background:#fef3c7; color:#d97706; font-size: 11px;">VERIFYING</span>` : `<span class="badge" style="background:#fee2e2; color:#dc2626; font-size: 11px;">DUE</span>`);
 
         let html = `
         <div class="order-card" style="border-left: 4px solid #10b981; padding: 20px;">
             <div style="display:flex; justify-content:space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px;">
                 <strong style="color:#0f172a; font-size:16px;">#${order.order_id}</strong>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:11px; color:#64748b; font-weight:700;">Payout: ${payoutBadge}</span>
+                    <span style="font-size:11px; color:#64748b; font-weight:700;">Status: ${payStatusBadge}</span>
                 </div>
             </div>
             <div class="settlement-grid">
                 <div class="settlement-box">Total MRP <strong>₹${mrp.toFixed(2)}</strong></div>
                 <div class="settlement-box">Total Profit <strong>₹${profit.toFixed(2)}</strong></div>
                 <div class="settlement-box" style="background:#f0fdf4; border-color:#10b981;">Your Share <strong style="color:#059669;">₹${myShare.toFixed(2)}</strong></div>
-                <div class="settlement-box">Del. Charge <strong style="color:#059669;">+ ₹${delCharge.toFixed(2)}</strong></div>
+                <div class="settlement-box" style="background:#eff6ff; border-color:#3b82f6;">BhavyaCare Comm. <strong style="color:#2563eb;">₹${comm.toFixed(2)}</strong></div>
             </div>
         </div>`;
         container.innerHTML += html;
     });
 }
 
+// ✨ NAYA: MODAL OPEN & SMART QR/LINK LOGIC ✨
+function openPayoutModal(amount) {
+    document.getElementById('modalPayAmount').innerText = "₹" + amount.toFixed(2);
+    
+    // Aapki exact UPI ID
+    const upiLink = `upi://pay?pa=8950112467@ptsbi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`;
+    const container = document.getElementById("paymentContainer");
+    
+    // Check if user is on Mobile or PC
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        container.innerHTML = `<a href="${upiLink}" class="btn" style="background:#10b981; color:white; display:block; text-decoration:none;"><i class="fas fa-mobile-alt"></i> Tap to Pay via UPI App</a>
+        <p style="font-size:12px; color:#64748b; margin-top:10px;">Opens GPay, PhonePe, Paytm etc. directly.</p>`;
+    } else {
+        let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+        container.innerHTML = `<img src="${qrUrl}" style="width:160px; height:160px; border-radius:10px; border:2px solid #e2e8f0; padding:5px; background:white;">
+        <p style="font-size:12px; color:#64748b; margin-top:10px;">Scan this QR code with your phone's UPI app.</p>`;
+    }
+    
+    document.getElementById("payoutScreenshot").value = "";
+    document.getElementById('payoutModal').style.display = "flex";
+}
+
+// ✨ NAYA: SCREENSHOT SUBMIT HANDLER ✨
+document.getElementById("payoutForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("btnSubmitPayout");
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Securely...`; btn.disabled = true;
+    
+    try {
+        let base64Img = await getBase64("payoutScreenshot");
+        let payload = { action: "submitPayoutRequest", pharmacy_id: localStorage.getItem("bhavya_user_id"), screenshot_base64: base64Img };
+        let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+        let data = await res.json();
+        
+        if(data.status === "success") {
+            showToast("Screenshot submitted for verification!", "success");
+            document.getElementById('payoutModal').style.display = 'none';
+            fetchOrders(); // Refresh table to show "Verification Pending"
+        } else {
+            showToast(data.message, "error");
+        }
+    } catch(e) { showToast("Error uploading screenshot", "error"); }
+    finally { btn.innerHTML = `<i class="fas fa-upload"></i> Submit for Verification`; btn.disabled = false; }
+});
 // ✨ NAYA LOGIC: BAR CHART FOR LEDGER ✨
 function drawRevenueChart(orders) {
     const ctx = document.getElementById('revenueBarChart').getContext('2d');

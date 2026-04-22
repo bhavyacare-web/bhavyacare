@@ -86,12 +86,12 @@ function setupProfileTimings() {
     });
 }
 
-// ✨ 2. FETCH PROFILE (With Force Logs & Correct Mapping) ✨
+// ✨ FETCH PROFILE (Safe Rendering) ✨
 function fetchPharmacyProfile() {
-    console.log("--- Profile Fetch Started ---"); // Agat ye console me nahi dikha, matlab file update nahi hui
+    console.log("--- Fetching Profile Data ---");
     const btn = document.getElementById("btnUpdateProfile");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
-    
+
     const uId = localStorage.getItem("bhavya_user_id");
 
     fetch(GOOGLE_SCRIPT_URL, {
@@ -107,7 +107,7 @@ function fetchPharmacyProfile() {
         if (resData.status === "success") {
             const p = resData.data;
 
-            // Pincodes Handle karna
+            // 1. Pincodes Setup
             if (p.available_pincode) {
                 try {
                     let parsed = JSON.parse(p.available_pincode);
@@ -117,28 +117,36 @@ function fetchPharmacyProfile() {
                 }
             }
 
-            // Cities Handle karna
+            // 2. Cities Setup
             if (p.available_city) {
-                profCityList = p.available_city.split(',').map(x => x.trim()).filter(x => x !== "");
+                profCityList = p.available_city.toString().split(',').map(x => x.trim()).filter(x => x !== "");
             }
 
-            // UI Tags Update karna
             updateProfTagsUI('pincode');
             updateProfTagsUI('city');
 
-            // Timings fill karna (24-hour format HH:mm)
-            days.forEach(day => {
+            // 3. Timings Setup
+            const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+            daysArr.forEach(day => {
                 if (p.timings && p.timings[day]) {
-                    if (p.timings[day].open) document.getElementById(`prof_${day}_open`).value = p.timings[day].open;
-                    if (p.timings[day].close) document.getElementById(`prof_${day}_close`).value = p.timings[day].close;
+                    let openInp = document.getElementById("prof_" + day + "_open");
+                    let closeInp = document.getElementById("prof_" + day + "_close");
+                    
+                    if (openInp && p.timings[day].open) {
+                        openInp.value = formatToHHMM(p.timings[day].open);
+                    }
+                    if (closeInp && p.timings[day].close) {
+                        closeInp.value = formatToHHMM(p.timings[day].close);
+                    }
                 }
             });
 
-            // Images UI
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank">View Image 1</a>` : "No image";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank">View Image 2</a>` : "No image";
             
-            console.log("UI Update Complete");
+            console.log("UI Update Complete!");
+        } else {
+            showToast(resData.message, "error");
         }
     })
     .catch(err => {
@@ -755,6 +763,29 @@ function checkDeliveryReminders(orders) {
             } catch(e) {}
         }
     });
+}
+
+// ✨ HELPER: Time ko 24-hour format mein badalna ✨
+function formatToHHMM(timeStr) {
+    if (!timeStr) return "";
+    let str = String(timeStr).trim();
+    
+    // Agar time Google Date object bankar aa raha hai
+    if(str.includes("T") && str.includes("Z")) {
+         let d = new Date(str);
+         return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+    }
+    // Agar time AM/PM ke sath aa raha hai
+    if (str.toLowerCase().includes("m")) {
+        let [time, modifier] = str.split(" ");
+        let [hours, minutes] = time.split(":");
+        if(!minutes) minutes = "00";
+        if (hours === "12") hours = "00";
+        if (modifier && modifier.toLowerCase().includes("p")) hours = parseInt(hours, 10) + 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes.substring(0,2)}`;
+    }
+    // Default 
+    return str.substring(0, 5);
 }
 
 // ==========================================

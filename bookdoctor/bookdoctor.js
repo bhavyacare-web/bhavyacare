@@ -461,18 +461,17 @@ function getBase64(file) {
     });
 }
 
+// ✨ FIXED: SUBMIT BOOKING LOGIC ✨
 async function submitBooking() {
     const form = document.getElementById("bookingForm");
     if(!form.checkValidity()) { form.reportValidity(); return; }
     
+    // Ab hum sirf hidden input ki value check karenge jo button click karne par save hoti hai
     const timeInput = document.getElementById("apptTime");
-    const rawTime = timeInput.dataset.val24 || timeInput.value;
+    const rawTime = timeInput.value; 
     
-    if(timeInput.disabled || !rawTime) {
-        alert("Please select a valid date where the doctor is available."); return;
-    }
-    if (rawTime < timeInput.min || rawTime > timeInput.max) {
-        alert(`Please select a time between ${formatTime12H(timeInput.min)} and ${formatTime12H(timeInput.max)}.`);
+    if(!rawTime) {
+        alert("Please select a preferred time slot from the green buttons."); 
         return;
     }
 

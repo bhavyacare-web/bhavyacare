@@ -104,33 +104,43 @@ function fetchPharmacyProfile() {
         if (resData.status === "success") {
             const p = resData.data;
             
-            // Pincodes aur Cities fill karna
+            // 1. Pincodes & Cities
             try { profPincodeList = JSON.parse(p.available_pincode); } catch(e) { profPincodeList = p.available_pincode ? p.available_pincode.split(',').map(x=>x.trim()) : []; }
             try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
-            
-            updateProfTagsUI('pincode');
-            updateProfTagsUI('city');
+            updateProfTagsUI('pincode'); updateProfTagsUI('city');
 
-            // ✨ FIXED: Timings Pre-fill Logic ✨
-            days.forEach(day => {
+            // 2. ✨ FIXED: Timings Pre-fill Logic ✨
+            const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+            daysArr.forEach(day => {
                 if(p.timings && p.timings[day]) {
-                    // Timing format 'HH:mm' hona chahiye input[type="time"] ke liye
-                    let openVal = p.timings[day].open || "";
-                    let closeVal = p.timings[day].close || "";
+                    // Time input ko "HH:mm" (24hr) format chahiye
+                    let openInput = document.getElementById("prof_" + day + "_open");
+                    let closeInput = document.getElementById("prof_" + day + "_close");
                     
-                    document.getElementById("prof_" + day + "_open").value = openVal;
-                    document.getElementById("prof_" + day + "_close").value = closeVal;
+                    if(openInput) openInput.value = formatToHHMM(p.timings[day].open);
+                    if(closeInput) closeInput.value = formatToHHMM(p.timings[day].close);
                 }
             });
 
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 1</a>` : "No image";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 2</a>` : "No image";
         }
-    })
-    .catch(err => {
-        console.error("Profile Fetch Error:", err);
-        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
     });
+}
+
+// ✨ Helper Function: Kisi bhi time string ko HH:mm mein convert karne ke liye ✨
+function formatToHHMM(timeStr) {
+    if (!timeStr) return "";
+    // Agar time mein AM/PM hai (e.g. "09:00 AM"), toh use convert karein
+    if (timeStr.includes(" ")) {
+        let [time, modifier] = timeStr.split(" ");
+        let [hours, minutes] = time.split(":");
+        if (hours === "12") hours = "00";
+        if (modifier.toLowerCase() === "pm") hours = parseInt(hours, 10) + 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes}`;
+    }
+    // Agar pehle se "HH:mm:ss" hai, toh sirf pehle 5 characters lein
+    return timeStr.substring(0, 5);
 }
 
 function addProfTag(type) {

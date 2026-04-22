@@ -112,6 +112,7 @@
             <button class="nav-btn" onclick="switchTab('registrations', this)"><i class="fas fa-user-check"></i> Registrations</button>
             <button class="nav-btn" onclick="switchTab('orders', this)"><i class="fas fa-box"></i> All Orders</button>
             <button class="nav-btn" onclick="switchTab('ledger', this)"><i class="fas fa-book"></i> Settlement Ledger</button>
+            <button class="nav-btn" onclick="switchTab('verifications', this)"><i class="fas fa-check-double"></i> Verifications</button>
         </div>
 
         <div id="overview" class="tab-content active">
@@ -289,7 +290,11 @@
             </div>
         </div>
     </div>
-
+<div id="verifications" class="tab-content">
+            <h2 style="margin-top:0;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Pending Payout Verifications</h2>
+            <div id="verificationContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                </div>
+        </div>
     <script src="pharmacyadmin.js"></script>
 </body>
 </html>

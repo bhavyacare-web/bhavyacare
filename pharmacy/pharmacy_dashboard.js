@@ -90,59 +90,66 @@ function setupProfileTimings() {
     });
 }
 
-// ✨ FIXED: FETCH PHARMACY PROFILE (With Headers & Safe Parsing) ✨
 function fetchPharmacyProfile() {
     const btn = document.getElementById("btnUpdateProfile");
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading Profile...`;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
     
+    const userId = localStorage.getItem("bhavya_user_id");
+    console.log("Fetching profile for ID:", userId);
+
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST", 
-        // 👇 YEH LINE MISSING THI JISKI WAJAH SE ERROR AAYA 👇
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "getPharmacyProfile", user_id: localStorage.getItem("bhavya_user_id") })
+        body: JSON.stringify({ action: "getPharmacyProfile", user_id: userId })
     })
-    .then(async res => {
-        if (!res.ok) throw new Error(`Server returned status: ${res.status}`);
-        const text = await res.text();
-        try {
-            return JSON.parse(text); // Try parsing JSON
-        } catch (e) {
-            console.error("Backend Error/Crash (Not JSON):", text);
-            throw new Error("JSON Parse Failed");
-        }
-    })
+    .then(res => res.json())
     .then(resData => {
+        console.log("Full Data from Backend:", resData); // 👈 Yeh check karna hai
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
-        if (resData && resData.status === "success") {
+
+        if (resData.status === "success") {
             const p = resData.data;
             
-            // 1. Pincodes & Cities
-            try { profPincodeList = JSON.parse(p.available_pincode); } catch(e) { profPincodeList = p.available_pincode ? p.available_pincode.split(',').map(x=>x.trim()) : []; }
-            try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
-            updateProfTagsUI('pincode'); updateProfTagsUI('city');
+            // 1. Pincodes & Cities Setup
+            if (p.available_pincode) {
+                try { 
+                    profPincodeList = JSON.parse(p.available_pincode); 
+                } catch(e) { 
+                    profPincodeList = p.available_pincode.split(',').map(x=>x.trim()); 
+                }
+            }
+            if (p.available_city) {
+                profCityList = p.available_city.split(',').map(x=>x.trim());
+            }
 
-            // 2. Timings Pre-fill Logic
+            // UI Refresh
+            updateProfTagsUI('pincode'); 
+            updateProfTagsUI('city');
+
+            // 2. Timings Setup
             const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
             daysArr.forEach(day => {
                 if(p.timings && p.timings[day]) {
-                    let openInput = document.getElementById("prof_" + day + "_open");
-                    let closeInput = document.getElementById("prof_" + day + "_close");
+                    let openInp = document.getElementById("prof_" + day + "_open");
+                    let closeInp = document.getElementById("prof_" + day + "_close");
                     
-                    if(openInput) openInput.value = formatToHHMM(p.timings[day].open);
-                    if(closeInput) closeInput.value = formatToHHMM(p.timings[day].close);
+                    if(openInp) openInp.value = p.timings[day].open || "";
+                    if(closeInp) closeInp.value = p.timings[day].close || "";
                 }
             });
 
-            document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 1</a>` : "No image";
-            document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 2</a>` : "No image";
+            if(p.img1) document.getElementById("currImg1").innerHTML = `<a href="${p.img1}" target="_blank">View Image 1</a>`;
+            if(p.img2) document.getElementById("currImg2").innerHTML = `<a href="${p.img2}" target="_blank">View Image 2</a>`;
+            
+            showToast("Profile loaded!", "info");
         } else {
-            showToast("Failed to load profile data", "error");
+            console.error("Backend Error:", resData.message);
+            showToast(resData.message, "error");
         }
     })
     .catch(err => {
-        console.error("Profile Fetch Error Trace:", err);
+        console.error("Fetch failed:", err);
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
-        showToast("Network error while loading profile", "error");
     });
 }
 // ✨ Helper Function: Kisi bhi time string ko HH:mm mein convert karne ke liye ✨

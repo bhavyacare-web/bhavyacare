@@ -90,18 +90,30 @@ function setupProfileTimings() {
     });
 }
 
+// ✨ FIXED: FETCH PHARMACY PROFILE (With Headers & Safe Parsing) ✨
 function fetchPharmacyProfile() {
     const btn = document.getElementById("btnUpdateProfile");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading Profile...`;
     
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST", 
+        // 👇 YEH LINE MISSING THI JISKI WAJAH SE ERROR AAYA 👇
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         body: JSON.stringify({ action: "getPharmacyProfile", user_id: localStorage.getItem("bhavya_user_id") })
     })
-    .then(res => res.json())
+    .then(async res => {
+        if (!res.ok) throw new Error(`Server returned status: ${res.status}`);
+        const text = await res.text();
+        try {
+            return JSON.parse(text); // Try parsing JSON
+        } catch (e) {
+            console.error("Backend Error/Crash (Not JSON):", text);
+            throw new Error("JSON Parse Failed");
+        }
+    })
     .then(resData => {
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
-        if (resData.status === "success") {
+        if (resData && resData.status === "success") {
             const p = resData.data;
             
             // 1. Pincodes & Cities
@@ -109,11 +121,10 @@ function fetchPharmacyProfile() {
             try { profCityList = p.available_city.split(',').map(x=>x.trim()); } catch(e) { profCityList = []; }
             updateProfTagsUI('pincode'); updateProfTagsUI('city');
 
-            // 2. ✨ FIXED: Timings Pre-fill Logic ✨
+            // 2. Timings Pre-fill Logic
             const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
             daysArr.forEach(day => {
                 if(p.timings && p.timings[day]) {
-                    // Time input ko "HH:mm" (24hr) format chahiye
                     let openInput = document.getElementById("prof_" + day + "_open");
                     let closeInput = document.getElementById("prof_" + day + "_close");
                     
@@ -124,10 +135,16 @@ function fetchPharmacyProfile() {
 
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 1</a>` : "No image";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank" style="text-decoration:none;"><i class="fas fa-image"></i> View Image 2</a>` : "No image";
+        } else {
+            showToast("Failed to load profile data", "error");
         }
+    })
+    .catch(err => {
+        console.error("Profile Fetch Error Trace:", err);
+        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
+        showToast("Network error while loading profile", "error");
     });
 }
-
 // ✨ Helper Function: Kisi bhi time string ko HH:mm mein convert karne ke liye ✨
 function formatToHHMM(timeStr) {
     if (!timeStr) return "";

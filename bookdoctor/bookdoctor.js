@@ -28,7 +28,17 @@ window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
     fetchDoctors();
 };
-
+// ✨ TOAST NOTIFICATION LOGIC ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'; 
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
 function fixDriveUrl(rawImg, docName) {
     let imgSrc = "";
     if (rawImg && rawImg.trim() !== "") {
@@ -350,17 +360,18 @@ function formatTimeDisplay(input) {
     }
 }
 
+// ✨ SMART DYNAMIC TIME SLOTS GENERATOR ✨
 function checkSchedule() {
     const dateVal = document.getElementById("apptDate").value;
     const typeVal = document.getElementById("consultType").value;
     const msgDiv = document.getElementById("availabilityMsg");
-    const timeInput = document.getElementById("apptTime");
+    const container = document.getElementById("timeSlotsContainer");
+    const hiddenTimeInput = document.getElementById("apptTime");
+    
+    hiddenTimeInput.value = ""; // Reset selection
     
     if(!dateVal || !typeVal) {
-        timeInput.disabled = true;
-        timeInput.type = "text";
-        timeInput.value = "";
-        timeInput.dataset.val24 = "";
+        container.innerHTML = `<div style="font-size: 13px; color: #64748b; font-style: italic;">Please select date and consult type first.</div>`;
         msgDiv.style.display = "none";
         return;
     }
@@ -372,28 +383,64 @@ function checkSchedule() {
     let outTime = typeVal === "Offline" ? selectedDoctor[`off_${dayKey}_out`] : selectedDoctor[`on_${dayKey}_out`];
 
     if (inTime && outTime) {
-        msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Available from ${formatTime12H(inTime)} to ${formatTime12H(outTime)}`;
-        msgDiv.style.color = "#155724";
-        msgDiv.style.background = "#d4edda";
-        msgDiv.style.borderLeftColor = "#28a745";
+        msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Doctor available today. Choose a slot below.`;
+        msgDiv.style.color = "#155724"; msgDiv.style.background = "#d4edda"; msgDiv.style.borderLeftColor = "#28a745";
         msgDiv.style.display = "block";
         
-        timeInput.disabled = false;
-        timeInput.type = "text"; 
-        timeInput.setAttribute("min", inTime);
-        timeInput.setAttribute("max", outTime);
-        timeInput.value = ""; 
-        timeInput.dataset.val24 = "";
+        // 🌟 GENERATING SLOTS 🌟
+        let slotDuration = parseInt(selectedDoctor.slot_duration) || 15; // default 15 mins
+        generateTimeSlots(inTime, outTime, slotDuration, container);
+        
     } else {
         msgDiv.innerHTML = `<i class="fas fa-times-circle"></i> Not available for ${typeVal} consultation on this day.`;
-        msgDiv.style.color = "#721c24";
-        msgDiv.style.background = "#f8d7da";
-        msgDiv.style.borderLeftColor = "#dc3545";
+        msgDiv.style.color = "#721c24"; msgDiv.style.background = "#f8d7da"; msgDiv.style.borderLeftColor = "#dc3545";
         msgDiv.style.display = "block";
-        timeInput.disabled = true;
-        timeInput.type = "text";
-        timeInput.value = "";
-        timeInput.dataset.val24 = "";
+        container.innerHTML = `<div style="font-size: 13px; color: #dc2626; font-weight: bold;">No slots available.</div>`;
+    }
+}
+
+function generateTimeSlots(start, end, durationMins, container) {
+    container.innerHTML = "";
+    let [startH, startM] = start.split(':').map(Number);
+    let [endH, endM] = end.split(':').map(Number);
+    
+    let startTime = new Date(); startTime.setHours(startH, startM, 0, 0);
+    let endTime = new Date(); endTime.setHours(endH, endM, 0, 0);
+    
+    let currentTime = new Date(startTime);
+    let slotsFound = 0;
+
+    // Time loop to create buttons
+    while (currentTime < endTime) {
+        let h = currentTime.getHours().toString().padStart(2, '0');
+        let m = currentTime.getMinutes().toString().padStart(2, '0');
+        let val24 = `${h}:${m}`;
+        let display12 = formatTime12H(val24);
+        
+        // Creating Button
+        let btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "slot-btn";
+        btn.innerText = display12;
+        btn.dataset.val24 = val24;
+        
+        btn.onclick = function() {
+            // Remove active class from all
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+            // Add to clicked
+            this.classList.add('active');
+            document.getElementById("apptTime").value = this.dataset.val24; // Save 24h format to hidden input
+        };
+        
+        container.appendChild(btn);
+        
+        // Increase time by slot duration
+        currentTime.setMinutes(currentTime.getMinutes() + durationMins);
+        slotsFound++;
+    }
+
+    if(slotsFound === 0) {
+        container.innerHTML = `<div style="font-size: 13px; color: #dc2626;">Doctor's working hours are shorter than one slot.</div>`;
     }
 }
 

@@ -3,6 +3,34 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let allDoctors = [];
 let allAppointments = [];
 
+// ✨ NAYE CHART VARIABLES ✨
+let adminApptChart = null; 
+let adminRevenueChart = null; 
+Chart.register(ChartDataLabels);
+
+// ✨ TOAST NOTIFICATION LOGIC ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { 
+        container = document.createElement('div'); 
+        container.id = 'toast-container'; 
+        container.style = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px;";
+        document.body.appendChild(container); 
+    }
+    const toast = document.createElement('div');
+    let bgColor = type === 'error' ? '#ef4444' : (type === 'info' ? '#3b82f6' : '#10b981');
+    let icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle';
+    toast.style = `background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 10px; animation: fadeInOut 3s forwards;`;
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    
+    let keyframes = document.createElement('style');
+    keyframes.innerHTML = `@keyframes fadeInOut { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }`;
+    document.head.appendChild(keyframes);
+
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
 window.onload = function() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -73,9 +101,11 @@ async function fetchAdminData() {
 
         if (apptsJson.status === "success") {
             allAppointments = apptsJson.data;
+            document.getElementById("adminApptStats").style.display = "grid"; // Show stats grid
             filterAppts(); 
             renderReviews();
             calculateLedger(); 
+            drawAdminCharts(); // ✨ CHARTS RENDER CALL ✨
         } else { console.error("Error loading appts: " + apptsJson.message); }
 
     } catch (error) {
@@ -215,6 +245,7 @@ async function updateStatus(docId, newStatus) {
         const resData = await res.json();
         
         if (resData.status === "success") { 
+            showToast(`Doctor ${docId} is now ${newStatus}`, "success");
             fetchAdminData(); 
         } 
         else { alert("Error: " + resData.message); }
@@ -298,6 +329,98 @@ function renderApptsTable(appts) {
             </tr>
         `;
     });
+}
+
+// ===============================================
+// ✨ CHARTS LOGIC (Admin Dashboard) ✨
+// ===============================================
+function drawAdminCharts() {
+    let pending = 0, approved = 0, completed = 0, cancelled = 0;
+    let revenueByDate = {};
+
+    allAppointments.forEach(appt => {
+        // Status Counting
+        if(appt.appt_status === "Pending") pending++;
+        else if(appt.appt_status === "Approved") approved++;
+        else if(appt.appt_status === "Completed") completed++;
+        else cancelled++;
+
+        // Revenue Calculation (BhavyaCare Commission 10%)
+        if(appt.appt_status === "Completed") {
+            let dateParts = appt.appt_date.split('-');
+            let dateStr = appt.appt_date;
+            if(dateParts.length === 3) dateStr = dateParts[0] + "-" + dateParts[1]; // DD-MM format
+
+            let totalMrp = parseInt(appt.total_mrp) || 0;
+            let earning = parseInt(appt.doctor_earning) || 0;
+            let collected = Math.round(totalMrp * 0.90); 
+            let platformFee = collected - earning; // 10% commission
+
+            if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
+            revenueByDate[dateStr] += platformFee;
+        }
+    });
+
+    // Update Stats Numbers
+    let statP = document.getElementById("adminStatPending");
+    let statA = document.getElementById("adminStatApproved");
+    let statC = document.getElementById("adminStatCompleted");
+    if(statP) statP.innerText = pending;
+    if(statA) statA.innerText = approved;
+    if(statC) statC.innerText = completed;
+
+    // 1. Doughnut Chart (Admin Overall Appts)
+    const ctx1 = document.getElementById('adminApptChart');
+    if(ctx1) {
+        if(adminApptChart) adminApptChart.destroy();
+        adminApptChart = new Chart(ctx1.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Approved', 'Completed', 'Cancelled'],
+                datasets: [{
+                    data: [pending, approved, completed, cancelled],
+                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } },
+                    datalabels: { color: '#fff', font: {weight: 'bold'}, formatter: (v) => v > 0 ? v : '' }
+                }
+            }
+        });
+    }
+
+    // 2. Bar Chart (Platform Commission)
+    let labels = Object.keys(revenueByDate).reverse();
+    let dataVals = Object.values(revenueByDate).reverse();
+
+    const ctx2 = document.getElementById('adminRevenueChart');
+    if(ctx2) {
+        if(adminRevenueChart) adminRevenueChart.destroy();
+        adminRevenueChart = new Chart(ctx2.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels.length > 0 ? labels : ['No Data'],
+                datasets: [{
+                    label: 'Platform Commission (₹)',
+                    data: dataVals.length > 0 ? dataVals : [0],
+                    backgroundColor: '#0056b3',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { align: 'end', anchor: 'end', color: '#0056b3', font: {weight: 'bold'}, formatter: (v) => v > 0 ? '₹'+v : '' }
+                },
+                scales: { y: { display: false } }
+            }
+        });
+    }
 }
 
 // ===============================================

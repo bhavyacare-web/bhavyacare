@@ -337,9 +337,7 @@ function renderApptsTable(appts) {
     });
 }
 
-// ===============================================
-// ✨ NEW: DOCTOR VERIFICATIONS LOGIC ✨
-// ===============================================
+// ✨ FIXED: renderSettlements function ✨
 function renderSettlements() {
     const statusFilter = document.getElementById("verifyStatusFilter").value;
     const tbody = document.getElementById("settlementsBody");
@@ -356,9 +354,10 @@ function renderSettlements() {
         let badge = s.status === "Verified" ? `<span class="status-badge bg-success">✔ Verified</span>` : `<span class="status-badge bg-warning">Pending</span>`;
         let actionBtn = s.status === "Pending" 
             ? `<button class="btn btn-approve" style="margin:0; width:auto;" onclick="verifySettlement('${s.settlement_id}', '${s.doctor_id}')">Approve Payment</button>`
-            : `<span style="font-size:12px; color:#666;">Approved on ${s.verified_date.substring(0, 10)}</span>`;
+            : `<span style="font-size:12px; color:#666;">Approved on ${String(s.verified_date).substring(0, 10)}</span>`;
 
-        let dateStr = new Date(s.payment_date).toLocaleDateString();
+        // FIXED: Invalid Date hatane ke liye direct sheet ki string use kar rahe hain
+        let dateStr = s.payment_date; 
 
         tbody.innerHTML += `
             <tr>

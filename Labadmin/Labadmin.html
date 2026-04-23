@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BhavyaCare - Super Admin Panel</title>
+    <title>BhavyaCare - Lab Master Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         * { box-sizing: border-box; }
@@ -16,7 +18,6 @@
         .header h1 { margin: 0; font-size: 24px; color: #1e293b; display: flex; align-items: center; gap: 10px;}
         .header i { color: #3b82f6; }
 
-        /* TABS CSS */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { padding: 12px 20px; border-radius: 8px; border: none; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); white-space: nowrap; }
         .tab-btn.active { background: #3b82f6; color: white; }
@@ -42,7 +43,6 @@
         .btn-red { background: #ef4444; } .btn-red:hover { background: #dc2626; }
         .btn-dark { background: #0f172a; } .btn-dark:hover { background: #1e293b; }
 
-        /* NAYA: MASTER ORDERS GRID & FILTERS */
         .controls-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); align-items: center;}
         .search-box { flex: 1; min-width: 250px; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
         .search-box:focus { border-color: #3b82f6; }
@@ -58,50 +58,48 @@
         .card-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;}
         .lab-tag { background: #e0e7ff; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-bottom: 10px; display: inline-block;}
         
-        /* LEDGER BOARD */
         .ledger-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .stat-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
         .stat-val { font-size: 28px; font-weight: 800; margin-top: 8px; }
         .stat-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;}
 
-        /* MODALS */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.7); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;}
         .modal { background: white; width: 100%; max-width: 800px; border-radius: 16px; padding: 30px; position: relative; margin: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
         .close-modal { position: absolute; top: 20px; right: 25px; font-size: 28px; cursor: pointer; color: #94a3b8; transition: 0.2s; line-height: 1;}
-        .close-modal:hover { color: #ef4444; }
         
         .section-title { font-size: 15px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;}
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;}
         .info-item label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; margin-bottom: 2px; text-transform: uppercase;}
         .info-item p, .info-item span { margin: 0; font-weight: 600; font-size: 14px; color: #1e293b;}
 
-        /* Docs & Images Links */
         .doc-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;}
         .doc-link { display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; color: #1d4ed8; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; border: 1px solid #bfdbfe; transition: 0.2s;}
-        .doc-link:hover { background: #dbeafe; transform: translateY(-2px);}
-
+        
         .action-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 12px; margin-top: 25px;}
         .loadingMsg { text-align: center; padding: 40px; font-size: 18px; color: #64748b; font-weight: 600;}
 
-        /* Utilities */
-        .cart-item { display: flex; justify-content: space-between; padding: 10px 15px; background: #fff; border-radius: 8px; margin-bottom: 8px; font-size: 14px; border: 1px solid #e2e8f0;}
-        .bill-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #475569;}
-        .bill-total { font-weight: 800; font-size: 18px; color: #0f172a; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #cbd5e1;}
+        /* ✨ TOAST CSS ✨ */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px;}
+        .toast { background: #1e293b; color: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: #10b981; } .toast.error { background: #ef4444; } .toast.info { background: #3b82f6; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1><i class="fas fa-chess-king"></i> Super Admin Panel</h1>
-        <div style="font-weight: 600; color: #475569; display: flex; gap:15px; align-items: center;">
-            <span id="autoRefreshStatus" style="font-size:12px; color:#10b981;"><i class="fas fa-circle" style="font-size:8px; vertical-align:middle;"></i> Auto-Sync On</span>
-            <span>BhavyaCare Master Control</span>
+        <h1><i class="fas fa-microscope"></i> Lab Master Panel</h1>
+        <div>
+            <button class="btn btn-dark" onclick="window.location.href='../admin.html'">Back to Home</button>
+            <button class="btn btn-blue" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
         </div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('allOrdersTab', this)"><i class="fas fa-boxes"></i> Master Orders</button>
         <button class="tab-btn" onclick="switchTab('ledgerTab', this)"><i class="fas fa-file-invoice-dollar"></i> Settlement Ledger</button>
+        <button class="tab-btn" onclick="switchTab('verificationsTab', this)"><i class="fas fa-check-double"></i> Verifications</button>
         <button class="tab-btn" onclick="switchTab('manageLabs', this)"><i class="fas fa-hospital"></i> Manage Labs</button>
         <button class="tab-btn" onclick="switchTab('serviceReqs', this)"><i class="fas fa-bell"></i> Service Requests <span id="reqBadge" style="background:#ef4444; color:white; padding:2px 8px; border-radius:10px; font-size:11px; display:none;">New</span></button>
     </div>
@@ -130,7 +128,7 @@
     <div id="ledgerTab" class="tab-content">
         <div class="controls-bar">
             <select id="ledgerLabFilter" class="lab-select">
-                <option value="ALL">All Registered Labs (Total Platform Earning)</option>
+                <option value="ALL">All Registered Labs (Total Earning)</option>
             </select>
             <div style="display:flex; gap:10px; align-items:center;">
                 <span style="font-size:13px; font-weight:600; color:#64748b;">From:</span>
@@ -174,11 +172,27 @@
                             <th style="padding:12px; text-align:right;">Collected</th>
                             <th style="padding:12px; text-align:right;">Bhavya Fee</th>
                             <th style="padding:12px; text-align:right;">Lab Earning</th>
+                            <th style="padding:12px; text-align:center;">Payout Status</th>
+                            <th style="padding:12px; text-align:center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="adminLedgerTableBody"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div id="verificationsTab" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin-top:0;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Payout Verifications</h2>
+            <div style="width: 250px;">
+                <select id="verifyStatusFilter" class="search-box" onchange="renderVerifications()" style="font-weight: bold; width:100%;">
+                    <option value="Pending">Pending Approvals</option>
+                    <option value="Verified">Already Verified</option>
+                </select>
+            </div>
+        </div>
+        <div id="verificationContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
         </div>
     </div>
 
@@ -222,7 +236,7 @@
             </div>
 
             <div class="section-title">Requested Services</div>
-            <div id="mItemsList"></div>
+            <div id="mItemsList" style="margin-bottom: 20px;"></div>
 
             <div class="section-title">Admin Financial Breakdown</div>
             <div class="info-grid" style="background:#fffbeb; border-color:#fef08a;">
@@ -247,8 +261,7 @@
             </div>
             
             <div class="section-title">Documents & Images</div>
-            <div class="doc-grid" id="modalDocs">
-                </div>
+            <div class="doc-grid" id="modalDocs"></div>
             
             <div class="section-title">Account Verification</div>
             <select id="modalStatusSelect" style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-weight: 600; margin-bottom: 20px;">

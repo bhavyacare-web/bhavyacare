@@ -381,6 +381,9 @@ function clearLedgerFilters() {
     renderLedger();
 }
 
+// ==========================================
+// ✨ FIX 3: RENDER LEDGER (Manual Override sync) ✨
+// ==========================================
 function renderLedger() {
     const pharmaVal = document.getElementById("ledgerPharmaFilter").value;
     const startVal = document.getElementById("ledgerStartDate").value;
@@ -414,12 +417,14 @@ function renderLedger() {
 
         sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumBhavya += comm;
 
-        let payoutStatus = o.payout_status || "Pending";
-        let payoutBadge = payoutStatus === "Paid" ? `<span class="badge" style="background:#d1fae5; color:#059669;">Paid</span>` : `<span class="badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
+        // 🚀 BADI FIX: Purane payout_status ki jagah, Naya payment_status use hoga
+        let payoutStatus = o.payment_status || "Due";
         
-        let payoutAction = payoutStatus === "Pending" ? 
+        let payoutBadge = payoutStatus === "Paid" ? `<span class="badge" style="background:#d1fae5; color:#059669;">Paid</span>` : `<span class="badge" style="background:#fef3c7; color:#d97706;">${payoutStatus}</span>`;
+        
+        let payoutAction = payoutStatus !== "Paid" ? 
             `<button class="btn btn-success" style="padding:6px 10px; font-size:11px;" onclick="togglePayout('${o.order_id}', 'Paid')">Mark Paid</button>` : 
-            `<button class="btn" style="background:#f1f5f9; color:#64748b; padding:6px 10px; font-size:11px;" onclick="togglePayout('${o.order_id}', 'Pending')">Mark Pending</button>`;
+            `<button class="btn" style="background:#f1f5f9; color:#64748b; padding:6px 10px; font-size:11px;" onclick="togglePayout('${o.order_id}', 'Due')">Mark Due</button>`;
 
         tbody.innerHTML += `
         <tr>
@@ -445,7 +450,6 @@ function renderLedger() {
         <td colspan="2"></td>
     </tr>`;
 }
-
 async function togglePayout(orderId, newStatus) {
     if(!confirm(`Mark payout for ${orderId} as ${newStatus}?`)) return;
     try {

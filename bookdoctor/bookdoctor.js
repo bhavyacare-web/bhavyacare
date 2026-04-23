@@ -258,6 +258,7 @@ function openSchedule(index) {
 
 function closeSchedule() { document.getElementById("scheduleModal").style.display = "none"; }
 
+// ✨ FIXED: attemptBook (Extra box ko hide karega) ✨
 function attemptBook(index) {
     const uid = localStorage.getItem("bhavya_user_id");
     const role = localStorage.getItem("bhavya_role");
@@ -287,22 +288,91 @@ function attemptBook(index) {
     }
     
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById("apptDate").type = "text"; 
+    document.getElementById("apptDate").type = "date"; // Fix: text ki jagah date
     document.getElementById("apptDate").value = "";
     document.getElementById("apptDate").setAttribute('min', today);
 
+    // ✨ YAHAN FIX KIYA HAI: Hidden ko hidden hi rehne do ✨
     const timeInput = document.getElementById("apptTime");
-    timeInput.type = "text";
-    timeInput.value = "";
-    timeInput.dataset.val24 = "";
-    timeInput.disabled = true;
+    timeInput.value = ""; 
+    timeInput.type = "hidden"; // Zaroori!
     
     document.getElementById("availabilityMsg").style.display = "none";
     document.getElementById("qrContainer").style.display = "none"; 
     
+    // Clear slots
+    document.getElementById("timeSlotsContainer").innerHTML = `<div style="font-size: 13px; color: #64748b; font-style: italic; background: #f8fafc; padding: 10px; border-radius: 8px; width: 100%;">Please select date and consult type first.</div>`;
+    
     selectConsultType("Offline"); 
     
     document.getElementById("bookingModal").style.display = "flex";
+}
+
+// ✨ FIXED: submitBooking (Purani validation hata di) ✨
+async function submitBooking() {
+    const form = document.getElementById("bookingForm");
+    if(!form.checkValidity()) { form.reportValidity(); return; }
+    
+    // Sirf value check karni hai
+    const timeInput = document.getElementById("apptTime");
+    const rawTime = timeInput.value; 
+    
+    if(!rawTime) {
+        alert("Please select a preferred time slot from the green buttons."); 
+        return;
+    }
+
+    const consultType = document.getElementById("consultType").value;
+    const rawDate = document.getElementById("apptDate").value;
+    const ssInput = document.getElementById("paymentScreenshot").files[0];
+    
+    if(consultType === "Online" && !ssInput) {
+        alert("Please upload the payment screenshot for online consultation."); return;
+    }
+
+    document.getElementById("submitBtn").style.display = "none";
+    document.getElementById("btnLoader").style.display = "block";
+
+    try {
+        let base64Img = ""; let mimeType = "";
+        if (ssInput) { base64Img = await getBase64(ssInput); mimeType = ssInput.type; }
+
+        let formattedDate = rawDate.split('-').reverse().join('-');
+        let formattedTime = formatTime12H(rawTime);
+
+        const payload = {
+            action: "bookAppointment",
+            data: {
+                patient_id: localStorage.getItem("bhavya_user_id"),
+                doctor_id: selectedDoctor.doctor_id,
+                doctor_name: selectedDoctor.doctor_name,
+                consult_type: consultType,
+                appt_date: formattedDate, 
+                appt_time: formattedTime, 
+                screenshot_base64: base64Img,
+                screenshot_mime: mimeType
+            }
+        };
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        const resData = await response.json();
+        if (resData.status === "success") {
+            alert("Booking Confirmed! You will be redirected to your dashboard.");
+            closeModal();
+            window.location.href = "../patient_dashboard/patient_dashboard.html";
+        } else {
+            alert("Error: " + resData.message);
+        }
+    } catch(e) {
+        alert("Failed to process booking.");
+    } finally {
+        document.getElementById("submitBtn").style.display = "block";
+        document.getElementById("btnLoader").style.display = "none";
+    }
 }
 
 function selectConsultType(type) {

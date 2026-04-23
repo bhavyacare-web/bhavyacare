@@ -291,9 +291,18 @@
         </div>
     </div>
 <div id="verifications" class="tab-content">
-            <h2 style="margin-top:0;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Pending Payout Verifications</h2>
-            <div id="verificationContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin-top:0;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Payout Verifications</h2>
+                <div style="width: 250px;">
+                    <select id="verifyStatusFilter" class="filter-input" onchange="renderVerifications()" style="font-weight: bold;">
+                        <option value="Pending">Pending Approvals</option>
+                        <option value="Verified">Already Verified</option>
+                    </select>
                 </div>
+            </div>
+            
+            <div id="verificationContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            </div>
         </div>
     <script src="pharmacyadmin.js"></script>
 </body>

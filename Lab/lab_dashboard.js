@@ -1,15 +1,26 @@
-// ==========================================
-// lab_dashboard.js
-// Logic for fetching and managing lab orders
-// ==========================================
-
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
 let allOrders = [];
 let currentFilteredOrders = []; 
 let currentOrder = null;
 
-// CRASH-PROOF HELPERS
+let labOrderChart = null;
+let labRevenueChart = null;
+Chart.register(ChartDataLabels);
+
+// ✨ TOAST NOTIFICATION ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'fa-check-circle'; 
+    if(type === 'error') icon = 'fa-exclamation-circle'; else if(type === 'info') icon = 'fa-info-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
 function safeSetText(id, text) { let el = document.getElementById(id); if (el) el.innerText = text; }
 function safeSetHTML(id, html) { let el = document.getElementById(id); if (el) el.innerHTML = html; }
 
@@ -46,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     fetchOrders(userId);
+
+    // Payout Form Listener
+    document.getElementById("payoutForm").addEventListener("submit", submitLabCommission);
 });
 
 function fetchOrders(userId) {
@@ -62,6 +76,7 @@ function fetchOrders(userId) {
             allOrders = data.data;
             currentFilteredOrders = [...allOrders]; 
             renderOrders();
+            calculateLabStatsAndCharts(); 
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
             let grid = document.getElementById("ordersGrid");
@@ -89,7 +104,7 @@ function renderOrders() {
     if(!grid) return;
     
     if(currentFilteredOrders.length === 0) {
-        grid.innerHTML = `<div style="padding:40px; text-align:center; width:100%; color:#64748b; grid-column: 1/-1;">No orders found in this category.</div>`;
+        grid.innerHTML = `<div style="padding:40px; text-align:center; width:100%; color:#64748b; grid-column: 1/-1;">No orders found.</div>`;
         return;
     }
 
@@ -102,7 +117,11 @@ function renderOrders() {
         else if(statusText === "COMPLETED") statusClass = "badge-completed";
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
 
-        let payClass = order.payment_status === "COMPLETED" ? "badge-paid" : "badge-due";
+        let payClass = "badge-due";
+        let payText = "DUE";
+        if(order.payment_status === "COMPLETED" || order.payment_status === "Paid") { payClass = "badge-paid"; payText = "PAID"; }
+        else if(order.payment_status === "Verification Pending") { payClass = "badge-verifying"; payText = "VERIFYING"; }
+
         let dtStr = formatDateTime(order.date);
         let slotStr = formatDateTime(order.slot);
 
@@ -121,11 +140,144 @@ function renderOrders() {
             
             <div class="badges-row">
                 <span class="badge ${statusClass}">${statusText}</span>
-                <span class="badge ${payClass}">Pay: ${order.payment_status}</span>
+                <span class="badge ${payClass}">Pay: ${payText}</span>
             </div>
         `;
         grid.appendChild(card);
     });
+}
+
+// ✨ STATS & CHARTS ✨
+function calculateLabStatsAndCharts() {
+    let totalTests = 0, netEarnings = 0, totalDues = 0;
+    let pending = 0, active = 0, completed = 0, cancelled = 0;
+    let revByDate = {};
+
+    allOrders.forEach(o => {
+        let s = o.status ? o.status.toUpperCase() : "PENDING";
+        if(s === "COMPLETED") {
+            completed++;
+            totalTests += (o.cart_items ? JSON.parse(o.cart_items).length : 1);
+            netEarnings += Number(o.lab_earning || 0);
+
+            // Dues Calculation
+            let payStat = o.payment_status ? o.payment_status.toUpperCase() : "";
+            if(payStat === "DUE" || payStat === "") {
+                totalDues += Number(o.bhavya_commission || 0);
+            }
+
+            // Chart Data
+            let dObj = new Date(o.date);
+            let dStr = `${dObj.getDate()}/${dObj.getMonth()+1}`;
+            if(!revByDate[dStr]) revByDate[dStr] = 0;
+            revByDate[dStr] += Number(o.lab_earning || 0);
+
+        } else if (s === "ACTIVE" || s === "CONFIRMED") active++;
+        else if (s === "CANCELLED") cancelled++;
+        else pending++;
+    });
+
+    safeSetText("statTests", totalTests);
+    safeSetText("statEarnings", "₹" + netEarnings.toFixed(2));
+    safeSetText("statDues", "₹" + totalDues.toFixed(2));
+
+    const btnContainer = document.getElementById("payDuesBtnContainer");
+    if(btnContainer) {
+        if(totalDues > 0) {
+            btnContainer.innerHTML = `<button class="btn" style="background:white; color:#0f172a; padding:8px 16px; font-size:12px; font-weight:bold; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.2);" onclick="openPayoutModal(${totalDues})"><i class="fas fa-qrcode"></i> Pay Now</button>`;
+        } else {
+            let hasPendingVerif = allOrders.some(o => o.payment_status === "Verification Pending");
+            if(hasPendingVerif) btnContainer.innerHTML = `<span style="background:#f59e0b; color:white; padding:6px 12px; font-size:11px; border-radius:15px;"><i class="fas fa-hourglass-half"></i> Verification Pending</span>`;
+            else btnContainer.innerHTML = `<span style="color:#10b981; font-size:13px;"><i class="fas fa-check-circle"></i> All Cleared</span>`;
+        }
+    }
+
+    // DRAW CHARTS
+    if(document.getElementById('labOrderChart')) {
+        if(labOrderChart) labOrderChart.destroy();
+        labOrderChart = new Chart(document.getElementById('labOrderChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Active', 'Completed', 'Cancelled'],
+                datasets: [{ data: [pending, active, completed, cancelled], backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { color: '#fff', font: {weight:'bold'}, formatter: (v) => v>0?v:'' } } }
+        });
+    }
+
+    if(document.getElementById('labRevenueChart')) {
+        let labels = Object.keys(revByDate).reverse();
+        let dataVals = Object.values(revByDate).reverse();
+        if(labRevenueChart) labRevenueChart.destroy();
+        labRevenueChart = new Chart(document.getElementById('labRevenueChart'), {
+            type: 'bar',
+            data: { labels: labels.length>0?labels:['No Data'], datasets: [{ label: 'Earnings', data: dataVals.length>0?dataVals:[0], backgroundColor: '#10b981', borderRadius:4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { align:'end', anchor:'end', color:'#10b981', font:{weight:'bold'}, formatter:(v)=>v>0?'₹'+v:'' } }, scales: { y: { display: false } } }
+        });
+    }
+}
+
+// ✨ PAYOUT LOGIC ✨
+function openPayoutModal(amount) {
+    document.getElementById('modalPayAmount').innerText = "₹" + amount.toFixed(2);
+    const upiLink = `upi://pay?pa=bhavyacare@upi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`; // Website UPI
+    const container = document.getElementById("paymentContainer");
+    
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        container.innerHTML = `<a href="${upiLink}" class="btn btn-green" style="display:block; text-decoration:none;"><i class="fas fa-mobile-alt"></i> Tap to Pay via UPI App</a>`;
+    } else {
+        let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+        container.innerHTML = `<img src="${qrUrl}" style="width:160px; height:160px; border-radius:10px; border:2px solid #e2e8f0; padding:5px; background:white;"><p style="font-size:12px; color:#64748b; margin-top:10px;">Scan QR with phone.</p>`;
+    }
+    
+    document.getElementById("payoutScreenshot").value = "";
+    document.getElementById('payoutModal').style.display = "flex";
+}
+
+// ✨ IMAGE COMPRESSOR ✨
+function getBase64(fileId) {
+    return new Promise((resolve, reject) => {
+        const input = document.getElementById(fileId);
+        if (!input || !input.files || input.files.length === 0) { resolve(""); return; }
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+            if(file.size > 5 * 1024 * 1024) return reject("File size cannot exceed 5MB.");
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e);
+            return;
+        }
+        const reader = new FileReader(); reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image(); img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); let ctx = canvas.getContext('2d');
+                let width = img.width, height = img.height; const MAX_DIM = 1000; 
+                if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
+                else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+                canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL(file.type, 0.7).split(',')[1]); 
+            };
+        };
+        reader.onerror = e => reject(e);
+    });
+}
+
+async function submitLabCommission(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSubmitPayout");
+    const amountStr = document.getElementById("modalPayAmount").innerText.replace('₹', '');
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`; btn.disabled = true;
+    
+    try {
+        let base64Img = await getBase64("payoutScreenshot"); 
+        let payload = { action: "submitLabPayoutRequest", lab_id: localStorage.getItem("bhavya_user_id"), amount: amountStr, screenshot_base64: base64Img, screenshot_mime: document.getElementById("payoutScreenshot").files[0].type };
+        let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        let data = await res.json();
+        
+        if(data.status === "success") { showToast("Receipt submitted to Admin!", "success"); document.getElementById('payoutModal').style.display = 'none'; fetchOrders(localStorage.getItem("bhavya_user_id")); } 
+        else { showToast(data.message, "error"); }
+    } catch(e) { showToast("Error uploading receipt", "error"); }
+    finally { btn.innerHTML = `<i class="fas fa-upload"></i> Submit Receipt`; btn.disabled = false; }
 }
 
 function openOrderModal(index) {
@@ -151,9 +303,11 @@ function openOrderModal(index) {
 
     let paySpan = document.getElementById("mPayStatus");
     if(paySpan) {
-        paySpan.innerText = "Payment: " + o.payment_status;
-        paySpan.className = "badge";
-        paySpan.classList.add(o.payment_status === "COMPLETED" ? "badge-paid" : "badge-due");
+        let psText = "DUE"; let psClass = "badge-due";
+        if(o.payment_status === "COMPLETED" || o.payment_status === "Paid") { psText = "PAID"; psClass = "badge-paid"; }
+        else if(o.payment_status === "Verification Pending") { psText = "VERIFYING"; psClass = "badge-verifying"; }
+        paySpan.innerText = "Payment: " + psText;
+        paySpan.className = "badge " + psClass;
     }
 
     let itemsArr = [];
@@ -161,9 +315,7 @@ function openOrderModal(index) {
     try {
         if(o.cart_items) {
             itemsArr = JSON.parse(o.cart_items);
-            itemsArr.forEach(item => {
-                itemsHTML += `<div class="cart-item"><div class="item-name">${item.qty}x ${item.service_name}</div><div class="item-price">₹${item.price}</div></div>`;
-            });
+            itemsArr.forEach(item => { itemsHTML += `<div class="cart-item"><div class="item-name">${item.qty}x ${item.service_name}</div><div class="item-price">₹${item.price}</div></div>`; });
         } else { itemsHTML = "<i>No items found</i>"; }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     safeSetHTML("mItemsList", itemsHTML);
@@ -244,10 +396,10 @@ function openOrderModal(index) {
                     <div style="font-weight:600; margin-top:20px; margin-bottom:10px;">${(onlineArr.length > 0 || handArr.length > 0) ? 'Add Another Report:' : 'Provide Report & Complete Order:'}</div>
                     <select id="reportType" class="input-box" onchange="toggleReportInput()" style="margin-bottom: 15px;">
                         <option value="">Select Report Type</option>
-                        <option value="Online">Online (Upload PDF)</option>
+                        <option value="Online">Online (Upload PDF/Image)</option>
                         <option value="In Hand">In Hand (Physical Copy)</option>
                     </select>
-                    <input type="file" id="reportPdfFile" class="input-box" accept=".pdf" style="display:none; margin-bottom: 15px;">
+                    <input type="file" id="reportPdfFile" class="input-box" accept=".pdf,image/*" style="display:none; margin-bottom: 15px;">
                     ${checksHTML}
                     <button class="btn btn-blue" style="width:100%; margin-top:5px;" onclick="submitReport()"><i class="fas fa-save"></i> Save & Mark Completed</button>
                 </div>`;
@@ -290,7 +442,7 @@ function submitAction(actionType) {
         let reasonEl = document.getElementById("cancelReason");
         if(!reasonEl) return;
         let reason = reasonEl.value.trim();
-        if(!reason) return alert("Please type a cancellation reason.");
+        if(!reason) { showToast("Please type a cancellation reason.", "error"); return; }
         payload.cancel_reason = reason;
     }
     callApi(payload);
@@ -308,23 +460,19 @@ async function submitReport() {
     let typeEl = document.getElementById("reportType");
     if(!typeEl) return;
     let rType = typeEl.value;
-    if(!rType) return alert("Please select a Report Type.");
+    if(!rType) { showToast("Please select a Report Type.", "error"); return; }
+    
     let payload = { action: "processLabOrderAction", order_id: currentOrder.order_id, action_type: "UploadReport", report_type: rType };
 
     if(rType === "Online") {
-        let fileInput = document.getElementById("reportPdfFile");
-        if(!fileInput || fileInput.files.length === 0) return alert("Please select a PDF file to upload.");
-        let file = fileInput.files[0];
-        if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
         try {
-            let base64 = await new Promise((res, rej) => {
-                let reader = new FileReader(); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = e => rej(e); reader.readAsDataURL(file);
-            });
+            let base64 = await getBase64("reportPdfFile"); // ✨ SMART COMPRESSOR IN USE ✨
             payload.base64Pdf = base64;
-        } catch(e) { return alert("Error reading file."); }
+            payload.mimeType = document.getElementById("reportPdfFile").files[0].type;
+        } catch(e) { showToast(e, "error"); return; }
     } else if (rType === "In Hand") {
         let checkboxes = document.querySelectorAll(".in-hand-chk:checked");
-        if(checkboxes.length === 0) return alert("Please select at least one service to mark as In-Hand.");
+        if(checkboxes.length === 0) { showToast("Select at least one service.", "error"); return; }
         let selectedServices = []; checkboxes.forEach(chk => selectedServices.push(chk.value));
         payload.in_hand_services = selectedServices;
     }
@@ -346,39 +494,34 @@ function callApi(payload) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") { 
-            alert(data.message); 
-            // 🌟 NAYA: TURANT REFRESH AFTER ANY ACTION 🌟
-            window.location.reload();
+            showToast(data.message, "success"); 
+            setTimeout(() => { window.location.reload(); }, 1500);
         } 
-        else { alert("Error: " + data.message); if(actionArea) actionArea.innerHTML = originalHTML; }
-    }).catch(err => { alert("Network Error occurred!"); if(actionArea) actionArea.innerHTML = originalHTML; })
+        else { showToast("Error: " + data.message, "error"); if(actionArea) actionArea.innerHTML = originalHTML; }
+    }).catch(err => { showToast("Network Error occurred!", "error"); if(actionArea) actionArea.innerHTML = originalHTML; })
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
 }
 
 function logout() {
     if(confirm("Are you sure you want to logout from BhavyaCare?")) {
-        localStorage.removeItem("bhavya_user_id");
-        localStorage.removeItem("bhavya_name");
-        localStorage.removeItem("bhavya_role");
+        localStorage.clear();
         window.location.href = "../index.html"; 
     }
 }
 
-// ==========================================
-// 🌟 TABS, LEDGER AUR PDF LOGIC 🌟
-// ==========================================
+// 🌟 LEDGER AUR PDF LOGIC 🌟
 function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     let targetTab = document.getElementById(tabId);
     if(targetTab) targetTab.classList.add('active');
     if(btn) btn.classList.add('active');
+    if(tabId === 'overviewTab') calculateLabStatsAndCharts();
 }
 
 function calculateLedger() {
     let startInput = document.getElementById("startDate");
     let endInput = document.getElementById("endDate");
-    
     if(!startInput || !endInput) return; 
 
     let start = new Date(startInput.value);
@@ -413,7 +556,6 @@ function calculateLedger() {
             </tr>`;
     });
 
-    // 🌟 NAYA: GRAND TOTAL ROW FOR PDF 🌟
     if (completedOrders.length > 0) {
         html += `
             <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #cbd5e1; font-size:14px;">
@@ -432,7 +574,7 @@ function calculateLedger() {
 
 function downloadPDF() {
     const element = document.getElementById('pdf-content');
-    if(!element) { alert("PDF content area missing!"); return; }
+    if(!element) { showToast("PDF content area missing!", "error"); return; }
     
     const labName = localStorage.getItem("bhavya_name") || "Lab";
     const opt = {

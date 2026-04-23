@@ -4,6 +4,29 @@ let allDoctorAppointments = [];
 let activeVideoCallApptId = null;
 let handledDocTriggers = new Set(); 
 
+// ✨ NAYE CHART VARIABLES ✨
+let docApptChart = null;
+let docRevenueChart = null;
+Chart.register(ChartDataLabels);
+
+// ✨ TOAST NOTIFICATION LOGIC ✨
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { 
+        container = document.createElement('div'); 
+        container.id = 'toast-container'; 
+        container.style = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px;";
+        document.body.appendChild(container); 
+    }
+    const toast = document.createElement('div');
+    let bgColor = type === 'error' ? '#ef4444' : (type === 'info' ? '#3b82f6' : '#10b981');
+    let icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle';
+    toast.style = `background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 10px; animation: fadeInOut 3s forwards;`;
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
 window.onload = function() {
     const role = localStorage.getItem("bhavya_role");
     const docName = localStorage.getItem("bhavya_name");
@@ -276,6 +299,9 @@ function renderAppointments(appointments) {
     document.getElementById("statPending").innerText = pendingCount;
     document.getElementById("statApproved").innerText = approvedCount;
     document.getElementById("statEarnings").innerText = totalEarnings;
+    
+    // ✨ YEH LINE ADD KAREIN ✨
+    drawDoctorCharts();
 }
 
 function renderReviews() {
@@ -590,4 +616,77 @@ function closeVideoCall() {
         document.getElementById("prescription-modal").style.display = "block";
     }
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
+}
+
+// ==========================================
+// ✨ CHARTS LOGIC (Doctor Dashboard) ✨
+// ==========================================
+function drawDoctorCharts() {
+    let pending = 0, approved = 0, completed = 0, cancelled = 0;
+    let revenueByDate = {};
+
+    allDoctorAppointments.forEach(appt => {
+        // Status Counting
+        if(appt.appt_status === "Pending") pending++;
+        else if(appt.appt_status === "Approved") approved++;
+        else if(appt.appt_status === "Completed") completed++;
+        else cancelled++;
+
+        // Revenue Calculation
+        if(appt.appt_status === "Completed") {
+            let dateStr = appt.cleanDate.substring(0, 5); // DD-MM format
+            let earn = parseInt(appt.doctor_earning) || 0;
+            if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
+            revenueByDate[dateStr] += earn;
+        }
+    });
+
+    // 1. Doughnut Chart (Status)
+    const ctx1 = document.getElementById('docApptChart').getContext('2d');
+    if(docApptChart) docApptChart.destroy();
+    docApptChart = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'Approved', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: [pending, approved, completed, cancelled],
+                backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } },
+                datalabels: { color: '#fff', font: {weight: 'bold'}, formatter: (v) => v > 0 ? v : '' }
+            }
+        }
+    });
+
+    // 2. Bar Chart (Revenue)
+    let labels = Object.keys(revenueByDate).reverse();
+    let dataVals = Object.values(revenueByDate).reverse();
+
+    const ctx2 = document.getElementById('docRevenueChart').getContext('2d');
+    if(docRevenueChart) docRevenueChart.destroy();
+    docRevenueChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Data'],
+            datasets: [{
+                label: 'Earnings (₹)',
+                data: dataVals.length > 0 ? dataVals : [0],
+                backgroundColor: '#28a745',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: { align: 'end', anchor: 'end', color: '#28a745', font: {weight: 'bold'}, formatter: (v) => v > 0 ? '₹'+v : '' }
+            },
+            scales: { y: { display: false } } // Hide Y-axis
+        }
+    });
 }

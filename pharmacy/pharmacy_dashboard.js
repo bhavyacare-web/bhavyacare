@@ -3,17 +3,14 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let globalPharmacyOrders = [];
 let remindedOrders = new Set(); 
 let myOrderStatusChart = null; 
-let myRevenueChart = null; // ✨ NAYA REVENUE CHART VARIABLE ✨
+let myRevenueChart = null; 
 
-// Register Chart DataLabels Plugin for numbers
 Chart.register(ChartDataLabels);
 
-// Profile Variables
 let profPincodeList = [];
 let profCityList = [];
 const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-// ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
@@ -47,7 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("profileUpdateForm").addEventListener("submit", submitProfileUpdate);
     document.getElementById("completeOrderForm").addEventListener("submit", submitCompleteOrder); 
 
-    // Auto Refresh Check
+    // Payout Form Submit (Naya Logic)
+    document.getElementById("payoutForm").addEventListener("submit", submitPayoutFormRecord);
+
     setInterval(() => checkDeliveryReminders(globalPharmacyOrders), 60000); 
 });
 
@@ -63,7 +62,6 @@ function showSection(sectionId, btn) {
     if(sectionId === 'profileSection') fetchPharmacyProfile();
 }
 
-// ✨ 1. TIMINGS SETUP (Ensure IDs are correct) ✨
 function setupProfileTimings() {
     const container = document.getElementById("profTimingsContainer");
     container.innerHTML = "";
@@ -86,9 +84,7 @@ function setupProfileTimings() {
     });
 }
 
-// ✨ FETCH PROFILE (Safe Rendering) ✨
 function fetchPharmacyProfile() {
-    console.log("--- Fetching Profile Data ---");
     const btn = document.getElementById("btnUpdateProfile");
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
 
@@ -101,13 +97,9 @@ function fetchPharmacyProfile() {
     })
     .then(res => res.json())
     .then(resData => {
-        console.log("Raw Response From Backend:", resData);
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
-
         if (resData.status === "success") {
             const p = resData.data;
-
-            // 1. Pincodes Setup
             if (p.available_pincode) {
                 try {
                     let parsed = JSON.parse(p.available_pincode);
@@ -116,48 +108,33 @@ function fetchPharmacyProfile() {
                     profPincodeList = p.available_pincode.toString().split(',').map(x => x.trim()).filter(x => x !== "");
                 }
             }
-
-            // 2. Cities Setup
             if (p.available_city) {
                 profCityList = p.available_city.toString().split(',').map(x => x.trim()).filter(x => x !== "");
             }
+            updateProfTagsUI('pincode'); updateProfTagsUI('city');
 
-            updateProfTagsUI('pincode');
-            updateProfTagsUI('city');
-
-            // 3. Timings Setup
-            const daysArr = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-            daysArr.forEach(day => {
+            days.forEach(day => {
                 if (p.timings && p.timings[day]) {
                     let openInp = document.getElementById("prof_" + day + "_open");
                     let closeInp = document.getElementById("prof_" + day + "_close");
-                    
-                    if (openInp && p.timings[day].open) {
-                        openInp.value = formatToHHMM(p.timings[day].open);
-                    }
-                    if (closeInp && p.timings[day].close) {
-                        closeInp.value = formatToHHMM(p.timings[day].close);
-                    }
+                    if (openInp && p.timings[day].open) openInp.value = formatToHHMM(p.timings[day].open);
+                    if (closeInp && p.timings[day].close) closeInp.value = formatToHHMM(p.timings[day].close);
                 }
             });
 
             document.getElementById("currImg1").innerHTML = p.img1 ? `<a href="${p.img1}" target="_blank">View Image 1</a>` : "No image";
             document.getElementById("currImg2").innerHTML = p.img2 ? `<a href="${p.img2}" target="_blank">View Image 2</a>` : "No image";
-            
-            console.log("UI Update Complete!");
         } else {
             showToast(resData.message, "error");
         }
     })
     .catch(err => {
-        console.error("Fetch Error:", err);
         btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
     });
 }
-// ✨ Helper Function: Kisi bhi time string ko HH:mm mein convert karne ke liye ✨
+
 function formatToHHMM(timeStr) {
     if (!timeStr) return "";
-    // Agar time mein AM/PM hai (e.g. "09:00 AM"), toh use convert karein
     if (timeStr.includes(" ")) {
         let [time, modifier] = timeStr.split(" ");
         let [hours, minutes] = time.split(":");
@@ -165,7 +142,6 @@ function formatToHHMM(timeStr) {
         if (modifier.toLowerCase() === "pm") hours = parseInt(hours, 10) + 12;
         return `${hours.toString().padStart(2, '0')}:${minutes}`;
     }
-    // Agar pehle se "HH:mm:ss" hai, toh sirf pehle 5 characters lein
     return timeStr.substring(0, 5);
 }
 
@@ -192,24 +168,51 @@ function updateProfTagsUI(type) {
     list.forEach((item, index) => { wrapper.innerHTML += `<div class="tag">${item} <span onclick="removeProfTag('${type}', ${index})">×</span></div>`; });
 }
 
+// ✨ SMART IMAGE COMPRESSOR ✨
 function getBase64(fileId) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const input = document.getElementById(fileId);
         if (!input || !input.files || input.files.length === 0) { resolve(""); return; }
-        const reader = new FileReader(); reader.readAsDataURL(input.files[0]);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
+        
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+            if(file.size > 5 * 1024 * 1024) return reject("File size cannot exceed 5MB.");
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); 
+            reader.onerror = error => reject(error);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
+                let width = img.width, height = img.height;
+                const MAX_DIM = 1000; 
+
+                if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
+                else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+                
+                canvas.width = width; canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL(file.type, 0.7).split(',')[1]); 
+            };
+        };
+        reader.onerror = error => reject(error);
     });
 }
 
 async function submitProfileUpdate(e) {
     e.preventDefault();
-    
     if(profPincodeList.length === 0 || profCityList.length === 0) { 
-        showToast("At least 1 Delivery Pincode and City is required.", "error"); 
-        return; 
+        showToast("At least 1 Delivery Pincode and City is required.", "error"); return; 
     }
 
-    // ✨ NAYA CHECK: Kya timings fill hain? ✨
     let timingsMissing = false;
     days.forEach(day => {
         let open = document.getElementById("prof_"+day+"_open").value;
@@ -217,10 +220,7 @@ async function submitProfileUpdate(e) {
         if(!open || !close) timingsMissing = true;
     });
 
-    if(timingsMissing) {
-        showToast("Please fill all Working Timings before saving.", "error");
-        return;
-    }
+    if(timingsMissing) { showToast("Please fill all Working Timings before saving.", "error"); return; }
 
     const btn = document.getElementById("btnUpdateProfile"); 
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; btn.disabled = true;
@@ -235,39 +235,29 @@ async function submitProfileUpdate(e) {
             img2: await getBase64("profImg2")
         };
 
-        // Days ki values add karna
         days.forEach(day => {
             payload[day + "_opening_time"] = document.getElementById("prof_"+day+"_open").value;
             payload[day + "_closing_time"] = document.getElementById("prof_"+day+"_close").value;
         });
 
         const response = await fetch(GOOGLE_SCRIPT_URL, { 
-            method: "POST", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify(payload) 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) 
         });
-        
         const resData = await response.json();
 
         if (resData.status === "success") {
             showToast("Profile updated successfully!", "success");
-            // Wapas fetch karein taaki UI confirm ho jaye
             setTimeout(fetchPharmacyProfile, 500); 
         } else {
             showToast("Error: " + resData.message, "error"); 
         }
-    } catch (error) { 
-        showToast("Network error while updating profile.", "error"); 
-    } finally { 
-        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`; 
-        btn.disabled = false; 
-    }
+    } catch (error) { showToast("Network error while updating profile.", "error"); } 
+    finally { btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`; btn.disabled = false; }
 }
 
-// ✨ ADVANCED FETCH ORDERS ✨
 function fetchOrders() {
     const container = document.getElementById("ordersContainer");
-    container.innerHTML = `<div style="text-align: center; padding: 50px; color: #64748b;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><p>Loading your orders...</p></div>`;
+    if(container) container.innerHTML = `<div style="text-align: center; padding: 50px; color: #64748b;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><p>Loading your orders...</p></div>`;
 
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -276,29 +266,23 @@ function fetchOrders() {
     .then(async res => {
         if (!res.ok) throw new Error(`Server returned status: ${res.status}`);
         const text = await res.text();
-        try {
-            return JSON.parse(text); 
-        } catch (e) {
-            console.error("Backend sent HTML instead of JSON! Backend Error/Crash:", text);
-            throw new Error("JSON Parse Failed - Backend Deployment Issue");
-        }
+        try { return JSON.parse(text); } 
+        catch (e) { throw new Error("JSON Parse Failed"); }
     })
     .then(resData => {
         if (resData.status === "success") {
             globalPharmacyOrders = resData.data.orders;
             renderOrders(globalPharmacyOrders);
-            
-            renderOverviewDashboard(); // Chart Render
-            
-            if(document.getElementById('settlementsSection').classList.contains('active')) renderSettlements();
+            renderOverviewDashboard(); 
+            if(document.getElementById('settlementsSection') && document.getElementById('settlementsSection').classList.contains('active')) renderSettlements();
         } else {
-            container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
+            if(container) container.innerHTML = `<p style="text-align:center; color:red;">Error: ${resData.message}</p>`;
         }
     }).catch(err => { 
-        console.error("Fetch Error Trace:", err);
-        container.innerHTML = `<p style="text-align:center; color:red; font-weight:bold;">Network Error: Check console.</p>`; 
+        if(container) container.innerHTML = `<p style="text-align:center; color:red; font-weight:bold;">Network Error.</p>`; 
     });
 }
+
 function filterLiveOrders() {
     const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
     const statusVal = document.getElementById("statusFilter").value;
@@ -331,7 +315,8 @@ function clearOrderFilters() {
 }
 
 function renderOrders(orders) {
-    const container = document.getElementById("ordersContainer"); container.innerHTML = "";
+    const container = document.getElementById("ordersContainer"); if(!container) return;
+    container.innerHTML = "";
     if (!orders || orders.length === 0) { container.innerHTML = `<div style="text-align: center; padding: 50px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><h3>No Orders Found</h3><p style="color:#64748b;">Try changing your search filters.</p></div>`; return; }
 
     orders.forEach(order => {
@@ -477,7 +462,6 @@ function clearSettlementFilters() {
 
 function renderSettlements() { renderSettlementsList(globalPharmacyOrders.filter(o => o.patient_status === "Completed")); }
 
-// ✨ UPDATED: RENDER SETTLEMENTS (With Total Dues & Payment Button) ✨
 function renderSettlementsList(ordersToRender) {
     const container = document.getElementById("settlementList"); container.innerHTML = "";
     drawRevenueChart(ordersToRender);
@@ -485,13 +469,11 @@ function renderSettlementsList(ordersToRender) {
     let totalDueAmount = 0;
     let hasVerificationPending = false;
 
-    // Due amount calculate karna
     ordersToRender.forEach(o => {
         if (o.payment_status === "Due") totalDueAmount += parseFloat(o.bhavya_care_commission) || 0;
         if (o.payment_status === "Verification Pending") hasVerificationPending = true;
     });
 
-    // Top Dues Card Banner
     let duesCardHtml = `
     <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <div>
@@ -537,15 +519,11 @@ function renderSettlementsList(ordersToRender) {
     });
 }
 
-// ✨ NAYA: MODAL OPEN & SMART QR/LINK LOGIC ✨
 function openPayoutModal(amount) {
     document.getElementById('modalPayAmount').innerText = "₹" + amount.toFixed(2);
-    
-    // Aapki exact UPI ID
     const upiLink = `upi://pay?pa=8950112467@ptsbi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`;
     const container = document.getElementById("paymentContainer");
     
-    // Check if user is on Mobile or PC
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         container.innerHTML = `<a href="${upiLink}" class="btn" style="background:#10b981; color:white; display:block; text-decoration:none;"><i class="fas fa-mobile-alt"></i> Tap to Pay via UPI App</a>
         <p style="font-size:12px; color:#64748b; margin-top:10px;">Opens GPay, PhonePe, Paytm etc. directly.</p>`;
@@ -559,45 +537,54 @@ function openPayoutModal(amount) {
     document.getElementById('payoutModal').style.display = "flex";
 }
 
-// ✨ NAYA: SCREENSHOT SUBMIT HANDLER ✨
-document.getElementById("payoutForm").addEventListener("submit", async (e) => {
+// ✨ FIXED: SUBMIT PAYOUT WITH COMPRESSOR ✨
+async function submitPayoutFormRecord(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmitPayout");
+    const amountStr = document.getElementById("modalPayAmount").innerText.replace('₹', '');
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Securely...`; btn.disabled = true;
     
     try {
-        let base64Img = await getBase64("payoutScreenshot");
-        let payload = { action: "submitPayoutRequest", pharmacy_id: localStorage.getItem("bhavya_user_id"), screenshot_base64: base64Img };
-        let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+        let base64Img = await getBase64("payoutScreenshot"); 
+        const fileInput = document.getElementById("payoutScreenshot");
+        
+        let payload = { 
+            action: "submitPayoutRequest", 
+            pharmacy_id: localStorage.getItem("bhavya_user_id"), 
+            amount: amountStr,
+            screenshot_base64: base64Img,
+            screenshot_mime: fileInput.files[0].type
+        };
+        
+        let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         let data = await res.json();
         
         if(data.status === "success") {
-            showToast("Screenshot submitted for verification!", "success");
+            showToast("Payment submitted! Admin will verify soon.", "success");
             document.getElementById('payoutModal').style.display = 'none';
-            fetchOrders(); // Refresh table to show "Verification Pending"
+            document.getElementById("payoutForm").reset();
+            fetchOrders(); 
         } else {
             showToast(data.message, "error");
         }
     } catch(e) { showToast("Error uploading screenshot", "error"); }
     finally { btn.innerHTML = `<i class="fas fa-upload"></i> Submit for Verification`; btn.disabled = false; }
-});
-// ✨ NAYA LOGIC: BAR CHART FOR LEDGER ✨
+}
+
 function drawRevenueChart(orders) {
     const ctx = document.getElementById('revenueBarChart').getContext('2d');
     if (myRevenueChart) myRevenueChart.destroy();
 
-    // Grouping revenue by Date
     let revenueByDate = {};
     orders.forEach(o => {
         let d = new Date(o.order_date);
-        let dateStr = `${d.getDate()}/${d.getMonth()+1}`; // format: DD/MM
+        let dateStr = `${d.getDate()}/${d.getMonth()+1}`; 
         let share = parseFloat(o.pharma_profit_share) || 0;
-        
         if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
         revenueByDate[dateStr] += share;
     });
 
-    let labels = Object.keys(revenueByDate).reverse(); // Reverse to show oldest to newest
+    let labels = Object.keys(revenueByDate).reverse(); 
     let dataValues = Object.values(revenueByDate).reverse();
 
     myRevenueChart = new Chart(ctx, {
@@ -615,17 +602,12 @@ function drawRevenueChart(orders) {
             responsive: true,
             plugins: {
                 legend: { display: false },
-                datalabels: { // Numbers on top of the bars
-                    align: 'end',
-                    anchor: 'end',
-                    color: '#2563eb',
-                    font: { weight: 'bold' },
+                datalabels: { 
+                    align: 'end', anchor: 'end', color: '#2563eb', font: { weight: 'bold' },
                     formatter: (value) => { return value > 0 ? '₹' + value.toFixed(0) : ''; }
                 }
             },
-            scales: {
-                y: { beginAtZero: true, display: false } // Hide Y axis numbers to make it cleaner
-            }
+            scales: { y: { beginAtZero: true, display: false } } 
         }
     });
 }
@@ -661,10 +643,6 @@ function downloadSettlementPDF() {
     printWindow.document.write(html); printWindow.document.close();
     printWindow.onload = function() { printWindow.focus(); printWindow.print(); setTimeout(() => printWindow.close(), 100); };
 }
-
-// ==========================================
-// ✨ MODALS & API CALLS ✨
-// ==========================================
 
 function openProcessModal(orderId) { document.getElementById("processOrderId").value = orderId; document.getElementById("modalOrderId").innerText = "#" + orderId; document.getElementById("processModal").style.display = "flex"; }
 function closeModal() { document.getElementById("processModal").style.display = "none"; document.getElementById("processForm").reset(); }
@@ -713,14 +691,7 @@ async function submitCompleteOrder(e) {
     const btn = document.getElementById("btnSubmitComplete");
     
     if (!fileInput.files || fileInput.files.length === 0) { showToast("Please upload the medicine bill.", "error"); return; }
-
-    const fileSizeMB = fileInput.files[0].size / (1024 * 1024);
-    if (fileSizeMB > 3) {
-        showToast("File is too large! Please upload a file smaller than 3MB.", "error");
-        return;
-    }
-
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading securely (Takes 10-15s)...`; 
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading securely...`; 
     btn.disabled = true;
 
     try {
@@ -765,32 +736,6 @@ function checkDeliveryReminders(orders) {
     });
 }
 
-// ✨ HELPER: Time ko 24-hour format mein badalna ✨
-function formatToHHMM(timeStr) {
-    if (!timeStr) return "";
-    let str = String(timeStr).trim();
-    
-    // Agar time Google Date object bankar aa raha hai
-    if(str.includes("T") && str.includes("Z")) {
-         let d = new Date(str);
-         return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-    }
-    // Agar time AM/PM ke sath aa raha hai
-    if (str.toLowerCase().includes("m")) {
-        let [time, modifier] = str.split(" ");
-        let [hours, minutes] = time.split(":");
-        if(!minutes) minutes = "00";
-        if (hours === "12") hours = "00";
-        if (modifier && modifier.toLowerCase().includes("p")) hours = parseInt(hours, 10) + 12;
-        return `${hours.toString().padStart(2, '0')}:${minutes.substring(0,2)}`;
-    }
-    // Default 
-    return str.substring(0, 5);
-}
-
-// ==========================================
-// ✨ CHART.JS OVERVIEW & DATALABELS ✨
-// ==========================================
 function renderOverviewDashboard() {
     if (!globalPharmacyOrders) return;
 
@@ -838,7 +783,7 @@ function renderOverviewDashboard() {
                 datalabels: {
                     color: '#ffffff',
                     font: { weight: 'bold', size: 16 },
-                    formatter: (value) => { return value > 0 ? value : ''; } // Sirf tab dikhao agar value 0 se jyada ho
+                    formatter: (value) => { return value > 0 ? value : ''; } 
                 }
             },
             cutout: '60%' 

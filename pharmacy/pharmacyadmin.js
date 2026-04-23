@@ -557,44 +557,61 @@ function downloadAdminLedgerPDF() {
 }
 
 // ==========================================
-// ✨ NEW: ADMIN PAYOUT VERIFICATION LOGIC ✨
+// ✨ UPDATED: ADMIN PAYOUT VERIFICATION LOGIC ✨
 // ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
-    if(!container) return; // Guard clause if HTML not present
+    if(!container) return; 
     container.innerHTML = "";
     
-    const pendingSetl = allPharmacySettlements.filter(s => s.status === "Pending");
+    // Dropdown filter ki value read karna
+    const statusFilterElement = document.getElementById("verifyStatusFilter");
+    const statusFilter = statusFilterElement ? statusFilterElement.value : "Pending";
 
-    if(pendingSetl.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No pending verifications.</div>`;
+    // Sirf selected status wale data ko filter karna
+    const filteredSetl = allPharmacySettlements.filter(s => s.status === statusFilter);
+
+    if(filteredSetl.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No ${statusFilter.toLowerCase()} verifications found.</div>`;
         return;
     }
 
-    pendingSetl.forEach(data => {
+    filteredSetl.forEach(data => {
+        // Screenshot HTML
         let imgHtml = (data.screenshot_url && data.screenshot_url !== "N/A") 
             ? `<a href="${data.screenshot_url}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Receipt</a>` 
-            : `<p style="color:#dc2626; font-size:12px;">No screenshot uploaded</p>`;
+            : `<p style="color:#dc2626; font-size:12px; margin-top:15px; text-align:center;">No screenshot uploaded</p>`;
+
+        // Badge Status (Pending ya Verified)
+        let badgeHtml = statusFilter === "Verified" 
+            ? `<span class="badge" style="background:#d1fae5; color:#059669;">✔ Verified</span>`
+            : `<span class="badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
+
+        // Button Action (Agar pending hai toh Verify button, warna verified date)
+        let actionHtml = statusFilter === "Pending"
+            ? `<button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approvePharmacyPayout('${data.settlement_id}', '${data.pharmacy_id}')">
+                <i class="fas fa-check-circle"></i> Verify & Mark Paid
+               </button>`
+            : `<div style="margin-top:15px; padding:12px; background:#ecfdf5; border:1px dashed #10b981; border-radius:8px; text-align:center; color:#059669; font-weight:bold; font-size:13px;">
+                <i class="fas fa-check-double"></i> Verified on ${new Date(data.verified_date).toLocaleDateString('en-IN')}
+               </div>`;
 
         let card = `
         <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <h3 style="margin: 0; color: #0f172a;">${getPharmaName(data.pharmacy_id)}</h3>
-                <span class="badge" style="background:#fef3c7; color:#d97706;">Pending</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <h3 style="margin: 0; color: #0f172a; font-size:18px;">${getPharmaName(data.pharmacy_id)}</h3>
+                ${badgeHtml}
             </div>
-            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 13px;">ID: ${data.pharmacy_id} | SETL: ${data.settlement_id}</p>
+            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 12px;">ID: ${data.pharmacy_id} | SETL: ${data.settlement_id}</p>
             
             <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid</p>
+                <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid</p>
                 <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.amount}</h2>
                 <p style="font-size:11px; margin-top:5px; color:#888;">Paid on: ${new Date(data.payment_date).toLocaleDateString('en-IN')}</p>
             </div>
             
             ${imgHtml}
-            
-            <button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approvePharmacyPayout('${data.settlement_id}', '${data.pharmacy_id}')">
-                <i class="fas fa-check-circle"></i> Verify & Mark Paid
-            </button>
+            ${actionHtml}
         </div>`;
         container.innerHTML += card;
     });

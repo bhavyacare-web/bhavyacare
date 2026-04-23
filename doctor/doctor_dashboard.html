@@ -128,21 +128,23 @@
                 <div class="stat-card" style="border-color: #ffc107;"><h3>Pending</h3><p id="statPending">0</p></div>
                 <div class="stat-card" style="border-color: #17a2b8;"><h3>Upcoming</h3><p id="statApproved">0</p></div>
                 <div class="stat-card" style="border-color: #28a745;"><h3>Total Earnings</h3><p style="color:#28a745;">₹<span id="statEarnings">0</span></p></div>
+                
+                <div class="stat-card" style="border-color: #d32f2f; background: #fff5f5;">
+                    <h3>Outstanding Dues</h3>
+                    <p style="color:#d32f2f;">₹<span id="statDues">0</span></p>
+                    <button class="btn btn-noshow" style="margin-top:10px; font-size:11px; padding:5px 10px;" onclick="openDoctorPayModal()">Pay Commission</button>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
                 <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--primary);">
                     <h3 style="margin-top: 0; color: #333; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><i class="fas fa-chart-pie" style="color: var(--primary);"></i> Consultations Overview</h3>
-                    <div style="height: 220px; position: relative;">
-                        <canvas id="docApptChart"></canvas>
-                    </div>
+                    <div style="height: 220px; position: relative;"><canvas id="docApptChart"></canvas></div>
                 </div>
 
                 <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--success);">
                     <h3 style="margin-top: 0; color: #333; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><i class="fas fa-chart-line" style="color: var(--success);"></i> Earnings Trend (Last 7 Days)</h3>
-                    <div style="height: 220px; position: relative;">
-                        <canvas id="docRevenueChart"></canvas>
-                    </div>
+                    <div style="height: 220px; position: relative;"><canvas id="docRevenueChart"></canvas></div>
                 </div>
             </div>
 
@@ -323,8 +325,7 @@
         </div>
     </div>
 
-    <div id="doctor-trigger-modal" class="modal-overlay" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);">
-        </div>
+    <div id="doctor-trigger-modal" class="modal-overlay" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);"></div>
 
     <div id="doctor-reject-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('doctor-reject-modal').style.display='none'">✖</button>
@@ -341,6 +342,36 @@
             </select>
         </div>
         <button id="btnConfirmReject" style="background:var(--danger); width:100%; color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; margin-top:20px;" onclick="submitRejectBooking()">Confirm Cancel</button>
+    </div>
+
+    <div id="doctor-pay-modal" class="modal-overlay">
+        <button class="close-btn-modal" onclick="document.getElementById('doctor-pay-modal').style.display='none'">✖</button>
+        <div style="text-align: center;">
+            <h3 style="margin-bottom:5px;">Pay Platform Commission</h3>
+            <p style="font-size:12px; color:#666;">Scan QR or use UPI to pay your dues</p>
+            
+            <div style="background:#f8fafc; padding:15px; border-radius:12px; margin:15px 0;">
+                <p style="margin:0; font-size:14px;">Total Amount to Pay:</p>
+                <h2 style="margin:5px 0; color:#d32f2f;">₹<span id="payModalAmount">0</span></h2>
+                <p style="font-size:12px; color:#555;">UPI ID: <strong>bhavyacare@upi</strong></p>
+            </div>
+
+            <a id="doctorUpiDeepLink" href="#" class="btn btn-complete" style="display:block; text-decoration:none; margin-bottom:10px;">
+                <i class="fas fa-mobile-alt"></i> Pay via UPI App (Mobile Only)
+            </a>
+            
+            <div id="doctorQrContainer" style="margin-bottom:15px;">
+                <img id="doctorPayQr" src="" style="width:150px; height:150px; border:1px solid #ddd; border-radius:8px;">
+            </div>
+
+            <div class="form-group" style="text-align:left;">
+                <label>Upload Payment Screenshot *</label>
+                <input type="file" id="doctorPayScreenshot" class="input-box" accept="image/*">
+            </div>
+
+            <button id="btnSubmitDocPay" class="btn btn-approve" style="width:100%; padding:12px; margin-top:10px;" onclick="submitDocCommission()">Submit Payment Record</button>
+            <div id="docPayLoader" style="display:none; color:var(--primary); font-weight:bold; margin-top:10px;">Processing... ⏳</div>
+        </div>
     </div>
 
     <script src="doctor_dashboard.js"></script>

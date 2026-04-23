@@ -99,6 +99,7 @@ function filterOrders(status, btnElement) {
     renderOrders();
 }
 
+// 🚀 FIX: Orders Render with Verification Badge
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     if(!grid) return;
@@ -117,10 +118,12 @@ function renderOrders() {
         else if(statusText === "COMPLETED") statusClass = "badge-completed";
         else if(statusText === "CANCELLED") statusClass = "badge-cancelled";
 
+        let pStat = order.payment_status ? order.payment_status.toString().trim().toLowerCase() : "due";
         let payClass = "badge-due";
         let payText = "DUE";
-        if(order.payment_status === "COMPLETED" || order.payment_status === "Paid") { payClass = "badge-paid"; payText = "PAID"; }
-        else if(order.payment_status === "Verification Pending") { payClass = "badge-verifying"; payText = "VERIFYING"; }
+        
+        if(pStat === "completed" || pStat === "paid") { payClass = "badge-paid"; payText = "PAID"; }
+        else if(pStat === "verification pending" || pStat === "verifying") { payClass = "badge-verifying"; payText = "VERIFYING"; }
 
         let dtStr = formatDateTime(order.date);
         let slotStr = formatDateTime(order.slot);
@@ -147,26 +150,28 @@ function renderOrders() {
     });
 }
 
-// ✨ STATS & CHARTS ✨
+// 🚀 FIX: Smart Dues Calculation
 function calculateLabStatsAndCharts() {
-    let totalTests = 0, netEarnings = 0, totalDues = 0;
+    let totalTests = 0, netEarnings = 0, totalDues = 0, verifyingDues = 0;
     let pending = 0, active = 0, completed = 0, cancelled = 0;
     let revByDate = {};
 
     allOrders.forEach(o => {
-        let s = o.status ? o.status.toUpperCase() : "PENDING";
+        let s = o.status ? o.status.toString().trim().toUpperCase() : "PENDING";
         if(s === "COMPLETED") {
             completed++;
             totalTests += (o.cart_items ? JSON.parse(o.cart_items).length : 1);
             netEarnings += Number(o.lab_earning || 0);
 
-            // Dues Calculation
-            let payStat = o.payment_status ? o.payment_status.toUpperCase() : "";
-            if(payStat === "DUE" || payStat === "") {
-                totalDues += Number(o.bhavya_commission || 0);
+            let payStat = o.payment_status ? o.payment_status.toString().trim().toLowerCase() : "";
+            let commission = Number(o.bhavya_commission || 0);
+
+            if(payStat === "due" || payStat === "") {
+                totalDues += commission;
+            } else if (payStat === "verification pending" || payStat === "verifying") {
+                verifyingDues += commission;
             }
 
-            // Chart Data
             let dObj = new Date(o.date);
             let dStr = `${dObj.getDate()}/${dObj.getMonth()+1}`;
             if(!revByDate[dStr]) revByDate[dStr] = 0;
@@ -179,16 +184,20 @@ function calculateLabStatsAndCharts() {
 
     safeSetText("statTests", totalTests);
     safeSetText("statEarnings", "₹" + netEarnings.toFixed(2));
-    safeSetText("statDues", "₹" + totalDues.toFixed(2));
 
     const btnContainer = document.getElementById("payDuesBtnContainer");
     if(btnContainer) {
         if(totalDues > 0) {
+            safeSetText("statDues", "₹" + totalDues.toFixed(2));
             btnContainer.innerHTML = `<button class="btn" style="background:white; color:#0f172a; padding:8px 16px; font-size:12px; font-weight:bold; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.2);" onclick="openPayoutModal(${totalDues})"><i class="fas fa-qrcode"></i> Pay Now</button>`;
-        } else {
-            let hasPendingVerif = allOrders.some(o => o.payment_status === "Verification Pending");
-            if(hasPendingVerif) btnContainer.innerHTML = `<span style="background:#f59e0b; color:white; padding:6px 12px; font-size:11px; border-radius:15px;"><i class="fas fa-hourglass-half"></i> Verification Pending</span>`;
-            else btnContainer.innerHTML = `<span style="color:#10b981; font-size:13px;"><i class="fas fa-check-circle"></i> All Cleared</span>`;
+        } 
+        else if (verifyingDues > 0) {
+            safeSetText("statDues", "₹0.00");
+            btnContainer.innerHTML = `<span style="background:#f59e0b; color:white; padding:6px 12px; font-size:11px; border-radius:15px; display:inline-block; margin-top:5px;"><i class="fas fa-hourglass-half"></i> Verifying ₹${verifyingDues.toFixed(2)}</span>`;
+        } 
+        else {
+            safeSetText("statDues", "₹0.00");
+            btnContainer.innerHTML = `<span style="color:#10b981; font-size:13px; display:inline-block; margin-top:5px; font-weight:bold;"><i class="fas fa-check-circle"></i> All Cleared</span>`;
         }
     }
 
@@ -262,19 +271,28 @@ function getBase64(fileId) {
     });
 }
 
+// 🚀 FIX: DELAY RELOAD AFTER UPLOAD
 async function submitLabCommission(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmitPayout");
     const amountStr = document.getElementById("modalPayAmount").innerText.replace('₹', '');
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`; btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading Securely...`; btn.disabled = true;
     
     try {
         let base64Img = await getBase64("payoutScreenshot"); 
         let payload = { action: "submitLabPayoutRequest", lab_id: localStorage.getItem("bhavya_user_id"), amount: amountStr, screenshot_base64: base64Img, screenshot_mime: document.getElementById("payoutScreenshot").files[0].type };
+        
         let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         let data = await res.json();
         
-        if(data.status === "success") { showToast("Receipt submitted to Admin!", "success"); document.getElementById('payoutModal').style.display = 'none'; fetchOrders(localStorage.getItem("bhavya_user_id")); } 
+        if(data.status === "success") { 
+            showToast("Receipt submitted successfully!", "success"); 
+            document.getElementById('payoutModal').style.display = 'none'; 
+            document.getElementById("payoutForm").reset();
+            
+            // 1.5 seconds ka delay taaki backend sheet properly save ho jaye aur UI wapas "Pay Now" na dikhaye
+            setTimeout(() => { window.location.reload(); }, 1500); 
+        } 
         else { showToast(data.message, "error"); }
     } catch(e) { showToast("Error uploading receipt", "error"); }
     finally { btn.innerHTML = `<i class="fas fa-upload"></i> Submit Receipt`; btn.disabled = false; }
@@ -304,8 +322,11 @@ function openOrderModal(index) {
     let paySpan = document.getElementById("mPayStatus");
     if(paySpan) {
         let psText = "DUE"; let psClass = "badge-due";
-        if(o.payment_status === "COMPLETED" || o.payment_status === "Paid") { psText = "PAID"; psClass = "badge-paid"; }
-        else if(o.payment_status === "Verification Pending") { psText = "VERIFYING"; psClass = "badge-verifying"; }
+        let pStat = o.payment_status ? o.payment_status.toString().trim().toLowerCase() : "due";
+        
+        if(pStat === "completed" || pStat === "paid") { psText = "PAID"; psClass = "badge-paid"; }
+        else if(pStat === "verification pending" || pStat === "verifying") { psText = "VERIFYING"; psClass = "badge-verifying"; }
+        
         paySpan.innerText = "Payment: " + psText;
         paySpan.className = "badge " + psClass;
     }
@@ -466,7 +487,7 @@ async function submitReport() {
 
     if(rType === "Online") {
         try {
-            let base64 = await getBase64("reportPdfFile"); // ✨ SMART COMPRESSOR IN USE ✨
+            let base64 = await getBase64("reportPdfFile"); 
             payload.base64Pdf = base64;
             payload.mimeType = document.getElementById("reportPdfFile").files[0].type;
         } catch(e) { showToast(e, "error"); return; }

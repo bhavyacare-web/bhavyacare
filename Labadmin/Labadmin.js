@@ -514,7 +514,7 @@ function downloadAdminPDF() {
 }
 
 // ==========================================
-// ✨ NEW: LAB VERIFICATIONS TAB ✨
+// ✨ NEW: LAB VERIFICATIONS TAB (With Reject) ✨
 // ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
@@ -536,13 +536,29 @@ function renderVerifications() {
             ? `<a href="${data.screenshot_url}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Receipt</a>` 
             : `<p style="color:#dc2626; font-size:12px; margin-top:15px; text-align:center;">No screenshot uploaded</p>`;
 
-        let badgeHtml = statusFilter === "Verified" 
-            ? `<span class="status-badge" style="background:#d1fae5; color:#059669;">✔ Verified</span>`
-            : `<span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
+        let badgeHtml = "";
+        if (statusFilter === "Verified") badgeHtml = `<span class="status-badge" style="background:#d1fae5; color:#059669;">✔ Verified</span>`;
+        else if (statusFilter === "Rejected") badgeHtml = `<span class="status-badge" style="background:#fee2e2; color:#dc2626;">✖ Rejected</span>`;
+        else badgeHtml = `<span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
 
-        let actionHtml = statusFilter === "Pending"
-            ? `<button class="btn btn-green" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approveLabPayout('${data.settlement_id}', '${data.lab_id}')"><i class="fas fa-check-circle"></i> Verify & Mark Paid</button>`
-            : `<div style="margin-top:15px; padding:12px; background:#ecfdf5; border:1px dashed #10b981; border-radius:8px; text-align:center; color:#059669; font-weight:bold; font-size:13px;"><i class="fas fa-check-double"></i> Verified on ${new Date(data.verified_date).toLocaleDateString('en-IN')}</div>`;
+        let actionHtml = "";
+        if (statusFilter === "Pending") {
+            actionHtml = `
+            <div style="display:flex; gap:10px; margin-top: 15px;">
+                <button class="btn btn-green" style="flex:1; padding: 12px; font-size: 14px;" onclick="actionLabPayout('${data.settlement_id}', '${data.lab_id}', 'Verify')"><i class="fas fa-check-circle"></i> Verify</button>
+                <button class="btn btn-red" style="flex:1; padding: 12px; font-size: 14px;" onclick="actionLabPayout('${data.settlement_id}', '${data.lab_id}', 'Reject')"><i class="fas fa-times-circle"></i> Reject</button>
+            </div>`;
+        } else {
+            let remarksText = data.admin_remarks ? `<br><span style="color:#ef4444; font-size:11px;">Reason: ${data.admin_remarks}</span>` : "";
+            let colorClass = statusFilter === "Verified" ? "#059669" : "#dc2626";
+            let bgClass = statusFilter === "Verified" ? "#ecfdf5" : "#fef2f2";
+            let iconClass = statusFilter === "Verified" ? "fa-check-double" : "fa-ban";
+            
+            actionHtml = `<div style="margin-top:15px; padding:12px; background:${bgClass}; border:1px dashed ${colorClass}; border-radius:8px; text-align:center; color:${colorClass}; font-weight:bold; font-size:13px;">
+                <i class="fas ${iconClass}"></i> ${statusFilter} on ${new Date(data.verified_date).toLocaleDateString('en-IN')}
+                ${remarksText}
+            </div>`;
+        }
 
         let card = `
         <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
@@ -561,6 +577,33 @@ function renderVerifications() {
         </div>`;
         container.innerHTML += card;
     });
+}
+
+// ✨ UNIFIED ACTION HANDLER (VERIFY & REJECT) ✨
+async function actionLabPayout(settlementId, labId, actionType) {
+    let remarks = "";
+    if (actionType === "Reject") {
+        remarks = prompt("Enter reason for rejecting this payment:");
+        if (!remarks) { showToast("Rejection cancelled.", "info"); return; }
+    } else {
+        if(!confirm(`Verify payment ${settlementId} for Lab ${labId}? This clears their dues.`)) return;
+    }
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "processLabPayoutAction", 
+                settlement_id: settlementId, 
+                lab_id: labId,
+                action_type: actionType,
+                remarks: remarks
+            }) 
+        });
+        const res = await response.json();
+        if(res.status === "success") { showToast(res.message, "success"); refreshAllData(); } 
+        else { showToast(res.message, "error"); }
+    } catch(e) { showToast("Network error", "error"); }
 }
 
 async function approveLabPayout(settlementId, labId) {

@@ -3,13 +3,12 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 let pharmacyRegData = []; 
 let allPharmacies = [];   
 let allOrders = [];       
+let allPharmacySettlements = []; // ✨ NEW ✨
 
-// ✨ NAYE CHARTS VARIABLES & REGISTER ✨
 let adminOrderStatusChart = null;
 let adminRevenueChart = null;
 Chart.register(ChartDataLabels);
 
-// ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
@@ -40,9 +39,6 @@ async function refreshAllData() {
     showToast("Data refreshed successfully!", "success");
 }
 
-// ==========================================
-// ✨ REGISTRATIONS LOGIC ✨
-// ==========================================
 function format12HourTime(timeStr) {
     if (!timeStr || !timeStr.includes(':')) return timeStr || "Closed";
     let [hours, minutes] = timeStr.split(':');
@@ -174,24 +170,28 @@ function changeStatus(newStatus) {
     .catch(err => { showToast("Network error occurred.", "error"); btnAction.innerHTML = originalBtns; });
 }
 
-// ==========================================
-// ✨ ORDERS, LEDGER & CHARTS LOGIC ✨
-// ==========================================
-
+// ✨ UPDATED: FETCH ALL DATA INCLUDING SETTLEMENTS ✨
 async function fetchAllAdminData() {
     try {
-        const phRes = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getAllPharmacies" }) });
-        const phData = await phRes.json();
-        if(phData.status === "success") allPharmacies = phData.data;
+        const [phRes, ordRes, setlRes] = await Promise.all([
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getAllPharmacies" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getAllMedicineOrders" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getPharmacySettlementsAdmin" }) })
+        ]);
 
-        const ordRes = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getAllMedicineOrders" }) });
+        const phData = await phRes.json();
         const ordData = await ordRes.json();
+        const setlData = await setlRes.json();
+
+        if(phData.status === "success") allPharmacies = phData.data;
         if(ordData.status === "success") allOrders = ordData.data;
+        if(setlData.status === "success") allPharmacySettlements = setlData.data;
 
         populatePharmaDropdowns();
-        updateOverviewStats(); // Ye Function ab Charts bhi draw karega
+        updateOverviewStats(); 
         renderAllOrders();
         renderLedger();
+        renderVerifications(); // ✨ RENDER NEW TAB ✨
     } catch(err) { console.error("Error fetching admin data"); }
 }
 
@@ -209,9 +209,7 @@ function getPharmaName(id) {
     return p ? p.name : id;
 }
 
-// ✨ NAYA LOGIC: Numbers + Doughnut Chart + Bar Chart update karega ✨
 function updateOverviewStats() {
-    // 1. Basic Stats
     document.getElementById("statPharmacies").innerText = allPharmacies.length;
     document.getElementById("statOrders").innerText = allOrders.length;
     const completed = allOrders.filter(o => o.patient_status === "Completed");
@@ -221,18 +219,13 @@ function updateOverviewStats() {
     completed.forEach(o => { totalComm += (Number(o.bhavya_care_commission) || 0); });
     document.getElementById("statComm").innerText = totalComm.toFixed(2);
 
-    // 2. Order Status Doughnut Chart Logic
-    let pendingCount = 0;
-    let confirmedCount = 0; 
-    let completedCount = 0;
-    let cancelledCount = 0;
-
+    let pendingCount = 0; let confirmedCount = 0; let completedCount = 0; let cancelledCount = 0;
     allOrders.forEach(o => {
         let s = o.patient_status;
         if(s === "Completed") completedCount++;
         else if(s === "Cancelled") cancelledCount++;
         else if(s === "Confirmed" || s === "confirm_for_patient") confirmedCount++;
-        else pendingCount++; // Any other status is Pending
+        else pendingCount++; 
     });
 
     const ctx1 = document.getElementById('adminOrderStatusChart').getContext('2d');
@@ -250,13 +243,11 @@ function updateOverviewStats() {
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false, 
+            responsive: true, maintainAspectRatio: false, 
             plugins: {
                 legend: { position: 'bottom' },
                 datalabels: {
-                    color: '#ffffff',
-                    font: { weight: 'bold', size: 16 },
+                    color: '#ffffff', font: { weight: 'bold', size: 16 },
                     formatter: (value) => { return value > 0 ? value : ''; }
                 }
             },
@@ -264,19 +255,16 @@ function updateOverviewStats() {
         }
     });
 
-    // 3. Commission Revenue Bar Chart Logic
     let revenueByDate = {};
     completed.forEach(o => {
         if(!o.order_date) return;
-        let d = new Date(o.order_date);
-        let dateStr = `${d.getDate()}/${d.getMonth()+1}`;
+        let d = new Date(o.order_date); let dateStr = `${d.getDate()}/${d.getMonth()+1}`;
         let comm = Number(o.bhavya_care_commission) || 0;
-        
         if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
         revenueByDate[dateStr] += comm;
     });
 
-    let labels = Object.keys(revenueByDate).reverse(); // Reverse for Oldest to Newest
+    let labels = Object.keys(revenueByDate).reverse();
     let dataValues = Object.values(revenueByDate).reverse();
 
     const ctx2 = document.getElementById('adminRevenueChart').getContext('2d');
@@ -289,29 +277,28 @@ function updateOverviewStats() {
             datasets: [{
                 label: 'Commission Earned (₹)',
                 data: dataValues.length > 0 ? dataValues : [0],
-                backgroundColor: '#10b981',
-                borderRadius: 6
+                backgroundColor: '#10b981', borderRadius: 6
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
-                datalabels: {
-                    align: 'end',
-                    anchor: 'end',
-                    color: '#10b981',
-                    font: { weight: 'bold' },
-                    formatter: (value) => { return value > 0 ? '₹' + value.toFixed(0) : ''; }
-                }
+                datalabels: { align: 'end', anchor: 'end', color: '#10b981', font: { weight: 'bold' }, formatter: (value) => { return value > 0 ? '₹' + value.toFixed(0) : ''; } }
             },
-            scales: { y: { beginAtZero: true, display: false } } // Hide vertical numbers for clean look
+            scales: { y: { beginAtZero: true, display: false } } 
         }
     });
 }
 
-// pharmacyadmin.js me renderAllOrders() ke andar ye update karein:
+function renderAllOrders() {
+    const search = document.getElementById("searchOrderInput").value.toLowerCase().trim();
+    const statusVal = document.getElementById("filterOrderStatus").value;
+    const pharmaVal = document.getElementById("filterOrderPharma").value;
+    const dateVal = document.getElementById("filterOrderDate").value;
+
+    const tbody = document.getElementById("ordersTableBody");
+    tbody.innerHTML = "";
 
     const filtered = allOrders.filter(o => {
         let matchText = (o.order_id || "").toLowerCase().includes(search) || (o.patient_mobile || "").toLowerCase().includes(search);
@@ -323,21 +310,17 @@ function updateOverviewStats() {
             matchDate = (o.order_date || "").includes(`${y}-${m}-${d}`);
         }
 
-        // ✨ NAYA STATUS FILTER LOGIC (For Delayed Orders) ✨
         let matchStatus = true;
         if (statusVal === "Delayed") {
             let isClosed = (o.patient_status === "Completed" || o.patient_status === "Cancelled");
             let isOverdue = false;
             let now = new Date();
             let oDate = new Date(o.order_date);
-            let diffHours = (now - oDate) / (1000 * 60 * 60); // Check hours difference
+            let diffHours = (now - oDate) / (1000 * 60 * 60); 
 
             if (!isClosed) {
-                // Rule 1: Pharmacy ne 24 ghante tak accept nahi kiya
                 if (o.patient_status === "Pending" && diffHours > 24) isOverdue = true;
-                // Rule 2: Patient ne 48 ghante tak confirm/pay nahi kiya
                 else if (o.patient_status === "confirm_for_patient" && diffHours > 48) isOverdue = true;
-                // Rule 3: Confirmed hai par 48 ghante se delivered nahi hua
                 else if (o.patient_status === "Confirmed" && diffHours > 48) isOverdue = true;
             }
             matchStatus = isOverdue;
@@ -390,6 +373,7 @@ function updateOverviewStats() {
         </tr>`;
     });
 }
+
 function clearLedgerFilters() {
     document.getElementById("ledgerPharmaFilter").value = "All";
     document.getElementById("ledgerStartDate").value = "";
@@ -469,7 +453,7 @@ async function togglePayout(orderId, newStatus) {
         const res = await response.json();
         if(res.status === "success") { 
             showToast(`Payout marked as ${newStatus}`, "success"); 
-            fetchAllAdminData(); // Refresh the table
+            fetchAllAdminData(); 
         } else {
             showToast(res.message, "error");
         }
@@ -497,10 +481,8 @@ function downloadAdminLedgerPDF() {
     if(filteredOrders.length === 0) { showToast("No records to export for selected filters.", "error"); return; }
 
     let printWindow = window.open('', '', 'width=1000,height=700');
-    
     let reportTitle = "BhavyaCare Admin - Pharmacy Ledger";
     let subTitle = pharmaVal === "All" ? "All Pharmacies" : `Pharmacy: ${getPharmaName(pharmaVal)} (${pharmaVal})`;
-    
     if (startVal && endVal) subTitle += ` | Dates: ${startVal} to ${endVal}`;
     else if (startVal) subTitle += ` | From: ${startVal}`;
     else if (endVal) subTitle += ` | Until: ${endVal}`;
@@ -526,14 +508,8 @@ function downloadAdminLedgerPDF() {
         <table>
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Date</th>
-                    <th>Pharmacy Detail</th>
-                    <th>Total MRP (₹)</th>
-                    <th>Total Profit (₹)</th>
-                    <th>Pharma Share (₹)</th>
-                    <th>BhavyaCare Comm (₹)</th>
-                    <th>Payout Status</th>
+                    <th>Order ID</th><th>Date</th><th>Pharmacy Detail</th><th>Total MRP (₹)</th>
+                    <th>Total Profit (₹)</th><th>Pharma Share (₹)</th><th>BhavyaCare Comm (₹)</th><th>Payout Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -547,7 +523,6 @@ function downloadAdminLedgerPDF() {
         let phShare = Number(o.pharma_profit_share)||0, comm = Number(o.bhavya_care_commission)||0;
 
         sumMrp += mrp; sumProfit += profit; sumPhShare += phShare; sumBhavya += comm;
-
         let payoutStatus = o.payout_status || "Pending";
 
         html += `<tr>
@@ -578,62 +553,46 @@ function downloadAdminLedgerPDF() {
     
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.onload = function() {
-        printWindow.focus();
-        printWindow.print(); 
-        setTimeout(() => printWindow.close(), 100);
-    };
+    printWindow.onload = function() { printWindow.focus(); printWindow.print(); setTimeout(() => printWindow.close(), 100); };
 }
+
 // ==========================================
-// ✨ NAYA: ADMIN PAYOUT VERIFICATION LOGIC ✨
+// ✨ NEW: ADMIN PAYOUT VERIFICATION LOGIC ✨
 // ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
+    if(!container) return; // Guard clause if HTML not present
     container.innerHTML = "";
     
-    let groupedRequests = {};
+    const pendingSetl = allPharmacySettlements.filter(s => s.status === "Pending");
 
-    // Grouping orders by Pharmacy ID where status is Verification Pending
-    allOrders.forEach(o => {
-        if(o.payment_status === "Verification Pending") {
-            if(!groupedRequests[o.medicos_id]) {
-                groupedRequests[o.medicos_id] = { 
-                    name: getPharmaName(o.medicos_id), 
-                    totalAmount: 0, 
-                    screenshot: o.payment_screenshot || "", 
-                    orderCount: 0 
-                };
-            }
-            groupedRequests[o.medicos_id].totalAmount += parseFloat(o.bhavya_care_commission) || 0;
-            groupedRequests[o.medicos_id].orderCount++;
-            if(o.payment_screenshot) groupedRequests[o.medicos_id].screenshot = o.payment_screenshot;
-        }
-    });
-
-    const pharmacies = Object.keys(groupedRequests);
-
-    if(pharmacies.length === 0) {
+    if(pendingSetl.length === 0) {
         container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No pending verifications.</div>`;
         return;
     }
 
-    pharmacies.forEach(pharmaId => {
-        let data = groupedRequests[pharmaId];
-        let imgHtml = data.screenshot ? `<a href="${data.screenshot}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Screenshot</a>` : `<p style="color:#dc2626; font-size:12px;">No screenshot uploaded</p>`;
+    pendingSetl.forEach(data => {
+        let imgHtml = (data.screenshot_url && data.screenshot_url !== "N/A") 
+            ? `<a href="${data.screenshot_url}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Receipt</a>` 
+            : `<p style="color:#dc2626; font-size:12px;">No screenshot uploaded</p>`;
 
         let card = `
         <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
-            <h3 style="margin: 0 0 5px 0; color: #0f172a;">${data.name}</h3>
-            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 13px;">ID: ${pharmaId} • Orders: ${data.orderCount}</p>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <h3 style="margin: 0; color: #0f172a;">${getPharmaName(data.pharmacy_id)}</h3>
+                <span class="badge" style="background:#fef3c7; color:#d97706;">Pending</span>
+            </div>
+            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 13px;">ID: ${data.pharmacy_id} | SETL: ${data.settlement_id}</p>
             
             <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid to Admin</p>
-                <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.totalAmount.toFixed(2)}</h2>
+                <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid</p>
+                <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.amount}</h2>
+                <p style="font-size:11px; margin-top:5px; color:#888;">Paid on: ${new Date(data.payment_date).toLocaleDateString('en-IN')}</p>
             </div>
             
             ${imgHtml}
             
-            <button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approvePharmacyPayout('${pharmaId}')">
+            <button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approvePharmacyPayout('${data.settlement_id}', '${data.pharmacy_id}')">
                 <i class="fas fa-check-circle"></i> Verify & Mark Paid
             </button>
         </div>`;
@@ -641,24 +600,18 @@ function renderVerifications() {
     });
 }
 
-// Call this function inside fetchAllAdminData() along with others
-// (Aap `updateOverviewStats();` ke theek neeche `renderVerifications();` likh dijiye)
-
-async function approvePharmacyPayout(pharmaId) {
-    if(!confirm(`Approve payment verification for ${pharmaId}? This will mark all their pending dues as PAID.`)) return;
+async function approvePharmacyPayout(settlementId, pharmaId) {
+    if(!confirm(`Verify payment ${settlementId} for ${pharmaId}? This clears their dues.`)) return;
     
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "approvePayoutRequest", pharmacy_id: pharmaId }) 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "approvePayoutRequest", settlement_id: settlementId, pharmacy_id: pharmaId }) 
         });
         const res = await response.json();
-        
         if(res.status === "success") { 
             showToast("Payment Verified Successfully!", "success"); 
             refreshAllData(); 
-        } else {
-            showToast(res.message, "error");
-        }
+        } else { showToast(res.message, "error"); }
     } catch(e) { showToast("Network error", "error"); }
 }

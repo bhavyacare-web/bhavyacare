@@ -514,7 +514,7 @@ function downloadAdminPDF() {
 }
 
 // ==========================================
-// ✨ NEW: LAB VERIFICATIONS TAB (With Reject) ✨
+// ✨ FIXED: LAB VERIFICATIONS TAB & INVALID DATE ✨
 // ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
@@ -554,12 +554,16 @@ function renderVerifications() {
             let bgClass = statusFilter === "Verified" ? "#ecfdf5" : "#fef2f2";
             let iconClass = statusFilter === "Verified" ? "fa-check-double" : "fa-ban";
             
+            // Fix for Invalid Date verification date
+            let vDate = data.verified_date ? new Date(data.verified_date).toLocaleDateString('en-IN') : "Recently";
+
             actionHtml = `<div style="margin-top:15px; padding:12px; background:${bgClass}; border:1px dashed ${colorClass}; border-radius:8px; text-align:center; color:${colorClass}; font-weight:bold; font-size:13px;">
-                <i class="fas ${iconClass}"></i> ${statusFilter} on ${new Date(data.verified_date).toLocaleDateString('en-IN')}
+                <i class="fas ${iconClass}"></i> ${statusFilter} on ${vDate}
                 ${remarksText}
             </div>`;
         }
 
+        // 🚀 FIX: Invalid Date hatane ke liye hum direct sheet ki date string use karenge (data.payment_date)
         let card = `
         <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -570,7 +574,7 @@ function renderVerifications() {
             <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
                 <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid</p>
                 <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.amount}</h2>
-                <p style="font-size:11px; margin-top:5px; color:#888;">Paid on: ${new Date(data.payment_date).toLocaleDateString('en-IN')}</p>
+                <p style="font-size:11px; margin-top:5px; color:#888;">Paid on: ${data.payment_date}</p>
             </div>
             ${imgHtml}
             ${actionHtml}

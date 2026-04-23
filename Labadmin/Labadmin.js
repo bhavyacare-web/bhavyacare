@@ -47,45 +47,70 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshAllData(true);
 });
 
+// ==========================================
+// ✨ FIXED: FAST & SAFE REFRESH LOGIC ✨
+// ==========================================
 async function refreshAllData(silent = false) {
     if(!silent) showToast("Refreshing data...", "info");
     
-    // Parallel Fetching
-    Promise.all([
-        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) }),
-        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) }),
-        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAllLabOrdersAdmin" }) }),
-        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getLabSettlementsAdmin" }) })
-    ])
-    .then(responses => Promise.all(responses.map(res => res.json())))
-    .then(dataArray => {
-        // Labs
-        if(dataArray[0].status === "success") { allLabsData = dataArray[0].data.data || []; renderLabsTable(); }
-        // Requests
-        if(dataArray[1].status === "success") { 
-            pendingStdRequests = dataArray[1].data.standard; 
-            document.getElementById("reqBadge").style.display = pendingStdRequests.length > 0 ? "inline-block" : "none";
+    try {
+        // Parallel Fetching
+        const [labsRes, reqsRes, ordRes, setlRes] = await Promise.all([
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAllLabOrdersAdmin" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getLabSettlementsAdmin" }) })
+        ]);
+
+        const labsData = await labsRes.json();
+        const reqsData = await reqsRes.json();
+        const ordData = await ordRes.json();
+        const setlData = await setlRes.json();
+
+        // 1. Labs (Safe Parse)
+        if(labsData.status === "success") { 
+            allLabsData = labsData.data?.data || labsData.data || []; 
+            renderLabsTable(); 
+        } else {
+            document.getElementById("labsTableBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No labs data found.</td></tr>`;
+        }
+
+        // 2. Requests (Safe Parse)
+        if(reqsData.status === "success") { 
+            pendingStdRequests = reqsData.data?.standard || reqsData.data || []; 
+            const badge = document.getElementById("reqBadge");
+            if(badge) badge.style.display = pendingStdRequests.length > 0 ? "inline-block" : "none";
             renderStdRequests(); 
         }
-        // Orders
-        if(dataArray[2].status === "success") { 
-            allAdminOrders = dataArray[2].data; 
+
+        // 3. Orders
+        if(ordData.status === "success") { 
+            allAdminOrders = ordData.data || []; 
             filteredAdminOrders = [...allAdminOrders];
             populateLabDropdowns();
             renderAdminOrders(); 
             calculateAdminLedger();
         }
-        // Settlements
-        if(dataArray[3].status === "success") {
-            allLabSettlements = dataArray[3].data;
+
+        // 4. Settlements
+        if(setlData.status === "success") {
+            allLabSettlements = setlData.data || [];
             renderVerifications();
         }
-        document.getElementById("loadingOrdersMsg").style.display = "none";
-        document.getElementById("loadingLabsMsg").style.display = "none";
-        if(!silent) showToast("Data refreshed!", "success");
-    }).catch(err => {
+
+    } catch (err) {
+        console.error("Fetch Crash Report:", err); // Ab console me error dikhega
         if(!silent) showToast("Network Error!", "error");
-    });
+    } finally {
+        // 🚀 BADI FIX: Har haal me Loader hide hoga!
+        let oMsg = document.getElementById("loadingOrdersMsg");
+        if(oMsg) oMsg.style.display = "none";
+        
+        let lMsg = document.getElementById("loadingLabsMsg");
+        if(lMsg) lMsg.style.display = "none";
+        
+        if(!silent) showToast("Data refreshed!", "success");
+    }
 }
 
 function switchTab(tabId, btnElement) {

@@ -112,6 +112,9 @@
             <li id="tab-docs" class="active" onclick="switchTab('docs')"><i class="fas fa-user-md"></i> <span>Doctors</span></li>
             <li id="tab-appts" onclick="switchTab('appts')"><i class="fas fa-calendar-check"></i> <span>Consults</span></li>
             <li id="tab-ledger" onclick="switchTab('ledger')"><i class="fas fa-file-invoice-dollar"></i> <span>Ledger</span></li>
+            
+            <li id="tab-verifications" onclick="switchTab('verifications')"><i class="fas fa-check-double"></i> <span>Verifications</span></li>
+            
             <li id="tab-reviews" onclick="switchTab('reviews')"><i class="fas fa-star"></i> <span>Reviews</span></li>
         </ul>
         <a href="../admin.html" class="desktop-back-btn"><i class="fas fa-arrow-left"></i> Back to Main Dashboard</a>
@@ -132,21 +135,15 @@
                     <input type="text" id="filterDocSearch" placeholder="Search by Name, ID or City..." onkeyup="filterDoctors()">
                 </div>
             </div>
-
             <div class="table-container">
                 <table id="doctorsTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Profile</th><th>Doc ID</th><th>Name & Speciality</th><th>Clinic City</th><th>Document</th><th>Status</th><th>Actions</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Profile</th><th>Doc ID</th><th>Name & Speciality</th><th>Clinic City</th><th>Document</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="doctorsBody"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="sec-appts" class="dashboard-section">
-            
             <div class="stats-grid" id="adminApptStats" style="display:none; margin-bottom: 15px;">
                 <div class="stat-card" style="border-color: #ffc107; padding: 15px;"><h3>Pending</h3><p id="adminStatPending">0</p></div>
                 <div class="stat-card" style="border-color: #17a2b8; padding: 15px;"><h3>Approved</h3><p id="adminStatApproved">0</p></div>
@@ -156,16 +153,11 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
                 <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--primary);">
                     <h3 style="margin-top: 0; color: #333; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><i class="fas fa-chart-pie" style="color: var(--primary);"></i> Overall Consultations</h3>
-                    <div style="height: 220px; position: relative;">
-                        <canvas id="adminApptChart"></canvas>
-                    </div>
+                    <div style="height: 220px; position: relative;"><canvas id="adminApptChart"></canvas></div>
                 </div>
-
                 <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid #0056b3;">
-                    <h3 style="margin-top: 0; color: #333; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><i class="fas fa-chart-line" style="color: #0056b3);"></i> Platform Commission Trend</h3>
-                    <div style="height: 220px; position: relative;">
-                        <canvas id="adminRevenueChart"></canvas>
-                    </div>
+                    <h3 style="margin-top: 0; color: #333; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><i class="fas fa-chart-line" style="color: #0056b3;"></i> Platform Commission Trend</h3>
+                    <div style="height: 220px; position: relative;"><canvas id="adminRevenueChart"></canvas></div>
                 </div>
             </div>
 
@@ -193,10 +185,26 @@
             
             <div class="table-container">
                 <table>
-                    <thead>
-                        <tr><th>Appt ID</th><th>Doctor</th><th>Patient</th><th>Date/Time</th><th>Type</th><th>Status</th><th>Refund Info</th></tr>
-                    </thead>
+                    <thead><tr><th>Appt ID</th><th>Doctor</th><th>Patient</th><th>Date/Time</th><th>Type</th><th>Status</th><th>Refund Info</th></tr></thead>
                     <tbody id="apptsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="sec-verifications" class="dashboard-section">
+            <div class="filter-bar" style="max-width: 500px;">
+                <div>
+                    <label>Filter by Status</label>
+                    <select id="verifyStatusFilter" onchange="renderSettlements()">
+                        <option value="Pending">Pending Approvals</option>
+                        <option value="Verified">Already Verified</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Date</th><th>Settlement ID</th><th>Doctor ID</th><th>Amount Paid</th><th>Screenshot</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="settlementsBody"></tbody>
                 </table>
             </div>
         </div>
@@ -231,10 +239,7 @@
 
         <div id="sec-reviews" class="dashboard-section">
             <div class="filter-bar" style="max-width: 400px;">
-                <div>
-                    <label>Filter by Doctor</label>
-                    <select id="reviewDocSelect" onchange="renderReviews()"><option value="ALL">All Doctors</option></select>
-                </div>
+                <div><label>Filter by Doctor</label><select id="reviewDocSelect" onchange="renderReviews()"><option value="ALL">All Doctors</option></select></div>
             </div>
             <div id="reviewsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
         </div>
@@ -242,8 +247,7 @@
 
     <div id="doctorProfileModal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('doctorProfileModal').style.display='none'">✖</button>
-        <div id="docProfileContent">
-            </div>
+        <div id="docProfileContent"></div>
     </div>
 
     <script src="doctoradmin.js"></script>

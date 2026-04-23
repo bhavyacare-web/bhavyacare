@@ -1,18 +1,27 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-// ==========================================
-// GLOBALS
-// ==========================================
 let allLabsData = [];
 let pendingStdRequests = [];
-
 let allAdminOrders = [];
 let filteredAdminOrders = [];
+let allLabSettlements = []; // ✨ NEW SETTLEMENTS DATA ✨
 let currentAdminOrder = null;
 let currentOrderStatusFilter = 'ALL';
 let currentEditUid = null;
 
-// HELPERS
+// TOAST NOTIFICATIONS
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'fa-check-circle'; 
+    if(type === 'error') icon = 'fa-exclamation-circle'; else if(type === 'info') icon = 'fa-info-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
 function safeSetText(id, text) { let el = document.getElementById(id); if (el) el.innerText = text; }
 function safeSetHTML(id, html) { let el = document.getElementById(id); if (el) el.innerHTML = html; }
 function formatDateTime(val) {
@@ -28,22 +37,56 @@ function formatDateTime(val) {
     } catch(e) { return val; }
 }
 
-// ==========================================
-// INIT (NO AUTO-REFRESH)
-// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    // Default Dates for Ledger
     if(document.getElementById("ledgerEndDate") && document.getElementById("ledgerStartDate")) {
         let today = new Date();
         document.getElementById("ledgerEndDate").value = today.toISOString().split('T')[0];
         today.setDate(1); 
         document.getElementById("ledgerStartDate").value = today.toISOString().split('T')[0];
     }
-
-    fetchLabs();
-    fetchPendingRequests();
-    fetchAllAdminOrders(); 
+    refreshAllData(true);
 });
+
+async function refreshAllData(silent = false) {
+    if(!silent) showToast("Refreshing data...", "info");
+    
+    // Parallel Fetching
+    Promise.all([
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) }),
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) }),
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAllLabOrdersAdmin" }) }),
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getLabSettlementsAdmin" }) })
+    ])
+    .then(responses => Promise.all(responses.map(res => res.json())))
+    .then(dataArray => {
+        // Labs
+        if(dataArray[0].status === "success") { allLabsData = dataArray[0].data.data || []; renderLabsTable(); }
+        // Requests
+        if(dataArray[1].status === "success") { 
+            pendingStdRequests = dataArray[1].data.standard; 
+            document.getElementById("reqBadge").style.display = pendingStdRequests.length > 0 ? "inline-block" : "none";
+            renderStdRequests(); 
+        }
+        // Orders
+        if(dataArray[2].status === "success") { 
+            allAdminOrders = dataArray[2].data; 
+            filteredAdminOrders = [...allAdminOrders];
+            populateLabDropdowns();
+            renderAdminOrders(); 
+            calculateAdminLedger();
+        }
+        // Settlements
+        if(dataArray[3].status === "success") {
+            allLabSettlements = dataArray[3].data;
+            renderVerifications();
+        }
+        document.getElementById("loadingOrdersMsg").style.display = "none";
+        document.getElementById("loadingLabsMsg").style.display = "none";
+        if(!silent) showToast("Data refreshed!", "success");
+    }).catch(err => {
+        if(!silent) showToast("Network Error!", "error");
+    });
+}
 
 function switchTab(tabId, btnElement) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -55,22 +98,6 @@ function switchTab(tabId, btnElement) {
 // ==========================================
 // 🌟 1. MASTER ORDERS & FILTERS LOGIC 🌟
 // ==========================================
-function fetchAllAdminOrders(silent = false) {
-    if(!silent) document.getElementById("loadingOrdersMsg").style.display = "block";
-    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAllLabOrdersAdmin" }) })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("loadingOrdersMsg").style.display = "none";
-        if(data.status === "success") { 
-            allAdminOrders = data.data; 
-            filteredAdminOrders = [...allAdminOrders];
-            populateLabDropdowns();
-            renderAdminOrders(); 
-            calculateAdminLedger();
-        }
-    }).catch(err => { if(!silent) document.getElementById("loadingOrdersMsg").innerText = "Error Loading Master Orders!"; });
-}
-
 function populateLabDropdowns() {
     let orderSel = document.getElementById("orderLabFilter");
     let ledgerSel = document.getElementById("ledgerLabFilter");
@@ -114,20 +141,16 @@ function filterAdminOrders() {
                           (o.patient_name && o.patient_name.toLowerCase().includes(searchText)) ||
                           (o.lab_info && o.lab_info.toLowerCase().includes(searchText));
         }
-
         let matchLab = true;
         if(selectedLab !== "ALL") { matchLab = (o.lab_info === selectedLab); }
-
         let matchStatus = true;
         let sText = o.status ? o.status.toUpperCase() : "PENDING";
         if(currentOrderStatusFilter !== "ALL") {
             if(currentOrderStatusFilter === "ACTIVE") matchStatus = (sText === "ACTIVE" || sText === "CONFIRMED");
             else matchStatus = (sText === currentOrderStatusFilter);
         }
-
         return matchSearch && matchLab && matchStatus;
     });
-
     renderAdminOrders();
 }
 
@@ -172,9 +195,6 @@ function renderAdminOrders() {
     });
 }
 
-// ==========================================
-// 🌟 2. MASTER ORDER MODAL & ADMIN ACTIONS 🌟
-// ==========================================
 function openAdminOrderModal(index) {
     currentAdminOrder = filteredAdminOrders[index];
     let o = currentAdminOrder;
@@ -199,7 +219,7 @@ function openAdminOrderModal(index) {
     try {
         if(o.cart_items) {
             itemsArr = JSON.parse(o.cart_items);
-            itemsArr.forEach(item => { itemsHTML += `<div class="cart-item"><div style="font-weight:600;">${item.qty}x ${item.service_name}</div><div style="font-weight:800;">₹${item.price}</div></div>`; });
+            itemsArr.forEach(item => { itemsHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:white; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;"><div style="font-weight:600;">${item.qty}x ${item.service_name}</div><div style="font-weight:800;">₹${item.price}</div></div>`; });
         } else { itemsHTML = "<i>No items found</i>"; }
     } catch(e) { itemsHTML = "<i>Error loading items</i>"; }
     safeSetHTML("mItemsList", itemsHTML);
@@ -234,7 +254,7 @@ function openAdminOrderModal(index) {
 
         if (currentStatus === "Pending") {
             actionArea.innerHTML = `
-                <div class="action-box">
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 12px; margin-top: 25px;">
                     <div style="font-weight:700; margin-bottom:10px; color:#1e293b;">Admin Force Actions:</div>
                     <input type="text" id="adminCancelReason" class="search-box" placeholder="Reason for cancellation..." style="width:100%; margin-bottom:10px;">
                     <div style="display:flex; gap:10px;">
@@ -245,7 +265,7 @@ function openAdminOrderModal(index) {
         } 
         else if (currentStatus === "Active" || currentStatus === "Confirmed" || currentStatus === "Completed") {
             actionArea.innerHTML = `
-                <div class="action-box">
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 12px; margin-top: 25px;">
                     ${reportsHTML}
                     <div style="font-weight:700; margin-top:20px; margin-bottom:10px; color:#1e293b;">Force Upload Report (On behalf of Lab):</div>
                     <select id="adminReportType" class="search-box" style="width:100%; margin-bottom: 10px;" onchange="toggleAdminReportInput()">
@@ -253,9 +273,9 @@ function openAdminOrderModal(index) {
                         <option value="Online">Online (Upload PDF)</option>
                         <option value="In Hand">In Hand (Physical Copy)</option>
                     </select>
-                    <input type="file" id="adminReportPdfFile" class="search-box" accept=".pdf" style="display:none; width:100%; margin-bottom: 10px;">
+                    <input type="file" id="adminReportPdfFile" class="search-box" accept=".pdf,image/*" style="display:none; width:100%; margin-bottom: 10px; background:white;">
                     ${checksHTML}
-                    <button class="btn btn-blue" style="width:100%;" onclick="adminSubmitReport()"><i class="fas fa-upload"></i> Save & Mark Completed</button>
+                    <button class="btn btn-blue" style="width:100%; padding:12px;" onclick="adminSubmitReport()"><i class="fas fa-upload"></i> Save & Mark Completed</button>
                 </div>`;
         }
     }
@@ -301,12 +321,11 @@ function toggleAdminReportInput() {
 
 function closeAdminOrderModal() { document.getElementById("adminOrderModal").style.display = "none"; currentAdminOrder = null; }
 
-// 🌟 ADMIN API CALLS (RELOADS ON SUCCESS) 🌟
 function adminSubmitAction(actionType) {
     let payload = { action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: actionType };
     if(actionType === "Cancel") {
         let reason = document.getElementById("adminCancelReason").value.trim();
-        if(!reason) return alert("Please type a cancellation reason.");
+        if(!reason) { showToast("Please type a cancellation reason.", "error"); return; }
         payload.cancel_reason = "Admin Force Cancel: " + reason;
     }
     adminCallOrderApi(payload);
@@ -326,24 +345,24 @@ function adminDeleteInHandReport(serviceName) {
 
 async function adminSubmitReport() {
     let rType = document.getElementById("adminReportType").value;
-    if(!rType) return alert("Please select a Report Type.");
+    if(!rType) { showToast("Please select a Report Type.", "error"); return; }
     
     if (rType === "Online") {
         let fileInput = document.getElementById("adminReportPdfFile");
-        if(!fileInput || fileInput.files.length === 0) return alert("Please select a PDF file.");
+        if(!fileInput || fileInput.files.length === 0) { showToast("Please select a file.", "error"); return; }
         let file = fileInput.files[0];
-        if(file.size > 3 * 1024 * 1024) return alert("File size must be less than 3MB."); 
+        if(file.size > 3 * 1024 * 1024) { showToast("File size must be less than 3MB.", "error"); return; }
         
         try {
             let base64 = await new Promise((res, rej) => {
                 let reader = new FileReader(); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = e => rej(e); reader.readAsDataURL(file);
             });
-            adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "Online", base64Pdf: base64 });
-        } catch(e) { alert("Error reading file."); }
+            adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "Online", base64Pdf: base64, mimeType: file.type });
+        } catch(e) { showToast("Error reading file.", "error"); }
     } 
     else if (rType === "In Hand") {
         let checkboxes = document.querySelectorAll(".admin-in-hand-chk:checked");
-        if(checkboxes.length === 0) return alert("Please select at least one service to mark as In-Hand.");
+        if(checkboxes.length === 0) { showToast("Select at least one service.", "error"); return; }
         let selectedServices = []; checkboxes.forEach(chk => selectedServices.push(chk.value));
         adminCallOrderApi({ action: "processLabOrderAction", order_id: currentAdminOrder.order_id, action_type: "UploadReport", report_type: "In Hand", in_hand_services: selectedServices });
     }
@@ -357,13 +376,13 @@ function adminCallOrderApi(payload) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") { 
-            alert("Admin Action Successful!"); 
-            window.location.reload(); // 🌟 RELOAD
-        } 
-        else { alert("Error: " + data.message); }
-    }).catch(err => { alert("Network Error occurred!"); })
+            showToast("Admin Action Successful!", "success"); 
+            setTimeout(()=> { window.location.reload(); }, 1500);
+        } else { showToast("Error: " + data.message, "error"); }
+    }).catch(err => { showToast("Network Error occurred!", "error"); })
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
 }
+
 
 // ==========================================
 // 🌟 3. MASTER SETTLEMENT LEDGER & PDF 🌟
@@ -401,6 +420,12 @@ function calculateAdminLedger() {
         tColl += coll; tRev += rev; tNet += net;
 
         let cleanLabName = o.lab_info ? o.lab_info.split("(")[0].trim() : "N/A";
+        
+        let payoutStatus = o.payment_status || "Due";
+        let payoutBadge = payoutStatus === "Paid" ? `<span class="status-badge" style="background:#d1fae5; color:#059669;">Paid</span>` : `<span class="status-badge" style="background:#fef3c7; color:#d97706;">${payoutStatus}</span>`;
+        let payoutAction = payoutStatus !== "Paid" 
+            ? `<button class="btn btn-green" style="padding:6px 10px; font-size:11px;" onclick="toggleLabPayoutStatus('${o.order_id}', 'Paid')">Mark Paid</button>` 
+            : `<button class="btn" style="background:#f1f5f9; color:#64748b; padding:6px 10px; font-size:11px;" onclick="toggleLabPayoutStatus('${o.order_id}', 'Due')">Mark Due</button>`;
 
         html += `
             <tr style="border-bottom:1px solid #f1f5f9;">
@@ -410,6 +435,8 @@ function calculateAdminLedger() {
                 <td style="padding:10px; text-align:right;">₹${coll.toFixed(2)}</td>
                 <td style="padding:10px; text-align:right; color:#e11d48; font-weight:600;">₹${rev.toFixed(2)}</td>
                 <td style="padding:10px; text-align:right; font-weight:700; color:#15803d;">₹${net.toFixed(2)}</td>
+                <td style="padding:10px; text-align:center;">${payoutBadge}</td>
+                <td style="padding:10px; text-align:center;">${payoutAction}</td>
             </tr>`;
     });
 
@@ -420,13 +447,28 @@ function calculateAdminLedger() {
                 <td style="padding:12px; text-align:right;">₹${tColl.toFixed(2)}</td>
                 <td style="padding:12px; text-align:right; color:#e11d48;">₹${tRev.toFixed(2)}</td>
                 <td style="padding:12px; text-align:right; color:#15803d;">₹${tNet.toFixed(2)}</td>
+                <td colspan="2"></td>
             </tr>`;
     }
 
     safeSetText("adminTotalColl", "₹" + tColl.toLocaleString('en-IN'));
     safeSetText("adminTotalRev", "₹" + tRev.toLocaleString('en-IN'));
     safeSetText("adminLabNet", "₹" + tNet.toLocaleString('en-IN'));
-    safeSetHTML("adminLedgerTableBody", html || "<tr><td colspan='6' style='text-align:center; padding:20px; color:#64748b;'>No completed orders found for this criteria.</td></tr>");
+    safeSetHTML("adminLedgerTableBody", html || "<tr><td colspan='8' style='text-align:center; padding:20px; color:#64748b;'>No completed orders found for this criteria.</td></tr>");
+}
+
+async function toggleLabPayoutStatus(orderId, newStatus) {
+    if(!confirm(`Update payout status to ${newStatus} for ${orderId}?`)) return;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify({ action: "updateLabPayoutStatus", order_id: orderId, payout_status: newStatus }) 
+        });
+        const res = await response.json();
+        if(res.status === "success") { showToast(`Status updated to ${newStatus}`, "success"); refreshAllData(true); } 
+        else { showToast(res.message, "error"); }
+    } catch(e) { showToast("Network error", "error"); }
 }
 
 function downloadAdminPDF() {
@@ -447,18 +489,71 @@ function downloadAdminPDF() {
 }
 
 // ==========================================
-// 4. PURANA CODE (MANAGE LABS & REQS)
+// ✨ NEW: LAB VERIFICATIONS TAB ✨
 // ==========================================
-function fetchLabs(silent = false) {
-    if(!silent) document.getElementById("loadingLabsMsg").style.display = "block";
-    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("loadingLabsMsg").style.display = "none";
-        if(data.status === "success") { allLabsData = data.data; renderLabsTable(); } 
+function renderVerifications() {
+    const container = document.getElementById("verificationContainer");
+    if(!container) return; 
+    container.innerHTML = "";
+    
+    const statusFilterElement = document.getElementById("verifyStatusFilter");
+    const statusFilter = statusFilterElement ? statusFilterElement.value : "Pending";
+
+    const filteredSetl = allLabSettlements.filter(s => s.status === statusFilter);
+
+    if(filteredSetl.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No ${statusFilter.toLowerCase()} verifications found.</div>`;
+        return;
+    }
+
+    filteredSetl.forEach(data => {
+        let imgHtml = (data.screenshot_url && data.screenshot_url !== "N/A") 
+            ? `<a href="${data.screenshot_url}" target="_blank" style="display:block; margin-top:15px; background:#eff6ff; color:#2563eb; padding:10px; border-radius:8px; text-align:center; font-weight:bold; text-decoration:none;"><i class="fas fa-image"></i> View Uploaded Receipt</a>` 
+            : `<p style="color:#dc2626; font-size:12px; margin-top:15px; text-align:center;">No screenshot uploaded</p>`;
+
+        let badgeHtml = statusFilter === "Verified" 
+            ? `<span class="status-badge" style="background:#d1fae5; color:#059669;">✔ Verified</span>`
+            : `<span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending</span>`;
+
+        let actionHtml = statusFilter === "Pending"
+            ? `<button class="btn btn-green" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;" onclick="approveLabPayout('${data.settlement_id}', '${data.lab_id}')"><i class="fas fa-check-circle"></i> Verify & Mark Paid</button>`
+            : `<div style="margin-top:15px; padding:12px; background:#ecfdf5; border:1px dashed #10b981; border-radius:8px; text-align:center; color:#059669; font-weight:bold; font-size:13px;"><i class="fas fa-check-double"></i> Verified on ${new Date(data.verified_date).toLocaleDateString('en-IN')}</div>`;
+
+        let card = `
+        <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <h3 style="margin: 0; color: #0f172a; font-size:18px;">Lab ID: ${data.lab_id}</h3>
+                ${badgeHtml}
+            </div>
+            <p style="margin: 0 0 15px 0; color: #64748b; font-size: 12px;">SETL: ${data.settlement_id}</p>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Amount Paid</p>
+                <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 32px;">₹${data.amount}</h2>
+                <p style="font-size:11px; margin-top:5px; color:#888;">Paid on: ${new Date(data.payment_date).toLocaleDateString('en-IN')}</p>
+            </div>
+            ${imgHtml}
+            ${actionHtml}
+        </div>`;
+        container.innerHTML += card;
     });
 }
 
+async function approveLabPayout(settlementId, labId) {
+    if(!confirm(`Verify payment ${settlementId} for Lab ${labId}? This clears their dues.`)) return;
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "approveLabPayoutRequest", settlement_id: settlementId, lab_id: labId }) 
+        });
+        const res = await response.json();
+        if(res.status === "success") { showToast("Payment Verified Successfully!", "success"); refreshAllData(); } 
+        else { showToast(res.message, "error"); }
+    } catch(e) { showToast("Network error", "error"); }
+}
+
+// ==========================================
+// 4. MANAGE LABS & REQS
+// ==========================================
 function renderLabsTable() {
     const tbody = document.getElementById("labsTableBody");
     tbody.innerHTML = "";
@@ -489,7 +584,6 @@ function openLabModal(index) {
     safeSetText("modalAddress", lab.address || "N/A");
     safeSetText("modalCityPin", lab.city + " - " + lab.pincode);
 
-    // Populate Documents & Images
     const docsDiv = document.getElementById("modalDocs");
     docsDiv.innerHTML = "";
     if(lab.reg_doc_url) docsDiv.innerHTML += `<a href="${lab.reg_doc_url}" target="_blank" class="doc-link"><i class="fas fa-file-pdf"></i> Reg Doc</a>`;
@@ -498,7 +592,6 @@ function openLabModal(index) {
     if(lab.img1_url) docsDiv.innerHTML += `<a href="${lab.img1_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 1</a>`;
     if(lab.img2_url) docsDiv.innerHTML += `<a href="${lab.img2_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 2</a>`;
     if(lab.img3_url) docsDiv.innerHTML += `<a href="${lab.img3_url}" target="_blank" class="doc-link"><i class="fas fa-image"></i> Img 3</a>`;
-    
     if(docsDiv.innerHTML === "") docsDiv.innerHTML = "<span style='color:#94a3b8; font-size:13px; padding:10px;'>No documents uploaded by lab.</span>";
 
     let sel = document.getElementById("modalStatusSelect");
@@ -520,22 +613,7 @@ function saveLabDetails() {
     .then(res => res.json())
     .then(data => {
         btn.innerText = "Update & Notify Lab"; btn.disabled = false;
-        if(data.status === "success") { 
-            alert("Lab updated!"); 
-            window.location.reload(); // 🌟 RELOAD
-        } 
-    });
-}
-
-function fetchPendingRequests(silent = false) {
-    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            pendingStdRequests = data.data.standard;
-            document.getElementById("reqBadge").style.display = pendingStdRequests.length > 0 ? "inline-block" : "none";
-            renderStdRequests();
-        }
+        if(data.status === "success") { showToast("Lab updated!", "success"); refreshAllData(true); closeLabModal(); } 
     });
 }
 
@@ -562,12 +640,12 @@ function handleStdReq(userId, actionType) {
     let modifiedJson = "";
     if (actionType === 'Approve') {
         modifiedJson = document.getElementById(`req_json_${userId}`).value;
-        try { JSON.parse(modifiedJson); } catch (e) { return alert("Invalid JSON format!"); }
+        try { JSON.parse(modifiedJson); } catch (e) { return showToast("Invalid JSON format!", "error"); }
     }
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST', body: JSON.stringify({ action: "processStandardServiceRequest", user_id: userId, request_action: actionType, modified_json: modifiedJson })
     }).then(res => res.json()).then(data => { 
-        alert(data.message); 
-        window.location.reload(); // 🌟 RELOAD
+        showToast(data.message, "info"); 
+        refreshAllData(true); 
     });
 }

@@ -4,12 +4,10 @@ let allDoctorAppointments = [];
 let activeVideoCallApptId = null;
 let handledDocTriggers = new Set(); 
 
-// ✨ NAYE CHART VARIABLES ✨
 let docApptChart = null;
 let docRevenueChart = null;
 Chart.register(ChartDataLabels);
 
-// ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { 
@@ -237,13 +235,23 @@ function renderAppointments(appointments) {
     const tbody = document.getElementById("apptTableBody");
     tbody.innerHTML = "";
     let pendingCount = 0; let approvedCount = 0; let totalEarnings = 0;
+    let totalDues = 0; // ✨ NAYA: OUTSTANDING DUES CALCULATION ✨
 
     if(appointments.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No appointments found.</td></tr>`; return;}
 
     appointments.forEach(appt => {
         if (appt.appt_status === "Pending") pendingCount++;
         if (appt.appt_status === "Approved") approvedCount++;
-        if (appt.appt_status === "Completed") totalEarnings += parseInt(appt.doctor_earning || 0);
+        if (appt.appt_status === "Completed") {
+            totalEarnings += parseInt(appt.doctor_earning || 0);
+            
+            // Calculate 10% BhavyaCare Commission for Dues
+            if (appt.settlement_status !== "PAID") {
+                let mrp = parseInt(appt.total_mrp) || 0;
+                let commission = Math.round(mrp * 0.10);
+                totalDues += commission;
+            }
+        }
 
         let statusBadge = "";
         if(appt.appt_status === "Pending") statusBadge = `<span class="badge bg-warning">Pending</span>`;
@@ -300,7 +308,10 @@ function renderAppointments(appointments) {
     document.getElementById("statApproved").innerText = approvedCount;
     document.getElementById("statEarnings").innerText = totalEarnings;
     
-    // ✨ YEH LINE ADD KAREIN ✨
+    // ✨ UPDATE DUES IN DASHBOARD ✨
+    let statDuesElement = document.getElementById("statDues");
+    if(statDuesElement) statDuesElement.innerText = totalDues;
+    
     drawDoctorCharts();
 }
 
@@ -338,10 +349,9 @@ function handleCompleteAction(apptId, consultType) {
     }
 }
 
-// ✨ SMART IMAGE COMPRESSOR (Prevents Crash on Large Files) ✨
+// ✨ SMART IMAGE COMPRESSOR (Phase 3) ✨
 function getBase64(file) {
     return new Promise((resolve, reject) => {
-        // Agar file PDF hai, toh direct convert karo (PDF compress nahi hoti)
         if (!file.type.startsWith('image/')) {
             if(file.size > 5 * 1024 * 1024) return reject("PDF size cannot exceed 5MB.");
             const reader = new FileReader();
@@ -350,8 +360,6 @@ function getBase64(file) {
             reader.onerror = error => reject(error);
             return;
         }
-
-        // Agar image hai, toh HTML5 Canvas se compress karo
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -361,14 +369,11 @@ function getBase64(file) {
                 const canvas = document.createElement('canvas');
                 let ctx = canvas.getContext('2d');
                 let width = img.width, height = img.height;
-                const MAX_DIM = 1000; // Resize to max 1000px
-
+                const MAX_DIM = 1000; 
                 if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
                 else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
-                
                 canvas.width = width; canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
-                // 0.7 = 70% Quality (File size kam ho jayega 80%)
                 resolve(canvas.toDataURL(file.type, 0.7).split(',')[1]); 
             };
         };
@@ -475,11 +480,6 @@ function downloadLedgerPDF() {
 
 function logoutDoctor() { localStorage.clear(); window.location.href = "../index.html"; }
 
-
-// ==========================================
-// 🌟 REJECT & APPROVE LOGIC 🌟
-// ==========================================
-
 function openApproveModal(apptId, patientId, date, time, type) {
     document.getElementById("approveApptIdHidden").value = apptId;
     document.getElementById("approveDetailsDiv").innerHTML = `<strong>Patient ID:</strong> ${patientId}<br><strong>Date & Time:</strong> ${date} at ${time}<br><strong>Type:</strong> ${type}`;
@@ -535,11 +535,6 @@ async function submitRejectBooking() {
     } catch (e) { alert("Failed to cancel."); location.reload(); }
     finally { btn.innerText = "Confirm Cancel"; btn.disabled = false; }
 }
-
-
-// ==========================================
-// 🌟 HANDSHAKE WORKFLOW (Doctor) 🌟
-// ==========================================
 
 setInterval(silentDoctorPolling, 30000);
 
@@ -648,30 +643,24 @@ function closeVideoCall() {
     fetchDoctorAppointments(localStorage.getItem("bhavya_user_id"));
 }
 
-// ==========================================
-// ✨ CHARTS LOGIC (Doctor Dashboard) ✨
-// ==========================================
 function drawDoctorCharts() {
     let pending = 0, approved = 0, completed = 0, cancelled = 0;
     let revenueByDate = {};
 
     allDoctorAppointments.forEach(appt => {
-        // Status Counting
         if(appt.appt_status === "Pending") pending++;
         else if(appt.appt_status === "Approved") approved++;
         else if(appt.appt_status === "Completed") completed++;
         else cancelled++;
 
-        // Revenue Calculation
         if(appt.appt_status === "Completed") {
-            let dateStr = appt.cleanDate.substring(0, 5); // DD-MM format
+            let dateStr = appt.cleanDate.substring(0, 5);
             let earn = parseInt(appt.doctor_earning) || 0;
             if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
             revenueByDate[dateStr] += earn;
         }
     });
 
-    // 1. Doughnut Chart (Status)
     const ctx1 = document.getElementById('docApptChart').getContext('2d');
     if(docApptChart) docApptChart.destroy();
     docApptChart = new Chart(ctx1, {
@@ -693,7 +682,6 @@ function drawDoctorCharts() {
         }
     });
 
-    // 2. Bar Chart (Revenue)
     let labels = Object.keys(revenueByDate).reverse();
     let dataVals = Object.values(revenueByDate).reverse();
 
@@ -716,7 +704,63 @@ function drawDoctorCharts() {
                 legend: { display: false },
                 datalabels: { align: 'end', anchor: 'end', color: '#28a745', font: {weight: 'bold'}, formatter: (v) => v > 0 ? '₹'+v : '' }
             },
-            scales: { y: { display: false } } // Hide Y-axis
+            scales: { y: { display: false } }
         }
     });
+}
+
+// ✨ DOCTOR PAYMENT LOGIC ✨
+function openDoctorPayModal() {
+    const amount = document.getElementById("statDues").innerText;
+    if (parseInt(amount) <= 0) { showToast("No outstanding dues!", "info"); return; }
+
+    document.getElementById("payModalAmount").innerText = amount;
+    const upi = "bhavyacare@upi"; // 👈 Apni Website ki UPI ID yahan daalein
+    const upiLink = `upi://pay?pa=${upi}&pn=BhavyaCare&am=${amount}&cu=INR`;
+    
+    document.getElementById("doctorUpiDeepLink").href = upiLink;
+    document.getElementById("doctorPayQr").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`;
+    document.getElementById("doctor-pay-modal").style.display = "block";
+}
+
+async function submitDocCommission() {
+    const fileInput = document.getElementById("doctorPayScreenshot");
+    const amount = document.getElementById("payModalAmount").innerText;
+    const btn = document.getElementById("btnSubmitDocPay");
+
+    if (fileInput.files.length === 0) { showToast("Please upload screenshot", "error"); return; }
+
+    btn.style.display = "none";
+    document.getElementById("docPayLoader").style.display = "block";
+
+    try {
+        const base64 = await getBase64(fileInput.files[0]);
+        const payload = {
+            action: "submitDoctorSettlement",
+            data: {
+                doctor_id: localStorage.getItem("bhavya_user_id"),
+                amount: amount,
+                screenshot_base64: base64,
+                screenshot_mime: fileInput.files[0].type
+            }
+        };
+
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+
+        if (res.status === "success") {
+            showToast("Payment submitted for verification!", "success");
+            document.getElementById("doctor-pay-modal").style.display = "none";
+            fileInput.value = "";
+        } else {
+            showToast(res.message, "error");
+        }
+    } catch (e) { showToast("Error submitting payment", "error"); }
+    finally {
+        btn.style.display = "block";
+        document.getElementById("docPayLoader").style.display = "none";
+    }
 }

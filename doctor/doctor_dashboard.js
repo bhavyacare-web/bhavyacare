@@ -338,10 +338,40 @@ function handleCompleteAction(apptId, consultType) {
     }
 }
 
+// ✨ SMART IMAGE COMPRESSOR (Prevents Crash on Large Files) ✨
 function getBase64(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader(); reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]); 
+        // Agar file PDF hai, toh direct convert karo (PDF compress nahi hoti)
+        if (!file.type.startsWith('image/')) {
+            if(file.size > 5 * 1024 * 1024) return reject("PDF size cannot exceed 5MB.");
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); 
+            reader.onerror = error => reject(error);
+            return;
+        }
+
+        // Agar image hai, toh HTML5 Canvas se compress karo
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
+                let width = img.width, height = img.height;
+                const MAX_DIM = 1000; // Resize to max 1000px
+
+                if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
+                else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+                
+                canvas.width = width; canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                // 0.7 = 70% Quality (File size kam ho jayega 80%)
+                resolve(canvas.toDataURL(file.type, 0.7).split(',')[1]); 
+            };
+        };
         reader.onerror = error => reject(error);
     });
 }

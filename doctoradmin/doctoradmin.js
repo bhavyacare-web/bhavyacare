@@ -2,13 +2,12 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 
 let allDoctors = [];
 let allAppointments = [];
+let allSettlements = []; // ✨ NEW ✨
 
-// ✨ NAYE CHART VARIABLES ✨
 let adminApptChart = null; 
 let adminRevenueChart = null; 
 Chart.register(ChartDataLabels);
 
-// ✨ TOAST NOTIFICATION LOGIC ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { 
@@ -50,7 +49,8 @@ function switchTab(tabId) {
     document.getElementById('sec-' + tabId).classList.add('active');
     document.getElementById('tab-' + tabId).classList.add('active');
     
-    let titles = { 'docs': '👨‍⚕️ Manage Doctors', 'appts': '📅 All Consultations', 'ledger': '🧾 Settlement Ledger', 'reviews': '⭐ Patient Reviews' };
+    // ✨ ADDED VERIFICATIONS TAB TITLE ✨
+    let titles = { 'docs': '👨‍⚕️ Manage Doctors', 'appts': '📅 All Consultations', 'ledger': '🧾 Settlement Ledger', 'verifications': '✅ Verify Payments', 'reviews': '⭐ Patient Reviews' };
     document.getElementById('pageTitle').innerText = titles[tabId];
 }
 
@@ -76,16 +76,19 @@ function fixDriveUrl(rawImg, docName) {
     return imgSrc;
 }
 
+// ✨ UPDATED: Fetching Settlements along with Docs & Appts ✨
 async function fetchAdminData() {
     document.getElementById("loader").style.display = "block";
     try {
-        const [docsRes, apptsRes] = await Promise.all([
+        const [docsRes, apptsRes, setlRes] = await Promise.all([
             fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getAdminDoctors" }) }),
-            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getAllDoctorAppointmentsAdmin" }) })
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getAllDoctorAppointmentsAdmin" }) }),
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getDoctorSettlementsAdmin" }) })
         ]);
 
         const docsJson = await docsRes.json();
         const apptsJson = await apptsRes.json();
+        const setlJson = await setlRes.json();
 
         document.getElementById("loader").style.display = "none";
         document.getElementById("doctorsTable").style.display = "table";
@@ -101,15 +104,20 @@ async function fetchAdminData() {
 
         if (apptsJson.status === "success") {
             allAppointments = apptsJson.data;
-            document.getElementById("adminApptStats").style.display = "grid"; // Show stats grid
+            document.getElementById("adminApptStats").style.display = "grid"; 
             filterAppts(); 
             renderReviews();
             calculateLedger(); 
-            drawAdminCharts(); // ✨ CHARTS RENDER CALL ✨
+            drawAdminCharts(); 
         } else { console.error("Error loading appts: " + apptsJson.message); }
 
+        if (setlJson.status === "success") {
+            allSettlements = setlJson.data;
+            renderSettlements();
+        }
+
     } catch (error) {
-        alert("System error loading data. Please check internet.");
+        showToast("System error loading data.", "error");
         document.getElementById("loader").innerText = "Failed to load data.";
     }
 }
@@ -117,7 +125,6 @@ async function fetchAdminData() {
 // ===============================================
 // 1. MANAGE DOCTORS LOGIC
 // ===============================================
-
 function filterDoctors() {
     const term = document.getElementById("filterDocSearch").value.toLowerCase();
     const filtered = allDoctors.filter(d => 
@@ -248,8 +255,8 @@ async function updateStatus(docId, newStatus) {
             showToast(`Doctor ${docId} is now ${newStatus}`, "success");
             fetchAdminData(); 
         } 
-        else { alert("Error: " + resData.message); }
-    } catch (error) { alert("System error updating status."); } 
+        else { showToast("Error: " + resData.message, "error"); }
+    } catch (error) { showToast("System error updating status.", "error"); } 
     finally { document.body.style.opacity = "1"; }
 }
 
@@ -291,7 +298,6 @@ function renderApptsTable(appts) {
         if(a.appt_status === "Completed") badge = "bg-success";
         if(a.appt_status.includes("Cancel") || a.appt_status.includes("No-Show")) badge = "bg-danger";
 
-        // 👇 Refund aur Cancel Reason dono show karna 👇
         let refInfo = "-";
         
         if (a.refund_status || a.refund_choice) {
@@ -332,6 +338,74 @@ function renderApptsTable(appts) {
 }
 
 // ===============================================
+// ✨ NEW: DOCTOR VERIFICATIONS LOGIC ✨
+// ===============================================
+function renderSettlements() {
+    const statusFilter = document.getElementById("verifyStatusFilter").value;
+    const tbody = document.getElementById("settlementsBody");
+    tbody.innerHTML = "";
+
+    const filtered = allSettlements.filter(s => s.status === statusFilter);
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#888;">No ${statusFilter.toLowerCase()} settlements found.</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(s => {
+        let badge = s.status === "Verified" ? `<span class="status-badge bg-success">✔ Verified</span>` : `<span class="status-badge bg-warning">Pending</span>`;
+        let actionBtn = s.status === "Pending" 
+            ? `<button class="btn btn-approve" style="margin:0; width:auto;" onclick="verifySettlement('${s.settlement_id}', '${s.doctor_id}')">Approve Payment</button>`
+            : `<span style="font-size:12px; color:#666;">Approved on ${s.verified_date.substring(0, 10)}</span>`;
+
+        let dateStr = new Date(s.payment_date).toLocaleDateString();
+
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-size:13px; color:#555;">${dateStr}</td>
+                <td><strong style="color:var(--primary); font-size:12px;">${s.settlement_id}</strong></td>
+                <td class="doc-clickable" onclick="showDoctorProfile('${s.doctor_id}')" style="font-weight:bold; color:#333;">${s.doctor_id}</td>
+                <td style="color:#d32f2f; font-weight:bold;">₹${s.amount}</td>
+                <td><a href="${s.screenshot_url}" target="_blank" class="btn btn-view" style="font-size:11px;">🖼 View Receipt</a></td>
+                <td>${badge}</td>
+                <td>${actionBtn}</td>
+            </tr>
+        `;
+    });
+}
+
+async function verifySettlement(settlementId, doctorId) {
+    if(!confirm(`Verify payment for ${settlementId}? This will clear Doctor's outstanding dues.`)) return;
+
+    document.getElementById("loader").style.display = "block";
+    document.body.style.opacity = "0.7";
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ 
+                action: "verifyDoctorSettlement", 
+                settlement_id: settlementId, 
+                doctor_id: doctorId 
+            })
+        });
+
+        const resData = await response.json();
+        if(resData.status === "success") {
+            showToast("Payment Verified Successfully!", "success");
+            fetchAdminData(); // Refresh UI
+        } else {
+            showToast(resData.message, "error");
+        }
+    } catch(e) {
+        showToast("Error verifying payment.", "error");
+    } finally {
+        document.getElementById("loader").style.display = "none";
+        document.body.style.opacity = "1";
+    }
+}
+
+// ===============================================
 // ✨ CHARTS LOGIC (Admin Dashboard) ✨
 // ===============================================
 function drawAdminCharts() {
@@ -339,29 +413,26 @@ function drawAdminCharts() {
     let revenueByDate = {};
 
     allAppointments.forEach(appt => {
-        // Status Counting
         if(appt.appt_status === "Pending") pending++;
         else if(appt.appt_status === "Approved") approved++;
         else if(appt.appt_status === "Completed") completed++;
         else cancelled++;
 
-        // Revenue Calculation (BhavyaCare Commission 10%)
         if(appt.appt_status === "Completed") {
             let dateParts = appt.appt_date.split('-');
             let dateStr = appt.appt_date;
-            if(dateParts.length === 3) dateStr = dateParts[0] + "-" + dateParts[1]; // DD-MM format
+            if(dateParts.length === 3) dateStr = dateParts[0] + "-" + dateParts[1]; 
 
             let totalMrp = parseInt(appt.total_mrp) || 0;
             let earning = parseInt(appt.doctor_earning) || 0;
             let collected = Math.round(totalMrp * 0.90); 
-            let platformFee = collected - earning; // 10% commission
+            let platformFee = collected - earning; 
 
             if(!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
             revenueByDate[dateStr] += platformFee;
         }
     });
 
-    // Update Stats Numbers
     let statP = document.getElementById("adminStatPending");
     let statA = document.getElementById("adminStatApproved");
     let statC = document.getElementById("adminStatCompleted");
@@ -369,7 +440,6 @@ function drawAdminCharts() {
     if(statA) statA.innerText = approved;
     if(statC) statC.innerText = completed;
 
-    // 1. Doughnut Chart (Admin Overall Appts)
     const ctx1 = document.getElementById('adminApptChart');
     if(ctx1) {
         if(adminApptChart) adminApptChart.destroy();
@@ -393,7 +463,6 @@ function drawAdminCharts() {
         });
     }
 
-    // 2. Bar Chart (Platform Commission)
     let labels = Object.keys(revenueByDate).reverse();
     let dataVals = Object.values(revenueByDate).reverse();
 
@@ -445,7 +514,6 @@ function calculateLedger() {
     allAppointments.forEach(a => {
         let isDocMatch = docFilter === "ALL" || a.doctor_id === docFilter;
         let isComplete = a.appt_status === "Completed";
-        // Update: Includes "Action Required"
         let isRefunded = a.refund_status && (a.refund_status.includes("Refunded") || a.refund_status.includes("Pending") || a.refund_status.includes("Action Required"));
 
         if (isDocMatch && (isComplete || isRefunded)) {

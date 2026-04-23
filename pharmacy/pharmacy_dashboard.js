@@ -383,12 +383,10 @@ function renderOrders(orders) {
         let deliveryIconText = isPickup ? `<i class="fas fa-walking"></i> <b>Pickup By:</b>` : `<i class="fas fa-truck-fast"></i> <b>Deliver By:</b>`;
         let addressLabel = isPickup ? "Pharmacy Address" : "Delivery Address";
 
-        let payStatusBadge = "";
-        if(order.patient_status !== "Pending" && order.patient_status !== "Cancelled" && order.patient_status !== "confirm_for_patient") {
-             payStatusBadge = (order.payment_status === "Completed" || order.payment_status === "Paid") 
-                ? `<span style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:8px;">PAID</span>` 
-                : `<span style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:8px;">DUE</span>`;
-        }
+        // 🚀 FIX: Sirf "Paid" status hone par hi PAID badge dikhega
+        let payStatusBadge = (order.payment_status === "Paid") 
+            ? `<span class="badge" style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">PAID</span>` 
+            : (order.payment_status === "Verification Pending" ? `<span class="badge" style="background:#fef3c7; color:#d97706; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">VERIFYING</span>` : `<span class="badge" style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:800; margin-left:5px;">DUE</span>`);
 
         let addressHtml = `
         <div class="info-block">

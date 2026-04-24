@@ -514,20 +514,56 @@ function downloadAdminPDF() {
 }
 
 // ==========================================
-// ✨ FIXED: LAB VERIFICATIONS TAB (No Invalid Date) ✨
+// ✨ FIXED: LAB VERIFICATIONS (With Smart Search & Date) ✨
 // ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
     if(!container) return; 
     container.innerHTML = "";
     
-    const statusFilterElement = document.getElementById("verifyStatusFilter");
-    const statusFilter = statusFilterElement ? statusFilterElement.value : "Pending";
+    // Filters ki values read karna
+    const statusFilter = document.getElementById("verifyStatusFilter") ? document.getElementById("verifyStatusFilter").value : "Pending";
+    const searchText = document.getElementById("verifySearchBox") ? document.getElementById("verifySearchBox").value.toLowerCase().trim() : "";
+    const startDateVal = document.getElementById("verifyStartDate") ? document.getElementById("verifyStartDate").value : "";
+    const endDateVal = document.getElementById("verifyEndDate") ? document.getElementById("verifyEndDate").value : "";
 
-    const filteredSetl = allLabSettlements.filter(s => s.status === statusFilter);
+    let start = startDateVal ? new Date(startDateVal) : null;
+    let end = endDateVal ? new Date(endDateVal) : null;
+    if(end) end.setHours(23, 59, 59);
+
+    // Date Parser helper (Kyunki Sheet se DD/MM/YYYY text format me aata hai)
+    function parseSheetDate(dateStr) {
+        if(!dateStr || dateStr === "N/A" || dateStr === "") return null;
+        let parts = dateStr.split(' ')[0].split('/'); 
+        if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]); 
+        return new Date(dateStr); 
+    }
+
+    // Data ko filter karna
+    const filteredSetl = allLabSettlements.filter(s => {
+        // 1. Status Check
+        let matchStatus = (s.status === statusFilter);
+        
+        // 2. Search Check (Settlement ID ya Lab ID)
+        let matchText = true;
+        if(searchText) {
+            let lId = s.lab_id ? s.lab_id.toLowerCase() : "";
+            let sId = s.settlement_id ? s.settlement_id.toLowerCase() : "";
+            matchText = lId.includes(searchText) || sId.includes(searchText);
+        }
+
+        // 3. Date Check (Agar Pending hai toh Payment Date, warna Verified Date dekhega)
+        let matchDate = true;
+        let recordDate = statusFilter === "Pending" ? parseSheetDate(s.payment_date) : parseSheetDate(s.verified_date || s.payment_date);
+        
+        if (start && recordDate && recordDate < start) matchDate = false;
+        if (end && recordDate && recordDate > end) matchDate = false;
+
+        return matchStatus && matchText && matchDate;
+    });
 
     if(filteredSetl.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No ${statusFilter.toLowerCase()} verifications found.</div>`;
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; background:white; border-radius:12px; color:#64748b;">No ${statusFilter.toLowerCase()} verifications found for this search.</div>`;
         return;
     }
 
@@ -554,7 +590,6 @@ function renderVerifications() {
             let bgClass = statusFilter === "Verified" ? "#ecfdf5" : "#fef2f2";
             let iconClass = statusFilter === "Verified" ? "fa-check-double" : "fa-ban";
             
-            // 🚀 BADI FIX: Google Sheet automatically "24/04/2026" text bhejti hai, isliye direct use karein!
             let vDate = data.verified_date ? data.verified_date : "Recently";
 
             actionHtml = `<div style="margin-top:15px; padding:12px; background:${bgClass}; border:1px dashed ${colorClass}; border-radius:8px; text-align:center; color:${colorClass}; font-weight:bold; font-size:13px;">
@@ -563,7 +598,6 @@ function renderVerifications() {
             </div>`;
         }
 
-        // Fix for Paid Date invalid issue as well
         let pDate = data.payment_date ? data.payment_date : "Recently";
 
         let card = `

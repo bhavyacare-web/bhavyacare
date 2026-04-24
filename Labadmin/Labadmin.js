@@ -4,10 +4,14 @@ let allLabsData = [];
 let pendingStdRequests = [];
 let allAdminOrders = [];
 let filteredAdminOrders = [];
-let allLabSettlements = []; // ✨ NEW SETTLEMENTS DATA ✨
+let allLabSettlements = []; 
 let currentAdminOrder = null;
 let currentOrderStatusFilter = 'ALL';
 let currentEditUid = null;
+
+// ✨ NEW VARIABLES FOR CHARTS ✨
+let adminTopChart = null;
+let adminMomChart = null;
 
 // TOAST NOTIFICATIONS
 function showToast(message, type = 'success') {
@@ -47,14 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshAllData(true);
 });
 
-// ==========================================
-// ✨ FIXED: FAST & SAFE REFRESH LOGIC ✨
-// ==========================================
 async function refreshAllData(silent = false) {
     if(!silent) showToast("Refreshing data...", "info");
     
     try {
-        // Parallel Fetching
         const [labsRes, reqsRes, ordRes, setlRes] = await Promise.all([
             fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getAdminLabs" }) }),
             fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getPendingServiceRequests" }) }),
@@ -67,7 +67,6 @@ async function refreshAllData(silent = false) {
         const ordData = await ordRes.json();
         const setlData = await setlRes.json();
 
-        // 1. Labs (Safe Parse)
         if(labsData.status === "success") { 
             allLabsData = labsData.data?.data || labsData.data || []; 
             renderLabsTable(); 
@@ -75,7 +74,6 @@ async function refreshAllData(silent = false) {
             document.getElementById("labsTableBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No labs data found.</td></tr>`;
         }
 
-        // 2. Requests (Safe Parse)
         if(reqsData.status === "success") { 
             pendingStdRequests = reqsData.data?.standard || reqsData.data || []; 
             const badge = document.getElementById("reqBadge");
@@ -83,7 +81,6 @@ async function refreshAllData(silent = false) {
             renderStdRequests(); 
         }
 
-        // 3. Orders
         if(ordData.status === "success") { 
             allAdminOrders = ordData.data || []; 
             filteredAdminOrders = [...allAdminOrders];
@@ -92,17 +89,15 @@ async function refreshAllData(silent = false) {
             calculateAdminLedger();
         }
 
-        // 4. Settlements
         if(setlData.status === "success") {
             allLabSettlements = setlData.data || [];
             renderVerifications();
         }
 
     } catch (err) {
-        console.error("Fetch Crash Report:", err); // Ab console me error dikhega
+        console.error("Fetch Crash Report:", err); 
         if(!silent) showToast("Network Error!", "error");
     } finally {
-        // 🚀 BADI FIX: Har haal me Loader hide hoga!
         let oMsg = document.getElementById("loadingOrdersMsg");
         if(oMsg) oMsg.style.display = "none";
         
@@ -113,16 +108,16 @@ async function refreshAllData(silent = false) {
     }
 }
 
+// ✨ FIXED: Added renderSuperAdminStats to switchTab ✨
 function switchTab(tabId, btnElement) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     if(btnElement) btnElement.classList.add('active');
+    
+    if(tabId === 'analyticsTab') renderSuperAdminStats();
 }
 
-// ==========================================
-// 🌟 1. MASTER ORDERS & FILTERS LOGIC 🌟
-// ==========================================
 function populateLabDropdowns() {
     let orderSel = document.getElementById("orderLabFilter");
     let ledgerSel = document.getElementById("ledgerLabFilter");
@@ -305,6 +300,9 @@ function openAdminOrderModal(index) {
         }
     }
 
+    // ✨ NAYA LOGIC: Call Feedback Modal function ✨
+    showFeedbackInAdminModal(o);
+
     document.getElementById("adminOrderModal").style.display = "flex";
 }
 
@@ -408,10 +406,6 @@ function adminCallOrderApi(payload) {
     .finally(() => { if(modal) { modal.style.opacity = "1"; modal.style.pointerEvents = "auto"; } });
 }
 
-
-// ==========================================
-// 🌟 3. MASTER SETTLEMENT LEDGER & PDF 🌟
-// ==========================================
 function calculateAdminLedger() {
     let startInput = document.getElementById("ledgerStartDate");
     let endInput = document.getElementById("ledgerEndDate");
@@ -513,15 +507,11 @@ function downloadAdminPDF() {
     html2pdf().set(opt).from(element).save();
 }
 
-// ==========================================
-// ✨ FIXED: LAB VERIFICATIONS (With Smart Search & Date) ✨
-// ==========================================
 function renderVerifications() {
     const container = document.getElementById("verificationContainer");
     if(!container) return; 
     container.innerHTML = "";
     
-    // Filters ki values read karna
     const statusFilter = document.getElementById("verifyStatusFilter") ? document.getElementById("verifyStatusFilter").value : "Pending";
     const searchText = document.getElementById("verifySearchBox") ? document.getElementById("verifySearchBox").value.toLowerCase().trim() : "";
     const startDateVal = document.getElementById("verifyStartDate") ? document.getElementById("verifyStartDate").value : "";
@@ -531,7 +521,6 @@ function renderVerifications() {
     let end = endDateVal ? new Date(endDateVal) : null;
     if(end) end.setHours(23, 59, 59);
 
-    // Date Parser helper (Kyunki Sheet se DD/MM/YYYY text format me aata hai)
     function parseSheetDate(dateStr) {
         if(!dateStr || dateStr === "N/A" || dateStr === "") return null;
         let parts = dateStr.split(' ')[0].split('/'); 
@@ -539,12 +528,9 @@ function renderVerifications() {
         return new Date(dateStr); 
     }
 
-    // Data ko filter karna
     const filteredSetl = allLabSettlements.filter(s => {
-        // 1. Status Check
         let matchStatus = (s.status === statusFilter);
         
-        // 2. Search Check (Settlement ID ya Lab ID)
         let matchText = true;
         if(searchText) {
             let lId = s.lab_id ? s.lab_id.toLowerCase() : "";
@@ -552,7 +538,6 @@ function renderVerifications() {
             matchText = lId.includes(searchText) || sId.includes(searchText);
         }
 
-        // 3. Date Check (Agar Pending hai toh Payment Date, warna Verified Date dekhega)
         let matchDate = true;
         let recordDate = statusFilter === "Pending" ? parseSheetDate(s.payment_date) : parseSheetDate(s.verified_date || s.payment_date);
         
@@ -618,7 +603,7 @@ function renderVerifications() {
         container.innerHTML += card;
     });
 }
-// ✨ UNIFIED ACTION HANDLER (VERIFY & REJECT) ✨
+
 async function actionLabPayout(settlementId, labId, actionType) {
     let remarks = "";
     if (actionType === "Reject") {
@@ -658,9 +643,6 @@ async function approveLabPayout(settlementId, labId) {
     } catch(e) { showToast("Network error", "error"); }
 }
 
-// ==========================================
-// 4. MANAGE LABS & REQS
-// ==========================================
 function renderLabsTable() {
     const tbody = document.getElementById("labsTableBody");
     tbody.innerHTML = "";
@@ -755,4 +737,92 @@ function handleStdReq(userId, actionType) {
         showToast(data.message, "info"); 
         refreshAllData(true); 
     });
+}
+
+// ==========================================
+// ✨ SUPER ADMIN ANALYTICS & FEEDBACK LOGIC ✨
+// ==========================================
+
+function renderSuperAdminStats() {
+    let labRevenueMap = {};
+    let monthlyGrowthMap = {};
+
+    allAdminOrders.forEach(o => {
+        let status = o.status ? o.status.toUpperCase() : "";
+        if (status === "COMPLETED") {
+            let revenue = Number(o.final_payable || 0); 
+            let labName = o.lab_info ? o.lab_info.split('(')[0].trim() : "Unknown Lab";
+            
+            if (!labRevenueMap[labName]) labRevenueMap[labName] = 0;
+            labRevenueMap[labName] += revenue;
+
+            let dObj = new Date(o.date);
+            if (!isNaN(dObj.getTime())) {
+                let monthYear = dObj.toLocaleString('en-IN', { month: 'short', year: 'numeric' }); 
+                if (!monthlyGrowthMap[monthYear]) monthlyGrowthMap[monthYear] = 0;
+                monthlyGrowthMap[monthYear] += revenue;
+            }
+        }
+    });
+
+    let sortedLabs = Object.keys(labRevenueMap).map(key => {
+        return { lab: key, rev: labRevenueMap[key] };
+    }).sort((a, b) => b.rev - a.rev).slice(0, 5);
+
+    let labLabels = sortedLabs.map(item => item.lab);
+    let labData = sortedLabs.map(item => item.rev);
+
+    let monthLabels = Object.keys(monthlyGrowthMap).reverse(); 
+    let monthData = monthLabels.map(m => monthlyGrowthMap[m]);
+
+    if(adminTopChart) adminTopChart.destroy();
+    adminTopChart = new Chart(document.getElementById('topPerformersChart'), {
+        type: 'bar',
+        data: {
+            labels: labLabels.length > 0 ? labLabels : ['No Data'],
+            datasets: [{
+                label: 'Total Revenue (₹)',
+                data: labData.length > 0 ? labData : [0],
+                backgroundColor: '#3b82f6',
+                borderRadius: 6
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    if(adminMomChart) adminMomChart.destroy();
+    adminMomChart = new Chart(document.getElementById('momGrowthChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels.length > 0 ? monthLabels : ['No Data'],
+            datasets: [{
+                label: 'Platform Growth (₹)',
+                data: monthData.length > 0 ? monthData : [0],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4 
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+
+function showFeedbackInAdminModal(order) {
+    let fbArea = document.getElementById("adminFeedbackArea");
+    let starsContainer = document.getElementById("adminModalStars");
+    let reviewText = document.getElementById("adminModalReview");
+
+    if (order.rating && order.rating !== "") {
+        fbArea.style.display = "block";
+        let stars = "";
+        for(let i=1; i<=5; i++) {
+            stars += `<i class="fas fa-star" style="color:${i <= order.rating ? '#f59e0b' : '#cbd5e1'};"></i>`;
+        }
+        starsContainer.innerHTML = `${stars} <span style="color:#0f172a; font-weight:bold; margin-left:5px;">${order.rating}/5</span>`;
+        reviewText.innerText = order.feedback ? `"${order.feedback}"` : "No written review provided.";
+    } else {
+        fbArea.style.display = "none"; 
+    }
 }

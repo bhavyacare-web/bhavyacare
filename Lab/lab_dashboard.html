@@ -141,6 +141,7 @@
         <button class="tab-btn active" onclick="switchTab('ordersTab', this)"><i class="fas fa-clipboard-list"></i> My Orders</button>
         <button class="tab-btn" onclick="switchTab('overviewTab', this)"><i class="fas fa-chart-line"></i> Analytics</button>
         <button class="tab-btn" onclick="switchTab('ledgerTab', this)"><i class="fas fa-history"></i> Payment Ledger</button>
+        <button class="tab-btn" onclick="switchTab('payoutHistoryTab', this)"><i class="fas fa-receipt"></i> Payout History</button>
     </div>
 
     <div id="ordersTab" class="tab-content active">
@@ -211,6 +212,15 @@
                     </thead>
                     <tbody id="ledgerTableBody"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="payoutHistoryTab" class="tab-content">
+        <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <h3 style="margin-top:0; margin-bottom:20px; color:#0f172a;"><i class="fas fa-receipt" style="color:#3b82f6;"></i> Recent Payout Requests</h3>
+            <div id="payoutHistoryContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <p style="grid-column: 1/-1; text-align:center; color:#64748b; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading history...</p>
             </div>
         </div>
     </div>

@@ -540,6 +540,7 @@ function logout() {
 }
 
 // 🌟 LEDGER AUR PDF LOGIC 🌟
+// 🚀 FIXED: Added switch for payoutHistoryTab
 function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -547,6 +548,7 @@ function switchTab(tabId, btn) {
     if(targetTab) targetTab.classList.add('active');
     if(btn) btn.classList.add('active');
     if(tabId === 'overviewTab') calculateLabStatsAndCharts();
+    if(tabId === 'payoutHistoryTab') fetchPayoutHistory(); // Fetch on click
 }
 
 function calculateLedger() {
@@ -615,4 +617,46 @@ function downloadPDF() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
+}
+
+// ==========================================
+// ✨ NEW: LAB PAYOUT HISTORY FETCH & RENDER ✨
+// ==========================================
+async function fetchPayoutHistory() {
+    const container = document.getElementById("payoutHistoryContainer");
+    if(!container) return;
+    
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Loading history...</p>`;
+
+    try {
+        let res = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: "getLabSettlements", lab_id: localStorage.getItem("bhavya_user_id") }) 
+        });
+        let data = await res.json();
+
+        if(data.status === "success" && data.data && data.data.length > 0) {
+            container.innerHTML = "";
+            data.data.forEach(item => {
+                let statusColor = item.status === "Verified" ? "#10b981" : (item.status === "Rejected" ? "#ef4444" : "#f59e0b");
+                let statusBg = item.status === "Verified" ? "#f0fdf4" : (item.status === "Rejected" ? "#fef2f2" : "#fffbeb");
+                
+                let card = `
+                <div style="background:${statusBg}; padding:15px; border-radius:10px; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:800; font-size:12px; color:#64748b;">${item.settlement_id}</span>
+                        <span style="font-size:10px; font-weight:bold; color:${statusColor}; text-transform:uppercase;">${item.status}</span>
+                    </div>
+                    <h2 style="margin:5px 0; color:#0f172a;">₹${item.amount}</h2>
+                    <p style="font-size:11px; color:#475569; margin:5px 0;">Submitted: ${item.payment_date}</p>
+                    ${item.verified_date ? `<p style="font-size:11px; color:#10b981; font-weight:600;">Verified: ${item.verified_date}</p>` : ""}
+                    ${item.admin_remarks ? `<p style="font-size:11px; color:#ef4444; margin-top:5px; padding-top:5px; border-top:1px dashed #ef4444;"><b>Remark:</b> ${item.admin_remarks}</p>` : ""}
+                    ${item.screenshot_url && item.screenshot_url !== 'N/A' ? `<a href="${item.screenshot_url}" target="_blank" style="display:block; margin-top:10px; font-size:12px; text-decoration:none; color:#3b82f6; font-weight:700;"><i class="fas fa-image"></i> View Receipt</a>` : ""}
+                </div>`;
+                container.innerHTML += card;
+            });
+        } else {
+            container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#64748b;">No settlement history found.</p>`;
+        }
+    } catch(e) { container.innerHTML = `<p style="grid-column: 1/-1; color:red; text-align:center;">Failed to load history.</p>`; }
 }

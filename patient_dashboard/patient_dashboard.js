@@ -620,13 +620,18 @@ function renderBookingCards(bookings) {
         let cancelBtnHtml = "";
         if (!isComplete && !safeStatus.includes("cancel")) cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
 
-        // ✨ NAYA LOGIC: RATE US BUTTON ✨
+        // ✨ NAYA LOGIC: RATE US BUTTON (WITH LOCK) ✨
         let rateBtnHtml = "";
         if (isComplete) {
-            // Sirf Completed orders par button aayega
-            rateBtnHtml = `<button onclick="openFeedbackModal('${bk.order_id}')" style="background:#f59e0b; color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;"><i class="fas fa-star"></i> Rate Lab Experience</button>`;
+            // Check karein ki rating pehle se hai ya nahi
+            if (bk.rating && bk.rating !== "") {
+                // Agar rating hai, toh Disable (Lock) button dikhayein
+                rateBtnHtml = `<button disabled style="background:#f1f5f9; color:#94a3b8; border:1px solid #cbd5e1; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; margin-top:12px; width:100%; cursor:not-allowed;"><i class="fas fa-check-circle" style="color:#10b981;"></i> Feedback Submitted</button>`;
+            } else {
+                // Agar rating nahi hai, toh orange Rate Us button dikhayein
+                rateBtnHtml = `<button onclick="openFeedbackModal('${bk.order_id}')" style="background:#f59e0b; color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%; transition:0.2s;"><i class="fas fa-star"></i> Rate Lab Experience</button>`;
+            }
         }
-
         let reportSectionHtml = ""; let handReportsArr = [];
         if (bk.hand_reports) { try { handReportsArr = JSON.parse(bk.hand_reports); if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports]; } catch(e) { handReportsArr = [bk.hand_reports]; } }
         let onlinePdfArr = [];

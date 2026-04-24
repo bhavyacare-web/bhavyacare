@@ -620,6 +620,13 @@ function renderBookingCards(bookings) {
         let cancelBtnHtml = "";
         if (!isComplete && !safeStatus.includes("cancel")) cancelBtnHtml = `<button onclick="openCancelModal('${bk.order_id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;">Cancel This Booking</button>`;
 
+        // ✨ NAYA LOGIC: RATE US BUTTON ✨
+        let rateBtnHtml = "";
+        if (isComplete) {
+            // Sirf Completed orders par button aayega
+            rateBtnHtml = `<button onclick="openFeedbackModal('${bk.order_id}')" style="background:#f59e0b; color:white; border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%;"><i class="fas fa-star"></i> Rate Lab Experience</button>`;
+        }
+
         let reportSectionHtml = ""; let handReportsArr = [];
         if (bk.hand_reports) { try { handReportsArr = JSON.parse(bk.hand_reports); if(!Array.isArray(handReportsArr)) handReportsArr = [bk.hand_reports]; } catch(e) { handReportsArr = [bk.hand_reports]; } }
         let onlinePdfArr = [];
@@ -647,8 +654,8 @@ function renderBookingCards(bookings) {
             </div>
             <div style="margin-bottom:12px;"><h5 style="margin:0; color:#555; font-size:12px; text-transform:uppercase; letter-spacing:0.5px;">Booked Tests</h5>${testsListHtml}</div>
             <div style="background:#fcfcfc; padding:10px; border-radius:8px; font-size:12px; color:#666; line-height:1.6; border:1px solid #f0f0f0; margin-bottom:12px;"><strong>Patient Name:</strong> ${bk.patient_name} <br><strong>Service Mode:</strong> ${modeDisplay} <br><strong>Collection Address:</strong> ${bk.address}</div>
-            <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:12px; font-size:12px;"><div style="display:flex; justify-content:space-between; margin-top:8px; font-weight:800; font-size:15px; color:#e65100; align-items:center;"><span>Payable:</span> <span>₹${bk.final_payable}${paymentBadge}</span></div></div>
-            ${reportSectionHtml}${cancelBtnHtml}
+           <div style="background:#fffaf0; border:1px dashed #ffe0b2; border-radius:8px; padding:12px; font-size:12px;"><div style="display:flex; justify-content:space-between; margin-top:8px; font-weight:800; font-size:15px; color:#e65100; align-items:center;"><span>Payable:</span> <span>₹${bk.final_payable}${paymentBadge}</span></div></div>
+            ${reportSectionHtml}${cancelBtnHtml}${rateBtnHtml}
         </div>`;
     });
     container.innerHTML = cardsHtml;
@@ -1053,4 +1060,73 @@ async function submitClaimRefund() {
             checkLoginAndFetchData(); 
         } else { showToast("Error: " + result.message, "error"); }
     } catch(e) { showToast("Network error.", "error"); } finally { btn.innerText = "Submit Refund Request"; btn.disabled = false; }
+}
+// ==========================================
+// ✨ PATIENT RATING & FEEDBACK SYSTEM ✨
+// ==========================================
+let currentFeedbackOrderId = null; // 👈 Ye raha wo variable
+
+// Star Click Animation Logic
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', function() {
+            let rating = this.getAttribute('data-val');
+            document.getElementById('fbRatingValue').value = rating;
+            
+            // Gold color for selected stars, Gray for unselected
+            document.querySelectorAll('.star').forEach(s => {
+                if(s.getAttribute('data-val') <= rating) {
+                    s.style.color = '#f59e0b'; // Gold Color
+                } else {
+                    s.style.color = '#cbd5e1'; // Gray Color
+                }
+            });
+        });
+    });
+});
+
+// Modal open karne ka function
+function openFeedbackModal(orderId) {
+    currentFeedbackOrderId = orderId; // ID yahan save ho jayegi
+    document.getElementById('fbOrderIdTxt').innerText = "#" + orderId;
+    document.getElementById('fbRatingValue').value = 0;
+    document.getElementById('fbReviewText').value = "";
+    document.querySelectorAll('.star').forEach(s => s.style.color = '#cbd5e1'); // Reset stars
+    document.getElementById('feedbackModal').style.display = 'flex';
+}
+
+// Feedback Backend pe bhejne ka function
+async function submitFeedback() {
+    let rating = document.getElementById('fbRatingValue').value;
+    let review = document.getElementById('fbReviewText').value.trim();
+
+    if(rating == 0) { showToast("Please select a star rating first!", "error"); return; }
+
+    const btn = document.getElementById('submitFeedbackBtn');
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
+    btn.disabled = true;
+
+    try {
+        let payload = {
+            action: "submitOrderFeedback",
+            order_id: currentFeedbackOrderId, // Wahi save ki hui ID yahan use hogi
+            rating: rating,
+            feedback: review
+        };
+        let res = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        let data = await res.json();
+
+        if(data.status === "success") {
+            showToast("Thank you! Your feedback is saved.", "success");
+            document.getElementById('feedbackModal').style.display = 'none';
+            setTimeout(() => { window.location.reload(); }, 1500); // Reload to hide button
+        } else {
+            showToast(data.message, "error");
+        }
+    } catch(e) {
+        showToast("Error submitting feedback", "error");
+    } finally {
+        btn.innerHTML = `<i class="fas fa-paper-plane"></i> Submit Feedback`;
+        btn.disabled = false;
+    }
 }

@@ -183,15 +183,27 @@
     </div>
 
     <div id="verificationsTab" class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="margin-top:0;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Payout Verifications</h2>
-            <div style="width: 250px;">
-                <select id="verifyStatusFilter" class="search-box" onchange="renderVerifications()" style="font-weight: bold; width:100%;">
-                    <option value="Pending">Pending Approvals</option>
-                    <option value="Verified">Already Verified</option>
-                    <option value="Rejected">Rejected Payments</option> </select>
+        <h2 style="margin-top:0; margin-bottom:20px; color:#1e293b;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Payout Verifications</h2>
+        
+        <div class="controls-bar" style="margin-bottom: 20px;">
+            <input type="text" id="verifySearchBox" class="search-box" placeholder="Search Lab ID or Settlement ID..." onkeyup="renderVerifications()">
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span style="font-size:13px; font-weight:600; color:#64748b;">From:</span>
+                <input type="date" id="verifyStartDate" class="search-box" style="min-width:130px;" onchange="renderVerifications()">
             </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span style="font-size:13px; font-weight:600; color:#64748b;">To:</span>
+                <input type="date" id="verifyEndDate" class="search-box" style="min-width:130px;" onchange="renderVerifications()">
+            </div>
+
+            <select id="verifyStatusFilter" class="search-box" onchange="renderVerifications()" style="font-weight: bold; width: 200px; background:#eff6ff;">
+                <option value="Pending">Pending Approvals</option>
+                <option value="Verified">Already Verified</option>
+                <option value="Rejected">Rejected Payments</option>
+            </select>
         </div>
+
         <div id="verificationContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
         </div>
     </div>

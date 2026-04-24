@@ -62,7 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("payoutForm").addEventListener("submit", submitLabCommission);
 });
 
-// 🚀 FIXED: Safe Data Fetching
+// ==========================================
+// ✨ FIXED: SAFE DATA FETCHING ✨
+// ==========================================
 function fetchOrders(userId) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -74,15 +76,19 @@ function fetchOrders(userId) {
         if(lMsg) lMsg.style.display = "none";
 
         if(data.status === "success") {
-            // Safe array check to prevent .filter is not a function error
-            allOrders = Array.isArray(data.data) ? data.data : (data.data.data || []);
+            // 🚀 BADI FIX: Data extract karne ka sabse safe tareeqa
+            allOrders = data.data || [];
+            if(!Array.isArray(allOrders)) {
+                 allOrders = allOrders.data || []; 
+            }
+
             currentFilteredOrders = [...allOrders]; 
             renderOrders();
             calculateLabStatsAndCharts(); 
             if(typeof calculateLedger === 'function') calculateLedger(); 
         } else {
             let grid = document.getElementById("ordersGrid");
-            if(grid) grid.innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
+            if(grid) grid.innerHTML = `<p style="color:red; padding:20px; grid-column: 1/-1; text-align:center;">Error: ${data.message}</p>`;
         }
     }).catch(err => {
         console.error("Fetch Error:", err);

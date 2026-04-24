@@ -8,7 +8,6 @@ let labOrderChart = null;
 let labRevenueChart = null;
 Chart.register(ChartDataLabels);
 
-// ✨ TOAST NOTIFICATION ✨
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if(!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
@@ -58,13 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchOrders(userId);
 
-    // Payout Form Listener
     document.getElementById("payoutForm").addEventListener("submit", submitLabCommission);
 });
 
-// ==========================================
-// ✨ FIXED: SAFE DATA FETCHING ✨
-// ==========================================
 function fetchOrders(userId) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -76,7 +71,6 @@ function fetchOrders(userId) {
         if(lMsg) lMsg.style.display = "none";
 
         if(data.status === "success") {
-            // 🚀 BADI FIX: Data extract karne ka sabse safe tareeqa
             allOrders = data.data || [];
             if(!Array.isArray(allOrders)) {
                  allOrders = allOrders.data || []; 
@@ -108,7 +102,6 @@ function filterOrders(status, btnElement) {
     renderOrders();
 }
 
-// 🚀 FIXED: Dynamic Payment Badges
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     if(!grid) return;
@@ -137,32 +130,51 @@ function renderOrders() {
         let dtStr = formatDateTime(order.date);
         let slotStr = formatDateTime(order.slot);
 
+        // ✨ RATING DISPLAY LOGIC IN CARD ✨
+        let ratingHtml = "";
+        if(order.rating && order.rating !== "") {
+            let stars = "";
+            for(let i=1; i<=5; i++) {
+                stars += `<i class="fas fa-star" style="color:${i <= order.rating ? '#f59e0b' : '#e2e8f0'}; font-size:12px;"></i>`;
+            }
+            ratingHtml = `
+            <div style="margin-top:15px; padding-top:12px; border-top:1px dashed #e2e8f0; background: #fafafa; padding: 10px; border-radius: 8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+                    <div style="display:flex; gap:3px;">${stars}</div>
+                    <span style="font-size:11px; font-weight:800; color:#0f172a;">${order.rating}.0 / 5.0</span>
+                </div>
+                ${order.feedback ? `<p style="font-size:12px; color:#475569; font-style:italic; margin:0;">"${order.feedback}"</p>` : `<p style="font-size:11px; color:#94a3b8; margin:0;">No comments</p>`}
+            </div>`;
+        }
+
         let card = document.createElement("div");
         card.className = "order-card";
-        card.onclick = () => openOrderModal(index);
         
         card.innerHTML = `
-            <div class="card-header">
-                <div class="card-id">#${order.order_id || "N/A"}</div>
-                <div class="card-date">${dtStr}</div>
+            <div onclick="openOrderModal(${index})">
+                <div class="card-header">
+                    <div class="card-id">#${order.order_id || "N/A"}</div>
+                    <div class="card-date">${dtStr}</div>
+                </div>
+                <div class="card-patient">${order.patient_name || "Unknown Patient"}</div>
+                <div class="card-info"><i class="fas fa-clock"></i> ${slotStr}</div>
+                <div class="card-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
+                
+                <div class="badges-row">
+                    <span class="badge ${statusClass}">${statusText}</span>
+                    <span class="badge ${payClass}">Pay: ${payText}</span>
+                </div>
             </div>
-            <div class="card-patient">${order.patient_name || "Unknown Patient"}</div>
-            <div class="card-info"><i class="fas fa-clock"></i> ${slotStr}</div>
-            <div class="card-info"><i class="fas fa-home"></i> ${order.fulfillment ? order.fulfillment.toUpperCase() : "N/A"}</div>
-            
-            <div class="badges-row">
-                <span class="badge ${statusClass}">${statusText}</span>
-                <span class="badge ${payClass}">Pay: ${payText}</span>
-            </div>
+            ${ratingHtml}
         `;
         grid.appendChild(card);
     });
 }
 
-// 🚀 FIXED: Smart Dues Calculation
 function calculateLabStatsAndCharts() {
     let totalTests = 0, netEarnings = 0, totalDues = 0, verifyingDues = 0;
     let pending = 0, active = 0, completed = 0, cancelled = 0;
+    let totalStars = 0, ratedOrders = 0; // ✨ FOR RATING ✨
     let revByDate = {};
 
     allOrders.forEach(o => {
@@ -185,6 +197,12 @@ function calculateLabStatsAndCharts() {
             let dStr = `${dObj.getDate()}/${dObj.getMonth()+1}`;
             if(!revByDate[dStr]) revByDate[dStr] = 0;
             revByDate[dStr] += Number(o.lab_earning || 0);
+            
+            // ✨ ADDING RATING STARS ✨
+            if(o.rating && !isNaN(o.rating) && o.rating !== "") {
+                totalStars += Number(o.rating);
+                ratedOrders++;
+            }
 
         } else if (s === "ACTIVE" || s === "CONFIRMED") active++;
         else if (s === "CANCELLED") cancelled++;
@@ -193,6 +211,11 @@ function calculateLabStatsAndCharts() {
 
     safeSetText("statTests", totalTests);
     safeSetText("statEarnings", "₹" + netEarnings.toFixed(2));
+
+    // ✨ RATING UI UPDATE ✨
+    let avg = ratedOrders > 0 ? (totalStars / ratedOrders).toFixed(1) : "0.0";
+    safeSetText("statRating", avg);
+    safeSetText("totalReviews", ratedOrders + " Patient Reviews");
 
     const btnContainer = document.getElementById("payDuesBtnContainer");
     if(btnContainer) {
@@ -210,7 +233,6 @@ function calculateLabStatsAndCharts() {
         }
     }
 
-    // DRAW CHARTS
     if(document.getElementById('labOrderChart')) {
         if(labOrderChart) labOrderChart.destroy();
         labOrderChart = new Chart(document.getElementById('labOrderChart'), {
@@ -235,7 +257,6 @@ function calculateLabStatsAndCharts() {
     }
 }
 
-// ✨ PAYOUT LOGIC ✨
 function openPayoutModal(amount) {
     document.getElementById('modalPayAmount').innerText = "₹" + amount.toFixed(2);
     const upiLink = `upi://pay?pa=bhavyacare@upi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`; 
@@ -252,7 +273,6 @@ function openPayoutModal(amount) {
     document.getElementById('payoutModal').style.display = "flex";
 }
 
-// ✨ IMAGE COMPRESSOR ✨
 function getBase64(fileId) {
     return new Promise((resolve, reject) => {
         const input = document.getElementById(fileId);
@@ -280,7 +300,6 @@ function getBase64(fileId) {
     });
 }
 
-// 🚀 FIXED: Delay Reload After Upload
 async function submitLabCommission(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmitPayout");
@@ -298,8 +317,6 @@ async function submitLabCommission(e) {
             showToast("Receipt submitted successfully!", "success"); 
             document.getElementById('payoutModal').style.display = 'none'; 
             document.getElementById("payoutForm").reset();
-            
-            // 1.5s delay to let sheet save completely
             setTimeout(() => { window.location.reload(); }, 1500); 
         } 
         else { showToast(data.message, "error"); }
@@ -539,8 +556,6 @@ function logout() {
     }
 }
 
-// 🌟 LEDGER AUR PDF LOGIC 🌟
-// 🚀 FIXED: Added switch for payoutHistoryTab
 function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -548,7 +563,7 @@ function switchTab(tabId, btn) {
     if(targetTab) targetTab.classList.add('active');
     if(btn) btn.classList.add('active');
     if(tabId === 'overviewTab') calculateLabStatsAndCharts();
-    if(tabId === 'payoutHistoryTab') fetchPayoutHistory(); // Fetch on click
+    if(tabId === 'payoutHistoryTab') fetchPayoutHistory();
 }
 
 function calculateLedger() {
@@ -619,9 +634,6 @@ function downloadPDF() {
     html2pdf().set(opt).from(element).save();
 }
 
-// ==========================================
-// ✨ NEW: LAB PAYOUT HISTORY FETCH & RENDER ✨
-// ==========================================
 async function fetchPayoutHistory() {
     const container = document.getElementById("payoutHistoryContainer");
     if(!container) return;
@@ -631,32 +643,42 @@ async function fetchPayoutHistory() {
     try {
         let res = await fetch(GOOGLE_SCRIPT_URL, { 
             method: 'POST', 
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getLabSettlements", lab_id: localStorage.getItem("bhavya_user_id") }) 
         });
+        
         let data = await res.json();
 
-        if(data.status === "success" && data.data && data.data.length > 0) {
-            container.innerHTML = "";
-            data.data.forEach(item => {
-                let statusColor = item.status === "Verified" ? "#10b981" : (item.status === "Rejected" ? "#ef4444" : "#f59e0b");
-                let statusBg = item.status === "Verified" ? "#f0fdf4" : (item.status === "Rejected" ? "#fef2f2" : "#fffbeb");
-                
-                let card = `
-                <div style="background:${statusBg}; padding:15px; border-radius:10px; border:1px solid #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span style="font-weight:800; font-size:12px; color:#64748b;">${item.settlement_id}</span>
-                        <span style="font-size:10px; font-weight:bold; color:${statusColor}; text-transform:uppercase;">${item.status}</span>
-                    </div>
-                    <h2 style="margin:5px 0; color:#0f172a;">₹${item.amount}</h2>
-                    <p style="font-size:11px; color:#475569; margin:5px 0;">Submitted: ${item.payment_date}</p>
-                    ${item.verified_date ? `<p style="font-size:11px; color:#10b981; font-weight:600;">Verified: ${item.verified_date}</p>` : ""}
-                    ${item.admin_remarks ? `<p style="font-size:11px; color:#ef4444; margin-top:5px; padding-top:5px; border-top:1px dashed #ef4444;"><b>Remark:</b> ${item.admin_remarks}</p>` : ""}
-                    ${item.screenshot_url && item.screenshot_url !== 'N/A' ? `<a href="${item.screenshot_url}" target="_blank" style="display:block; margin-top:10px; font-size:12px; text-decoration:none; color:#3b82f6; font-weight:700;"><i class="fas fa-image"></i> View Receipt</a>` : ""}
-                </div>`;
-                container.innerHTML += card;
-            });
+        if(data.status === "success") {
+            let historyArray = Array.isArray(data.data) ? data.data : (data.data.data || []);
+            
+            if(historyArray.length > 0) {
+                container.innerHTML = "";
+                historyArray.forEach(item => {
+                    let statusColor = item.status === "Verified" ? "#10b981" : (item.status === "Rejected" ? "#ef4444" : "#f59e0b");
+                    let statusBg = item.status === "Verified" ? "#f0fdf4" : (item.status === "Rejected" ? "#fef2f2" : "#fffbeb");
+                    
+                    let card = `
+                    <div style="background:${statusBg}; padding:15px; border-radius:10px; border:1px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="font-weight:800; font-size:12px; color:#64748b;">${item.settlement_id}</span>
+                            <span style="font-size:10px; font-weight:bold; color:${statusColor}; text-transform:uppercase;">${item.status}</span>
+                        </div>
+                        <h2 style="margin:5px 0; color:#0f172a;">₹${item.amount}</h2>
+                        <p style="font-size:11px; color:#475569; margin:5px 0;">Submitted: ${item.payment_date}</p>
+                        ${item.verified_date ? `<p style="font-size:11px; color:#10b981; font-weight:600;">Verified: ${item.verified_date}</p>` : ""}
+                        ${item.admin_remarks ? `<p style="font-size:11px; color:#ef4444; margin-top:5px; padding-top:5px; border-top:1px dashed #ef4444;"><b>Remark:</b> ${item.admin_remarks}</p>` : ""}
+                        ${item.screenshot_url && item.screenshot_url !== 'N/A' ? `<a href="${item.screenshot_url}" target="_blank" style="display:block; margin-top:10px; font-size:12px; text-decoration:none; color:#3b82f6; font-weight:700;"><i class="fas fa-image"></i> View Receipt</a>` : ""}
+                    </div>`;
+                    container.innerHTML += card;
+                });
+            } else {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#64748b;">No settlement history found.</p>`;
+            }
         } else {
-            container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#64748b;">No settlement history found.</p>`;
+            container.innerHTML = `<p style="grid-column: 1/-1; color:red; text-align:center;">Error: ${data.message}</p>`;
         }
-    } catch(e) { container.innerHTML = `<p style="grid-column: 1/-1; color:red; text-align:center;">Failed to load history.</p>`; }
+    } catch(e) { 
+        container.innerHTML = `<p style="grid-column: 1/-1; color:red; text-align:center;">Failed to load history. Backend error or missing function.</p>`; 
+    }
 }

@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("payoutForm").addEventListener("submit", submitLabCommission);
 });
 
+// 🚀 FIXED: Safe Data Fetching
 function fetchOrders(userId) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -73,7 +74,8 @@ function fetchOrders(userId) {
         if(lMsg) lMsg.style.display = "none";
 
         if(data.status === "success") {
-            allOrders = data.data;
+            // Safe array check to prevent .filter is not a function error
+            allOrders = Array.isArray(data.data) ? data.data : (data.data.data || []);
             currentFilteredOrders = [...allOrders]; 
             renderOrders();
             calculateLabStatsAndCharts(); 
@@ -83,6 +85,7 @@ function fetchOrders(userId) {
             if(grid) grid.innerHTML = `<p style="color:red; padding:20px;">Error: ${data.message}</p>`;
         }
     }).catch(err => {
+        console.error("Fetch Error:", err);
         let lMsg = document.getElementById("loadingMsg");
         if(lMsg) { lMsg.innerText = "Network Error!"; lMsg.style.color = "red"; }
     });
@@ -99,7 +102,7 @@ function filterOrders(status, btnElement) {
     renderOrders();
 }
 
-// 🚀 FIX: Orders Render with Verification Badge
+// 🚀 FIXED: Dynamic Payment Badges
 function renderOrders() {
     const grid = document.getElementById("ordersGrid");
     if(!grid) return;
@@ -150,7 +153,7 @@ function renderOrders() {
     });
 }
 
-// 🚀 FIX: Smart Dues Calculation
+// 🚀 FIXED: Smart Dues Calculation
 function calculateLabStatsAndCharts() {
     let totalTests = 0, netEarnings = 0, totalDues = 0, verifyingDues = 0;
     let pending = 0, active = 0, completed = 0, cancelled = 0;
@@ -166,7 +169,7 @@ function calculateLabStatsAndCharts() {
             let payStat = o.payment_status ? o.payment_status.toString().trim().toLowerCase() : "";
             let commission = Number(o.bhavya_commission || 0);
 
-            if(payStat === "due" || payStat === "") {
+            if(payStat === "due" || payStat === "" || payStat === "pending") {
                 totalDues += commission;
             } else if (payStat === "verification pending" || payStat === "verifying") {
                 verifyingDues += commission;
@@ -229,7 +232,7 @@ function calculateLabStatsAndCharts() {
 // ✨ PAYOUT LOGIC ✨
 function openPayoutModal(amount) {
     document.getElementById('modalPayAmount').innerText = "₹" + amount.toFixed(2);
-    const upiLink = `upi://pay?pa=bhavyacare@upi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`; // Website UPI
+    const upiLink = `upi://pay?pa=bhavyacare@upi&pn=BhavyaCare&am=${amount.toFixed(2)}&cu=INR`; 
     const container = document.getElementById("paymentContainer");
     
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -271,7 +274,7 @@ function getBase64(fileId) {
     });
 }
 
-// 🚀 FIX: DELAY RELOAD AFTER UPLOAD
+// 🚀 FIXED: Delay Reload After Upload
 async function submitLabCommission(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSubmitPayout");
@@ -290,7 +293,7 @@ async function submitLabCommission(e) {
             document.getElementById('payoutModal').style.display = 'none'; 
             document.getElementById("payoutForm").reset();
             
-            // 1.5 seconds ka delay taaki backend sheet properly save ho jaye aur UI wapas "Pay Now" na dikhaye
+            // 1.5s delay to let sheet save completely
             setTimeout(() => { window.location.reload(); }, 1500); 
         } 
         else { showToast(data.message, "error"); }

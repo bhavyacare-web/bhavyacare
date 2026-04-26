@@ -45,6 +45,8 @@
     .search-container { padding: 15px 20px 5px; position: relative; max-width: 800px; margin: 0 auto; }
     .search-container input { width: 100%; padding: 14px 14px 14px 45px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: var(--card-bg); box-shadow: var(--shadow-sm); outline: none; font-weight: 500;}
     .search-icon { position: absolute; left: 35px; top: 29px; color: #94a3b8; font-size: 18px; }
+    /* Auto Suggest Box */
+    #autoSuggestBox { display: none; position: absolute; top: 100%; left: 20px; right: 20px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; }
 
     .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 15px 20px; max-width: 800px; margin: 0 auto;}
     .cat-card { background: var(--card-bg); border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s;}
@@ -58,11 +60,17 @@
     .sub-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,86,179,0.2);}
 
     .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 800px; margin: 0 auto;}
+    
+    /* 🌟 SKELETON LOADER 🌟 */
+    .skeleton-card { background: #fff; border-radius: 14px; padding: 15px; height: 140px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 10px;}
+    .skeleton-card::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(241, 245, 249, 0.8), transparent); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
     .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #e2e8f0;}
     .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .profile-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .param-badge { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
-    .service-info h3 { margin: 0 0 6px; font-size: 15px; color: var(--text-main); font-weight: 800; line-height: 1.2; }
+    .service-info h3 { margin: 0 0 6px; font-size: 15px; color: var(--text-main); font-weight: 800; line-height: 1.3; display: flex; align-items: center;}
     .desc-preview { background: #f8fafc; border-radius: 8px; padding: 8px 12px; border: 1px solid #f1f5f9;}
     .desc-preview ul { margin: 0; padding-left: 15px; font-size: 11px; color: var(--text-muted); line-height: 1.4; font-weight: 600;}
     .view-more-btn { font-size: 11px; color: var(--primary); margin-top: 5px; font-weight: 800; cursor: pointer; display: inline-block; padding: 4px 8px; background: var(--primary-light); border-radius: 6px;}
@@ -150,7 +158,12 @@
     .file-input-btn { background: #f1f5f9; border: 1px dashed #94a3b8; color: var(--text-main); padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;}
     .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
 
-    #loading { text-align: center; padding: 40px 20px; color: var(--primary); font-size: 15px; font-weight: 600;}
+    /* 🌟 TOAST NOTIFICATIONS 🌟 */
+    #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;}
+    .toast { background: #1e293b; color: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+    .toast.success { background: #10b981; } .toast.error { background: #ef4444; }
+    @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
 
     @media (min-width: 768px) {
         .services-container { display: grid; grid-template-columns: repeat(2, 1fr); }
@@ -160,8 +173,8 @@
   </style>
 </head>
 <body>
-
-  <div class="sticky-top-wrapper">
+  
+  <div id="toast-container"></div> <div class="sticky-top-wrapper">
     <div class="header">
      <button class="nav-btn" id="navBackBtn" onclick="handleHomeNavigation()">
         <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> <span id="navBackText">Home</span>
@@ -190,15 +203,18 @@
   <div id="bookingView">
       <div class="search-container">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search tests, profiles, scans..." onkeyup="filterServices()">
+        <input type="text" id="searchInput" placeholder="Search tests, profiles, scans..." onkeyup="handleAutoSuggest()">
+        <div id="autoSuggestBox"></div>
       </div>
 
       <div id="dynamicCategorySlider" class="sub-cat-nav" style="padding-top:10px; display:none;"></div>
 
       <div class="category-grid" id="mainCategories"></div>
-      <div id="loading"><i class="fas fa-spinner fa-spin"></i> Fetching best prices...</div>
       <div id="subCategoryContainer"></div>
-      <div class="services-container" id="servicesList"></div>
+      <div class="services-container" id="servicesList">
+          <div class="skeleton-card"></div><div class="skeleton-card"></div>
+          <div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
 
       <div id="bottomCartBar" class="bottom-cart-bar" onclick="toggleView('cart')">
         <div class="cart-summary" id="bottomCartText">0 Items <span style="color:#cbd5e1;">|</span> ₹0</div>
@@ -206,141 +222,154 @@
       </div>
   </div>
 
-
   <div id="cartView" style="display: none; padding-bottom: 50px;">
       
-      <div class="stepper">
-        <div class="step active" id="step1-nav"><div class="step-icon">1</div><span class="step-label">My Info</span></div>
-        <div class="step" id="step2-nav"><div class="step-icon">2</div><span class="step-label">Services</span></div>
-        <div class="step" id="step3-nav"><div class="step-icon">3</div><span class="step-label">Checkout</span></div>
+      <div id="emptyCartDesign" style="display:none; text-align:center; padding:80px 20px;">
+          <img src="https://cdn-icons-png.flaticon.com/512/11329/11329060.png" style="width:120px; opacity:0.5; margin-bottom:20px;">
+          <h3 style="color:#1e293b; margin-bottom:10px;">Your Cart is Empty</h3>
+          <p style="color:#64748b; font-size:14px; margin-bottom:25px;">Looks like you haven't added any health tests yet.</p>
+          <button onclick="toggleView('booking')" class="btn-main" style="width:auto; padding:12px 30px;"><i class="fas fa-search"></i> Browse Tests</button>
       </div>
 
-      <div class="checkout-container">
-        
-        <div class="checkout-card" id="step1-card">
-          <div class="card-title">Patient Details <span id="vipBadge"></span></div>
-          
-          <div id="infoForm">
-            <div class="input-group">
-              <label class="input-label">Patient Name</label>
-              <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Who is the test for?"></div>
-            </div>
-            <div class="input-group">
-              <label class="input-label">Mobile Number</label>
-              <input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number">
-            </div>
-            <div class="input-group">
-              <label class="input-label">City/Locality <span style="color:var(--danger)">*</span></label>
-              <input type="text" id="uCity" class="form-input" placeholder="e.g. Delhi">
-            </div>
-            <div class="input-group">
-              <label class="input-label">Pincode <span style="color:var(--danger)">*</span></label>
-              <input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507">
-            </div>
-            <div class="input-group">
-              <label class="input-label">Complete Address</label>
-              <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
-            </div>
-            <button class="btn-main" onclick="savePatientInfo()">Save & Continue <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
+      <div id="cartCheckoutProcess">
+          <div class="stepper">
+            <div class="step active" id="step1-nav"><div class="step-icon">1</div><span class="step-label">My Info</span></div>
+            <div class="step" id="step2-nav"><div class="step-icon">2</div><span class="step-label">Services</span></div>
+            <div class="step" id="step3-nav"><div class="step-icon">3</div><span class="step-label">Checkout</span></div>
           </div>
 
-          <div id="infoSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="font-size: 14px; line-height: 1.6;">
-                <strong id="sumName" style="font-size: 16px; color: var(--text-main);"></strong><br>
-                <span id="sumMobile" style="color: var(--text-main); font-weight: 600;"></span><br>
-                <span id="sumCityPin" style="color: var(--text-main); font-weight: 600;"></span><br>
-                <span id="sumAddress" style="color: var(--text-muted);"></span>
+          <div class="checkout-container">
+            
+            <div class="checkout-card" id="step1-card">
+              <div class="card-title">Patient Details <span id="vipBadge"></span></div>
+              
+              <div id="infoForm">
+                <div class="input-group">
+                  <label class="input-label">Patient Name</label>
+                  <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Who is the test for?"></div>
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Mobile Number</label>
+                  <input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number">
+                </div>
+                <div class="input-group">
+                  <label class="input-label">City/Locality <span style="color:var(--danger)">*</span></label>
+                  <input type="text" id="uCity" class="form-input" placeholder="e.g. Delhi">
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Pincode <span style="color:var(--danger)">*</span></label>
+                  <input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507">
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Complete Address</label>
+                  <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
+                </div>
+                <button class="btn-main" onclick="savePatientInfo()">Save & Continue <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
               </div>
-              <button onclick="editPatientInfo()" style="background: white; color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: var(--shadow-sm);">Edit</button>
-            </div>
-          </div>
-        </div>
 
-        <div id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
-          
-          <div id="loadingLabsSpinner" style="display:none; text-align:center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
-            <i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:35px;'></i>
-            <p style='font-size:15px; font-weight: 700; color:var(--text-main); margin-top:15px;'>Finding premium providers...</p>
-          </div>
-
-          <div id="cartItemsContainer"></div>
-
-          <div id="labTimesContainer" style="margin-top: 20px; border-top: 2px dashed var(--border); padding-top: 20px;"></div>
-
-          <button id="btnProceedCheckout" class="btn-main" style="display:none; margin-top: 20px;" onclick="goToStep3()">Proceed to Payment <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
-
-          <div id="servicesSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="font-size: 14px; line-height: 1.6;">
-                <strong style="font-size: 16px; color: var(--text-main);"><i class="fas fa-check-circle" style="color:var(--success); margin-right:5px;"></i>Services & Time Confirmed</strong><br>
-                <span id="sumTotalTests" style="color: var(--text-muted); font-weight: 600;"></span>
+              <div id="infoSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div style="font-size: 14px; line-height: 1.6;">
+                    <strong id="sumName" style="font-size: 16px; color: var(--text-main);"></strong><br>
+                    <span id="sumMobile" style="color: var(--text-main); font-weight: 600;"></span><br>
+                    <span id="sumCityPin" style="color: var(--text-main); font-weight: 600;"></span><br>
+                    <span id="sumAddress" style="color: var(--text-muted);"></span>
+                  </div>
+                  <button onclick="editPatientInfo()" style="background: white; color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: var(--shadow-sm);">Edit</button>
+                </div>
               </div>
-              <button onclick="editServicesInfo()" style="background: white; color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: var(--shadow-sm);">Edit</button>
             </div>
+
+            <div id="step2-card" style="display: none; opacity: 0.5; pointer-events: none;">
+              
+              <div id="loadingLabsSpinner" style="display:none; text-align:center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
+                <i class='fas fa-circle-notch fa-spin' style='color:var(--primary); font-size:35px;'></i>
+                <p style='font-size:15px; font-weight: 700; color:var(--text-main); margin-top:15px;'>Finding premium providers...</p>
+              </div>
+
+              <div id="vipUpsellCartBanner" style="display:none;"></div>
+
+              <div id="cartItemsContainer"></div>
+
+              <div id="crossSellContainer" style="display:none; margin-top:15px; margin-bottom:15px;"></div>
+
+              <div id="labTimesContainer" style="margin-top: 20px; border-top: 2px dashed var(--border); padding-top: 20px;"></div>
+
+              <button id="btnProceedCheckout" class="btn-main" style="display:none; margin-top: 20px;" onclick="goToStep3()">Proceed to Payment <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
+
+              <div id="servicesSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div style="font-size: 14px; line-height: 1.6;">
+                    <strong style="font-size: 16px; color: var(--text-main);"><i class="fas fa-check-circle" style="color:var(--success); margin-right:5px;"></i>Services & Time Confirmed</strong><br>
+                    <span id="sumTotalTests" style="color: var(--text-muted); font-weight: 600;"></span>
+                  </div>
+                  <button onclick="editServicesInfo()" style="background: white; color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: var(--shadow-sm);">Edit</button>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="checkout-card" id="step3-card" style="display: none; opacity: 0.5; pointer-events: none; scroll-margin-top: 100px;">
+              <div class="card-title"><i class="fas fa-wallet" style="color: var(--primary); margin-right: 8px;"></i> 3. Payment Details</div>
+              
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 12px; display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
+                <i class="fas fa-money-bill-wave" style="color: var(--success); font-size: 28px; margin-top: 4px;"></i>
+                <div>
+                  <h4 style="margin: 0 0 6px 0; color: #166534; font-size: 15px; font-weight: 800;">Pay at Center / Home</h4>
+                  <p style="margin: 0; color: #15803d; font-size: 13px; line-height: 1.5; font-weight: 500;">No advance payment required. You can pay via <b>Cash or UPI</b> directly at the lab reception or to our home collection agent.</p>
+                </div>
+              </div>
+
+              <div id="discountSection" style="background: #f8fafc; border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Offers & Wallet</h4>
+                
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 12px; color: var(--text-main);">
+                  <input type="checkbox" id="useWalletCb" onchange="calculateFinalBill()" style="width:16px; height:16px; cursor:pointer;">
+                  Use Wallet Balance (Available: ₹<span id="walletBalTxt">0</span>)
+                </label>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="text" id="refCodeInput" class="form-input" placeholder="Referral Code" style="padding: 10px; text-transform: uppercase; margin-bottom:0;">
+                  <button id="applyRefBtn" class="btn-main" style="width: auto; padding: 10px 20px;" onclick="applyReferral()">Apply</button>
+                </div>
+                <div id="refMessage" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
+              </div>
+              
+              <div style="background: #ffffff; border: 1px dashed var(--border); padding: 18px; border-radius: 12px;">
+                <h4 style="margin: 0 0 15px 0; font-size: 13px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">Bill Summary</h4>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
+                  <span>Total Tests/Packages:</span>
+                  <strong id="summaryItemCount" style="color: var(--text-main);">0</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
+                  <span>Collection Charge:</span>
+                  <strong id="summaryChargeTxt" style="color: var(--success); background: var(--success-soft); padding: 2px 8px; border-radius: 6px;">FREE</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 16px; font-weight: 800; color: var(--text-main);">
+                  <span>Amount to Pay:</span>
+                  <span style="color: var(--primary); font-size: 18px;">₹<span id="summaryTotalAmt">0</span></span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-        </div>
-
-        <div class="checkout-card" id="step3-card" style="display: none; opacity: 0.5; pointer-events: none; scroll-margin-top: 100px;">
-          <div class="card-title"><i class="fas fa-wallet" style="color: var(--primary); margin-right: 8px;"></i> 3. Payment Details</div>
-          
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 12px; display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
-            <i class="fas fa-money-bill-wave" style="color: var(--success); font-size: 28px; margin-top: 4px;"></i>
+          <div class="checkout-bottom-bar">
             <div>
-              <h4 style="margin: 0 0 6px 0; color: #166534; font-size: 15px; font-weight: 800;">Pay at Center / Home</h4>
-              <p style="margin: 0; color: #15803d; font-size: 13px; line-height: 1.5; font-weight: 500;">No advance payment required. You can pay via <b>Cash or UPI</b> directly at the lab reception or to our home collection agent.</p>
+              <span style="font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Payable</span><br>
+              <strong style="font-size: 24px; color: var(--text-main); font-weight: 900;">₹<span id="totalAmt">0</span></strong>
             </div>
+            <button class="proceed-btn" id="confirmBtn" disabled onclick="finalizeBooking()">Confirm Booking</button>
           </div>
-
-          <div id="discountSection" style="background: #f8fafc; border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Offers & Wallet</h4>
-            
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 12px; color: var(--text-main);">
-              <input type="checkbox" id="useWalletCb" onchange="calculateFinalBill()" style="width:16px; height:16px; cursor:pointer;">
-              Use Wallet Balance (Available: ₹<span id="walletBalTxt">0</span>)
-            </label>
-
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="text" id="refCodeInput" class="form-input" placeholder="Referral Code" style="padding: 10px; text-transform: uppercase; margin-bottom:0;">
-              <button id="applyRefBtn" class="btn-main" style="width: auto; padding: 10px 20px;" onclick="applyReferral()">Apply</button>
-            </div>
-            <div id="refMessage" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
-          </div>
-          
-          <div style="background: #ffffff; border: 1px dashed var(--border); padding: 18px; border-radius: 12px;">
-            <h4 style="margin: 0 0 15px 0; font-size: 13px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">Bill Summary</h4>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
-              <span>Total Tests/Packages:</span>
-              <strong id="summaryItemCount" style="color: var(--text-main);">0</strong>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); font-weight: 500;">
-              <span>Collection Charge:</span>
-              <strong id="summaryChargeTxt" style="color: var(--success); background: var(--success-soft); padding: 2px 8px; border-radius: 6px;">FREE</strong>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 16px; font-weight: 800; color: var(--text-main);">
-              <span>Amount to Pay:</span>
-              <span style="color: var(--primary); font-size: 18px;">₹<span id="summaryTotalAmt">0</span></span>
-            </div>
-          </div>
-        </div>
-
       </div>
+  </div> 
 
-      <div class="checkout-bottom-bar">
-        <div>
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Payable</span><br>
-          <strong style="font-size: 24px; color: var(--text-main); font-weight: 900;">₹<span id="totalAmt">0</span></strong>
-        </div>
-        <button class="proceed-btn" id="confirmBtn" disabled onclick="finalizeBooking()">Confirm Booking</button>
-      </div>
-
-  </div> <div id="loadingOverlay" class="modal-overlay" style="background: rgba(255,255,255,0.9);">
+  <div id="loadingOverlay" class="modal-overlay" style="background: rgba(255,255,255,0.9);">
     <div style="text-align: center;">
-      <div style="width: 60px; height: 60px; border: 6px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+      <div style="width: 60px; height: 60px; border: 6px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
       <p style="margin-top: 20px; font-weight: 700; color: var(--text-main); font-size: 16px;">Securing your request...</p>
     </div>
   </div>
@@ -427,7 +456,7 @@
 
   <div id="cartOtpModal" class="modal-overlay">
     <div class="modal-content" style="padding: 30px;">
-      <div style="background: var(--primary-soft); width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
+      <div style="background: var(--primary-light); width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
           <i class="fas fa-shield-alt" style="font-size: 35px; color: var(--primary);"></i>
       </div>
       <h3 style="margin-top:0; color: var(--text-main); font-weight: 800; font-size: 20px;">Secure Checkout</h3>
@@ -443,9 +472,25 @@
     </div>
   </div>
 
+  <div id="login-section" class="modal-overlay">
+    <div class="modal-content" style="padding: 25px; text-align: center;">
+      <span class="close-modal" onclick="closeLoginPopup()" style="position:absolute; right:20px; top:15px;">&times;</span>
+      <h3 id="form-title" style="font-size:18px; font-weight:800; color:#1e293b; margin-top:0; margin-bottom:20px;">Patient Login</h3>
+      <div id="phone-section">
+        <input type="text" id="userName" placeholder="Full Name" class="form-input" style="margin-bottom: 10px;">
+        <input type="number" id="phoneNumber" placeholder="Mobile Number" class="form-input" style="margin-bottom: 10px;">
+        <div id="recaptcha-container" style="margin-bottom:15px; display:flex; justify-content:center;"></div>
+        <button onclick="sendOTP()" style="background:var(--primary); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">Send OTP</button>
+      </div>
+      <div id="otp-section" style="display:none;">
+        <input type="number" id="otpCode" placeholder="Enter 6-digit OTP" class="form-input" style="margin-bottom: 10px;">
+        <button onclick="verifyOTP()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">Verify & Login</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="../app.js"></script> 
   <script src="booking.js"></script>
 </body>
 </html>

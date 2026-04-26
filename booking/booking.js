@@ -1,5 +1,5 @@
 // =======================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (YE MISSING THA)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION
 // =======================================================
 const firebaseConfig = {
     apiKey: "AIzaSyC2nYH22wkYDhh-BWfHvkT-bQvdKLCxask",
@@ -21,20 +21,9 @@ try {
 
 // =======================================================
 // MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
-// WITH PREMIUM FEATURES (Skeleton, Suggest, Toast, Upsell)
 // =======================================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
-
-// --- GLOBALS ---
-let cart = [];
-let currentView = 'booking';
-// ... baaki aapka poora booking.js ka code same rahega ...
-// =======================================================
-// MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
-// WITH PREMIUM FEATURES (Skeleton, Suggest, Toast, Upsell)
-// =======================================================
-
+// 👇 YE LINE SIRF EK BAAR HONI CHAHIYE 👇
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 // --- GLOBALS ---
@@ -50,7 +39,6 @@ const categoryConfig = {
     'ecg':       { name: 'ECG', icon: '❤️' },
     'echo':      { name: 'ECHO', icon: '💓' }
 };
-
 const defaultIcon = '🧪';
 const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
@@ -70,6 +58,7 @@ try {
     }
 } catch (e) { cart = []; }
 
+// Niche ka baaki code as it is rahega...
 let searchTimeout; 
 let pollingInterval; 
 

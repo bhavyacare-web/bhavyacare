@@ -445,6 +445,9 @@ function openVipFormModal() {
 }
 function closeVipFormModal() { document.getElementById("vipFormModal").classList.remove("active"); }
 
+// ==========================================
+// ✨ FIXED: VIP PROMO CLICK (WITH LOGIN WATCHER) ✨
+// ==========================================
 async function handleVipPromoClick() {
     const pincode = document.getElementById("vipPromoPincode").value.trim();
     const msg = document.getElementById("vipPromoPincodeMsg");
@@ -467,11 +470,31 @@ async function handleVipPromoClick() {
             
             setTimeout(() => {
                 const userId = localStorage.getItem("bhavya_user_id");
-                if (userId) { closeVipPromo(); openVipFormModal(); } 
+                
+                if (userId) { 
+                    closeVipPromo(); 
+                    openVipFormModal(); 
+                } 
                 else {
                     localStorage.setItem("pending_vip_redirect", "true");
                     closeVipPromo();
-                    if (typeof openPatientLogin === "function") { openPatientLogin(); } else { alert("Please login first."); }
+                    
+                    if (typeof openPatientLogin === "function") { 
+                        openPatientLogin(); 
+                        
+                        // ✨ NAYA LOGIC: Background Watcher ✨
+                        // Ye background me check karta rahega ki patient ne OTP daal kar login kiya ya nahi
+                        let checkLoginInterval = setInterval(() => {
+                            if (localStorage.getItem("bhavya_user_id")) {
+                                clearInterval(checkLoginInterval); // Login mil gaya, baar-baar check karna band karo
+                                localStorage.removeItem("pending_vip_redirect");
+                                openVipFormModal(); // Bina page refresh kiye turant VIP form khol do!
+                            }
+                        }, 1000); // Har 1 second me check karega
+                        
+                    } else { 
+                        alert("Please login first."); 
+                    }
                 }
                 btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`; btn.disabled = false;
             }, 800);

@@ -1,12 +1,13 @@
 // =======================================================
 // MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
+// WITH PREMIUM FEATURES (Skeleton, Suggest, Toast, Upsell)
 // =======================================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
 
 // --- GLOBALS ---
 let cart = [];
-let currentView = 'booking'; // Tracks SPA state
+let currentView = 'booking';
 const categoryConfig = {
     'pathology': { name: 'Test', icon: '🩸' },
     'profile':   { name: 'Package', icon: '🩺' }, 
@@ -17,6 +18,7 @@ const categoryConfig = {
     'ecg':       { name: 'ECG', icon: '❤️' },
     'echo':      { name: 'ECHO', icon: '💓' }
 };
+
 const defaultIcon = '🧪';
 const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
@@ -25,6 +27,17 @@ let allServices = [];
 let userPlanStatus = "basic"; 
 let currentCategory = 'profile'; 
 let currentSubCategory = 'all'; 
+
+// Load cart aggressively
+try {
+    let stored = localStorage.getItem('bhavyaCart');
+    if (stored) {
+        let parsed = JSON.parse(stored);
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        if (Array.isArray(parsed)) cart = parsed.map(item => ({...item, qty: item.qty || 1})); 
+    }
+} catch (e) { cart = []; }
+
 let searchTimeout; 
 let pollingInterval; 
 
@@ -41,73 +54,7 @@ let userWalletBalance = 0;
 let finalBill = { subtotal: 0, collectionCharge: 0, walletUsed: 0, refDiscount: 0, totalPayable: 0, refCode: "" };
 let labSlots = {}; 
 
-// =======================================================
-// 🌟 INITIALIZATION & SPA ROUTER 🌟
-// =======================================================
-document.addEventListener('DOMContentLoaded', function() {
-    loadUniversalCart();
-    initBookingPage();
-});
-
-function loadUniversalCart() {
-    try {
-        let stored = localStorage.getItem('bhavyaCart');
-        if (stored) {
-            let parsed = JSON.parse(stored);
-            if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                cart = parsed.filter(item => item !== null && typeof item === 'object' && item.service_id)
-                             .map(item => ({...item, qty: item.qty || 1})); 
-            } else { cart = []; }
-        } else { cart = []; }
-    } catch (e) { cart = []; }
-}
-
-// 🌟 SPA TOGGLE LOGIC 🌟
-function toggleView(view) {
-    if (view === 'cart') {
-        if (cart.length === 0) {
-            alert("Your cart is empty. Please add items to proceed.");
-            return;
-        }
-        currentView = 'cart';
-        document.getElementById('bookingView').style.display = 'none';
-        document.getElementById('cartView').style.display = 'block';
-        document.getElementById('topCartBtn').style.display = 'none';
-        
-        document.getElementById('navBackText').innerText = "Back to Tests";
-        document.getElementById('pageMainTitle').innerText = "Checkout";
-        window.scrollTo(0, 0);
-        
-        initCartPage();
-    } else {
-        currentView = 'booking';
-        document.getElementById('cartView').style.display = 'none';
-        document.getElementById('bookingView').style.display = 'block';
-        document.getElementById('topCartBtn').style.display = 'inline-block';
-        
-        document.getElementById('navBackText').innerText = "Home";
-        document.getElementById('pageMainTitle').innerText = "Book Services";
-        window.scrollTo(0, 0);
-        
-        updateCartUI();
-    }
-}
-
-function handleHomeNavigation() {
-    if (currentView === 'cart') {
-        toggleView('booking');
-    } else {
-        const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
-        if (userId) { window.location.href = '../patient_dashboard/patient_dashboard.html'; } 
-        else { window.location.href = '../index.html'; }
-    }
-}
-
-// =======================================================
-// 🌟 BOOKING PAGE LOGIC 🌟
-// =======================================================
-function initBookingPage() {
+window.onload = () => {
     updateCartUI(); 
     fetchBookingData();
 
@@ -117,6 +64,17 @@ function initBookingPage() {
         localStorage.removeItem("pending_vip_redirect");
         openVipFormModal();
     }
+};
+
+// 🌟 TOAST NOTIFICATION 🌟
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
 }
 
 function formatText(text) {
@@ -137,8 +95,6 @@ function fetchBookingData() {
     if (cachedServices) {
         allServices = JSON.parse(cachedServices);
         userPlanStatus = cachedPlan || "basic";
-        let loader = document.getElementById("loading");
-        if(loader) loader.style.display = "none";
         handleBannerDisplay();
         renderCategories();
         renderServices();
@@ -151,33 +107,26 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            let claimBanner = document.getElementById("vipClaimBanner");
-            if (claimBanner) {
-                if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
-                    claimBanner.style.display = "block";
-                } else {
-                    claimBanner.style.display = "none";
-                }
+            if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
+                document.getElementById("vipClaimBanner").style.display = "block";
+            } else {
+                document.getElementById("vipClaimBanner").style.display = "none";
             }
             
             localStorage.setItem("bhavya_services_cache", JSON.stringify(allServices));
             localStorage.setItem("bhavya_plan_cache", userPlanStatus);
             
-            let loader = document.getElementById("loading");
-            if(loader) loader.style.display = "none";
             handleBannerDisplay();
             renderCategories();
             renderServices(); 
         }
     }).catch(error => { 
-        let loader = document.getElementById("loading");
-        if(!cachedServices && loader) loader.innerHTML = "Failed to load data."; 
+        if(!cachedServices) document.getElementById("servicesList").innerHTML = "<p style='text-align:center;'>Failed to load data.</p>"; 
     });
 }
 
 function handleBannerDisplay() {
     const banner = document.getElementById("pendingWarningBanner");
-    if(!banner) return;
     if (userPlanStatus === "pending") {
         banner.style.display = "block";
         startVipPolling(); 
@@ -243,13 +192,10 @@ function renderCategories() {
 
     let hasNewCategories = false;
     existingTypes.forEach(key => {
-        if (!key) return; 
-        if (mainCategoryKeys.includes(key)) return; 
-        
+        if (!key || mainCategoryKeys.includes(key)) return; 
         hasNewCategories = true;
         let isActive = currentCategory === key ? 'active' : '';
         let config = categoryConfig[key] || { name: formatText(key), icon: defaultIcon };
-        
         sliderHtml += `<button class="sub-cat-btn ${isActive}" onclick="selectCategory('${key}')" style="display:flex; align-items:center; gap:5px;">
                           <span>${config.icon}</span> ${config.name}
                        </button>`;
@@ -257,19 +203,17 @@ function renderCategories() {
 
     if (sliderContainer) {
         if (hasNewCategories) {
-            sliderContainer.innerHTML = sliderHtml;
-            sliderContainer.style.display = "flex";
+            sliderContainer.innerHTML = sliderHtml; sliderContainer.style.display = "flex";
         } else {
-            sliderContainer.innerHTML = "";
-            sliderContainer.style.display = "none";
+            sliderContainer.innerHTML = ""; sliderContainer.style.display = "none";
         }
     }
 }
 
 function selectCategory(categoryKey) {
     currentCategory = categoryKey; currentSubCategory = 'all';
-    let searchInp = document.getElementById("searchInput");
-    if(searchInp) searchInp.value = ""; 
+    document.getElementById("searchInput").value = ""; 
+    document.getElementById("autoSuggestBox").style.display = "none";
     renderCategories(); renderServices();
 }
 
@@ -277,9 +221,28 @@ function selectSubCategory(subCat) { currentSubCategory = subCat; renderServices
 
 function filterServices() {
     clearTimeout(searchTimeout); 
-    let searchInp = document.getElementById("searchInput");
-    if(!searchInp) return;
-    searchTimeout = setTimeout(() => { renderServices(searchInp.value.toLowerCase()); }, 300); 
+    searchTimeout = setTimeout(() => { renderServices(document.getElementById("searchInput").value.toLowerCase()); }, 300); 
+}
+
+// 🌟 AUTO SUGGEST LOGIC 🌟
+function handleAutoSuggest() {
+    let query = document.getElementById("searchInput").value.toLowerCase();
+    let suggestBox = document.getElementById("autoSuggestBox");
+    if(query.length < 2) { suggestBox.style.display = "none"; return; }
+    
+    let matches = allServices.filter(s => s.service_name.toLowerCase().includes(query) && s.service_id !== "VIP-FREE-001").slice(0, 6);
+    
+    if(matches.length > 0) {
+        suggestBox.innerHTML = matches.map(m => `<div style="padding:12px 15px; border-bottom:1px solid #eee; cursor:pointer;" onclick="selectSuggested('${m.service_name.replace(/'/g, "\\'")}')"><i class="fas fa-search" style="color:#cbd5e1; margin-right:8px;"></i> <b>${m.service_name}</b> <span style="float:right; color:var(--success); font-weight:bold;">₹${m.basic_price}</span></div>`).join('');
+        suggestBox.style.display = "block";
+    } else {
+        suggestBox.style.display = "none";
+    }
+}
+function selectSuggested(name) {
+    document.getElementById("searchInput").value = name;
+    document.getElementById("autoSuggestBox").style.display = "none";
+    filterServices();
 }
 
 function renderServices(searchQuery = "") {
@@ -298,12 +261,10 @@ function renderServices(searchQuery = "") {
             subHtml += `<button class="sub-cat-btn ${active}" onclick="selectSubCategory('${sc}')">${formatText(sc)}</button>`;
         });
         subHtml += `</div>`;
-        if(subContainer) subContainer.innerHTML = subHtml;
+        subContainer.innerHTML = subHtml;
 
         if (currentSubCategory !== 'all') { filtered = filtered.filter(s => String(s.service_category || 'Other').trim() === currentSubCategory); }
-    } else { 
-        if(subContainer) subContainer.innerHTML = ""; 
-    }
+    } else { subContainer.innerHTML = ""; }
 
     if (searchQuery) {
         filtered = displayServices.filter(s => 
@@ -350,6 +311,14 @@ function renderServices(searchQuery = "") {
             pricingHtml = `<div class="mrp-row"><span>Total: <span class="mrp">₹${totalMrp}</span></span></div><div class="final-price">₹${basicPrice} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div><div class="locked-price" onclick="openVipPromo()"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>`;
         }
 
+        // 🌟 INFO ICON & FASTING WARNING LOGIC 🌟
+        let infoIconHtml = (service.description && service.description.trim() !== "") ? `<i class="fas fa-info-circle" onclick="openModal('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>` : "";
+        let fastingHtml = "";
+        let fastData = service.fasting ? service.fasting.toLowerCase() : "";
+        if (fastData.includes("yes") || fastData.includes("8") || fastData.includes("10") || fastData.includes("12")) {
+            fastingHtml = `<div style="color:#d97706; font-size:10px; font-weight:800; background:#fef3c7; padding:4px 8px; border-radius:4px; display:inline-block; margin-top:5px; border:1px solid #fde68a;"><i class="fas fa-utensils"></i> 8-12 Hrs Fasting Required</div>`;
+        }
+
         let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
         let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
 
@@ -364,14 +333,13 @@ function renderServices(searchQuery = "") {
                     descPreviewHtml = `<div class="desc-preview"><ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>${moreText ? `<div class="view-more-btn" onclick="openModal('${s_id}')">${moreText}</div>` : ''}</div>`;
                 }
             }
-
-            htmlContent += `<div class="profile-item"><div class="profile-header"><span class="profile-badge">${cleanCat}</span>${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Tests</span>` : ''}</div><div class="service-info"><h3>${cleanName}</h3>${descPreviewHtml}</div><div class="price-action-row"><div class="price-box">${pricingHtml}</div><div class="action-container">${actionBtnHtml}</div></div></div>`;
+            htmlContent += `<div class="profile-item"><div class="profile-header"><span class="profile-badge">${cleanCat}</span>${service.number_of_test ? `<span class="param-badge"><i class="fas fa-microscope"></i> ${service.number_of_test} Tests</span>` : ''}</div><div class="service-info"><h3>${cleanName} ${infoIconHtml}</h3>${fastingHtml}${descPreviewHtml}</div><div class="price-action-row"><div class="price-box">${pricingHtml}</div><div class="action-container">${actionBtnHtml}</div></div></div>`;
         } else {
             let catIcon = categoryConfig[sTypeLowerCase]?.icon || defaultIcon;
             let imgStr = service.service_image ? String(service.service_image).trim() : "";
             let imageHtml = imgStr !== "" ? `<img src="${imgStr}" onerror="this.style.display='none'; this.parentNode.innerHTML='${catIcon}';">` : catIcon;
 
-            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal"><h3 style="font-size:14px; margin-bottom:6px;">${cleanName}</h3><div class="price-box">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
+            htmlContent += `<div class="service-item"><div class="service-img-box">${imageHtml}</div><div class="service-info-normal"><h3 style="font-size:14px; margin-bottom:2px;">${cleanName} ${infoIconHtml}</h3>${fastingHtml}<div class="price-box" style="margin-top:6px;">${pricingHtml}</div></div><div class="action-container">${actionBtnHtml}</div></div>`;
         }
     });
     container.innerHTML = htmlContent;
@@ -385,24 +353,17 @@ function updateQty(id, change, price, name, type) {
         if (cart[index].qty <= 0) cart.splice(index, 1); 
     } else if (change > 0) { 
         cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
+        showToast("Item added to cart!", "success"); // ✨ ADD TO CART TOAST ✨
     }
     
     localStorage.setItem('bhavyaCart', JSON.stringify(cart));
     updateCartUI(); 
-    
-    let searchInp = document.getElementById("searchInput");
-    renderServices(searchInp ? searchInp.value : ""); 
+    renderServices(document.getElementById("searchInput").value); 
 }
 
 function updateCartUI() {
-    const topCartBtn = document.getElementById("topCartBtn"); 
-    const cartBar = document.getElementById("bottomCartBar"); 
-    const cartText = document.getElementById("bottomCartText");
-    
-    if(!topCartBtn || !cartBar || !cartText) return; 
-
-    let totalItems = cart.reduce((sum, item) => sum + item.qty, 0); 
-    let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const topCartBtn = document.getElementById("topCartBtn"); const cartBar = document.getElementById("bottomCartBar"); const cartText = document.getElementById("bottomCartText");
+    let totalItems = cart.reduce((sum, item) => sum + item.qty, 0); let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     topCartBtn.innerText = `🛒 Cart (${totalItems})`;
     if (totalItems > 0) {
         cartText.innerHTML = `${totalItems} Item${totalItems > 1 ? 's' : ''} <span style="color:#cbd5e1; margin:0 8px;">|</span> ₹${totalPrice}`;
@@ -410,9 +371,40 @@ function updateCartUI() {
     } else { cartBar.classList.remove("visible"); }
 }
 
+// 🌟 EMPTY CART UI IN TOGGLE 🌟
+function toggleView(view) {
+    if (view === 'cart') {
+        currentView = 'cart';
+        document.getElementById('bookingView').style.display = 'none';
+        document.getElementById('cartView').style.display = 'block';
+        document.getElementById('topCartBtn').style.display = 'none';
+        document.getElementById('navBackText').innerText = "Back to Tests";
+        document.getElementById('pageMainTitle').innerText = "Checkout";
+        window.scrollTo(0, 0);
+        
+        if (cart.length === 0) {
+            document.getElementById('emptyCartDesign').style.display = 'block';
+            document.getElementById('cartCheckoutProcess').style.display = 'none';
+        } else {
+            document.getElementById('emptyCartDesign').style.display = 'none';
+            document.getElementById('cartCheckoutProcess').style.display = 'block';
+            initCartPage();
+        }
+    } else {
+        currentView = 'booking';
+        document.getElementById('cartView').style.display = 'none';
+        document.getElementById('bookingView').style.display = 'block';
+        document.getElementById('topCartBtn').style.display = 'inline-block';
+        document.getElementById('navBackText').innerText = "Home";
+        document.getElementById('pageMainTitle').innerText = "Book Services";
+        window.scrollTo(0, 0);
+        updateCartUI();
+    }
+}
+
 function openModal(serviceId) {
     const service = allServices.find(s => s.service_id === serviceId);
-    if (!service) return alert("Details not loaded yet.");
+    if (!service) return;
     
     document.getElementById("modalTitle").innerText = formatText(service.service_name);
     let descRaw = String(service.description || '');
@@ -445,9 +437,64 @@ function openVipFormModal() {
 }
 function closeVipFormModal() { document.getElementById("vipFormModal").classList.remove("active"); }
 
-// ==========================================
-// ✨ FIXED: VIP PROMO CLICK (WITH LOGIN WATCHER) ✨
-// ==========================================
+// ✨ HISTORY WALE LOGIN MODAL KE FUNCTIONS ✨
+let loginConfirmationResult;
+function openPatientLogin() {
+    document.getElementById("login-section").classList.add("active");
+    document.getElementById("phone-section").style.display = "block";
+    document.getElementById("otp-section").style.display = "none";
+    if (!window.loginRecaptchaVerifier) {
+        window.loginRecaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
+        window.loginRecaptchaVerifier.render();
+    }
+}
+
+function closeLoginPopup() {
+    document.getElementById("login-section").classList.remove("active");
+}
+
+function sendOTP() {
+    const mobile = document.getElementById("phoneNumber").value.trim();
+    const name = document.getElementById("userName").value.trim();
+    if (!name || mobile.length !== 10) return alert("Please enter a valid Name and 10-digit mobile number.");
+
+    firebase.auth().signInWithPhoneNumber("+91" + mobile, window.loginRecaptchaVerifier)
+    .then((result) => {
+        loginConfirmationResult = result;
+        document.getElementById("phone-section").style.display = "none";
+        document.getElementById("otp-section").style.display = "block";
+        showToast("OTP Sent!", "success");
+    }).catch((error) => {
+        alert("Error sending OTP.");
+    });
+}
+
+function verifyOTP() {
+    const otp = document.getElementById("otpCode").value.trim();
+    if(otp.length !== 6) return alert("Enter valid 6-digit OTP");
+
+    loginConfirmationResult.confirm(otp).then((result) => {
+        let user = result.user;
+        const payload = { action: "login", uid: user.uid, mobile: user.phoneNumber, role: "patient", name: document.getElementById("userName").value.trim() };
+        
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === "success") {
+                const finalUserId = res.user_id || (res.data ? res.data.user_id : null); 
+                localStorage.setItem("bhavya_uid", user.uid); 
+                localStorage.setItem("bhavya_mobile", user.phoneNumber); 
+                localStorage.setItem("bhavya_role", res.role || "patient"); 
+                localStorage.setItem("bhavya_user_id", finalUserId); 
+                localStorage.setItem("bhavya_name", document.getElementById("userName").value.trim());
+                closeLoginPopup();
+                showToast("Login Successful!", "success");
+                // Watcher chal raha hai, wo khud VIP form khol dega
+            }
+        });
+    }).catch((error) => { alert("Invalid OTP."); });
+}
+
 async function handleVipPromoClick() {
     const pincode = document.getElementById("vipPromoPincode").value.trim();
     const msg = document.getElementById("vipPromoPincodeMsg");
@@ -470,31 +517,21 @@ async function handleVipPromoClick() {
             
             setTimeout(() => {
                 const userId = localStorage.getItem("bhavya_user_id");
-                
                 if (userId) { 
-                    closeVipPromo(); 
-                    openVipFormModal(); 
+                    closeVipPromo(); openVipFormModal(); 
                 } 
                 else {
                     localStorage.setItem("pending_vip_redirect", "true");
                     closeVipPromo();
                     
-                    if (typeof openPatientLogin === "function") { 
-                        openPatientLogin(); 
-                        
-                        // ✨ NAYA LOGIC: Background Watcher ✨
-                        // Ye background me check karta rahega ki patient ne OTP daal kar login kiya ya nahi
-                        let checkLoginInterval = setInterval(() => {
-                            if (localStorage.getItem("bhavya_user_id")) {
-                                clearInterval(checkLoginInterval); // Login mil gaya, baar-baar check karna band karo
-                                localStorage.removeItem("pending_vip_redirect");
-                                openVipFormModal(); // Bina page refresh kiye turant VIP form khol do!
-                            }
-                        }, 1000); // Har 1 second me check karega
-                        
-                    } else { 
-                        alert("Please login first."); 
-                    }
+                    openPatientLogin(); 
+                    let checkLoginInterval = setInterval(() => {
+                        if (localStorage.getItem("bhavya_user_id")) {
+                            clearInterval(checkLoginInterval); 
+                            localStorage.removeItem("pending_vip_redirect");
+                            openVipFormModal(); 
+                        }
+                    }, 1000); 
                 }
                 btn.innerHTML = `<i class="fas fa-crown"></i> Activate Now`; btn.disabled = false;
             }, 800);
@@ -609,6 +646,12 @@ function claimVipPackage() {
         updateQty(service.service_id, 1, 0, service.service_name, service.service_type);
         toggleView('cart');
     } else { alert("Loading... Please wait a second or contact Admin."); }
+}
+
+function handleHomeNavigation() {
+    const userId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("user_id");
+    if (userId) { window.location.href = '../patient_dashboard/patient_dashboard.html'; } 
+    else { window.location.href = '../index.html'; }
 }
 
 // =======================================================
@@ -939,6 +982,10 @@ function renderGroupedCart() {
     }
     
     document.getElementById('cartItemsContainer').innerHTML = html;
+    
+    // ✨ CROSS SELL LOGIC RENDER ✨
+    renderCrossSell();
+
     renderLabTimeSelectors();
     calculateFinalBill(); 
 }
@@ -972,7 +1019,6 @@ function removeCartItem(originalIndex) {
         cart.splice(originalIndex, 1);
         localStorage.setItem('bhavyaCart', JSON.stringify(cart));
         if(cart.length === 0) {
-            alert("Cart is empty. Redirecting to Booking Page.");
             toggleView('booking');
         } else { 
             autoAssignGroupLabs(); 
@@ -1262,6 +1308,73 @@ function calculateFinalBill() {
         if (collectionCharge === 0) chargeUI.innerHTML = `<span style="color:var(--success); background:var(--success-soft); padding:2px 8px; border-radius:6px;">FREE</span>`;
         else { chargeUI.innerText = `₹${collectionCharge}`; chargeUI.style.color = "var(--text-main)"; chargeUI.style.background = "transparent"; }
     }
+
+    // 🌟 VIP SMART UPSELL LOGIC 🌟
+    let upsellBanner = document.getElementById("vipUpsellCartBanner"); 
+    if (userPlanStatus !== "vip" && userPlanStatus !== "pending" && !hasVipPackage && upsellBanner) {
+        let potentialVipSavings = 0;
+        cart.forEach(item => {
+            let service = allServices.find(s => s.service_id === item.service_id);
+            if(service) potentialVipSavings += (Number(service.basic_price) - Number(service.vip_price)) * item.qty;
+        });
+
+        if (potentialVipSavings > 500) {
+            upsellBanner.innerHTML = `<div style="background:linear-gradient(135deg, #1e293b, #0f172a); color:white; padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+                <div><h4 style="margin:0; color:#f59e0b; font-size:14px;"><i class="fas fa-crown"></i> Add VIP Plan</h4><p style="margin:2px 0 0; font-size:12px; color:#cbd5e1;">Add VIP for ₹${baseVipPrice} & save ₹${potentialVipSavings} instantly!</p></div>
+                <button onclick="claimVipPackage()" style="background:#f59e0b; color:#1e293b; font-weight:800; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">Add Now</button>
+            </div>`;
+            upsellBanner.style.display = "block";
+        } else {
+            upsellBanner.style.display = "none";
+        }
+    }
+}
+
+// 🌟 FREQUENTLY ADDED TOGETHER (CROSS-SELL) 🌟
+function renderCrossSell() {
+    let crossSellDiv = document.getElementById("crossSellContainer");
+    if(!crossSellDiv) return;
+
+    let inCartNames = cart.map(c => c.service_name.toLowerCase());
+    
+    // Very basic mapping logic. Example: If Thyroid in cart, suggest Vitamin D.
+    const crossSellRules = [
+        { trigger: "thyroid", suggest: "vitamin d" },
+        { trigger: "lipid", suggest: "hba1c" },
+        { trigger: "sugar", suggest: "kidney" }
+    ];
+
+    let suggestedItem = null;
+
+    for (let rule of crossSellRules) {
+        let hasTrigger = inCartNames.some(name => name.includes(rule.trigger));
+        let alreadyHasSuggest = inCartNames.some(name => name.includes(rule.suggest));
+        
+        if (hasTrigger && !alreadyHasSuggest) {
+            suggestedItem = allServices.find(s => s.service_name.toLowerCase().includes(rule.suggest) && s.service_id !== "VIP-FREE-001");
+            if (suggestedItem) break; 
+        }
+    }
+
+    if (suggestedItem) {
+        let priceToUse = (userPlanStatus === "vip" || userPlanStatus === "pending") ? suggestedItem.vip_price : suggestedItem.basic_price;
+        let cName = suggestedItem.service_name.replace(/'/g, "\\'");
+        
+        crossSellDiv.innerHTML = `
+        <div style="background:#fdf8f6; border:1px dashed #f97316; padding:15px; border-radius:12px;">
+            <p style="margin:0 0 8px 0; font-size:12px; color:#c2410c; font-weight:800; text-transform:uppercase;"><i class="fas fa-magic"></i> Frequently Added Together</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h4 style="margin:0; font-size:14px; color:var(--text-main);">${suggestedItem.service_name}</h4>
+                    <p style="margin:2px 0 0; font-size:12px; color:var(--success); font-weight:bold;">Just +₹${priceToUse}</p>
+                </div>
+                <button onclick="updateQty('${suggestedItem.service_id}', 1, ${priceToUse}, '${cName}', '${suggestedItem.service_type}')" style="background:var(--primary); color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">Add</button>
+            </div>
+        </div>`;
+        crossSellDiv.style.display = "block";
+    } else {
+        crossSellDiv.style.display = "none";
+    }
 }
 
 function validateCheckout() {
@@ -1294,6 +1407,7 @@ function goToStep3() {
     document.getElementById('cartItemsContainer').style.display = 'none';
     document.getElementById('labTimesContainer').style.display = 'none';
     document.getElementById('btnProceedCheckout').style.display = 'none';
+    document.getElementById('crossSellContainer').style.display = 'none'; // Hide cross sell
     
     let summaryDiv = document.getElementById('servicesSummary');
     if(summaryDiv) {
@@ -1318,6 +1432,7 @@ function editServicesInfo() {
     document.getElementById('cartItemsContainer').style.display = 'block';
     document.getElementById('labTimesContainer').style.display = 'block';
     document.getElementById('btnProceedCheckout').style.display = 'block';
+    document.getElementById('crossSellContainer').style.display = 'block'; 
 
     document.getElementById('step2-nav').classList.remove('completed');
     document.getElementById('step3-nav').classList.remove('active');

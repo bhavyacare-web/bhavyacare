@@ -1,4 +1,36 @@
 // =======================================================
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (YE MISSING THA)
+// =======================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyC2nYH22wkYDhh-BWfHvkT-bQvdKLCxask",
+    authDomain: "bhavya-care.firebaseapp.com",
+    projectId: "bhavya-care",
+    storageBucket: "bhavya-care.firebasestorage.app",
+    messagingSenderId: "979254809111",
+    appId: "1:979254809111:web:0181e0c97277a5d0d9c252",
+    measurementId: "G-G82G4VWGGT"
+};
+
+try {
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+} catch(e) {
+    console.error("Firebase init error:", e);
+}
+
+// =======================================================
+// MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
+// WITH PREMIUM FEATURES (Skeleton, Suggest, Toast, Upsell)
+// =======================================================
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec"; 
+
+// --- GLOBALS ---
+let cart = [];
+let currentView = 'booking';
+// ... baaki aapka poora booking.js ka code same rahega ...
+// =======================================================
 // MASTER FRONTEND JS (booking.js & cart.js UNIFIED SPA)
 // WITH PREMIUM FEATURES (Skeleton, Suggest, Toast, Upsell)
 // =======================================================

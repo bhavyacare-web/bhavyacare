@@ -113,12 +113,29 @@ function fetchBookingData() {
     const cachedServices = localStorage.getItem("bhavya_services_cache");
     const cachedPlan = localStorage.getItem("bhavya_plan_cache");
     
+    // ✨ NAYA LOGIC: Data load hone ke baad URL check karega ✨
+    function checkUrlAndRender() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        const viewParam = urlParams.get('view');
+        
+        if (viewParam === 'cart') {
+            toggleView('cart');
+        } else if (searchParam) {
+            // Search input me text daalo aur bina ruke search kar do
+            document.getElementById("searchInput").value = searchParam;
+            renderServices(searchParam.toLowerCase());
+        } else {
+            renderServices(); 
+        }
+    }
+
     if (cachedServices) {
         allServices = JSON.parse(cachedServices);
         userPlanStatus = cachedPlan || "basic";
         handleBannerDisplay();
         renderCategories();
-        renderServices();
+        checkUrlAndRender(); // Cache se mila toh turant search karega
     }
 
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: userId }) })
@@ -128,10 +145,13 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
-            if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
-                document.getElementById("vipClaimBanner").style.display = "block";
-            } else {
-                document.getElementById("vipClaimBanner").style.display = "none";
+            let claimBanner = document.getElementById("vipClaimBanner");
+            if (claimBanner) {
+                if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
+                    claimBanner.style.display = "block";
+                } else {
+                    claimBanner.style.display = "none";
+                }
             }
             
             localStorage.setItem("bhavya_services_cache", JSON.stringify(allServices));
@@ -139,7 +159,11 @@ function fetchBookingData() {
             
             handleBannerDisplay();
             renderCategories();
-            renderServices(); 
+            
+            if (!cachedServices) { 
+                // Naya data aaya toh search karega
+                checkUrlAndRender(); 
+            }
         }
     }).catch(error => { 
         if(!cachedServices) document.getElementById("servicesList").innerHTML = "<p style='text-align:center;'>Failed to load data.</p>"; 

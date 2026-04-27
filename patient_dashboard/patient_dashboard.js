@@ -194,7 +194,16 @@ async function checkLoginAndFetchData() {
                     let deskImg = document.getElementById("desktopProfileImg"); if(deskImg) deskImg.src = patient.extra_details.image;
                 } else { profileImages.forEach(img => img.src = fallbackUrl); if(editPreview) editPreview.src = fallbackUrl; }
             } else {
-                if (banner) banner.style.display = "block"; profileImages.forEach(img => img.src = fallbackUrl); if(editPreview) editPreview.src = fallbackUrl;
+                if (banner) banner.style.display = "block"; 
+                profileImages.forEach(img => img.src = fallbackUrl); 
+                if(editPreview) editPreview.src = fallbackUrl;
+                
+                // ✨ NAYA LOGIC: Auto-switch to Profile Tab on fresh visit
+                if (!sessionStorage.getItem("profilePromptShown")) {
+                    sessionStorage.setItem("profilePromptShown", "true");
+                    switchTab('profile');
+                    setTimeout(() => { showToast("Please complete your profile details.", "info"); }, 500);
+                }
             }
 
             fetchWalletHistory(userId);

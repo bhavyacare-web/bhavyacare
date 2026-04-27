@@ -3,106 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Patient Dashboard - BhavyaCare</title>
+    <title>Patient Dashboard - BhavyaCare Premium</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* CSS Variables */
-        :root { --primary: #0056b3; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #333333; --text-light: #777777; }
-        * { box-sizing: border-box; }
+        /* CSS Variables & Reset */
+        :root { 
+            --primary: #0056b3; --primary-light: #e6f0fa;
+            --success: #10b981; --success-light: #d1fae5;
+            --warning: #f59e0b; --warning-light: #fef3c7;
+            --danger: #ef4444; --danger-light: #fee2e2;
+            --bg-color: #f8fafc; --card-bg: #ffffff; 
+            --text-main: #0f172a; --text-light: #64748b; 
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
         
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: var(--text-main); }
         .main-content { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
         
         .tab-content { display: none; animation: slideUp 0.3s ease-out; }
         .tab-content.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        .mobile-header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 100; position: sticky; top: 0; }
-        .brand h2 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; }
+        /* Header Styles */
+        .mobile-header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); z-index: 100; position: sticky; top: 0; border-bottom: 1px solid var(--border);}
+        .brand h2 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px;}
         .brand span { color: var(--success); }
         
         .user-profile-mini { display: flex; align-items: center; gap: 10px; cursor: pointer;}
-        .user-profile-mini .greeting { font-size: 13px; color: var(--text-light); text-align: right;}
-        .user-profile-mini .name { font-size: 15px; font-weight: bold; color: var(--text-main); margin: 0; }
-        .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e6f0fa; object-fit: cover;}
+        .user-profile-mini .greeting { font-size: 12px; color: var(--text-light); text-align: right; font-weight: 500;}
+        .user-profile-mini .name { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0; }
+        .profile-img { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--primary-light); object-fit: cover;}
         
-        .notification-dot { position: absolute; top: -2px; right: -2px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--card-bg); }
+        /* ✨ GLOBAL SEARCH BAR ✨ */
+        .global-search-box { position: relative; margin-bottom: 20px; max-width: 800px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-radius: 14px;}
+        .global-search-box input { width: 100%; padding: 16px 15px 16px 45px; border-radius: 14px; border: 1px solid var(--border); font-size: 14px; outline: none; font-weight: 500; font-family: inherit;}
+        .global-search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .global-search-box i.fa-search { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px;}
+        .global-search-btn { position: absolute; right: 6px; top: 6px; bottom: 6px; background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;}
         
-        .quick-actions-container { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .action-btn-main { flex: 1; min-width: 30%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .action-btn-main:active { transform: scale(0.96); }
-        .btn-book { background: var(--primary); color: white; }
-        .btn-consult { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
-        .btn-rx { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .dash-card { background: var(--card-bg); padding: 20px 15px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; border: 1px solid #f0f0f0; transition: 0.2s; }
-        .card-wallet { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: none; }
-        .card-wallet .icon-bg { color: #2e7d32; opacity: 0.1; position: absolute; right: -10px; bottom: -10px; font-size: 70px; }
-        .card-vip { background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); border: none; cursor: pointer; }
+        /* ✨ 6 QUICK ACTIONS GRID ✨ */
+        .quick-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .q-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 15px 10px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .q-btn:active { transform: scale(0.95); }
+        .q-btn .icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 2px;}
+        .q-btn span { font-size: 11px; font-weight: 700; color: var(--text-main); text-align: center;}
+        
+        /* ✨ COMPACT WALLET & VIP CARDS ✨ */
+        .compact-cards-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .compact-card { flex: 1; border-radius: 16px; padding: 16px; position: relative; overflow: hidden; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 20px rgba(0,0,0,0.08);}
+        .card-wallet { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .card-vip { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); cursor: pointer; }
         .card-vip:active { transform: scale(0.98); }
-        .card-vip .icon-bg { color: #f57c00; opacity: 0.1; position: absolute; right: -10px; bottom: -10px; font-size: 70px; }
-        .dash-card h4 { margin: 0 0 5px 0; color: var(--text-light); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; z-index: 1;}
-        .dash-card .value { font-size: 26px; font-weight: 800; color: var(--text-main); margin: 0; z-index: 1;}
-        .dash-card .sub-text { font-size: 12px; color: var(--text-light); margin-top: 5px; z-index: 1;}
-        .card-action-btn { background: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 1; transition: 0.2s;}
+        .cc-title { font-size: 11px; font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;}
+        .cc-value { font-size: 24px; font-weight: 800; margin: 0; line-height: 1.2;}
+        .cc-action { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; margin-top: 10px; backdrop-filter: blur(5px); width: max-content;}
+        .cc-icon { position: absolute; right: -15px; bottom: -20px; font-size: 80px; opacity: 0.15; }
         
-        .data-box { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px;}
-        .section-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
+        /* ✨ VIP ALERT ATTACHED TO CARD ✨ */
+        #vipPackageAlert { background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 12px; padding: 12px; color: white; font-size: 12px; font-weight: bold; text-align: center; margin-top: -15px; margin-bottom: 25px; cursor: pointer; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); display: none; position: relative; z-index: 2;}
+
+        .data-box { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid var(--border);}
+        .section-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center;}
         
+        /* ✨ SKELETON LOADERS ✨ */
+        .skeleton-box { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
+        .skel-text { height: 12px; margin-bottom: 10px; width: 100%; }
+        .skel-text.short { width: 60%; }
+        .skel-card { border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 15px;}
+        .skel-icon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
         .list-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .list-info h5 { margin: 0 0 5px 0; font-size: 15px; color: var(--text-main); }
+        .list-info h5 { margin: 0 0 5px 0; font-size: 14px; color: var(--text-main); font-weight: 700;}
         .list-info p { margin: 0; font-size: 12px; color: var(--text-light); }
         
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
-        .status-success { background: #e8f5e9; color: #2e7d32; }
-        .status-warning { background: #fff8e1; color: #f57c00; }
-        .status-primary { background: #e6f0fa; color: #0056b3; }
-        .status-danger { background: #ffebee; color: #d32f2f; }
+        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .status-success { background: var(--success-light); color: #065f46; }
+        .status-warning { background: var(--warning-light); color: #b45309; }
+        .status-primary { background: var(--primary-light); color: var(--primary); }
+        .status-danger { background: var(--danger-light); color: #991b1b; }
 
         /* 🌟 NAVIGATION STYLES 🌟 */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 5px 15px 5px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0aab5; text-decoration: none; font-size: 11px; font-weight: 600; gap: 4px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 5px 20px 5px; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 1000; border-top-left-radius: 20px; border-top-right-radius: 20px;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; font-size: 10px; font-weight: 700; gap: 5px; padding: 8px 12px; border-radius: 12px; transition: 0.3s; cursor: pointer; }
         .nav-item i { font-size: 20px; margin-bottom: 2px; transition: 0.3s;}
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
+
+        /* ✨ FLOATING CART ICON ✨ */
+        #floatingCartBtn { position: fixed; bottom: 90px; right: 20px; background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(0, 86, 179, 0.4); cursor: pointer; z-index: 1000; transition: 0.3s; }
+        #floatingCartBtn:active { transform: scale(0.9); }
+        #globalCartBadge { position: absolute; top: -2px; right: -2px; background: var(--danger); color: white; font-size: 11px; font-weight: 800; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         
-        .input-box { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;}
-        .input-box:focus { border-color: var(--primary); }
-        .form-group { margin-top: 12px; }
+        .input-box { width: 100%; padding: 14px; margin-top: 5px; border: 1px solid var(--border); border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; font-family: inherit; font-weight: 500;}
+        .input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);}
+        .form-group { margin-top: 15px; }
         
-        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; align-items: center; }
+        /* Filter Bar */
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: #ffffff; padding: 15px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid var(--border); align-items: center; }
         .search-wrapper { flex: 2; position: relative; }
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px;}
-        .filter-input { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: 'Segoe UI', sans-serif;}
-        .filter-input.with-icon { padding-left: 42px; }
-        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
+        .filter-input { width: 100%; padding: 14px 15px 14px 40px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: inherit; font-weight: 500;}
+        .filter-input:focus { border-color: var(--primary); }
         .filter-actions { display: flex; gap: 10px; flex: 1.5; }
-        .date-input { flex: 1; }
-        .filter-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;}
-        
+        .date-input { flex: 1; padding-left: 15px;}
+        .filter-btn { background: var(--primary-light); color: var(--primary); border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;}
+
         /* Modals & Bottom Sheets */
-        .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-radius: 20px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
-        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #aaa; cursor: pointer; border: none; background: #f4f4f4; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+        .modal-overlay { width: 90%; max-width: 400px; background: #ffffff; box-shadow: 0 20px 50px rgba(0,0,0,0.15); border-radius: 24px; display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; padding: 25px; max-height: 85vh; overflow-y: auto; }
+        .close-btn-modal { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #94a3b8; cursor: pointer; border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
 
-        /* 🌟 MOBILE MENU SHEET STYLES 🌟 */
-        .bottom-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: #fff; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 2001; padding: 25px; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bottom-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: #fff; border-radius: 30px 30px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 2001; padding: 30px 25px; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .bottom-sheet.active { bottom: 0; }
-        .sheet-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
+        .sheet-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
         .sheet-backdrop.active { display: block; opacity: 1; }
-        .sheet-handle { width: 40px; height: 5px; background: #e0e0e0; border-radius: 5px; margin: 0 auto 20px auto; }
+        .sheet-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 5px; margin: 0 auto 25px auto; }
 
-        .star-rating { display: flex; justify-content: center; gap: 8px; font-size: 30px; color: #ddd; margin: 15px 0; cursor: pointer; }
-        .star-rating i:hover, .star-rating i.active { color: #ffc107; }
+        .star-rating { display: flex; justify-content: center; gap: 10px; font-size: 35px; color: #e2e8f0; margin: 20px 0; cursor: pointer; }
+        .star-rating i:hover, .star-rating i.active { color: var(--warning); }
 
         /* ✨ TOAST NOTIFICATION CSS ✨ */
-        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 300px; background: #333; color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
-        .toast.success { background: #10b981; }
-        .toast.error { background: #ef4444; }
-        .toast.info { background: #3b82f6; }
+        #toast-container { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;}
+        .toast { background: var(--text-main); color: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--primary); }
         .toast i { font-size: 20px; }
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
@@ -116,11 +145,12 @@
             .mobile-only { display: none !important; }
             .desktop-only { display: flex; }
             .mobile-header { display: none; }
-            .bottom-nav { flex-direction: column; position: static; width: 250px; justify-content: flex-start; padding: 20px 10px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
-            .nav-item { flex-direction: row; justify-content: flex-start; gap: 15px; font-size: 15px; padding: 15px 20px; margin-bottom: 5px; width: 100%; }
-            .nav-item.active { background: #e6f0fa; }
+            .bottom-nav { flex-direction: column; position: static; width: 260px; justify-content: flex-start; padding: 30px 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.03); border-radius: 0;}
+            .nav-item { flex-direction: row; justify-content: flex-start; gap: 15px; font-size: 14px; padding: 15px 20px; margin-bottom: 8px; width: 100%; border-radius: 14px;}
+            .nav-item.active { background: var(--primary-light); }
             .main-content { padding: 40px; padding-bottom: 40px;}
             .desktop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+            #floatingCartBtn { bottom: 30px; right: 40px; width: 65px; height: 65px; font-size: 26px;}
         }
         @media (max-width: 768px) { 
             .desktop-header { display: none; } 
@@ -133,47 +163,62 @@
 <body>
     
     <nav class="bottom-nav" id="sidebar">
-        <div class="brand desktop-header" style="padding: 10px 20px 30px 20px; text-align:center;">
+        <div class="brand desktop-header" style="padding: 10px 20px 40px 20px; text-align:center;">
             <h2>Bhavya<span>Care</span></h2>
         </div>
         <a class="nav-item active" onclick="switchTab('overview')"><i class="fas fa-home"></i> <span>Home</span></a>
-        <a class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Lab Tests</span></a>
+        <a class="nav-item" onclick="switchTab('bookings')"><i class="fas fa-microscope"></i> <span>Tests</span></a>
         <a class="nav-item" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> <span>Consults</span></a>
         <a class="nav-item desktop-only" onclick="switchTab('medicines')"><i class="fas fa-pills"></i> <span>Medicines</span></a>
         
-        <a class="nav-item mobile-only" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i> <span>Menu</span></a>
+        <a class="nav-item mobile-only" onclick="toggleMobileMenu()"><i class="fas fa-layer-group"></i> <span>Menu</span></a>
         
         <a class="nav-item desktop-only" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> <span>Rx</span></a>
         <a class="nav-item desktop-only" onclick="switchTab('reports')"><i class="fas fa-file-medical-alt"></i> <span>Reports</span></a>
-        <a class="nav-item desktop-only" onclick="switchTab('profile')"><i class="fas fa-user"></i> <span>My Info</span></a>
+        <a class="nav-item desktop-only" onclick="switchTab('profile')"><i class="fas fa-user-circle"></i> <span>Profile</span></a>
         <a class="nav-item desktop-only" style="color: var(--danger); margin-top: auto;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
     </nav>
 
     <div class="sheet-backdrop" id="menuBackdrop" onclick="toggleMobileMenu()"></div>
     <div class="bottom-sheet" id="mobileMenuSheet">
         <div class="sheet-handle"></div>
-        <h3 style="margin: 0 0 20px 0; color: var(--primary); font-size: 18px;">More Options</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <button class="action-btn-main" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;" onclick="toggleMobileMenu(); switchTab('medicines')"><i class="fas fa-pills"></i> Pharmacy Orders</button>
-            <button class="action-btn-main btn-rx" onclick="toggleMobileMenu(); switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> Prescriptions</button>
-            <button class="action-btn-main" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;" onclick="toggleMobileMenu(); switchTab('reports')"><i class="fas fa-file-medical-alt"></i> Medical Reports</button>
-            <button class="action-btn-main" style="background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;" onclick="toggleMobileMenu(); switchTab('profile')"><i class="fas fa-user"></i> My Profile Info</button>
-            <button class="action-btn-main" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; grid-column: span 2;" onclick="logoutDashboard()"><i class="fas fa-sign-out-alt"></i> Logout Securely</button>
+        <h3 style="margin: 0 0 20px 0; color: var(--text-main); font-size: 18px; font-weight: 800;">More Options</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="q-btn" style="border-color:#bbf7d0;" onclick="toggleMobileMenu(); switchTab('medicines')">
+                <div class="icon-circle" style="background:#dcfce7; color:#059669;"><i class="fas fa-pills"></i></div><span>Medicines</span>
+            </button>
+            <button class="q-btn" style="border-color:#fef08a;" onclick="toggleMobileMenu(); switchTab('prescriptions')">
+                <div class="icon-circle" style="background:#fef3c7; color:#d97706;"><i class="fas fa-file-prescription"></i></div><span>Prescriptions</span>
+            </button>
+            <button class="q-btn" style="border-color:#bae6fd;" onclick="toggleMobileMenu(); switchTab('reports')">
+                <div class="icon-circle" style="background:#e0f2fe; color:#0284c7;"><i class="fas fa-file-medical-alt"></i></div><span>Reports</span>
+            </button>
+            <button class="q-btn" style="border-color:#e2e8f0;" onclick="toggleMobileMenu(); switchTab('profile')">
+                <div class="icon-circle" style="background:#f1f5f9; color:#475569;"><i class="fas fa-user"></i></div><span>My Info</span>
+            </button>
+            <button class="q-btn" style="grid-column: span 2; border-color:#fecaca; flex-direction:row; padding:15px;" onclick="logoutDashboard()">
+                <i class="fas fa-sign-out-alt" style="color:#dc2626; font-size:18px;"></i> <span style="color:#dc2626;">Logout Securely</span>
+            </button>
         </div>
+    </div>
+
+    <div id="floatingCartBtn" onclick="goToGlobalCart()">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="globalCartBadge">0</span>
     </div>
 
     <div class="main-content">
         
-        <div id="profileBanner" style="display:none; background: #fff3cd; color: #856404; padding: 12px 20px; font-size: 13px; text-align: center; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba;">
-            ⚠️ <strong>Complete your profile!</strong> Helpful for home collection.
-            <button onclick="switchTab('profile')" style="background: #856404; color: white; border: none; padding: 5px 12px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: bold;">Fill Now</button>
+        <div id="profileBanner" style="display:none; background: var(--warning-light); color: #b45309; padding: 12px 20px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #fcd34d;">
+            ⚠️ <strong>Profile Incomplete!</strong> Complete your details for quick home collection.
+            <button onclick="switchTab('profile')" style="background: #b45309; color: white; border: none; padding: 6px 14px; border-radius: 8px; margin-left: 10px; cursor: pointer; font-weight: bold;">Fill Now</button>
         </div>
 
         <div class="mobile-header">
             <div class="brand"><h2>Bhavya<span>Care</span></h2></div>
             <div style="display: flex; align-items: center;">
                 <div class="user-profile-mini" onclick="switchTab('profile')">
-                    <div class="greeting"><p style="margin:0; font-size:11px;">Welcome,</p><p class="name" id="userNameMobile">Loading...</p></div>
+                    <div class="greeting"><p style="margin:0;">Hello,</p><p class="name" id="userNameMobile">Loading...</p></div>
                     <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img" id="mobileProfileImg">
                 </div>
             </div>
@@ -181,51 +226,72 @@
 
         <div class="desktop-header">
             <div>
-                <h3 style="margin: 0; font-size: 24px; color: var(--text-main);">Welcome back, <span id="userNameDesktop" style="color: var(--primary);">Patient</span>!</h3>
-                <p style="margin: 5px 0 0 0; color: var(--text-light);">Here is your health summary.</p>
+                <h3 style="margin: 0; font-size: 26px; color: var(--text-main); font-weight: 800;">Welcome back, <span id="userNameDesktop" style="color: var(--primary);">Patient</span>! 👋</h3>
+                <p style="margin: 5px 0 0 0; color: var(--text-light); font-weight: 500;">Here is your health summary.</p>
             </div>
             <div style="display: flex; align-items: center;">
-                <div class="user-profile-mini" style="background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);" onclick="switchTab('profile')">
+                <div class="user-profile-mini" style="background: white; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid var(--border);" onclick="switchTab('profile')">
                     <img src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" alt="Profile" class="profile-img" id="desktopProfileImg">
-                    <span style="font-weight: bold; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
+                    <span style="font-weight: 700; color: var(--text-main); margin-left: 10px;" id="userIdDisplay">Loading...</span>
                 </div>
             </div>
         </div>
 
         <div id="overview" class="tab-content active">
             
-            <div class="quick-actions-container">
-                <button class="action-btn-main btn-book" onclick="window.location.href='../booking/cart.html'"><i class="fas fa-microscope"></i> Book Test</button>
-                <button class="action-btn-main btn-consult" onclick="switchTab('consults')"><i class="fas fa-user-md"></i> Dr Consult</button>
-                <button class="action-btn-main btn-rx" onclick="switchTab('prescriptions')"><i class="fas fa-file-prescription"></i> Prescriptions</button>
+            <div class="global-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="globalTestSearch" placeholder="Search Lab Tests, Profiles, Scans..." onkeypress="handleGlobalSearch(event)">
+                <button class="global-search-btn" onclick="executeGlobalSearch()">Search</button>
+            </div>
+            
+            <div class="quick-actions-grid">
+                <button class="q-btn" onclick="window.location.href='../booking/booking.html'">
+                    <div class="icon-circle" style="background:#e0e7ff; color:#4f46e5;"><i class="fas fa-microscope"></i></div><span>Book Test</span>
+                </button>
+                <button class="q-btn" onclick="window.location.href='../bookdoctor/bookdoctor.html'">
+                    <div class="icon-circle" style="background:#dcfce7; color:#059669;"><i class="fas fa-user-md"></i></div><span>Dr Consult</span>
+                </button>
+                <button class="q-btn" onclick="window.location.href='../pharmacy/medicineorders.html'">
+                    <div class="icon-circle" style="background:#e0f2fe; color:#0284c7;"><i class="fas fa-pills"></i></div><span>Medicines</span>
+                </button>
+                <button class="q-btn" onclick="window.location.href='../prescription.html'">
+                    <div class="icon-circle" style="background:#fef3c7; color:#d97706;"><i class="fas fa-file-upload"></i></div><span>Upload Rx</span>
+                </button>
+                <button class="q-btn" onclick="window.location.href='../help.html'">
+                    <div class="icon-circle" style="background:#fce7f3; color:#e11d48;"><i class="fas fa-headset"></i></div><span>Get Help</span>
+                </button>
+                <button class="q-btn" onclick="window.location.href='tel:8950112467'">
+                    <div class="icon-circle" style="background:#f3e8ff; color:#2563eb;"><i class="fas fa-phone-alt"></i></div><span>Book by Call</span>
+                </button>
             </div>
 
-            <div class="dashboard-grid">
-                <div class="dash-card card-wallet" onclick="switchTab('wallet')" style="cursor: pointer;">
-                    <i class="fas fa-wallet icon-bg"></i>
-                    <h4>Wallet Balance</h4>
-                    <div class="value">₹<span id="walletBal"><i class="fas fa-circle-notch fa-spin" style="font-size: 16px;"></i></span></div>
-                    <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 2;">
-                        <button class="card-action-btn" style="color: var(--success); flex: 1;" onclick="event.stopPropagation(); showToast('Add money feature coming soon!', 'info')">Top Up</button>
-                        <button id="btn-withdraw" class="card-action-btn" style="color: white; background: var(--danger); display: none; flex: 1;" onclick="event.stopPropagation(); showToast('Withdraw request page coming soon!', 'info')">Withdraw</button>
-                    </div>
+            <div class="compact-cards-row">
+                <div class="compact-card card-wallet">
+                    <i class="fas fa-wallet cc-icon"></i>
+                    <div class="cc-title">Wallet Balance <i class="fas fa-info-circle" style="opacity:0.8;"></i></div>
+                    <div class="cc-value">₹<span id="walletBal">0.00</span></div>
+                    <button id="btn-withdraw" class="cc-action" style="display: none;" onclick="window.location.href='../withdraw/withdraw.html'">Withdraw Funds</button>
                 </div>
                 
-                <div class="dash-card card-vip" onclick="handleVipCardClick()" title="Click to view Plan Details">
-                    <i class="fas fa-crown icon-bg"></i>
-                    <h4>Current Plan</h4>
-                    <div class="value" id="vipStatus" style="font-size: 22px;">Loading...</div>
-                    <p class="sub-text" id="vipSubText">Checking VIP Status...</p>
-                    <button class="card-action-btn" id="btn-vip-action" style="color: #f57c00; margin-top: 15px; display: none;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade to VIP</button>
-                    <div id="vipPackageAlert" style="display: none; background: #e65100; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(230,81,0,0.3); transition: 0.3s;" onclick="event.stopPropagation(); showToast('Booking system coming soon!', 'info')">
-                        🎁 Free VIP Package Pending <br> <span style="text-decoration: underline; margin-top:3px; display:inline-block;">Book Now!</span>
-                    </div>
+                <div class="compact-card card-vip" onclick="handleVipCardClick()">
+                    <i class="fas fa-crown cc-icon"></i>
+                    <div class="cc-title">Current Plan <i class="fas fa-arrow-right" style="opacity:0.8;"></i></div>
+                    <div class="cc-value" id="vipStatus" style="font-size: 20px;">BASIC</div>
+                    <button class="cc-action" id="btn-vip-action" style="display: none;" onclick="event.stopPropagation(); window.location.href='../vip/vip_member.html'">Upgrade Now</button>
                 </div>
+            </div>
+
+            <div id="vipPackageAlert" onclick="claimVipAndGoToCart()">
+                <i class="fas fa-gift" style="font-size: 16px; margin-right: 5px;"></i> Free VIP Package Pending — <span style="text-decoration: underline;">Claim & Book Now!</span>
             </div>
 
             <div class="data-box">
-                <div class="section-title"><span>Recent Activity</span></div>
-                <div id="recentActivityContainer"></div> 
+                <div class="section-title">Recent Activity</div>
+                <div id="recentActivityContainer">
+                    <div class="skel-card skeleton-box"><div class="skel-icon skeleton-box"></div><div style="flex:1"><div class="skel-text skeleton-box"></div><div class="skel-text short skeleton-box"></div></div></div>
+                    <div class="skel-card skeleton-box"><div class="skel-icon skeleton-box"></div><div style="flex:1"><div class="skel-text skeleton-box"></div><div class="skel-text short skeleton-box"></div></div></div>
+                </div> 
             </div>
         </div>
 
@@ -235,42 +301,34 @@
                 <div class="filter-bar">
                     <div class="search-wrapper">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchBookingText" class="filter-input with-icon" placeholder="Search Lab or Test Name..." onkeyup="filterMyBookings()">
+                        <input type="text" id="searchBookingText" class="filter-input" placeholder="Search Lab or Test Name..." onkeyup="filterMyBookings()">
                     </div>
                     <div class="filter-actions">
                         <input type="date" id="searchBookingDate" class="filter-input date-input" onchange="filterMyBookings()">
-                        <button class="filter-btn" onclick="clearBookingFilters()"><i class="fas fa-times"></i> Clear</button>
+                        <button class="filter-btn" onclick="clearBookingFilters()">Clear</button>
                     </div>
                 </div>
                 <div id="patientBookingsContainer">
-                    <div style="text-align: center; padding: 50px 20px; color: var(--primary);">
-                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your tests...</p>
-                    </div>
+                    <div class="skel-card skeleton-box" style="height:120px;"></div>
+                    <div class="skel-card skeleton-box" style="height:120px;"></div>
                 </div>
             </div>
         </div>
 
         <div id="consults" class="tab-content">
             <div class="data-box">
-                <div class="section-title">My Doctor Consultations</div>
+                <div class="section-title">My Consultations</div>
                 <div id="patientConsultsContainer">
-                    <div style="text-align: center; padding: 50px 20px; color: #2e7d32;">
-                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your consults...</p>
-                    </div>
+                    <div class="skel-card skeleton-box" style="height:120px;"></div>
                 </div>
             </div>
         </div>
 
         <div id="medicines" class="tab-content">
             <div class="data-box">
-                <div class="section-title">My Pharmacy Orders</div>
+                <div class="section-title">Pharmacy Orders</div>
                 <div id="patientMedicinesContainer">
-                    <div style="text-align: center; padding: 50px 20px; color: #0056b3;">
-                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <p style="color: #888; font-size: 14px; font-weight: bold;">Fetching your medicine orders...</p>
-                    </div>
+                    <div class="skel-card skeleton-box" style="height:120px;"></div>
                 </div>
             </div>
         </div>
@@ -279,32 +337,26 @@
             <div class="data-box">
                 <div class="section-title">My Prescriptions</div>
                 <div id="prescriptionsTabContainer">
-                    <div style="text-align: center; padding: 50px 20px; color: #856404;">
-                        <i class="fas fa-spinner fa-pulse" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <p style="color: #888; font-size: 14px; font-weight: bold;">Loading prescriptions...</p>
-                    </div>
+                    <div class="skel-card skeleton-box" style="height:80px;"></div>
                 </div>
             </div>
         </div>
 
         <div id="reports" class="tab-content">
             <div class="data-box">
-                 <div class="section-title">Medical Lab Reports</div>
+                 <div class="section-title">Medical Reports</div>
                  <div class="filter-bar">
                     <div class="search-wrapper">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchReportText" class="filter-input with-icon" placeholder="Search Test or Lab Name..." onkeyup="filterPatientReports()">
+                        <input type="text" id="searchReportText" class="filter-input" placeholder="Search Test or Lab Name..." onkeyup="filterPatientReports()">
                     </div>
                     <div class="filter-actions">
                         <input type="date" id="searchReportDate" class="filter-input date-input" onchange="filterPatientReports()">
-                        <button class="filter-btn" onclick="clearReportFilters()"><i class="fas fa-times"></i> Clear</button>
+                        <button class="filter-btn" onclick="clearReportFilters()">Clear</button>
                     </div>
                 </div>
                  <div id="reportsTabContainer">
-                    <div style="text-align: center; padding: 50px 20px; color: var(--success);">
-                        <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <p style="color: #888; font-size: 14px; font-weight: bold;">Loading reports...</p>
-                    </div>
+                    <div class="skel-card skeleton-box" style="height:100px;"></div>
                  </div>
             </div>
         </div>
@@ -313,7 +365,8 @@
             <div class="data-box">
                 <div class="section-title">Transaction History</div>
                 <div id="walletHistoryContainer">
-                    <div style="text-align: center; padding: 40px; color: #ddd;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 15px;"></i><p>Loading transactions...</p></div>
+                    <div class="skel-card skeleton-box" style="height:60px;"></div>
+                    <div class="skel-card skeleton-box" style="height:60px;"></div>
                 </div>
             </div>
         </div>
@@ -325,17 +378,17 @@
                     <button onclick="switchTab('overview')" style="background:none; border:none; color:var(--text-light); font-size:24px; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
                 </div>
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <img id="editProfilePreview" src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f0fa; margin-bottom: 10px;"><br>
+                    <img id="editProfilePreview" src="https://ui-avatars.com/api/?name=User&background=e6f0fa&color=0056b3" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-light); margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"><br>
                     <input type="file" id="profileImageInput" accept="image/*" style="font-size: 12px; max-width: 200px;">
                 </div>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h5 style="margin: 0 0 10px 0; color: var(--primary);">Account Details</h5>
+                <div style="background: var(--bg-color); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border);">
+                    <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; text-transform: uppercase;">Account Details</h5>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-                        <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:#888;">Full Name</label><div style="font-weight:bold; font-size:14px;" id="infoName">Loading...</div></div>
-                        <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:#888;">Mobile Number</label><div style="font-weight:bold; font-size:14px;" id="infoMobile">Loading...</div></div>
+                        <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:var(--text-light); font-weight:700;">Full Name</label><div style="font-weight:800; font-size:14px;" id="infoName">Loading...</div></div>
+                        <div style="flex: 1; min-width: 120px;"><label style="font-size:11px; color:var(--text-light); font-weight:700;">Mobile Number</label><div style="font-weight:800; font-size:14px;" id="infoMobile">Loading...</div></div>
                     </div>
                 </div>
-                <h5 style="margin: 0 0 10px 0; color: var(--primary);">Personal Details</h5>
+                <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; text-transform: uppercase;">Personal Details</h5>
                 <div class="form-group"><input type="email" id="infoEmail" class="input-box" placeholder="Email Address"></div>
                 <div class="form-group"><input type="text" id="infoAddress" class="input-box" placeholder="Full Address (House, Street)"></div>
                 <div style="display: flex; gap: 10px;">
@@ -347,169 +400,22 @@
                     <div class="form-group" style="flex: 1;"><input type="number" id="infoPincode" class="input-box" placeholder="Pincode"></div>
                 </div>
                 <input type="hidden" id="infoImageBase64" value="">
-                <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="savePatientProfile()">Save & Update Profile</button>
+                <button id="btnSaveProfile" style="background:var(--success); width:100%; color:white; border:none; margin-top:25px; font-weight:800; padding:15px; border-radius:12px; cursor:pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onclick="savePatientProfile()">Save & Update Profile</button>
             </div>
         </div>
     </div>
 
-    <div id="cancel-consult-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('cancel-consult-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #ffebee; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-ban" style="font-size: 26px; color: #d32f2f;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">Cancel Consultation</h3>
-        </div>
-        <input type="hidden" id="cancelConsultIdHidden">
-        <div class="form-group"><textarea id="cancelConsultReason" class="input-box" rows="2" placeholder="Reason for cancellation..." style="resize: none;"></textarea></div>
-        <div style="margin-top:15px; text-align:left;">
-            <label style="font-size:13px; font-weight:bold; color:#555;">Refund Method:</label>
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
-                    <input type="radio" name="refundMethod" value="Wallet" checked onchange="toggleRefundMethod()">
-                    <div><strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong><div style="font-size:11px; color:#777;">Refund added immediately.</div></div>
-                </label>
-                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
-                    <input type="radio" name="refundMethod" value="Bank" onchange="toggleRefundMethod()">
-                    <div><strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong><div style="font-size:11px; color:#777;">Processed on 1st of next month.</div></div>
-                </label>
-            </div>
-        </div>
-        <div id="bankRefundSection" style="display:none; margin-top:15px; background:#fff8e1; padding:10px; border-radius:8px; border:1px solid #ffeeba;">
-            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code.</p>
-            <input type="file" id="refundQrInput" class="input-box" accept="image/*" style="font-size:12px; background:white;">
-        </div>
-        <button id="btnConfirmConsultCancel" style="background:var(--danger); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitCancelConsult()">Confirm Cancellation</button>
-    </div>
+    <div id="cancel-consult-modal" class="modal-overlay">...</div>
+    <div id="review-modal" class="modal-overlay">...</div>
+    <div id="patient-ready-modal" class="modal-overlay">...</div>
+    <div id="claim-refund-modal" class="modal-overlay">...</div>
+    <div id="confirmMedicineModal" class="modal-overlay">...</div>
+    <div id="cancel-med-order-modal" class="modal-overlay">...</div>
+    <div id="pharma-review-modal" class="modal-overlay">...</div>
+    <div class="modal-overlay" id="feedbackModal">...</div>
 
-    <div id="review-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('review-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-star" style="font-size: 26px; color: #ffc107;"></i></div>
-            <h3 style="margin:0; color: var(--text-main);">Rate Doctor</h3>
-        </div>
-        <input type="hidden" id="reviewApptIdHidden">
-        <div class="star-rating" id="starRatingContainer">
-            <i class="fas fa-star" onclick="setRating(1)"></i><i class="fas fa-star" onclick="setRating(2)"></i><i class="fas fa-star" onclick="setRating(3)"></i><i class="fas fa-star" onclick="setRating(4)"></i><i class="fas fa-star" onclick="setRating(5)"></i>
-        </div>
-        <div class="form-group"><textarea id="reviewCommentInput" class="input-box" rows="3" placeholder="Leave a comment (Optional)..."></textarea></div>
-        <button id="btnSubmitReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitReview()">Submit Review</button>
-    </div>
-    
-    <div id="patient-ready-modal" class="modal-overlay" style="background: rgba(255,255,255,0.90); backdrop-filter: blur(10px); border: 2px solid var(--success);">
-        <div style="text-align: center;">
-            <div style="background: #e8f5e9; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;"><i class="fas fa-stethoscope" style="font-size: 30px; color: var(--success); animation: pulse 1.5s infinite;"></i></div>
-            <h3 style="margin:0; color: var(--text-main); font-size: 22px;">Doctor is Waiting!</h3>
-            <p style="color:var(--text-light); font-size:14px; margin-top:10px;">The doctor is waiting in the clinic room. Please set up your camera and mic, then click below to enter.</p>
-        </div>
-        <input type="hidden" id="readyApptIdHidden">
-        <input type="hidden" id="readyMeetLinkHidden">
-        <button id="btnPatientReady" style="background:var(--success); width:100%; color:white; border:none; font-weight:bold; padding:15px; border-radius:8px; cursor:pointer; margin-top:15px; font-size: 16px;" onclick="patientConfirmsReady()">I Am Ready</button>
-    </div>
+    <div id="toast-container"></div>
 
-    <div id="claim-refund-modal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="document.getElementById('claim-refund-modal').style.display='none'">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <i class="fas fa-hand-holding-usd" style="font-size: 30px; color: #f57c00; margin-bottom:10px;"></i>
-            <h3 style="margin:0; color: var(--text-main);">Claim Your Refund</h3>
-            <p style="font-size:12px; color:#666; margin-top:5px;">Select how you want to receive your money.</p>
-        </div>
-        <input type="hidden" id="claimRefundApptId">
-        <div style="margin-top:15px; text-align:left;">
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
-                    <input type="radio" name="claimRefundMethod" value="Wallet" checked onchange="toggleClaimRefundMethod()">
-                    <div><strong style="font-size:13px; color:var(--primary);">BhavyaCare Wallet (Instant)</strong><div style="font-size:11px; color:#777;">Refund added immediately.</div></div>
-                </label>
-                <label style="background:#f4f7f6; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; display:flex; align-items:center; gap:10px;">
-                    <input type="radio" name="claimRefundMethod" value="Bank" onchange="toggleClaimRefundMethod()">
-                    <div><strong style="font-size:13px; color:var(--danger);">Bank/UPI (Takes Time)</strong><div style="font-size:11px; color:#777;">Processed on 1st of next month.</div></div>
-                </label>
-            </div>
-        </div>
-        <div id="claimBankRefundSection" style="display:none; margin-top:15px; background:#fff8e1; padding:10px; border-radius:8px; border:1px solid #ffeeba;">
-            <p style="font-size:11px; color:#856404; margin:0 0 10px 0;"><strong>Note:</strong> Upload your UPI QR code.</p>
-            <input type="file" id="claimRefundQrInput" class="input-box" accept="image/*" style="font-size:12px; background:white;">
-        </div>
-        <button id="btnConfirmClaim" style="background:#f57c00; width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitClaimRefund()">Submit Refund Request</button>
-    </div>
-
-    <div id="confirmMedicineModal" class="modal-overlay">
-        <button class="close-btn-modal" onclick="closeConfirmMedicineModal()">✖</button>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <i class="fas fa-pills" style="font-size: 30px; color: var(--primary); margin-bottom:10px;"></i>
-            <h3 style="margin:0; color: var(--text-main);">Confirm Medicine Order</h3>
-            <p id="prescAlert" style="color: #dc2626; font-size: 13px; font-weight: 600; display: none; background: #fee2e2; padding: 8px; border-radius: 8px; margin-top: 10px;">
-                <i class="fas fa-exclamation-triangle"></i> Pharmacy requires a valid prescription for these medicines.
-            </p>
-        </div>
-        <form id="confirmMedicineForm">
-            <input type="hidden" id="modalMedOrderId">
-            <div class="form-group" id="prescUploadGroup" style="display: none; margin-top: 15px;">
-                <label style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 13px; color:#555;">Upload Valid Prescription (PDF/Image) *</label>
-                <input type="file" id="validPrescriptionFile" accept=".pdf,image/*" style="width: 100%; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; font-size:12px;">
-            </div>
-            <button type="button" class="btn btn-confirm" id="btnSubmitConfirmMed" style="background: var(--success); width:100%; color:white; border:none; margin-top:20px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitConfirmMedicineForm()">Confirm & Place Order</button>
-        </form>
-    </div>
-
-    <div id="cancel-med-order-modal" class="modal-overlay">
-        <div class="modal">
-            <button class="close-btn-modal" onclick="document.getElementById('cancel-med-order-modal').style.display='none'">✖</button>
-            <div style="text-align: center; margin-bottom: 15px;">
-                <div style="background: #ffebee; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-ban" style="font-size: 26px; color: #d32f2f;"></i></div>
-                <h3 style="margin:0; color: var(--text-main);">Cancel Medicine Order</h3>
-            </div>
-            <form id="cancelMedOrderForm" onsubmit="submitCancelMedicineOrder(event)">
-                <input type="hidden" id="cancelMedOrderIdHidden">
-                <div class="form-group">
-                    <label>Reason for Cancellation *</label>
-                    <textarea id="cancelMedReasonInput" class="input-box" rows="3" placeholder="Why are you cancelling this order?" required style="resize: none; border-color:#fca5a5;"></textarea>
-                    <p style="font-size:12px; color:#ef4444; margin-top:5px;">This reason will be shared with the pharmacy.</p>
-                </div>
-                <button type="submit" class="btn" id="btnConfirmMedCancel" style="background:var(--danger); color:white; width:100%; margin-top:10px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;">
-                    Confirm Cancellation
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div id="pharma-review-modal" class="modal-overlay">
-        <div class="modal">
-            <button class="close-btn-modal" onclick="document.getElementById('pharma-review-modal').style.display='none'">✖</button>
-            <div style="text-align: center; margin-bottom: 15px;">
-                <div style="background: #fff8e1; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;"><i class="fas fa-store" style="font-size: 26px; color: #ffc107;"></i></div>
-                <h3 style="margin:0; color: var(--text-main);">Rate Pharmacy</h3>
-                <p style="font-size:12px; color:#888;">How was your medicine delivery experience?</p>
-            </div>
-            <input type="hidden" id="pharmaReviewOrderIdHidden">
-            <div class="star-rating" id="pharmaStarRatingContainer">
-                <i class="fas fa-star" onclick="setPharmaRating(1)"></i><i class="fas fa-star" onclick="setPharmaRating(2)"></i><i class="fas fa-star" onclick="setPharmaRating(3)"></i><i class="fas fa-star" onclick="setPharmaRating(4)"></i><i class="fas fa-star" onclick="setPharmaRating(5)"></i>
-            </div>
-            <div class="form-group"><textarea id="pharmaReviewCommentInput" class="input-box" rows="3" placeholder="Leave a review (Optional)..."></textarea></div>
-            <button id="btnSubmitPharmaReview" style="background:var(--primary); width:100%; color:white; border:none; margin-top:15px; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;" onclick="submitPharmaReview()">Submit Rating</button>
-        </div>
-    </div>
-<div class="modal-overlay" id="feedbackModal">
-        <div class="modal" style="max-width: 400px; text-align: center;">
-            <span class="close-modal" onclick="document.getElementById('feedbackModal').style.display='none'">&times;</span>
-            <h2 style="margin-top:0; color:#0f172a;">Rate Your Experience</h2>
-            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Order <strong id="fbOrderIdTxt" style="color:#3b82f6;"></strong></p>
-
-            <div id="starRating" style="font-size: 35px; color: #cbd5e1; cursor: pointer; margin-bottom: 15px; display:flex; justify-content:center; gap:10px;">
-                <i class="fas fa-star star" data-val="1"></i>
-                <i class="fas fa-star star" data-val="2"></i>
-                <i class="fas fa-star star" data-val="3"></i>
-                <i class="fas fa-star star" data-val="4"></i>
-                <i class="fas fa-star star" data-val="5"></i>
-            </div>
-            <input type="hidden" id="fbRatingValue" value="0">
-
-            <textarea id="fbReviewText" class="input-box" rows="3" placeholder="Write your review here... (Optional)" style="resize:none; margin-bottom:20px; width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:10px;"></textarea>
-
-            <button class="btn btn-blue" id="submitFeedbackBtn" onclick="submitFeedback()" style="width:100%; background:#10b981; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                <i class="fas fa-paper-plane"></i> Submit Feedback
-            </button>
-        </div>
-    </div>
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

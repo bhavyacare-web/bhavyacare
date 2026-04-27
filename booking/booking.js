@@ -710,11 +710,17 @@ function fetchProfile(userId) {
             let uMob = document.getElementById('uMobile');
             if(uMob) { uMob.value = data.mobile; uMob.setAttribute("readonly", true); }
             
+            // ✨ Pincode Auto-fill
             let uPin = document.getElementById('uPincode');
-            if(uPin) uPin.value = data.pincode;
+            if(uPin && data.pincode) uPin.value = data.pincode;
             
+            // ✨ Address Auto-fill
             let uAddr = document.getElementById('uAddress');
-            if(uAddr) uAddr.value = data.address;
+            if(uAddr && data.address) uAddr.value = data.address;
+
+            // ✨ NAYA: City Auto-fill
+            let uCity = document.getElementById('uCity');
+            if(uCity && data.city) uCity.value = data.city;
 
             const nameBox = document.getElementById('nameInputBox');
             if(nameBox) {

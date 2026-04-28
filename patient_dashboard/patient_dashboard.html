@@ -44,7 +44,7 @@
         .global-search-box i.fa-search { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px;}
         .global-search-btn { position: absolute; right: 6px; top: 6px; bottom: 6px; background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;}
         
-        /* ✨ 6 QUICK ACTIONS GRID ✨ */
+        /* ✨ QUICK ACTIONS GRID ✨ */
         .quick-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
         .q-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 15px 10px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
         .q-btn:active { transform: scale(0.95); }
@@ -95,8 +95,9 @@
         .nav-item.active i { transform: translateY(-3px); }
 
         /* ✨ FLOATING ICONS ✨ */
-        #floatingWaBtn { position: fixed; bottom: 155px; right: 20px; background: #25D366; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); z-index: 1000; transition: 0.3s; text-decoration: none; }
-        #floatingWaBtn:active { transform: scale(0.9); }
+        #floatingHelpBtn { position: fixed; bottom: 155px; right: 20px; background: #e11d48; color: white; height: 55px; padding: 0 20px; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); z-index: 1000; transition: 0.3s; text-decoration: none; }
+        #floatingHelpBtn:active { transform: scale(0.9); }
+        .help-text { font-size: 15px; font-weight: 800; margin-left: 8px; }
         
         #floatingCartBtn { position: fixed; bottom: 90px; right: 20px; background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(0, 86, 179, 0.4); cursor: pointer; z-index: 1000; transition: 0.3s; }
         #floatingCartBtn:active { transform: scale(0.9); }
@@ -153,7 +154,9 @@
             .nav-item.active { background: var(--primary-light); }
             .main-content { padding: 40px; padding-bottom: 40px;}
             .desktop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-            #floatingWaBtn { bottom: 110px; right: 40px; width: 65px; height: 65px; font-size: 36px;}
+            
+            #floatingHelpBtn { bottom: 110px; right: 40px; height: 65px; padding: 0 25px; font-size: 26px;}
+            #floatingHelpBtn .help-text { font-size: 18px; margin-left: 10px;}
             #floatingCartBtn { bottom: 30px; right: 40px; width: 65px; height: 65px; font-size: 26px;}
         }
         @media (max-width: 768px) { 
@@ -206,8 +209,8 @@
         </div>
     </div>
 
-    <a href="https://wa.me/918950112467" target="_blank" id="floatingWaBtn">
-        <i class="fab fa-whatsapp"></i>
+    <a href="../help.html" id="floatingHelpBtn">
+        <i class="fas fa-headset"></i><span class="help-text">Help</span>
     </a>
     
     <div id="floatingCartBtn" onclick="goToGlobalCart()">
@@ -266,11 +269,12 @@
                 <button class="q-btn" onclick="window.location.href='../prescription.html'">
                     <div class="icon-circle" style="background:#fef3c7; color:#d97706;"><i class="fas fa-file-upload"></i></div><span>Upload Rx</span>
                 </button>
-                <button class="q-btn" onclick="window.location.href='../help.html'">
-                    <div class="icon-circle" style="background:#fce7f3; color:#e11d48;"><i class="fas fa-headset"></i></div><span>Get Help</span>
-                </button>
                 <button class="q-btn" onclick="window.location.href='tel:8950112467'">
                     <div class="icon-circle" style="background:#f3e8ff; color:#2563eb;"><i class="fas fa-phone-alt"></i></div><span>Book by Call</span>
+                </button>
+                <button class="q-btn" onclick="window.open('https://wa.me/918950112467', '_blank')">
+                    <div class="icon-circle" style="background:#dcfce7; color:#25D366;"><i class="fab fa-whatsapp"></i></div>
+                    <span style="line-height: 1.2;">WhatsApp<br>Booking</span>
                 </button>
             </div>
 

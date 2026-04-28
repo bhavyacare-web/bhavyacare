@@ -61,10 +61,16 @@
 
     .services-container { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 800px; margin: 0 auto;}
     
-    /* 🌟 SKELETON LOADER 🌟 */
+    /* 🌟 SKELETON LOADER FOR SERVICES 🌟 */
     .skeleton-card { background: #fff; border-radius: 14px; padding: 15px; height: 140px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 10px;}
     .skeleton-card::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(241, 245, 249, 0.8), transparent); animation: shimmer 1.5s infinite; }
     @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    /* ✨ CHECKOUT SKELETON LOADER (Perceived Performance) ✨ */
+    .skel-loader { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skelLoading 1.5s infinite; border-radius: 8px; }
+    .skel-input { height: 45px; width: 100%; margin-bottom: 15px; }
+    .skel-textarea { height: 80px; width: 100%; margin-bottom: 15px; }
+    @keyframes skelLoading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     .profile-item { background: var(--card-bg); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #e2e8f0;}
     .profile-header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -244,27 +250,39 @@
               <div class="card-title">Patient Details <span id="vipBadge"></span></div>
               
               <div id="infoForm">
-                <div class="input-group">
-                  <label class="input-label">Patient Name</label>
-                  <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Who is the test for?"></div>
+                <div id="checkoutFormSkeleton">
+                    <div class="skel-loader skel-input"></div>
+                    <div class="skel-loader skel-input"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="skel-loader skel-input" style="flex: 1;"></div>
+                        <div class="skel-loader skel-input" style="flex: 1;"></div>
+                    </div>
+                    <div class="skel-loader skel-textarea"></div>
                 </div>
-                <div class="input-group">
-                  <label class="input-label">Mobile Number</label>
-                  <input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number">
+
+                <div id="actualCheckoutForm" style="display: none;">
+                  <div class="input-group">
+                    <label class="input-label">Patient Name</label>
+                    <div id="nameInputBox"><input type="text" id="uName" class="form-input" placeholder="Who is the test for?"></div>
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">Mobile Number</label>
+                    <input type="tel" id="uMobile" class="form-input" placeholder="10-digit Mobile Number">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">City/Locality <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="uCity" class="form-input" placeholder="e.g. Delhi">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">Pincode <span style="color:var(--danger)">*</span></label>
+                    <input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">Complete Address</label>
+                    <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
+                  </div>
+                  <button class="btn-main" onclick="savePatientInfo()">Save & Continue <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
                 </div>
-                <div class="input-group">
-                  <label class="input-label">City/Locality <span style="color:var(--danger)">*</span></label>
-                  <input type="text" id="uCity" class="form-input" placeholder="e.g. Delhi">
-                </div>
-                <div class="input-group">
-                  <label class="input-label">Pincode <span style="color:var(--danger)">*</span></label>
-                  <input type="number" id="uPincode" class="form-input" placeholder="e.g. 124507">
-                </div>
-                <div class="input-group">
-                  <label class="input-label">Complete Address</label>
-                  <input type="text" id="uAddress" class="form-input" placeholder="House No, Street, Landmark">
-                </div>
-                <button class="btn-main" onclick="savePatientInfo()">Save & Continue <i class="fas fa-arrow-right" style="margin-left:5px;"></i></button>
               </div>
 
               <div id="infoSummary" style="display: none; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
@@ -487,6 +505,17 @@
         <button onclick="verifyOTP()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; width:100%;">Verify & Login</button>
       </div>
     </div>
+  </div>
+
+  <div id="testInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+      <div style="background: #fff; padding: 20px; border-radius: 16px; width: 90%; max-width: 350px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <button onclick="document.getElementById('testInfoModal').style.display='none'" style="position: absolute; top: 15px; right: 15px; border: none; background: #f1f5f9; color:#64748b; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;">✖</button>
+          <div style="text-align: center; margin-bottom: 15px;">
+              <i class="fas fa-info-circle" style="font-size: 30px; color: var(--primary); margin-bottom: 10px;"></i>
+              <h3 id="testInfoTitle" style="margin: 0; color: var(--text-main); font-size: 16px; font-weight: 800;">Test Name</h3>
+          </div>
+          <p id="testInfoDesc" style="font-size: 13px; color: var(--text-light); line-height: 1.6; margin: 0; text-align: left; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border);"></p>
+      </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

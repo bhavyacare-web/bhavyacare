@@ -1639,3 +1639,15 @@ function processOrderSubmission(userId) {
         btn.innerText = "Confirm Booking"; btn.disabled = false; 
     });
 }
+// ✨ TEST KI DESCRIPTION FETCH KARNE KA FUNCTION ✨
+window.showTestInfo = function(serviceId) {
+    let service = allServices.find(s => s.service_id === serviceId);
+    
+    if (service && service.description && service.description.trim() !== "") {
+        document.getElementById('testInfoTitle').innerText = service.service_name;
+        document.getElementById('testInfoDesc').innerText = service.description;
+        document.getElementById('testInfoModal').style.display = 'flex';
+    } else {
+        showToast("No description available for this test.", "info");
+    }
+};

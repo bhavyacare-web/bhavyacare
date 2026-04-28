@@ -360,16 +360,27 @@ function renderServices(searchQuery = "") {
             pricingHtml = `<div class="mrp-row"><span>Total: <span class="mrp">₹${totalMrp}</span></span></div><div class="final-price">₹${basicPrice} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div><div class="locked-price" onclick="openVipPromo()"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>`;
         }
 
-        // 🌟 INFO ICON & FASTING WARNING LOGIC 🌟
-        let infoIconHtml = (service.description && service.description.trim() !== "") ? `<i class="fas fa-info-circle" onclick="openModal('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>` : "";
+        let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
+        let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
+
+        // 🌟 IF-ELSE CONDITION FOR INFO ICON 🌟
+        let infoIconHtml = "";
+        if (service.description && service.description.trim() !== "") {
+            if (isPackageOrProfile) {
+                // Purana wala popup jo Packages ke liye chalta hai
+                infoIconHtml = `<i class="fas fa-info-circle" onclick="openModal('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
+            } else {
+                // Naya wala popup jo sirf Tests ke liye description layega
+                infoIconHtml = `<i class="fas fa-info-circle" onclick="showTestInfo('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
+            }
+        }
+
+        // 🌟 FASTING WARNING LOGIC 🌟
         let fastingHtml = "";
         let fastData = service.fasting ? service.fasting.toLowerCase() : "";
         if (fastData.includes("yes") || fastData.includes("8") || fastData.includes("10") || fastData.includes("12")) {
             fastingHtml = `<div style="color:#d97706; font-size:10px; font-weight:800; background:#fef3c7; padding:4px 8px; border-radius:4px; display:inline-block; margin-top:5px; border:1px solid #fde68a;"><i class="fas fa-utensils"></i> 8-12 Hrs Fasting Required</div>`;
         }
-
-        let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
-        let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
 
         if (isPackageOrProfile) {
             let descPreviewHtml = "";
@@ -741,6 +752,12 @@ function initCartPage() {
 }
 
 function fetchProfile(userId) {
+    // ✨ Skeleton Loader Dikhana Shuru Karein ✨
+    let skel = document.getElementById('checkoutFormSkeleton');
+    let form = document.getElementById('actualCheckoutForm');
+    if(skel) skel.style.display = 'block';
+    if(form) form.style.display = 'none';
+
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getPatientCheckoutProfile", user_id: userId }) })
     .then(res => res.json())
     .then(res => {
@@ -778,10 +795,18 @@ function fetchProfile(userId) {
                     nameBox.innerHTML = `<input type="text" id="uName" class="form-input" value="${data.name}" placeholder="Patient Name">`;
                 }
             }
+            
+            // ✨ Data Load hone ke baad Skeleton chupayein, Asli form dikhayein ✨
+            if(skel) skel.style.display = 'none';
+            if(form) form.style.display = 'block';
         }
     }).catch(e => { 
         let loader = document.getElementById('loadingOverlay');
         if(loader) loader.style.display = 'none'; 
+        
+        // ✨ Error aane par bhi Skeleton hata de, taki form khali dikhe aur patient fill kar sake ✨
+        if(skel) skel.style.display = 'none';
+        if(form) form.style.display = 'block';
     });
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getCartRulesAndWallet", user_id: userId }) })

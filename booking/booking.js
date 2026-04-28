@@ -43,6 +43,7 @@ const defaultIcon = '🧪';
 const mainCategoryKeys = ['pathology', 'profile', 'usg', 'xray', 'ct', 'mri', 'ecg', 'echo'];
 const homeServiceCategories = ['pathology', 'profile', 'package', 'ecg', 'blood test'];
 
+let isVipPkgPending = false; // ✨ NAYA VARIABLE ADD KIYA
 let allServices = [];
 let userPlanStatus = "basic"; 
 let currentCategory = 'profile'; 
@@ -145,9 +146,12 @@ function fetchBookingData() {
             allServices = response.data.services;
             userPlanStatus = response.data.userPlan;
             
+            isVipPkgPending = (response.data.vipPackageStatus === "pending");
+            
             let claimBanner = document.getElementById("vipClaimBanner");
             if (claimBanner) {
-                if (response.data.vipPackageStatus === "pending" && userPlanStatus === "vip") {
+                // Sirf tab dikhao jab View 'booking' ho aur VIP pending ho
+                if (isVipPkgPending && userPlanStatus === "vip" && currentView === 'booking') {
                     claimBanner.style.display = "block";
                 } else {
                     claimBanner.style.display = "none";
@@ -416,10 +420,18 @@ function updateCartUI() {
     } else { cartBar.classList.remove("visible"); }
 }
 
-// 🌟 EMPTY CART UI IN TOGGLE 🌟
+// 🌟 EMPTY CART UI & BANNER TOGGLE IN SPA 🌟
 function toggleView(view) {
+    let claimBanner = document.getElementById("vipClaimBanner");
+    let warningBanner = document.getElementById("pendingWarningBanner");
+
     if (view === 'cart') {
         currentView = 'cart';
+        
+        // ✨ CART KHOLE TOH DONO BANNERS HIDE KAR DO ✨
+        if (claimBanner) claimBanner.style.display = "none";
+        if (warningBanner) warningBanner.style.display = "none";
+        
         document.getElementById('bookingView').style.display = 'none';
         document.getElementById('cartView').style.display = 'block';
         document.getElementById('topCartBtn').style.display = 'none';
@@ -437,6 +449,15 @@ function toggleView(view) {
         }
     } else {
         currentView = 'booking';
+        
+        // ✨ BOOKING PAGE PAR WAPAS AAYE TOH ELIGIBLE BANNERS SHOW KAR DO ✨
+        if (claimBanner && userPlanStatus === "vip" && isVipPkgPending) {
+            claimBanner.style.display = "block";
+        }
+        if (warningBanner && userPlanStatus === "pending") {
+            warningBanner.style.display = "block";
+        }
+        
         document.getElementById('cartView').style.display = 'none';
         document.getElementById('bookingView').style.display = 'block';
         document.getElementById('topCartBtn').style.display = 'inline-block';

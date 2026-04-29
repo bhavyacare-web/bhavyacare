@@ -363,14 +363,18 @@ function renderServices(searchQuery = "") {
         let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
         let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
 
-        // 🌟 IF-ELSE CONDITION FOR INFO ICON 🌟
+        // 🌟 UPDATED IF-ELSE CONDITION FOR INFO ICON 🌟
+        let sTypeLower = String(service.service_type || '').toLowerCase().trim();
+        let isPackageOrProfile = (sTypeLower === 'profile' || sTypeLower === 'package');
         let infoIconHtml = "";
-        if (service.description && service.description.trim() !== "") {
+        let descText = service.description ? String(service.description).trim() : "";
+
+        if (descText !== "") {
             if (isPackageOrProfile) {
-                // Purana wala popup jo Packages ke liye chalta hai
+                // Packages ke liye purana function call karo
                 infoIconHtml = `<i class="fas fa-info-circle" onclick="openModal('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
             } else {
-                // Naya wala popup jo sirf Tests ke liye description layega
+                // Normal tests ke liye naya description function call karo
                 infoIconHtml = `<i class="fas fa-info-circle" onclick="showTestInfo('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
             }
         }
@@ -1639,15 +1643,23 @@ function processOrderSubmission(userId) {
         btn.innerText = "Confirm Booking"; btn.disabled = false; 
     });
 }
-// ✨ TEST KI DESCRIPTION FETCH KARNE KA FUNCTION ✨
+// ✨ BULLETPROOF TEST DESCRIPTION FUNCTION ✨
 window.showTestInfo = function(serviceId) {
-    let service = allServices.find(s => s.service_id === serviceId);
+    // ID ko string banakar trim kar diya taaki hamesha match ho
+    let targetId = String(serviceId).trim();
+    let service = allServices.find(s => String(s.service_id).trim() === targetId);
     
-    if (service && service.description && service.description.trim() !== "") {
-        document.getElementById('testInfoTitle').innerText = service.service_name;
-        document.getElementById('testInfoDesc').innerText = service.description;
-        document.getElementById('testInfoModal').style.display = 'flex';
+    if (service) {
+        let desc = service.description ? String(service.description).trim() : "";
+        if (desc !== "") {
+            document.getElementById('testInfoTitle').innerText = service.service_name;
+            // .replace(/\n/g, '<br>') line breaks ko theek se dikhayega
+            document.getElementById('testInfoDesc').innerHTML = desc.replace(/\n/g, '<br>');
+            document.getElementById('testInfoModal').style.display = 'flex';
+        } else {
+            showToast("No description text found in database.", "error");
+        }
     } else {
-        showToast("No description available for this test.", "info");
+        showToast("Test loading... Please wait.", "info");
     }
 };

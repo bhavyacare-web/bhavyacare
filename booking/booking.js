@@ -360,12 +360,11 @@ function renderServices(searchQuery = "") {
             pricingHtml = `<div class="mrp-row"><span>Total: <span class="mrp">₹${totalMrp}</span></span></div><div class="final-price">₹${basicPrice} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div><div class="locked-price" onclick="openVipPromo()"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>`;
         }
 
+        // ✨ EK BAAR HI DECLARE KIYA HAI (Fixed Double Declaration) ✨
         let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
         let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
 
         // 🌟 UPDATED IF-ELSE CONDITION FOR INFO ICON 🌟
-        let sTypeLower = String(service.service_type || '').toLowerCase().trim();
-        let isPackageOrProfile = (sTypeLower === 'profile' || sTypeLower === 'package');
         let infoIconHtml = "";
         let descText = service.description ? String(service.description).trim() : "";
 
@@ -408,7 +407,6 @@ function renderServices(searchQuery = "") {
     });
     container.innerHTML = htmlContent;
 }
-
 function updateQty(id, change, price, name, type) {
     id = String(id);
     let index = cart.findIndex(item => String(item.service_id) === id);

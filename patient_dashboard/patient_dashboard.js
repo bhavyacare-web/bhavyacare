@@ -138,7 +138,7 @@ async function checkLoginAndFetchData() {
             if(patient.patient_name) localStorage.setItem("bhavya_name", patient.patient_name);
 
             safeSetText("userNameMobile", patient.patient_name); safeSetText("userNameDesktop", patient.patient_name); safeSetText("userIdDisplay", "ID: " + patient.user_id);
-            safeSetText("walletBal", patient.wallet || "0"); safeSetText("refCode", patient.referral_code || "-----");
+            safeSetText("walletBal", patient.wallet || "0"); safeSetText("refCode", patient.referral_code || "-----");safeSetText("refCodeDisplay", patient.referral_code || "N/A");
             safeSetText("infoName", patient.patient_name); safeSetText("infoMobile", patient.mobile_number);
 
             let btnWithdraw = document.getElementById('btn-withdraw');
@@ -1313,4 +1313,14 @@ function goToDiscountProfiles() {
 window.openVipPromo = function() {
     // Agar patient_dashboard aur vip folder ek hi level par hain
     window.location.href = '../vip/vip_member.html'; 
+};
+// ✨ DASHBOARD REFERRAL COPY FUNCTION ✨
+window.copyDashReferralCode = function() {
+    const code = document.getElementById("refCodeDisplay").innerText;
+    if (code && code !== "N/A" && code !== "Loading..") { 
+        navigator.clipboard.writeText(code); 
+        showToast("Referral Code '" + code + "' Copied! Share with friends 🚀", "success"); 
+    } else {
+        showToast("Referral code not available right now.", "error");
+    }
 };

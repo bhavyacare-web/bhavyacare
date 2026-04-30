@@ -1189,7 +1189,7 @@ async function submitFeedback() {
 }
 // ✨ FETCH & RENDER DISCOUNT PROFILES ON DASHBOARD ✨
 function loadDashboardDiscountProfiles() {
-    fetch(GAS_URL, {
+    fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({ action: "getBookingData", user_id: localStorage.getItem("patient_id") || "" })
     })
@@ -1251,3 +1251,14 @@ function loadDashboardDiscountProfiles() {
 setTimeout(() => {
     loadDashboardDiscountProfiles();
 }, 1000); // 1 second delay taki baaki important chizein pehle load ho jayein
+// ✨ NAYA FUNCTION: DISCOUNT PAGE PAR BHEJNE KE LIYE ✨
+function goToDiscountProfiles() {
+    localStorage.setItem("targetCategory", "discount_profile");
+    window.location.href = '../booking/booking.html';
+}
+// ✨ AUTO-SWITCH CATEGORY LOGIC ✨
+let checkTarget = localStorage.getItem("targetCategory");
+if(checkTarget) {
+    currentCategory = checkTarget; // Category ko discount_profile set kar diya
+    localStorage.removeItem("targetCategory"); // Use karne ke baad memory se hata diya
+}

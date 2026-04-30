@@ -302,7 +302,7 @@ function renderServices(searchQuery = "") {
     let displayServices = allServices.filter(s => s.service_id !== "VIP-FREE-001");
     let filtered = displayServices.filter(s => String(s.service_type || '').toLowerCase().trim() === currentCategory);
 
-    if (currentCategory === 'profile' && !searchQuery) {
+    if ((currentCategory === 'profile' || currentCategory === 'discount_profile') && !searchQuery) {
         let subCats = ['all', ...new Set(filtered.map(s => String(s.service_category || 'Other').trim()))];
         let subHtml = `<div class="sub-cat-nav">`;
         subCats.forEach(sc => {

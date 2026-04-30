@@ -1,102 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-    // ✨ SESSION PROTECTION LOGIC ✨
-    // Agar user pehle se logged in hai, toh use direct uske dashboard par bhej do
-    document.addEventListener("DOMContentLoaded", () => {
-        const userId = localStorage.getItem("bhavya_user_id");
-        const role = localStorage.getItem("bhavya_role");
+    <script>
+        // ✨ SESSION PROTECTION LOGIC ✨
+        document.addEventListener("DOMContentLoaded", () => {
+            const userId = localStorage.getItem("bhavya_user_id");
+            const role = localStorage.getItem("bhavya_role");
 
-        // Agar dono details localStorage me hain, matlab user logged in hai
-        if (userId && role) {
-            // window.location.replace use kar rahe hain taaki "Back" button ki history me index.html save na ho
-            if (role === "lab") {
-                window.location.replace("Lab/lab_dashboard.html"); // Apne lab folder ka sahi path dalein
-            } 
-            else if (role === "pharmacy") {
-                window.location.replace("pharmacy/pharmacy_dashboard.html");
-            } 
-            else if (role === "patient") {
-                window.location.replace("patient_dashboard/patient_dashboard.html");
-            } 
-            else if (role === "doctor") {
-                window.location.replace("doctor/doctor_dashboard.html"); // Doctor ka sahi path dalein
+            if (userId && role) {
+                if (role === "lab") window.location.replace("Lab/lab_dashboard.html"); 
+                else if (role === "pharmacy") window.location.replace("pharmacy/pharmacy_dashboard.html");
+                else if (role === "patient") window.location.replace("patient_dashboard/patient_dashboard.html");
+                else if (role === "doctor") window.location.replace("doctor/doctor_dashboard.html"); 
+                else if (role === "admin") window.location.replace("admin/admin_dashboard.html"); 
             }
-            else if (role === "admin") {
-                window.location.replace("admin/admin_dashboard.html"); // Admin ka sahi path dalein
-            }
-        }
-    });
-</script>
+        });
+    </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bhavyacare.com - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BhavyaCare - Your Complete Health Partner</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f4f7f6; }
-        .hero-section { text-align: center; padding: 100px 20px; background-color: #e6f0fa; }
-        .hero-section h1 { color: #0056b3; font-size: 42px; margin-bottom: 15px; font-weight: 800; }
-        .hero-section p { color: #555; font-size: 18px; max-width: 600px; margin: 0 auto 30px auto; line-height: 1.6; }
-        
-        .action-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-        
-        /* Button Styles for smooth hover effects */
-        .btn-home {
-            text-decoration: none; padding: 15px 35px; border-radius: 30px; font-size: 18px; 
-            font-weight: bold; display: inline-flex; align-items: center; gap: 10px; color: white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        /* === PREMIUM MODERN UI CSS === */
+        :root {
+            --primary: #2563eb; --primary-light: #eff6ff;
+            --secondary: #10b981; --secondary-light: #d1fae5;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-color: #f8fafc; --text-main: #0f172a; --text-muted: #64748b;
         }
-        .btn-lab { background: linear-gradient(135deg, #0056b3 0%, #007bff 100%); box-shadow: 0 6px 15px rgba(0, 86, 179, 0.3); }
-        .btn-lab:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0, 86, 179, 0.5); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
+
+        /* 🌟 HERO SECTION 🌟 */
+        .hero-section { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); padding: 60px 20px 40px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .hero-title { font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.2;}
+        .hero-title span { color: var(--primary); }
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 30px; font-weight: 500; line-height: 1.5;}
+
+        /* 🔍 GLOBAL SEARCH BAR */
+        .search-container { max-width: 650px; margin: 0 auto 40px; position: relative; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08); border-radius: 16px; }
+        .search-container input { width: 100%; padding: 20px 20px 20px 55px; border-radius: 16px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); transition: 0.3s;}
+        .search-container input:focus { border-color: var(--primary); }
+        .search-container i.fa-search { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;}
+        .search-btn { position: absolute; right: 8px; top: 8px; bottom: 8px; background: var(--primary); color: white; border: none; padding: 0 25px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
+        .search-btn:hover { background: #1d4ed8; }
+
+        /* ⚡ 3 MAIN PILLARS (Lab, Doctor, Pharmacy) */
+        .main-services-grid { max-width: 1000px; margin: -20px auto 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 0 20px; position: relative; z-index: 10;}
+        .service-card { background: white; border-radius: 20px; padding: 25px 20px; text-align: center; text-decoration: none; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;}
+        .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #cbd5e1;}
+        .service-icon { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto;}
         
-        /* 🌟 NAYA DOCTOR BUTTON STYLE 🌟 */
-        .btn-doctor { background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%); box-shadow: 0 6px 15px rgba(23, 162, 184, 0.3); }
-        .btn-doctor:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(23, 162, 184, 0.5); }
+        .sc-lab .service-icon { background: #e0e7ff; color: #4f46e5; }
+        .sc-doc .service-icon { background: #dcfce7; color: #059669; }
+        .sc-med .service-icon { background: #fae8ff; color: #9333ea; }
+        
+        .service-card h3 { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0;}
+        .service-card p { color: #64748b; font-size: 13px; margin: 0; font-weight: 500; line-height: 1.4;}
 
-        /* ✨ NAYA PHARMACY BUTTON STYLE ✨ */
-        .btn-pharmacy { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3); }
-        .btn-pharmacy:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5); }
+        /* 🛡️ TRUST BADGES */
+        .trust-section { background: white; padding: 30px 20px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+        .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;}
+        .trust-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #334155;}
+        .trust-item i { font-size: 24px; color: var(--secondary); }
 
-        .btn-vip { background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%); box-shadow: 0 6px 15px rgba(245, 124, 0, 0.4); }
-        .btn-vip:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(245, 124, 0, 0.6); }
+        /* 👑 VIP BANNER */
+        .vip-banner { max-width: 1000px; margin: 50px auto; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 24px; padding: 40px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); position: relative; overflow: hidden; padding: 0 20px;}
+        .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -40px; font-size: 180px; opacity: 0.05; transform: rotate(15deg);}
+        .vip-content { flex: 1; padding:40px; z-index: 2;}
+        .vip-content h2 { font-size: 28px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
+        .vip-content p { font-size: 15px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
+        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);}
+        .btn-vip:hover { transform: scale(1.05); }
+
+        /* 🗂️ QUICK CATEGORIES */
+        .section-heading { text-align: center; margin: 50px 0 30px; }
+        .section-heading h2 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0;}
+        .section-heading p { color: #64748b; font-size: 14px; margin-top: 5px; font-weight: 500;}
+
+        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 0 20px;}
+        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; text-decoration: none;}
+        .cat-circle { width: 80px; height: 80px; border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--primary); transition: 0.3s; border: 2px solid transparent;}
+        .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);}
+        .cat-item span { font-size: 14px; font-weight: 700; color: #334155; }
+
+        /* 🎁 TRENDING PACKAGES SLIDER */
+        .slider-wrapper { max-width: 1000px; margin: 0 auto 60px; overflow-x: auto; display: flex; gap: 20px; padding: 10px 20px; scroll-behavior: smooth; }
+        .slider-wrapper::-webkit-scrollbar { display: none; }
+        .pkg-card { min-width: 280px; background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; position: relative;}
+        .pkg-badge { position: absolute; top: 15px; right: 15px; background: var(--warning-light); color: #b45309; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 8px;}
+        .pkg-card h3 { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0;}
+        .pkg-card p { font-size: 12px; color: #64748b; font-weight: 600; margin: 0 0 15px 0;}
+        .pkg-price { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 15px;}
+        .btn-book-pkg { display: block; text-align: center; background: var(--primary-light); color: var(--primary); text-decoration: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 14px; transition: 0.2s;}
+        .btn-book-pkg:hover { background: var(--primary); color: white; }
+
+        /* HOW IT WORKS */
+        .hiw-section { background: white; padding: 60px 20px; text-align: center; }
+        .hiw-grid { max-width: 900px; margin: 40px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; position: relative;}
+        .hiw-step { display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 2; background: white;}
+        .hiw-icon { width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; color: var(--text-main); font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 2px #e2e8f0;}
+        .hiw-step h4 { font-size: 16px; font-weight: 800; margin: 0; color: #1e293b;}
+        .hiw-step p { font-size: 13px; color: #64748b; margin: 0; line-height: 1.5; font-weight: 500;}
+        
+        @media (max-width: 768px) {
+            .hero-title { font-size: 28px; }
+            .search-container input { padding: 16px 16px 16px 45px; font-size: 14px; }
+            .search-btn { padding: 0 15px; font-size: 13px; }
+            .main-services-grid { grid-template-columns: 1fr; margin-top: -10px; gap: 15px; }
+            .service-card { padding: 20px; flex-direction: row; text-align: left; justify-content: flex-start;}
+            .service-icon { margin: 0; width: 50px; height: 50px; font-size: 20px; flex-shrink: 0;}
+            .trust-item { font-size: 12px; width: 45%; justify-content: center;}
+            .vip-banner { flex-direction: column; text-align: center; padding: 30px 20px; margin: 30px 20px;}
+            .vip-content { padding: 0;}
+            .btn-vip { width: 100%; justify-content: center;}
+            .hiw-grid { grid-template-columns: 1fr; gap: 40px;}
+        }
     </style>
 </head>
 <body>
 
     <div id="header-container"></div>
 
+    <!-- 🌟 HERO SECTION -->
     <div class="hero-section">
-        <h1>Welcome to BhavyaCare</h1>
-        <p>Aapki health, humari zimmedari. Book tests, consult doctors, and get medicines easily right at your doorstep.</p>
+        <h1 class="hero-title">Your Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
+        <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate reports, expert doctor consultations, and medicines delivered at home.</p>
         
-        <div class="action-buttons">
-            <a href="#" onclick="handleBookClick(event)" class="btn-home btn-lab">
-                <i class="fas fa-microscope"></i> Book Lab Test
-            </a>
-            
-            <a href="bookdoctor/bookdoctor.html" class="btn-home btn-doctor">
-                <i class="fas fa-user-md"></i> Consult Doctor
-            </a>
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search for Lab Tests, Scans, or Profiles..." onkeypress="handleHomeSearch(event)">
+            <button class="search-btn" onclick="executeHomeSearch()">Search</button>
+        </div>
+    </div>
 
-            <a href="#" onclick="handlePharmacyClick(event)" class="btn-home btn-pharmacy">
-                <i class="fas fa-pills"></i> Order Medicines
-            </a>
-            
-            <a href="#" onclick="handleVipClick(event)" class="btn-home btn-vip">
-                <i class="fas fa-crown"></i> Upgrade to VIP
+    <!-- ⚡ 3 MAIN PILLARS -->
+    <div class="main-services-grid">
+        <a href="#" onclick="handleBookClick(event)" class="service-card sc-lab">
+            <div class="service-icon"><i class="fas fa-microscope"></i></div>
+            <div>
+                <h3>Book Lab Test</h3>
+                <p>NABL Certified Labs & Free Home Collection.</p>
+            </div>
+        </a>
+        <a href="bookdoctor/bookdoctor.html" class="service-card sc-doc">
+            <div class="service-icon"><i class="fas fa-user-md"></i></div>
+            <div>
+                <h3>Consult Doctor</h3>
+                <p>Online Video Consult or Offline Clinic Visit.</p>
+            </div>
+        </a>
+        <a href="#" onclick="handlePharmacyClick(event)" class="service-card sc-med">
+            <div class="service-icon"><i class="fas fa-pills"></i></div>
+            <div>
+                <h3>Order Medicines</h3>
+                <p>Upload Prescription & Get Superfast Delivery.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- 🛡️ TRUST BADGES -->
+    <div class="trust-section">
+        <div class="trust-grid">
+            <div class="trust-item"><i class="fas fa-award"></i> NABL Accredited Labs</div>
+            <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Medicine Delivery</div>
+            <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Phlebotomists</div>
+            <div class="trust-item"><i class="fas fa-shield-alt"></i> 100% Data Security</div>
+        </div>
+    </div>
+
+    <!-- 🗂️ QUICK CATEGORIES -->
+    <div class="section-heading">
+        <h2>What are you looking for?</h2>
+        <p>Choose a category to find specific tests or doctors.</p>
+    </div>
+    <div class="categories-grid">
+        <a href="#" onclick="searchAndGo('Fever')" class="cat-item">
+            <div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span>
+        </a>
+        <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item">
+            <div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span>
+        </a>
+        <a href="#" onclick="searchAndGo('Heart')" class="cat-item">
+            <div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span>
+        </a>
+        <a href="#" onclick="searchAndGo('Full Body')" class="cat-item">
+            <div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span>
+        </a>
+        <a href="bookdoctor/bookdoctor.html" class="cat-item">
+            <div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Specialists</span>
+        </a>
+    </div>
+
+    <!-- 👑 VIP BANNER -->
+    <div class="vip-banner">
+        <div class="vip-content">
+            <h2>One VIP Plan = Maximum Savings!</h2>
+            <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
+            <a href="#" onclick="handleVipClick(event)" class="btn-vip">
+                <i class="fas fa-crown"></i> Become a VIP Member
             </a>
         </div>
     </div>
 
+    <!-- 🎁 TRENDING PACKAGES -->
+    <div class="section-heading">
+        <h2>Trending Health Packages</h2>
+        <p>Our most popular preventive health checkups.</p>
+    </div>
+    <div class="slider-wrapper">
+        <div class="pkg-card">
+            <div class="pkg-badge">80 Tests</div>
+            <h3>Bhavya Silver Profile</h3>
+            <p><i class="fas fa-vial"></i> Includes CBC, LFT, KFT, Sugar & more.</p>
+            <div class="pkg-price">
+                <div><del style="font-size:12px; color:#94a3b8;">₹2000</del><br><span style="font-size:22px; font-weight:800; color:#0f172a;">₹1000</span></div>
+                <div style="font-size:11px; color:#b45309; font-weight:700;"><i class="fas fa-lock"></i> VIP Rate: ₹600</div>
+            </div>
+            <a href="#" onclick="handleBookClick(event)" class="btn-book-pkg">View Details & Book</a>
+        </div>
+        <div class="pkg-card">
+            <div class="pkg-badge">90 Tests</div>
+            <h3>Bhavya Gold Profile</h3>
+            <p><i class="fas fa-vial"></i> Silver + Thyroid + HbA1c + Lipid Profile.</p>
+            <div class="pkg-price">
+                <div><del style="font-size:12px; color:#94a3b8;">₹4000</del><br><span style="font-size:22px; font-weight:800; color:#0f172a;">₹2000</span></div>
+                <div style="font-size:11px; color:#b45309; font-weight:700;"><i class="fas fa-lock"></i> VIP Rate: ₹1200</div>
+            </div>
+            <a href="#" onclick="handleBookClick(event)" class="btn-book-pkg">View Details & Book</a>
+        </div>
+        <div class="pkg-card">
+            <div class="pkg-badge">100 Tests</div>
+            <h3>Bhavya Platinum Profile</h3>
+            <p><i class="fas fa-vial"></i> Gold + Vitamin D, B12 & Iron Studies.</p>
+            <div class="pkg-price">
+                <div><del style="font-size:12px; color:#94a3b8;">₹7000</del><br><span style="font-size:22px; font-weight:800; color:#0f172a;">₹3500</span></div>
+                <div style="font-size:11px; color:#b45309; font-weight:700;"><i class="fas fa-lock"></i> VIP Rate: ₹2100</div>
+            </div>
+            <a href="#" onclick="handleBookClick(event)" class="btn-book-pkg">View Details & Book</a>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="hiw-section">
+        <div class="section-heading" style="margin-top:0;">
+            <h2>How BhavyaCare Works</h2>
+            <p>3 simple steps to a healthier you.</p>
+        </div>
+        <div class="hiw-grid">
+            <div class="hiw-step">
+                <div class="hiw-icon"><i class="fas fa-mobile-alt"></i></div>
+                <h4>1. Book Online</h4>
+                <p>Select your required Lab Test, Doctor Consult, or upload Medicine Prescription.</p>
+            </div>
+            <div class="hiw-step">
+                <div class="hiw-icon"><i class="fas fa-home"></i></div>
+                <h4>2. Home Service / Clinic</h4>
+                <p>Our expert collects sample from home, or you visit the doctor's clinic securely.</p>
+            </div>
+            <div class="hiw-step">
+                <div class="hiw-icon"><i class="fas fa-file-medical-alt"></i></div>
+                <h4>3. Digital Records</h4>
+                <p>Access your reports, prescriptions, and order history directly on your phone.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 1. Header aur App.js load karne ka logic
+        // 1. Header aur App.js load karne ka logic (Same as old)
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
@@ -107,10 +284,27 @@
             })
             .catch(error => console.error('Error loading header:', error));
 
+        // ✨ GLOBAL SEARCH LOGIC ✨
+        function handleHomeSearch(e) {
+            if (e.key === 'Enter') executeHomeSearch();
+        }
+
+        function executeHomeSearch() {
+            let query = document.getElementById("globalSearchInput").value.trim();
+            if (query) {
+                // Seedha booking page par bhej kar search apply kar dega
+                window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Quick Category Search
+        function searchAndGo(category) {
+            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
+        }
+
         // BOOKING LOGIC (BINA LOGIN KE DIRECT REDIRECT) 
         function handleBookClick(event) {
             event.preventDefault(); 
-            // Seedha booking page par bhejo, koi login check nahi!
             window.location.href = "booking/booking.html";
         }
 
@@ -132,14 +326,11 @@
         // 2. VIP Button Logic: Isme login jaruri hai
         function handleVipClick(event) {
             event.preventDefault(); 
-            
             const userId = localStorage.getItem("bhavya_user_id");
             
             if (userId) {
-                // Agar user logged in hai, toh VIP page par bhejo
                 window.location.href = "vip/vip_member.html";
             } else {
-                // Agar user logged in nahi hai, toh login popup open karo
                 if (typeof openPatientLogin === "function") {
                     openPatientLogin();
                 } else {

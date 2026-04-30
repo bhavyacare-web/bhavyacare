@@ -1187,7 +1187,10 @@ async function submitFeedback() {
         btn.disabled = false;
     }
 }
-// ✨ COMPLETE UPDATED DASHBOARD SLIDER (WITH BULLETS & TEST COUNT) ✨
+// Global variable modal ke data ke liye
+window.dashGlobalServices = []; 
+
+// ✨ DASHBOARD SLIDER (WITH VIP LOCKED RATE) ✨
 function loadDashboardDiscountProfiles() {
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
@@ -1216,15 +1219,15 @@ function loadDashboardDiscountProfiles() {
                 let name = pkg.service_name || "Health Package";
                 let basicPrice = pkg.basic_price || 0;
                 let vipPrice = pkg.vip_price || 0;
-                let finalPrice = isVip ? vipPrice : basicPrice;
                 
-                // Top Badges
+                // Badges
                 let tag = pkg.service_category ? `<span style="font-size:9px; background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase;">${pkg.service_category}</span>` : "";
                 let testCountBadge = pkg.number_of_test ? `<span style="background:#fef3c7; color:#d97706; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:700;"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : '';
 
-                let infoIcon = (pkg.description && pkg.description.trim() !== "") ? `<i class="fas fa-info-circle" onclick="showDashPopup('${pkg.service_id}')" style="color:#0056b3; cursor:pointer; margin-left:6px; font-size:15px;"></i>` : "";
+                // 'i' Icon
+                let infoIcon = (pkg.description && pkg.description.trim() !== "") ? `<i class="fas fa-info-circle" onclick="showDashPopup('${pkg.service_id}'); event.stopPropagation();" style="color:#0056b3; cursor:pointer; margin-left:6px; font-size:15px;"></i>` : "";
 
-                // Bullet points generate karna
+                // Bullet Points
                 let descPreviewHtml = "";
                 let descRaw = String(pkg.description || '');
                 if (descRaw.trim() !== "") {
@@ -1235,9 +1238,26 @@ function loadDashboardDiscountProfiles() {
                         descPreviewHtml = `
                         <div style="background:#f8fafc; border-radius:8px; padding:6px 10px; border:1px solid #f1f5f9; margin:8px 0;">
                             <ul style="margin:0; padding-left:15px; font-size:10px; color:#64748b; font-weight:600;">${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
-                            ${moreText ? `<div style="font-size:10px; color:#0056b3; margin-top:4px; font-weight:800; cursor:pointer;" onclick="showDashPopup('${pkg.service_id}')">${moreText}</div>` : ''}
+                            ${moreText ? `<div style="font-size:10px; color:#0056b3; margin-top:4px; font-weight:800; cursor:pointer;" onclick="showDashPopup('${pkg.service_id}'); event.stopPropagation();">${moreText}</div>` : ''}
                         </div>`;
                     }
+                }
+
+                // ✨ NAYA LOGIC: VIP RATE LOCK UI ✨
+                let pricingHtml = "";
+                if (isVip) {
+                    pricingHtml = `
+                        <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
+                        <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${vipPrice} <i class="fas fa-crown" style="color:var(--warning); font-size:12px;"></i></span>
+                    `;
+                } else {
+                    pricingHtml = `
+                        <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
+                        <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${basicPrice}</span><br>
+                        <div style="color: #64748b; font-size: 10px; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cbd5e1; cursor: pointer; margin-top:5px;" onclick="openVipPromo(); event.stopPropagation();">
+                            <i class="fas fa-lock" style="font-size:9px;"></i> VIP Rate: ₹${vipPrice}
+                        </div>
+                    `;
                 }
 
                 html += `
@@ -1248,10 +1268,9 @@ function loadDashboardDiscountProfiles() {
                     </div>
                     <h4 class="pkg-title" style="display:flex; align-items:center; margin-bottom:4px; font-size:14px;">${name} ${infoIcon}</h4>
                     ${descPreviewHtml}
-                    <div class="pkg-price-row" style="margin-top:auto;">
+                    <div class="pkg-price-row" style="margin-top:auto; align-items:flex-end;">
                         <div>
-                            <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
-                            <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${finalPrice}</span>
+                            ${pricingHtml}
                         </div>
                         <button class="pkg-book-btn" onclick="goToDiscountProfiles()">Book Now</button>
                     </div>
@@ -1261,6 +1280,18 @@ function loadDashboardDiscountProfiles() {
         }
     }).catch(err => console.log("Dashboard slider error:", err));
 }
+
+// ✨ POPUP KHOLNE KA FUNCTION ✨
+window.showDashPopup = function(id) {
+    let srv = window.dashGlobalServices.find(s => String(s.service_id) == String(id));
+    if(srv && srv.description) {
+        document.getElementById('dashModalTitle').innerText = srv.service_name;
+        document.getElementById('dashModalDesc').innerHTML = String(srv.description).replace(/\n/g, '<br>');
+        document.getElementById('dashboardInfoModal').style.display = 'flex';
+    } else {
+        showToast("Description not available", "error");
+    }
+};
 
 // ✨ Yahan hum ensure kar rahe hain ki dashboard load hote hi ye function chal jaye ✨
 // Apni file me dhoondhiye jahan window.onload ya initDashboard() likha hai, uske andar isko call karna hai:

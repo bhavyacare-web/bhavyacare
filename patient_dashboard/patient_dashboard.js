@@ -1310,3 +1310,19 @@ if(checkTarget) {
     currentCategory = checkTarget; // Category ko discount_profile set kar diya
     localStorage.removeItem("targetCategory"); // Use karne ke baad memory se hata diya
 }
+// ✨ DASHBOARD PAR VIP FORM OPEN KARNE KA FUNCTION ✨
+window.openVipPromo = function() {
+    // Ye check karega ki dashboard par VIP form/promo ki id kya hai
+    let formModal = document.getElementById('vipFormModal');
+    let promoModal = document.getElementById('vipPromoModal');
+    
+    if (formModal) {
+        formModal.style.display = 'flex'; // Agar direct form hai toh wo khul jayega
+    } else if (promoModal) {
+        promoModal.style.display = 'flex'; // Agar pehle banner hai toh wo khul jayega
+    } else {
+        // Safe Check: Agar galti se html mein modal nahi milta, toh user ko safely booking page par bhej do
+        showToast("Opening VIP Section...", "info");
+        setTimeout(() => { window.location.href = '../booking/booking.html'; }, 1000);
+    }
+};

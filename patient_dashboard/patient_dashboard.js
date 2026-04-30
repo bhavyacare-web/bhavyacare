@@ -1187,3 +1187,67 @@ async function submitFeedback() {
         btn.disabled = false;
     }
 }
+// ✨ FETCH & RENDER DISCOUNT PROFILES ON DASHBOARD ✨
+function loadDashboardDiscountProfiles() {
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "getBookingData", user_id: localStorage.getItem("patient_id") || "" })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === "success") {
+            let allServices = res.data.services || [];
+            let userPlan = res.data.userPlan || "basic";
+            let isVip = (userPlan === "vip" || userPlan === "pending");
+
+            // Sirf 'discount_profile' type ki services filter karo
+            let discountProfiles = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === 'discount_profile');
+            let sliderContainer = document.getElementById("dashboardDiscountSlider");
+            
+            if (!sliderContainer) return;
+
+            if (discountProfiles.length === 0) {
+                sliderContainer.innerHTML = `<div style="font-size:12px; color:#64748b; padding:10px;">No exclusive packages available right now.</div>`;
+                return;
+            }
+
+            let html = "";
+            // Pehle 5 packages dikhayenge dashboard par (taki fast load ho)
+            discountProfiles.slice(0, 5).forEach(pkg => {
+                let name = pkg.service_name || "Health Package";
+                let basicPrice = pkg.basic_price || 0;
+                let vipPrice = pkg.vip_price || 0;
+                let finalPrice = isVip ? vipPrice : basicPrice;
+                let tag = pkg.service_category ? `<span style="font-size:9px; background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px; margin-bottom:5px; display:inline-block; font-weight:700;">${pkg.service_category}</span>` : "";
+
+                html += `
+                <div class="pkg-card">
+                    <div>
+                        ${tag}
+                        <h4 class="pkg-title">${name}</h4>
+                    </div>
+                    <div class="pkg-price-row">
+                        <div>
+                            <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
+                            <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${finalPrice}</span>
+                        </div>
+                        <button class="pkg-book-btn" onclick="window.location.href='../booking/booking.html'">Book Now</button>
+                    </div>
+                </div>`;
+            });
+
+            sliderContainer.innerHTML = html;
+        }
+    })
+    .catch(err => {
+        let sliderContainer = document.getElementById("dashboardDiscountSlider");
+        if(sliderContainer) sliderContainer.innerHTML = `<div style="font-size:12px; color:#ef4444; padding:10px;">Failed to load packages.</div>`;
+    });
+}
+
+// ✨ Yahan hum ensure kar rahe hain ki dashboard load hote hi ye function chal jaye ✨
+// Apni file me dhoondhiye jahan window.onload ya initDashboard() likha hai, uske andar isko call karna hai:
+// For example, document.addEventListener('DOMContentLoaded', ...) ke andar ise daal dein:
+setTimeout(() => {
+    loadDashboardDiscountProfiles();
+}, 1000); // 1 second delay taki baaki important chizein pehle load ho jayein

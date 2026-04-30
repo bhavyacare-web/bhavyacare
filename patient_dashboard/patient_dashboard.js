@@ -1187,7 +1187,7 @@ async function submitFeedback() {
         btn.disabled = false;
     }
 }
-// ✨ FETCH & RENDER DISCOUNT PROFILES ON DASHBOARD ✨
+// ✨ COMPLETE UPDATED DASHBOARD SLIDER (WITH BULLETS & TEST COUNT) ✨
 function loadDashboardDiscountProfiles() {
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
@@ -1197,52 +1197,69 @@ function loadDashboardDiscountProfiles() {
     .then(res => {
         if (res.status === "success") {
             let allServices = res.data.services || [];
+            window.dashGlobalServices = allServices; 
+            
             let userPlan = res.data.userPlan || "basic";
             let isVip = (userPlan === "vip" || userPlan === "pending");
 
-            // Sirf 'discount_profile' type ki services filter karo
             let discountProfiles = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === 'discount_profile');
             let sliderContainer = document.getElementById("dashboardDiscountSlider");
             
             if (!sliderContainer) return;
-
             if (discountProfiles.length === 0) {
                 sliderContainer.innerHTML = `<div style="font-size:12px; color:#64748b; padding:10px;">No exclusive packages available right now.</div>`;
                 return;
             }
 
             let html = "";
-            // Pehle 5 packages dikhayenge dashboard par (taki fast load ho)
             discountProfiles.slice(0, 5).forEach(pkg => {
                 let name = pkg.service_name || "Health Package";
                 let basicPrice = pkg.basic_price || 0;
                 let vipPrice = pkg.vip_price || 0;
                 let finalPrice = isVip ? vipPrice : basicPrice;
-                let tag = pkg.service_category ? `<span style="font-size:9px; background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px; margin-bottom:5px; display:inline-block; font-weight:700;">${pkg.service_category}</span>` : "";
+                
+                // Top Badges
+                let tag = pkg.service_category ? `<span style="font-size:9px; background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase;">${pkg.service_category}</span>` : "";
+                let testCountBadge = pkg.number_of_test ? `<span style="background:#fef3c7; color:#d97706; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:700;"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : '';
+
+                let infoIcon = (pkg.description && pkg.description.trim() !== "") ? `<i class="fas fa-info-circle" onclick="showDashPopup('${pkg.service_id}')" style="color:#0056b3; cursor:pointer; margin-left:6px; font-size:15px;"></i>` : "";
+
+                // Bullet points generate karna
+                let descPreviewHtml = "";
+                let descRaw = String(pkg.description || '');
+                if (descRaw.trim() !== "") {
+                    let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
+                    if (items.length > 0) {
+                        let previewItems = items.slice(0, 2);
+                        let moreText = pkg.number_of_test ? `+ ${pkg.number_of_test} Parameters` : (items.length > 2 ? "View All" : "");
+                        descPreviewHtml = `
+                        <div style="background:#f8fafc; border-radius:8px; padding:6px 10px; border:1px solid #f1f5f9; margin:8px 0;">
+                            <ul style="margin:0; padding-left:15px; font-size:10px; color:#64748b; font-weight:600;">${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
+                            ${moreText ? `<div style="font-size:10px; color:#0056b3; margin-top:4px; font-weight:800; cursor:pointer;" onclick="showDashPopup('${pkg.service_id}')">${moreText}</div>` : ''}
+                        </div>`;
+                    }
+                }
 
                 html += `
-                <div class="pkg-card">
-                    <div>
+                <div class="pkg-card" style="min-width: 270px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         ${tag}
-                        <h4 class="pkg-title">${name}</h4>
+                        ${testCountBadge}
                     </div>
-                    <div class="pkg-price-row">
+                    <h4 class="pkg-title" style="display:flex; align-items:center; margin-bottom:4px; font-size:14px;">${name} ${infoIcon}</h4>
+                    ${descPreviewHtml}
+                    <div class="pkg-price-row" style="margin-top:auto;">
                         <div>
                             <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
                             <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${finalPrice}</span>
                         </div>
-                        <button class="pkg-book-btn" onclick="window.location.href='../booking/booking.html'">Book Now</button>
+                        <button class="pkg-book-btn" onclick="goToDiscountProfiles()">Book Now</button>
                     </div>
                 </div>`;
             });
-
             sliderContainer.innerHTML = html;
         }
-    })
-    .catch(err => {
-        let sliderContainer = document.getElementById("dashboardDiscountSlider");
-        if(sliderContainer) sliderContainer.innerHTML = `<div style="font-size:12px; color:#ef4444; padding:10px;">Failed to load packages.</div>`;
-    });
+    }).catch(err => console.log("Dashboard slider error:", err));
 }
 
 // ✨ Yahan hum ensure kar rahe hain ki dashboard load hote hi ye function chal jaye ✨

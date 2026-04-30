@@ -94,6 +94,16 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px); }
 
+        /* ✨ DASHBOARD HORIZONTAL SLIDER CSS ✨ */
+        .horizontal-slider { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scroll-behavior: smooth; margin: 0 -5px; padding: 5px; }
+        .horizontal-slider::-webkit-scrollbar { display: none; }
+        .pkg-card { min-width: 240px; background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid var(--border); display:flex; flex-direction:column; gap:10px; position: relative; overflow: hidden;}
+        .pkg-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--warning); }
+        .pkg-title { font-size: 14px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+        .pkg-price-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 5px; }
+        .pkg-book-btn { background: var(--warning-light); color: #b45309; border: 1px solid #fcd34d; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;}
+        .pkg-book-btn:active { transform: scale(0.95); }
+
         /* ✨ FLOATING ICONS ✨ */
         #floatingHelpBtn { position: fixed; bottom: 155px; right: 20px; background: #e11d48; color: white; height: 55px; padding: 0 20px; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); z-index: 1000; transition: 0.3s; text-decoration: none; }
         #floatingHelpBtn:active { transform: scale(0.9); }

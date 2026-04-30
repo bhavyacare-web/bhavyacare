@@ -1190,11 +1190,14 @@ async function submitFeedback() {
 // Global variable modal ke data ke liye
 window.dashGlobalServices = []; 
 
-// ✨ DASHBOARD SLIDER (WITH VIP LOCKED RATE) ✨
+// ✨ DASHBOARD SLIDER (WITH 100% ACCURATE VIP CHECK) ✨
 function loadDashboardDiscountProfiles() {
+    // 💡 FIX: ID ya Mobile number pakadne ka bulletproof tareeqa
+    let pId = localStorage.getItem("patient_id") || localStorage.getItem("userId") || localStorage.getItem("mobile") || "";
+
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        body: JSON.stringify({ action: "getBookingData", user_id: localStorage.getItem("patient_id") || "" })
+        body: JSON.stringify({ action: "getBookingData", user_id: pId })
     })
     .then(res => res.json())
     .then(res => {
@@ -1202,8 +1205,11 @@ function loadDashboardDiscountProfiles() {
             let allServices = res.data.services || [];
             window.dashGlobalServices = allServices; 
             
-            let userPlan = res.data.userPlan || "basic";
-            let isVip = (userPlan === "vip" || userPlan === "pending");
+            // 💡 FIX: VIP Plan check ko aur strict aur safe banaya hai
+            let userPlan = res.data.userPlan ? String(res.data.userPlan).toLowerCase().trim() : "basic";
+            
+            // Agar dashboard mein pehle se `isUserVip` true hai, toh usko bhi consider karega
+            let isVip = (userPlan === "vip" || userPlan === "pending" || window.isUserVip === true);
 
             let discountProfiles = allServices.filter(s => String(s.service_type || '').toLowerCase().trim() === 'discount_profile');
             let sliderContainer = document.getElementById("dashboardDiscountSlider");
@@ -1243,14 +1249,16 @@ function loadDashboardDiscountProfiles() {
                     }
                 }
 
-                // ✨ NAYA LOGIC: VIP RATE LOCK UI ✨
+                // ✨ VIP RATE LOGIC ✨
                 let pricingHtml = "";
                 if (isVip) {
+                    // Agar Patient VIP hai, toh sidha VIP Rate dikhao
                     pricingHtml = `
                         <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
                         <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${vipPrice} <i class="fas fa-crown" style="color:var(--warning); font-size:12px;"></i></span>
                     `;
                 } else {
+                    // Agar Patient Basic hai, toh lock wala UI dikhao
                     pricingHtml = `
                         <span style="font-size:10px; color:#94a3b8; text-decoration:line-through;">₹${pkg.service_price}</span><br>
                         <span style="font-size:16px; font-weight:900; color:var(--text-main);">₹${basicPrice}</span><br>
@@ -1310,19 +1318,8 @@ if(checkTarget) {
     currentCategory = checkTarget; // Category ko discount_profile set kar diya
     localStorage.removeItem("targetCategory"); // Use karne ke baad memory se hata diya
 }
-// ✨ DASHBOARD PAR VIP FORM OPEN KARNE KA FUNCTION ✨
+// ✨ VIP BUTTON CLICK PAR NAYE PAGE PAR JANA ✨
 window.openVipPromo = function() {
-    // Ye check karega ki dashboard par VIP form/promo ki id kya hai
-    let formModal = document.getElementById('vipFormModal');
-    let promoModal = document.getElementById('vipPromoModal');
-    
-    if (formModal) {
-        formModal.style.display = 'flex'; // Agar direct form hai toh wo khul jayega
-    } else if (promoModal) {
-        promoModal.style.display = 'flex'; // Agar pehle banner hai toh wo khul jayega
-    } else {
-        // Safe Check: Agar galti se html mein modal nahi milta, toh user ko safely booking page par bhej do
-        showToast("Opening VIP Section...", "info");
-        setTimeout(() => { window.location.href = '../booking/booking.html'; }, 1000);
-    }
+    // Agar patient_dashboard aur vip folder ek hi level par hain
+    window.location.href = '../vip/vip_member.html'; 
 };

@@ -360,9 +360,10 @@ function renderServices(searchQuery = "") {
             pricingHtml = `<div class="mrp-row"><span>Total: <span class="mrp">₹${totalMrp}</span></span></div><div class="final-price">₹${basicPrice} <span style="font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; transform:translateY(-2px);">BASIC</span></div><div class="locked-price" onclick="openVipPromo()"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>`;
         }
 
-        // ✨ EK BAAR HI DECLARE KIYA HAI (Fixed Double Declaration) ✨
         let sTypeLowerCase = String(service.service_type || '').toLowerCase().trim();
-        let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package');
+        
+        // ✨ YAHAN UPDATE HUA HAI: discount_profile ko bhi premium card design milega ✨
+        let isPackageOrProfile = (sTypeLowerCase === 'profile' || sTypeLowerCase === 'package' || sTypeLowerCase === 'discount_profile');
 
         // 🌟 UPDATED IF-ELSE CONDITION FOR INFO ICON 🌟
         let infoIconHtml = "";
@@ -370,10 +371,10 @@ function renderServices(searchQuery = "") {
 
         if (descText !== "") {
             if (isPackageOrProfile) {
-                // Packages ke liye purana function call karo
+                // Packages & Discount Profiles ke liye purana modal function call karo
                 infoIconHtml = `<i class="fas fa-info-circle" onclick="openModal('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
             } else {
-                // Normal tests ke liye naya description function call karo
+                // Normal tests ke liye naya description popup function call karo
                 infoIconHtml = `<i class="fas fa-info-circle" onclick="showTestInfo('${s_id}')" style="color:#3b82f6; cursor:pointer; margin-left:8px; font-size:16px;"></i>`;
             }
         }
@@ -1661,3 +1662,22 @@ window.showTestInfo = function(serviceId) {
         showToast("Test loading... Please wait.", "info");
     }
 };
+// ✨ AUTO-SWITCH CATEGORY LOGIC (FIXED TIMING) ✨
+window.addEventListener('load', () => {
+    // 1.5 Second ka delay diya hai taki pehle Google Sheet se saara data aa jaye
+    setTimeout(() => {
+        let checkTarget = localStorage.getItem("targetCategory");
+        if(checkTarget) {
+            currentCategory = checkTarget; // Target category set karo
+            localStorage.removeItem("targetCategory"); // Memory se clean karo
+            
+            // Tab button ki UI ko active karna (Agar ID 'btn-discount_profile' hai)
+            // Taki user ko lage ki sahi tab click hui hai
+            document.querySelectorAll('.cat-card').forEach(btn => btn.classList.remove('selected'));
+            // Default active hataya
+            
+            // Render call kardo taki sahi cards aa jayein
+            renderServices(); 
+        }
+    }, 1500); // 1.5 seconds delay
+});

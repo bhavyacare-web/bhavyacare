@@ -71,12 +71,12 @@
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
-        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 60px 20px 50px; text-align: center; }
-        .section-pillars { background: #ffffff; padding: 40px 20px; border-bottom: 1px solid #e2e8f0; }
-        .section-diagnostics { background: #f8fafc; padding: 50px 20px; text-align: center; }
-        .section-categories { background: #ffffff; padding: 50px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-packages { background: #f1f5f9; padding: 60px 20px; }
-        .section-hiw { background: #ffffff; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 60px 20px 40px; text-align: center; }
+        .section-diagnostics { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; } 
+        .section-trust { background: #f8fafc; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
+        .section-categories { background: #ffffff; padding: 50px 20px; }
+        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 60px 20px; }
 
         /* 🌟 HERO & SEARCH SECTION 🌟 */
         .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.2;}
@@ -96,25 +96,14 @@
         .wa-btn { background: #10b981; color: white; border: 1px solid #059669; }
         .rx-btn { background: #8b5cf6; color: white; border: 1px solid #7c3aed; }
 
-        /* ⚡ 3 MAIN PILLARS */
-        .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
-        .service-card { background: white; border-radius: 20px; padding: 30px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center;}
-        .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.1); border-color: #93c5fd;}
-        .service-icon { width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 15px;}
-        .sc-lab .service-icon { background: #eff6ff; color: #2563eb; }
-        .sc-doc .service-icon { background: #f0fdf4; color: #10b981; }
-        .sc-med .service-icon { background: #faf5ff; color: #c026d3; }
-        .service-card h3 { color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 8px;}
-        .service-card p { color: #64748b; font-size: 14px; margin: 0; font-weight: 600; line-height: 1.4;}
-
-        /* ✨ COMPACT DIAGNOSTICS & SCANS WITH DISCOUNTS ✨ */
-        .compact-diag-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 900px; margin: 0 auto 25px; text-align: left;}
-        .compact-diag-card { display: flex; align-items: center; gap: 15px; background: white; padding: 20px 25px; border-radius: 20px; border: 1px solid #e2e8f0; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+        /* ✨ COMPACT SERVICES & DISCOUNTS GRID (Replaces 3 Pillars) ✨ */
+        .compact-diag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1050px; margin: 0 auto 25px; text-align: left;}
+        .compact-diag-card { display: flex; align-items: center; gap: 15px; background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .compact-diag-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(37,99,235,0.1); border-color: #93c5fd;}
         .cd-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0;}
         .cd-info { display: flex; flex-direction: column; gap: 6px; }
         .cd-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;}
-        .cd-discount { font-size: 12px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content;}
+        .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content;}
         
         .btn-more-services { display: inline-flex; align-items: center; gap: 8px; background: var(--text-main); color: white; padding: 14px 35px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; transition: 0.3s; margin-top: 15px; box-shadow: 0 4px 15px rgba(15,23,42,0.2);}
         .btn-more-services:hover { background: var(--primary); box-shadow: 0 8px 25px rgba(37,99,235,0.3);}
@@ -131,7 +120,7 @@
 
         .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} 
         .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
-        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
+        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
         .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
         
@@ -221,7 +210,7 @@
             .logo h2 { font-size: 20px !important; }
 
             .section-hero { padding: 40px 15px 30px; }
-            .section-pillars, .section-packages, .section-hiw, .section-about, .section-diagnostics { padding: 40px 15px; }
+            .section-diagnostics, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
@@ -236,12 +225,6 @@
             .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 100%;}
             .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
             .btn-quick i { font-size: 22px; }
-            
-            .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
-            .service-card { padding: 15px 18px; flex-direction: row; text-align: left; justify-content: flex-start;}
-            .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 20px;}
-            .service-card h3 { font-size: 16px; margin-bottom: 3px;}
-            .service-card p { font-size: 12px;}
 
             /* Mobile Compact Diagnostics Grid */
             .compact-diag-grid { grid-template-columns: 1fr; gap: 12px; padding: 0;}
@@ -388,29 +371,11 @@
         </div>
     </section>
 
-    <!-- ⚡ SECTION 2: 3 MAIN PILLARS ⚡ -->
-    <section class="section-pillars">
-        <div class="main-services-grid">
-            <a href="booking/booking.html" class="service-card sc-lab">
-                <div class="service-icon"><i class="fas fa-microscope"></i></div>
-                <div><h3>Lab Tests & Scans</h3><p>NABL Certified Labs, MRI, CT & Home Collection.</p></div>
-            </a>
-            <a href="bookdoctor/bookdoctor.html" class="service-card sc-doc">
-                <div class="service-icon"><i class="fas fa-user-md"></i></div>
-                <div><h3>Consult Doctor</h3><p>Online Video Consult or Clinic Visit.</p></div>
-            </a>
-            <a href="pharmacy/medicineorders.html" class="service-card sc-med">
-                <div class="service-icon"><i class="fas fa-pills"></i></div>
-                <div><h3>Order Medicines</h3><p>Upload Rx & Get Superfast Delivery.</p></div>
-            </a>
-        </div>
-    </section>
-
-    <!-- ✨ COMPACT DIAGNOSTICS & SCANS GRID ✨ -->
+    <!-- ✨ COMPACT ALL-IN-ONE SERVICES GRID ✨ -->
     <section class="section-diagnostics">
         <div class="section-heading" style="margin-bottom: 25px;">
-            <h2>Comprehensive Diagnostics</h2>
-            <p>Premium healthcare services with assured discounts.</p>
+            <h2>Our Premium Services</h2>
+            <p>Book lab tests, consult doctors, and order medicines with assured discounts.</p>
         </div>
         <div class="compact-diag-grid">
             <a href="booking/booking.html" class="compact-diag-card">
@@ -439,6 +404,20 @@
                 <div class="cd-info">
                     <h3 class="cd-title">MRI Scans</h3>
                     <div class="cd-discount">Flat ₹1000 - ₹2500 OFF</div>
+                </div>
+            </a>
+            <a href="bookdoctor/bookdoctor.html" class="compact-diag-card">
+                <div class="cd-icon" style="background:#f0fdf4; color:#10b981;">👨‍⚕️</div>
+                <div class="cd-info">
+                    <h3 class="cd-title">Consult Doctor</h3>
+                    <div class="cd-discount">Flat 10% OFF</div>
+                </div>
+            </a>
+            <a href="#" onclick="handlePharmacyClick(event)" class="compact-diag-card">
+                <div class="cd-icon" style="background:#faf5ff; color:#c026d3;">💊</div>
+                <div class="cd-info">
+                    <h3 class="cd-title">Order Medicines</h3>
+                    <div class="cd-discount">10-70% OFF</div>
                 </div>
             </a>
         </div>
@@ -582,7 +561,7 @@
                 <h3>Our Services</h3>
                 <a href="booking/booking.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Book Lab Tests</a>
                 <a href="bookdoctor/bookdoctor.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Consult a Doctor</a>
-                <a href="pharmacy/medicineorders.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
+                <a href="#" onclick="handlePharmacyClick(event)"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
                 <a href="vip/vip_member.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> VIP Membership</a>
                 <a href="prescription.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Upload Prescription</a>
             </div>
@@ -717,10 +696,19 @@
             }
         }
 
-        function searchAndGo(category) {
-            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
-        }
+        function searchAndGo(category) { window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`; }
         
+        // Custom Pharmacy Click Logic based on User Status
+        function handlePharmacyClick(event) {
+            event.preventDefault(); 
+            const userId = localStorage.getItem("bhavya_user_id");
+            if (userId) { window.location.href = "pharmacy/medicineorders.html"; } 
+            else {
+                if (typeof openPatientLogin === "function") openPatientLogin();
+                else showHomeToast("Please login first to order medicines.", "error");
+            }
+        }
+
         function executeHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.trim();
             if (query) { window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`; }
@@ -761,6 +749,7 @@
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                     enableDragScroll('.categories-grid'); 
+                    enableDragScroll('.diag-grid'); 
                     enableDragScroll('#reviewsSlider');
                 }
             }).catch(e => console.log("Silent fetch error", e));

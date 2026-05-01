@@ -37,38 +37,38 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
         body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
 
-        /* 🌟 HEADER CSS (Merged from header.html) 🌟 */
-        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo h2 { color: #0056b3; font-size: 26px; font-weight: 800; margin: 0; }
-        .logo span { color: #28a745; }
+        /* 🌟 HEADER CSS 🌟 */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        
+        /* ✨ NAYA LOGO STYLE ✨ */
+        .logo img { height: 45px; object-fit: contain; display: block;}
+        
         .nav-actions { display: flex; align-items: center; gap: 15px; }
         .nav-btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
-        .login-btn { background-color: #0056b3; }
-        .login-btn:hover { background-color: #004494; }
-        .admin-btn { background-color: #17a2b8; text-decoration: none; }
-        .admin-btn:hover { background-color: #138496; }
+        .login-btn { background-color: var(--primary); }
+        .login-btn:hover { background-color: #1d4ed8; }
 
         #user-menu-container { display: none; }
-        .user-profile-btn { background: #f4f7f6; color: #0056b3; border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .user-profile-btn { background: #f4f7f6; color: var(--primary); border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .user-profile-btn:hover { background: #e6f0fa; }
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
-        .dropbtn:hover { color: #0056b3; }
-        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
-        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 500; }
-        .dropdown-content a:hover { background-color: #f9f9f9; color: #0056b3; }
+        .dropbtn:hover { color: var(--primary); }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 600; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: var(--primary); }
         .show-menu { display: block; }
 
         /* Login Popup Section CSS */
         #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: fixed; top: 70px; right: 40px; z-index: 999; }
         #login-section h3 { color: #333; margin-bottom: 20px; }
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
-        .input-box:focus { border-color: #0056b3; box-shadow: 0 0 5px rgba(0,86,179,0.2); }
-        .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .action-btn:hover { background-color: #218838; }
+        .input-box:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(37, 99, 235, 0.2); }
+        .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .action-btn:hover { background-color: #059669; }
         .support-text { font-size: 12px; color: #888; margin-top: 15px; }
 
-        /* 🌟 NEW DIVIDED SECTIONS CSS 🌟 */
+        /* 🌟 SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 50px 20px 40px; text-align: center; }
         .section-pillars { background: #ffffff; padding: 30px 20px; }
         .section-trust { background: #f8fafc; padding: 25px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
@@ -176,20 +176,20 @@
         /* 📱 MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
-            .logo h2 { font-size: 22px; }
+            .logo img { height: 35px; } /* Mobile par logo thoda chhota */
             #login-section { right: 5%; width: 90%; top: 60px;}
 
             .section-hero { padding: 40px 15px 30px; }
             .section-pillars { padding: 20px 15px 30px; }
             .section-trust { padding: 20px 10px; }
-            .section-categories { padding: 30px 15px; }
+            .section-categories { padding: 30px 0; } /* Padding 0 kiya scrolling ke liye */
             .section-packages { padding: 40px 15px; }
             .section-hiw { padding: 40px 15px; }
 
             .hero-title { font-size: 26px; line-height: 1.4; margin-bottom: 10px; padding: 0 5px;}
             .hero-subtitle { font-size: 14px; line-height: 1.5; padding: 0 5px; margin-top: 8px;}
             
-            .search-container { padding: 8px; border-radius: 16px; margin-top: 20px;}
+            .search-container { padding: 8px; border-radius: 16px; margin-top: 20px; margin-left: 15px; margin-right: 15px;}
             .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
             .search-container i.fa-search { font-size: 16px; left: 16px;}
             .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
@@ -202,14 +202,23 @@
             .trust-grid { gap: 12px; }
             .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 10px; background: white; border: 1px solid #e2e8f0;}
             
-            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0;}
+            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0 15px;}
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
             
-            .categories-grid { gap: 12px;}
-            .cat-item { width: 75px; }
-            .cat-circle { width: 60px; height: 60px; font-size: 24px;}
-            .cat-item span { font-size: 12px;}
+            /* ✨ MOBILE CATEGORIES GRID TO HORIZONTAL SCROLL ✨ */
+            .categories-grid { 
+                flex-wrap: nowrap; 
+                overflow-x: auto; 
+                justify-content: flex-start; 
+                padding: 10px 15px; 
+                gap: 15px;
+                scroll-behavior: smooth;
+            }
+            .categories-grid::-webkit-scrollbar { display: none; }
+            .cat-item { flex: 0 0 auto; width: 65px; gap: 6px;}
+            .cat-circle { width: 55px; height: 55px; font-size: 22px;}
+            .cat-item span { font-size: 11px;}
             
             .hiw-grid { grid-template-columns: 1fr; gap: 15px;}
             .hiw-step { flex-direction: row; text-align: left; padding: 20px 15px;}
@@ -227,10 +236,13 @@
 
     <!-- 🌟 MERGED HEADER 🌟 -->
     <header class="navbar">
-        <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
+        <div class="logo">
+            <!-- Naya Logo Add Kiya Hai (Path check kar lena agar jarurat pade) -->
+            <img src="image/bhavyacarelogo.png" alt="BhavyaCare">
+        </div>
         
         <div class="nav-actions">
-            <a href="admin.html" class="nav-btn admin-btn">🛡️ Admin</a>
+            <!-- Admin button ab yahan nahi hai -->
             <button id="nav-login-btn" class="nav-btn login-btn" onclick="openPatientLogin()">Login</button>
             
             <div class="dropdown">
@@ -239,9 +251,11 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
-                    <a href="#" id="menu-join" onclick="openPartnerLogin()">🤝 Join Us (Partner)</a>
-                    <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;">📊 My Dashboard</a>
-                    <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;">🚪 Logout</a>
+                    <!-- Admin Button Menu ke andar daal diya hai -->
+                    <a href="admin.html" id="menu-admin"><i class="fas fa-shield-alt" style="color: #17a2b8; width: 20px;"></i> Admin Panel</a>
+                    <a href="#" id="menu-join" onclick="openPartnerLogin()"><i class="fas fa-handshake" style="color: var(--primary); width: 20px;"></i> Join Us (Partner)</a>
+                    <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
+                    <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -450,8 +464,8 @@
     <script src="app.js"></script>
 
     <script>
-        // ✨ TEXT & NUMBER FORMATTING FUNCTIONS ✨
-        function formatText(text) {
+        // ✨ NAYA NAAM: Is function ka naam homeFormatText kar diya taki app.js ke sath jhagda na kare! ✨
+        function homeFormatText(text) {
             if (!text) return "";
             let cleanText = String(text).replace(/_/g, ' '); 
             let formatted = cleanText.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
@@ -459,7 +473,7 @@
             return formatted.replace(acronyms, match => match.toUpperCase());
         }
 
-        function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
+        function homeFormatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
 
         function handlePharmacyClick(event) {
             event.preventDefault(); 
@@ -478,13 +492,13 @@
             const service = homeAllServices.find(s => s.service_id === serviceId);
             if (!service) return;
             
-            document.getElementById("homeModalTitle").innerText = formatText(service.service_name);
+            document.getElementById("homeModalTitle").innerText = homeFormatText(service.service_name);
             let descRaw = String(service.description || '');
             let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
             
             if (descRaw.trim() !== "") {
                 let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
-                formattedDesc = "<ul>" + items.map(i => `<li style="margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:4px;">${formatText(i.trim())}</li>`).join('') + "</ul>";
+                formattedDesc = "<ul>" + items.map(i => `<li style="margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:4px;">${homeFormatText(i.trim())}</li>`).join('') + "</ul>";
                 if (service.number_of_test) {
                     formattedDesc = `<div style="background:#e0f2fe; color:#0284c7; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; margin-bottom:15px; display:inline-block;"><i class="fas fa-microscope"></i> Includes ${service.number_of_test} Parameters</div>` + formattedDesc;
                 }
@@ -511,7 +525,6 @@
             if (query) { window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`; }
         }
 
-        // ✨ PC DRAG TO SCROLL LOGIC ✨
         function enableDragScroll(selector) {
             const slider = document.querySelector(selector);
             if(!slider) return;
@@ -546,6 +559,7 @@
                     renderHomePackages(); 
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
+                    enableDragScroll('.categories-grid'); // Mobile icons horizontal scroll drag support
                 }
             }).catch(e => console.log("Silent fetch error", e));
             
@@ -571,7 +585,7 @@
             categories.forEach(c => {
                 if(c === "") return;
                 let activeClass = c === homeCurrentSubCat ? "active" : "";
-                let displayName = c === 'all' ? "All" : formatText(c);
+                let displayName = c === 'all' ? "All" : homeFormatText(c);
                 navHtml += `<button class="home-cat-btn ${activeClass}" onclick="renderHomePackages('${c}')">${displayName}</button>`;
             });
             nav.innerHTML = navHtml;
@@ -589,13 +603,13 @@
 
             let html = "";
             displayPkgs.forEach(pkg => {
-                let price = formatPrice(pkg.basic_price || pkg.service_price);
-                let totalMrp = formatPrice(pkg.service_price);
-                let vipPrice = formatPrice(pkg.vip_price || price);
+                let price = homeFormatPrice(pkg.basic_price || pkg.service_price);
+                let totalMrp = homeFormatPrice(pkg.service_price);
+                let vipPrice = homeFormatPrice(pkg.vip_price || price);
                 
-                let cleanName = formatText(pkg.service_name);
+                let cleanName = homeFormatText(pkg.service_name);
                 let cleanType = String(pkg.service_type || '').replace(/'/g, "\\'");
-                let cleanCat = formatText(pkg.service_category || 'Package');
+                let cleanCat = homeFormatText(pkg.service_category || 'Package');
                 let s_id = String(pkg.service_id).replace(/'/g, "\\'");
 
                 const cartItem = cart.find(item => String(item.service_id) === String(pkg.service_id));
@@ -614,7 +628,7 @@
                 if (descRaw.trim() !== "") {
                     let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
                     if (items.length > 0) {
-                        let previewItems = items.slice(0, 2).map(i => formatText(i.trim())); 
+                        let previewItems = items.slice(0, 2).map(i => homeFormatText(i.trim())); 
                         let moreText = pkg.number_of_test ? `+ ${pkg.number_of_test} Parameters` : (items.length > 2 ? "+ More Details" : "");
                         descPreviewHtml = `
                         <div class="pkg-desc">
@@ -663,9 +677,9 @@
             
             let html = "";
             filtered.forEach(s => {
-                let price = formatPrice(s.basic_price || s.service_price); 
-                let totalMrp = formatPrice(s.service_price);
-                let cleanName = formatText(s.service_name);
+                let price = homeFormatPrice(s.basic_price || s.service_price); 
+                let totalMrp = homeFormatPrice(s.service_price);
+                let cleanName = homeFormatText(s.service_name);
                 let cleanType = String(s.service_type || '').replace(/'/g, "\\'");
                 let s_id = String(s.service_id).replace(/'/g, "\\'");
 

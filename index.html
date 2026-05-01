@@ -73,10 +73,11 @@
         /* 🌟 SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 60px 20px 50px; text-align: center; }
         .section-pillars { background: #ffffff; padding: 40px 20px; }
-        .section-trust { background: #f8fafc; padding: 30px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-categories { background: #ffffff; padding: 50px 20px; }
-        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #ffffff; padding: 60px 20px; }
+        .section-diagnostics { background: #f8fafc; padding: 50px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; } /* ✨ NAYA SECTION ✨ */
+        .section-trust { background: #ffffff; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
+        .section-categories { background: #f8fafc; padding: 50px 20px; }
+        .section-packages { background: #ffffff; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #f8fafc; padding: 60px 20px; }
 
         /* 🌟 HERO & SEARCH SECTION 🌟 */
         .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.2;}
@@ -107,6 +108,13 @@
         .service-card h3 { color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 8px;}
         .service-card p { color: #64748b; font-size: 14px; margin: 0; font-weight: 600; line-height: 1.4;}
 
+        /* ✨ NEW: DIAGNOSTICS & SCANS GRID (8 CARDS) ✨ */
+        .diag-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .diag-card { background: white; border-radius: 16px; padding: 25px 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: 0.3s; cursor: pointer; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .diag-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(37,99,235,0.1); border-color: var(--primary-light); }
+        .diag-icon { font-size: 38px; margin-bottom: 12px; }
+        .diag-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0; }
+
         /* 🛡️ TRUST BADGES */
         .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 30px;}
         .trust-item { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #334155;}
@@ -119,7 +127,7 @@
 
         .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} 
         .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
-        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
+        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
         .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
         
@@ -164,9 +172,9 @@
 
         /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #f8fafc; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s;}
-        .hiw-step:hover { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px);}
-        .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: white; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
+        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .hiw-step:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); transform: translateY(-5px);}
+        .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: #f8fafc; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px #e2e8f0;}
         .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
         .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
 
@@ -206,17 +214,15 @@
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
             .logo img { height: 35px; } 
-            
-            /* ✨ MOBILE TEXT FIX ✨ */
             .logo h2 { font-size: 20px !important; }
 
             .section-hero { padding: 40px 15px 30px; }
-            .section-pillars, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
+            .section-pillars, .section-packages, .section-hiw, .section-about, .section-diagnostics { padding: 40px 15px; }
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
-            .hero-title { font-size: 28px; line-height: 1.3; margin-bottom: 10px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 20px;}
+            .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 25px;}
             
             .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
             .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
@@ -232,6 +238,12 @@
             .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 20px;}
             .service-card h3 { font-size: 16px; margin-bottom: 3px;}
             .service-card p { font-size: 12px;}
+
+            /* Mobile Diagnostics Grid */
+            .diag-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0;}
+            .diag-card { padding: 18px 10px; border-radius: 12px;}
+            .diag-icon { font-size: 30px; margin-bottom: 8px;}
+            .diag-title { font-size: 14px;}
             
             .trust-grid { gap: 10px; }
             .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 8px; background: white; border: 1px solid #e2e8f0;}
@@ -356,7 +368,8 @@
     <!-- 🌟 SECTION 1: HERO & SEARCH 🌟 -->
     <section class="section-hero">
         <h1 class="hero-title">Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
-        <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate reports, expert doctor consultations, and medicines delivered at home.</p>
+        <!-- Subtitle Update to include Scans -->
+        <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate blood reports, advanced scans (MRI, CT), expert doctor consultations, and medicines delivered at home.</p>
         
         <div class="search-container">
             <i class="fas fa-search"></i>
@@ -377,7 +390,8 @@
         <div class="main-services-grid">
             <a href="booking/booking.html" class="service-card sc-lab">
                 <div class="service-icon"><i class="fas fa-microscope"></i></div>
-                <div><h3>Book Lab Test</h3><p>NABL Certified Labs & Home Collection.</p></div>
+                <!-- Title updated to include Scans -->
+                <div><h3>Lab Tests & Scans</h3><p>NABL Certified Labs, MRI, CT & Home Collection.</p></div>
             </a>
             <a href="bookdoctor/bookdoctor.html" class="service-card sc-doc">
                 <div class="service-icon"><i class="fas fa-user-md"></i></div>
@@ -390,13 +404,21 @@
         </div>
     </section>
 
-    <!-- 🛡️ SECTION 3: TRUST BADGES 🛡️ -->
-    <section class="section-trust">
-        <div class="trust-grid">
-            <div class="trust-item"><i class="fas fa-award"></i> NABL Labs</div>
-            <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Delivery</div>
-            <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Staff</div>
-            <div class="trust-item"><i class="fas fa-shield-alt"></i> Safe Data</div>
+    <!-- ✨ NEW SECTION: ADVANCED DIAGNOSTICS GRID ✨ -->
+    <section class="section-diagnostics">
+        <div class="section-heading">
+            <h2>Comprehensive Diagnostics</h2>
+            <p>From routine blood tests to advanced imaging, book everything easily.</p>
+        </div>
+        <div class="diag-grid">
+            <a href="#" onclick="searchAndGo('pathology')" class="diag-card"><div class="diag-icon">🩸</div><h3 class="diag-title">Blood Tests</h3></a>
+            <a href="javascript:void(0)" onclick="scrollToPackages('all')" class="diag-card"><div class="diag-icon">🩺</div><h3 class="diag-title">Packages</h3></a>
+            <a href="#" onclick="searchAndGo('usg')" class="diag-card"><div class="diag-icon">🖥️</div><h3 class="diag-title">Ultrasound</h3></a>
+            <a href="#" onclick="searchAndGo('xray')" class="diag-card"><div class="diag-icon">🩻</div><h3 class="diag-title">X-Ray</h3></a>
+            <a href="#" onclick="searchAndGo('ct')" class="diag-card"><div class="diag-icon">☢️</div><h3 class="diag-title">CT Scan</h3></a>
+            <a href="#" onclick="searchAndGo('mri')" class="diag-card"><div class="diag-icon">🧠</div><h3 class="diag-title">MRI</h3></a>
+            <a href="#" onclick="searchAndGo('ecg')" class="diag-card"><div class="diag-icon">❤️</div><h3 class="diag-title">ECG</h3></a>
+            <a href="#" onclick="searchAndGo('echo')" class="diag-card"><div class="diag-icon">💓</div><h3 class="diag-title">ECHO</h3></a>
         </div>
     </section>
 
@@ -507,12 +529,21 @@
         </div>
     </section>
 
+    <!-- 🛡️ SECTION 8: TRUST BADGES (Bottom) 🛡️ -->
+    <section class="section-trust">
+        <div class="trust-grid">
+            <div class="trust-item"><i class="fas fa-award"></i> NABL Labs</div>
+            <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Delivery</div>
+            <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Staff</div>
+            <div class="trust-item"><i class="fas fa-shield-alt"></i> Safe Data</div>
+        </div>
+    </section>
+
     <!-- ✨ MEGA FOOTER ✨ -->
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-col">
                 <div class="logo" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                    <!-- Fixed Logo Box Issue: Removed the invert filter & added border-radius -->
                     <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" style="height: 45px; border-radius: 8px;" onerror="this.onerror=null; this.src='image/bhavyacarelogo.png'; if(this.src.includes('png')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
                     <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
                 </div>
@@ -663,7 +694,11 @@
             }
         }
 
-        function searchAndGo(category) { window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`; }
+        function searchAndGo(category) {
+            // Updated so home page correctly redirects for scans
+            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
+        }
+        
         function executeHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.trim();
             if (query) { window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`; }
@@ -704,6 +739,7 @@
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                     enableDragScroll('.categories-grid'); 
+                    enableDragScroll('.diag-grid'); // Extra smooth scrolling for diag grid on mobile
                     enableDragScroll('#reviewsSlider');
                 }
             }).catch(e => console.log("Silent fetch error", e));

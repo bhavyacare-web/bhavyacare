@@ -12,7 +12,7 @@
                 else if (role === "pharmacy") window.location.replace("pharmacy/pharmacy_dashboard.html");
                 else if (role === "patient") window.location.replace("patient_dashboard/patient_dashboard.html");
                 else if (role === "doctor") window.location.replace("doctor/doctor_dashboard.html"); 
-                // Admin ka auto-redirect hata diya hai, ab password se jayega
+                else if (role === "admin") window.location.replace("admin/admin_dashboard.html"); 
             }
         });
     </script>
@@ -41,7 +41,9 @@
 
         /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo { display: flex; align-items: center; }
         .logo img { height: 45px; object-fit: contain; display: block;}
+        
         .nav-actions { display: flex; align-items: center; gap: 15px; }
         .nav-btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
         .login-btn { background-color: var(--primary); }
@@ -81,17 +83,18 @@
         .hero-title span { color: var(--primary); }
         .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 35px; font-weight: 500; line-height: 1.6;}
         
-        .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto 35px; max-width: 800px; flex-wrap: wrap;}
+        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
+        .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
+        .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
+        .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
+
+        /* ✨ PROMINENT QUICK ACTIONS (Moved below search) ✨ */
+        .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto; max-width: 800px; flex-wrap: wrap;}
         .btn-quick { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
         .btn-quick:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .call-btn { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
         .wa-btn { background: #10b981; color: white; border: 1px solid #059669; }
         .rx-btn { background: #8b5cf6; color: white; border: 1px solid #7c3aed; }
-
-        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative;}
-        .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
-        .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
-        .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
 
         /* ⚡ 3 MAIN PILLARS */
         .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
@@ -114,13 +117,13 @@
         .section-heading h2 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0;}
         .section-heading p { color: #64748b; font-size: 15px; margin-top: 8px; font-weight: 600;}
 
-        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap;}
+        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} /* Added margin-bottom for gap */
         .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
         .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
         .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
         
-        .vip-banner { max-width: 1000px; margin: 40px auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
+        .vip-banner { max-width: 1000px; margin: 0 auto; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
         .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
         .vip-content { flex: 1; padding: 40px; z-index: 2; position: relative;}
         .vip-content h2 { font-size: 26px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
@@ -161,10 +164,23 @@
 
         /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #f8fafc; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s;}
-        .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: white; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
-        .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
-        .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
+        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s;}
+        .hiw-icon { width: 70px; height: 70px; border-radius: 20px; background: white; color: var(--primary); font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
+        .hiw-step h4 { font-size: 18px; font-weight: 800; margin: 0; color: #1e293b;}
+        .hiw-step p { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
+
+        /* 💬 PATIENT REVIEWS SECTION 💬 */
+        .section-reviews { background: #ffffff; padding: 60px 20px; border-top: 1px solid #e2e8f0; }
+        .reviews-wrapper { max-width: 1050px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; cursor: grab; }
+        .reviews-wrapper:active { cursor: grabbing; }
+        .review-card { background: #f8fafc; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: 0.3s; user-select: none; }
+        .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(37,99,235,0.08); background: white; border-color: #cbd5e1; }
+        .review-stars { color: #f59e0b; font-size: 14px; margin-bottom: 12px; }
+        .review-text { font-size: 14px; color: #475569; line-height: 1.6; font-style: italic; margin-bottom: 20px; }
+        .review-user { display: flex; align-items: center; gap: 12px; }
+        .review-avatar { width: 45px; height: 45px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; }
+        .review-info h4 { margin: 0 0 3px 0; font-size: 15px; color: #1e293b; font-weight: 800; }
+        .review-info p { margin: 0; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
         /* ✨ AGGREGATOR SECTION ✨ */
         .section-about { background: #f8fafc; padding: 60px 20px; text-align: center; border-top: 1px solid #e2e8f0; }
@@ -195,21 +211,26 @@
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
-            .hero-title { font-size: 28px; line-height: 1.3; margin-bottom: 10px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 25px;}
+            /* Reduced Hero Title Size for Mobile */
+            .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 20px;}
             
-            .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; width: 100%;}
-            .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
-            .btn-quick i { font-size: 22px; }
-
-            .search-container { padding: 8px; border-radius: 16px; margin: 0 auto;}
+            .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
             .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
             .search-container i.fa-search { font-size: 16px; left: 16px;}
             .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
+
+            /* Quick Actions Below Search Bar on Mobile */
+            .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 100%;}
+            .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
+            .btn-quick i { font-size: 22px; }
             
-            .main-services-grid { gap: 15px; grid-template-columns: 1fr; }
-            .service-card { padding: 20px; flex-direction: row; text-align: left; justify-content: flex-start;}
-            .service-icon { margin: 0 15px 0 0; width: 55px; height: 55px; font-size: 24px;}
+            /* Compact Main Pillars */
+            .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
+            .service-card { padding: 15px 18px; flex-direction: row; text-align: left; justify-content: flex-start;}
+            .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 20px;}
+            .service-card h3 { font-size: 16px; margin-bottom: 3px;}
+            .service-card p { font-size: 12px;}
             
             .trust-grid { gap: 10px; }
             .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 8px; background: white; border: 1px solid #e2e8f0;}
@@ -222,6 +243,9 @@
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
                 flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
             }
+            /* Extra bottom margin removed to fix gap */
+            .categories-grid { margin-bottom: 25px; }
+
             .cat-item { flex: 0 0 auto; width: 70px; gap: 6px;}
             .cat-circle { width: 60px; height: 60px; font-size: 24px;}
             .cat-item span { font-size: 11px;}
@@ -231,13 +255,26 @@
             .pkg-basic-price { font-size: 20px; }
             .btn-add-cart { padding: 8px 18px; font-size: 13px; }
 
-            .hiw-grid { grid-template-columns: 1fr; gap: 15px;}
-            .hiw-step { flex-direction: row; text-align: left; padding: 20px 15px;}
-            .hiw-icon { margin-right: 15px; margin-bottom:0; flex-shrink: 0; width: 60px; height: 60px; font-size: 24px;}
+            /* Compact How It Works */
+            .hiw-grid { grid-template-columns: 1fr; gap: 12px;}
+            .hiw-step { flex-direction: row; text-align: left; padding: 15px;}
+            .hiw-icon { margin-right: 15px; margin-bottom:0; flex-shrink: 0; width: 50px; height: 50px; font-size: 20px;}
+            .hiw-step h4 { font-size: 16px; }
+            .hiw-step p { font-size: 13px; }
+
+            /* Mobile Reviews Fix */
+            .section-reviews { padding: 40px 15px; }
+            .reviews-wrapper { 
+                margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
+                display: flex; overflow-x: auto; justify-content: flex-start; gap: 15px; flex-wrap: nowrap;
+            }
+            .reviews-wrapper::-webkit-scrollbar { display: none; }
+            .review-card { min-width: 290px; flex: 0 0 auto; }
             
             .about-box { padding: 25px 15px; border-radius: 16px; }
             .about-box h2 { font-size: 20px; }
             
+            /* Footer Mobile Fix */
             .footer { padding: 40px 20px 20px; text-align: left;}
             .footer-grid { grid-template-columns: 1fr; gap: 30px; }
             .footer-col h3 { font-size: 16px; margin-bottom: 12px; }
@@ -263,17 +300,11 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
-                    <!-- ✨ ADMIN PASSWORD LINK ✨ -->
-                    <a href="#" id="menu-admin" onclick="openAdminPasswordModal(event)"><i class="fas fa-shield-alt" style="color: #17a2b8; width: 20px;"></i> Admin Panel</a>
-                    <a href="#" id="menu-join" onclick="openPartnerLogin()"><i class="fas fa-handshake" style="color: var(--primary); width: 20px;"></i> Join Us (Partner)</a>
+                    <!-- Dashboard only if logged in -->
                     <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
                     
-                    <hr>
                     <a href="prescription.html"><i class="fas fa-upload" style="color: #8b5cf6; width: 20px;"></i> Upload Prescription</a>
-                    <a href="terms.html"><i class="fas fa-file-contract" style="color: #64748b; width: 20px;"></i> Terms & Conditions</a>
-                    <a href="privacy.html"><i class="fas fa-user-shield" style="color: #64748b; width: 20px;"></i> Privacy Policy</a>
-                    <a href="refund.html"><i class="fas fa-undo" style="color: #64748b; width: 20px;"></i> Refund Policy</a>
-                    <a href="contact.html"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
+                    <a href="tel:8950112467"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
                     
                     <hr>
                     <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Logout</a>
@@ -331,17 +362,17 @@
         <h1 class="hero-title">Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
         <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate reports, expert doctor consultations, and medicines delivered at home.</p>
         
-        <div class="hero-quick-actions">
-            <a href="tel:8950112467" class="btn-quick call-btn"><i class="fas fa-phone-alt"></i> <span>Book by Call</span></a>
-            <a href="https://wa.me/918950112467" class="btn-quick wa-btn"><i class="fab fa-whatsapp"></i> <span>WhatsApp Booking</span></a>
-            <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Rx</span></a>
-        </div>
-
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
             <button class="search-btn" onclick="executeHomeSearch()">Search</button>
             <div id="homeSearchResults" style="display:none; position:absolute; top:110%; left:0; width:100%; background:white; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:1000; max-height:350px; overflow-y:auto; text-align:left;"></div>
+        </div>
+
+        <div class="hero-quick-actions">
+            <a href="tel:8950112467" class="btn-quick call-btn"><i class="fas fa-phone-alt"></i> <span>Book by Call</span></a>
+            <a href="https://wa.me/918950112467" class="btn-quick wa-btn"><i class="fab fa-whatsapp"></i> <span>WhatsApp Booking</span></a>
+            <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Rx</span></a>
         </div>
     </section>
 
@@ -356,7 +387,7 @@
                 <div class="service-icon"><i class="fas fa-user-md"></i></div>
                 <div><h3>Consult Doctor</h3><p>Online Video Consult or Clinic Visit.</p></div>
             </a>
-            <a href="#" onclick="handlePharmacyClick(event)" class="service-card sc-med">
+            <a href="pharmacy/medicineorders.html" class="service-card sc-med">
                 <div class="service-icon"><i class="fas fa-pills"></i></div>
                 <div><h3>Order Medicines</h3><p>Upload Rx & Get Superfast Delivery.</p></div>
             </a>
@@ -381,10 +412,10 @@
         </div>
         <div class="categories-grid">
             <a href="#" onclick="searchAndGo('Fever')" class="cat-item"><div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span></a>
-            <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
+            <a href="#" onclick="searchAndGo('Sugar')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
             <a href="#" onclick="searchAndGo('Heart')" class="cat-item"><div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span></a>
-            <a href="#" onclick="searchAndGo('Full Body')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
-            <a href="bookdoctor/bookdoctor.html" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Doctors</span></a>
+            <a href="#" onclick="searchAndGo('Profile')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
+            <a href="#" onclick="searchAndGo('Senior Citizen')" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-blind"></i></div><span>Senior Citizen</span></a>
         </div>
         
         <div class="vip-banner">
@@ -421,11 +452,48 @@
             </div>
             <div class="hiw-step">
                 <div class="hiw-icon"><i class="fas fa-home"></i></div>
-                <div><h4>2. Home Service / Clinic</h4><p>Our expert collects sample from home, or you visit the doctor's clinic securely.</p></div>
+                <div><h4>2. Home Collection & Delivery</h4><p>Sample collection and medicine delivery directly at your doorstep.</p></div>
             </div>
             <div class="hiw-step">
                 <div class="hiw-icon"><i class="fas fa-file-medical-alt"></i></div>
                 <div><h4>3. Digital Records</h4><p>Access your reports, prescriptions, and order history directly on your phone.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 💬 SECTION: PATIENT REVIEWS 💬 -->
+    <section class="section-reviews">
+        <div class="section-heading" style="margin-top:0;">
+            <h2>What Our Patients Say</h2>
+            <p>Trusted by thousands of happy families across India.</p>
+        </div>
+        
+        <div class="reviews-wrapper" id="reviewsSlider">
+            <div class="review-card">
+                <div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="review-text">"Bahut acchi service hai! Maine papa ke liye Full Body test book kiya tha. Sample lene wale bhaiya bahut polite the aur report phone par hi aa gayi 4 ghante mein."</p>
+                <div class="review-user">
+                    <div class="review-avatar">R</div>
+                    <div class="review-info"><h4>Rahul Sharma</h4><p><i class="fas fa-check-circle" style="color:var(--secondary);"></i> Verified Patient</p></div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="review-text">"The VIP plan is amazing! I saved around ₹1200 on my family's blood tests and medicines. Superfast home delivery of medicines too. Highly recommended!"</p>
+                <div class="review-user">
+                    <div class="review-avatar" style="background:#fef3c7; color:#d97706;">S</div>
+                    <div class="review-info"><h4>Sneha Patel</h4><p><i class="fas fa-crown" style="color:var(--warning);"></i> VIP Member</p></div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div>
+                <p class="review-text">"Aadhi raat ko bukhar hua toh yahan se doctor consult book kiya. Doctor ne 5 minute mein video call par baat ki aur dawa likh di. Great aggregator platform."</p>
+                <div class="review-user">
+                    <div class="review-avatar" style="background:#fce7f3; color:#db2777;">V</div>
+                    <div class="review-info"><h4>Vikas Singh</h4><p><i class="fas fa-check-circle" style="color:var(--secondary);"></i> Verified Patient</p></div>
+                </div>
             </div>
         </div>
     </section>
@@ -448,7 +516,8 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div class="logo" style="margin-bottom: 15px;">
-                    <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
+                    <img src="image/bhavyacarelogo.png" alt="BhavyaCare" style="height: 40px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='image/bhavyacarelogo.jpeg'; if(this.src.includes('jpeg')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+                    <h2 style="display:none; color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
                 </div>
                 <p>Making premium healthcare accessible, affordable, and accurate for everyone. Book tests, consult doctors, and order medicines with ease.</p>
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
@@ -462,9 +531,17 @@
                 <h3>Our Services</h3>
                 <a href="booking/booking.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Book Lab Tests</a>
                 <a href="bookdoctor/bookdoctor.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Consult a Doctor</a>
-                <a href="#" onclick="handlePharmacyClick(event)"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
+                <a href="pharmacy/medicineorders.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
                 <a href="vip/vip_member.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> VIP Membership</a>
                 <a href="prescription.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Upload Prescription</a>
+            </div>
+
+            <div class="footer-col">
+                <h3>Company</h3>
+                <a href="about.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
+                <a href="#" onclick="openPartnerLogin()"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Join Us (Partner)</a>
+                <a href="#" onclick="openAdminPasswordModal(event)"><i class="fas fa-shield-alt" style="font-size:10px; color:#17a2b8;"></i> Admin Login</a>
+                <a href="contact.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Contact Support</a>
             </div>
 
             <div class="footer-col">
@@ -472,14 +549,6 @@
                 <a href="terms.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Terms & Conditions</a>
                 <a href="privacy.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Privacy Policy</a>
                 <a href="refund.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Refund & Cancellation</a>
-                <a href="contact.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
-            </div>
-
-            <div class="footer-col">
-                <h3>Contact Us</h3>
-                <p><i class="fas fa-map-marker-alt" style="color: var(--secondary); margin-right: 8px;"></i> Shakti Nagar, Bahadurgarh, Haryana, India</p>
-                <p><i class="fas fa-phone-alt" style="color: var(--secondary); margin-right: 8px;"></i> +91 8950112467</p>
-                <p><i class="fas fa-envelope" style="color: var(--secondary); margin-right: 8px;"></i> bhavyacare1@gmail.com</p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -533,12 +602,8 @@
 
         function verifyAdminPassword() {
             const passInput = document.getElementById('adminPassInput').value;
-            // Default password: Bhavya@123
-            if (passInput === 'Bhavya@123') {
-                window.location.href = 'admin.html';
-            } else {
-                showHomeToast("Incorrect Password! Access Denied.", "error");
-            }
+            if (passInput === 'Bhavya@123') { window.location.href = 'admin.html'; } 
+            else { showHomeToast("Incorrect Password! Access Denied.", "error"); }
         }
 
         function homeFormatText(text) {
@@ -550,16 +615,6 @@
         }
 
         function homeFormatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
-
-        function handlePharmacyClick(event) {
-            event.preventDefault(); 
-            const userId = localStorage.getItem("bhavya_user_id");
-            if (userId) { window.location.href = "pharmacy/medicineorders.html"; } 
-            else {
-                if (typeof openPatientLogin === "function") openPatientLogin();
-                else showHomeToast("Please login first to order medicines.", "error");
-            }
-        }
 
         function openVipImageModal() { document.getElementById('vipImageModal').style.display = 'flex'; }
         function closeVipImageModal() { document.getElementById('vipImageModal').style.display = 'none'; }
@@ -634,6 +689,7 @@
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                     enableDragScroll('.categories-grid'); 
+                    enableDragScroll('#reviewsSlider');
                 }
             }).catch(e => console.log("Silent fetch error", e));
             

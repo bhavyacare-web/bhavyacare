@@ -40,7 +40,7 @@
         *, *::before, *::after { box-sizing: inherit; }
 
         /* 🌟 HEADER CSS 🌟 */
-        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #f1f5f9;}
         .logo { display: flex; align-items: center; gap: 10px; } 
         .logo img { height: 45px; object-fit: contain; display: block;}
         
@@ -71,19 +71,20 @@
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
-        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 60px 20px 40px; text-align: center; }
+        /* ✨ Hero Section Padkam kar di gayi hai search bar ko upar laane ke liye ✨ */
+        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 30px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .section-diagnostics { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; } 
         .section-trust { background: #f8fafc; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
         .section-categories { background: #ffffff; padding: 50px 20px; }
         .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #ffffff; padding: 60px 20px; }
+        .section-hiw { background: #ffffff; padding: 60px 20px; border-bottom: 1px solid #e2e8f0;}
 
-        /* 🌟 HERO & SEARCH SECTION 🌟 */
-        .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.2;}
+        /* 🌟 TEXT STYLES (Moved to Diagnostics Section) 🌟 */
+        .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px; line-height: 1.2;}
         .hero-title span { color: var(--primary); }
-        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 35px; font-weight: 500; line-height: 1.6;}
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.6;}
         
-        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
+        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
         .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
@@ -96,14 +97,19 @@
         .wa-btn { background: #10b981; color: white; border: 1px solid #059669; }
         .rx-btn { background: #8b5cf6; color: white; border: 1px solid #7c3aed; }
 
-        /* ✨ COMPACT SERVICES & DISCOUNTS GRID (Replaces 3 Pillars) ✨ */
+        /* ✨ COMPACT SERVICES & DISCOUNTS GRID ✨ */
         .compact-diag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1050px; margin: 0 auto 25px; text-align: left;}
         .compact-diag-card { display: flex; align-items: center; gap: 15px; background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .compact-diag-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(37,99,235,0.1); border-color: #93c5fd;}
         .cd-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0;}
-        .cd-info { display: flex; flex-direction: column; gap: 6px; }
+        .cd-info { display: flex; flex-direction: column; gap: 4px; }
         .cd-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;}
-        .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content;}
+        
+        /* ✨ TAGS CSS ✨ */
+        .cd-tag { font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 5px; }
+        .cd-tag i { font-size: 12px; }
+        
+        .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content; margin-top: 4px;}
         
         .btn-more-services { display: inline-flex; align-items: center; gap: 8px; background: var(--text-main); color: white; padding: 14px 35px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; transition: 0.3s; margin-top: 15px; box-shadow: 0 4px 15px rgba(15,23,42,0.2);}
         .btn-more-services:hover { background: var(--primary); box-shadow: 0 8px 25px rgba(37,99,235,0.3);}
@@ -205,24 +211,25 @@
         
         /* 📱 100% PERFECT MOBILE OPTIMIZATION 📱 */
         @media (max-width: 768px) {
-            .navbar { padding: 15px 20px; }
+            .navbar { padding: 12px 20px; }
             .logo img { height: 35px; } 
             .logo h2 { font-size: 20px !important; }
 
-            .section-hero { padding: 40px 15px 30px; }
+            /* ✨ SEARCH BAR PUSHED TO TOP ON MOBILE ✨ */
+            .section-hero { padding: 20px 15px 25px; }
             .section-diagnostics, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
             .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 25px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 0px;}
             
             .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
             .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
             .search-container i.fa-search { font-size: 16px; left: 16px;}
             .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
 
-            .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 100%;}
+            .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 0; width: 100%;}
             .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
             .btn-quick i { font-size: 22px; }
 
@@ -352,11 +359,8 @@
         </div>
     </div>
 
-    <!-- 🌟 SECTION 1: HERO & SEARCH 🌟 -->
+    <!-- 🌟 SECTION 1: SEARCH BAR FIRST & QUICK ACTIONS 🌟 -->
     <section class="section-hero">
-        <h1 class="hero-title">Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
-        <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate blood reports, advanced scans (MRI, CT), expert doctor consultations, and medicines delivered at home.</p>
-        
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
@@ -371,17 +375,20 @@
         </div>
     </section>
 
-    <!-- ✨ COMPACT ALL-IN-ONE SERVICES GRID ✨ -->
+    <!-- ✨ COMPACT ALL-IN-ONE SERVICES GRID WITH TAGS ✨ -->
     <section class="section-diagnostics">
-        <div class="section-heading" style="margin-bottom: 25px;">
-            <h2>Our Premium Services</h2>
-            <p>Book lab tests, consult doctors, and order medicines with assured discounts.</p>
+        <div class="section-heading" style="margin-bottom: 35px;">
+            <!-- ✨ Moved Heading Here ✨ -->
+            <h2 class="hero-title" style="margin-bottom: 10px;">Complete Health Partner<br><span>Consult, Test & Heal.</span></h2>
+            <p class="hero-subtitle" style="margin-bottom: 0;">India's most trusted digital healthcare platform. Book lab tests, advanced scans, consult doctors, and order medicines with assured discounts.</p>
         </div>
+        
         <div class="compact-diag-grid">
             <a href="booking/booking.html" class="compact-diag-card">
                 <div class="cd-icon" style="background:#eff6ff; color:#2563eb;">🩸</div>
                 <div class="cd-info">
                     <h3 class="cd-title">Blood Tests & Packages</h3>
+                    <div class="cd-tag"><i class="fas fa-check-circle" style="color: #10b981;"></i> NABL/NABH Certified</div>
                     <div class="cd-discount">20-70% OFF</div>
                 </div>
             </a>
@@ -389,6 +396,7 @@
                 <div class="cd-icon" style="background:#f0fdf4; color:#10b981;">🖥️</div>
                 <div class="cd-info">
                     <h3 class="cd-title">Ultrasound, X-Ray & ECG</h3>
+                    <div class="cd-tag"><i class="fas fa-check-circle" style="color: #10b981;"></i> NABL/NABH Certified</div>
                     <div class="cd-discount">5-15% OFF</div>
                 </div>
             </a>
@@ -396,6 +404,7 @@
                 <div class="cd-icon" style="background:#fffbeb; color:#f59e0b;">☢️</div>
                 <div class="cd-info">
                     <h3 class="cd-title">CT Scan</h3>
+                    <div class="cd-tag"><i class="fas fa-check-circle" style="color: #10b981;"></i> NABL/NABH Certified</div>
                     <div class="cd-discount">10-25% OFF</div>
                 </div>
             </a>
@@ -403,6 +412,7 @@
                 <div class="cd-icon" style="background:#f5f3ff; color:#db2777;">🧠</div>
                 <div class="cd-info">
                     <h3 class="cd-title">MRI Scans</h3>
+                    <div class="cd-tag"><i class="fas fa-check-circle" style="color: #10b981;"></i> NABL/NABH Certified</div>
                     <div class="cd-discount">Flat ₹1000 - ₹2500 OFF</div>
                 </div>
             </a>
@@ -410,6 +420,7 @@
                 <div class="cd-icon" style="background:#f0fdf4; color:#10b981;">👨‍⚕️</div>
                 <div class="cd-info">
                     <h3 class="cd-title">Consult Doctor</h3>
+                    <div class="cd-tag"><i class="fas fa-video" style="color: #2563eb;"></i> Online & Clinic Visit</div>
                     <div class="cd-discount">Flat 10% OFF</div>
                 </div>
             </a>
@@ -417,6 +428,7 @@
                 <div class="cd-icon" style="background:#faf5ff; color:#c026d3;">💊</div>
                 <div class="cd-info">
                     <h3 class="cd-title">Order Medicines</h3>
+                    <div class="cd-tag"><i class="fas fa-motorcycle" style="color: #f59e0b;"></i> Fast Home Delivery</div>
                     <div class="cd-discount">10-70% OFF</div>
                 </div>
             </a>
@@ -561,7 +573,7 @@
                 <h3>Our Services</h3>
                 <a href="booking/booking.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Book Lab Tests</a>
                 <a href="bookdoctor/bookdoctor.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Consult a Doctor</a>
-                <a href="#" onclick="handlePharmacyClick(event)"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
+                <a href="pharmacy/medicineorders.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
                 <a href="vip/vip_member.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> VIP Membership</a>
                 <a href="prescription.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Upload Prescription</a>
             </div>
@@ -696,9 +708,10 @@
             }
         }
 
-        function searchAndGo(category) { window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`; }
-        
-        // Custom Pharmacy Click Logic based on User Status
+        function searchAndGo(category) {
+            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
+        }
+
         function handlePharmacyClick(event) {
             event.preventDefault(); 
             const userId = localStorage.getItem("bhavya_user_id");
@@ -708,7 +721,7 @@
                 else showHomeToast("Please login first to order medicines.", "error");
             }
         }
-
+        
         function executeHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.trim();
             if (query) { window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`; }
@@ -749,7 +762,7 @@
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                     enableDragScroll('.categories-grid'); 
-                    enableDragScroll('.diag-grid'); 
+                    enableDragScroll('.compact-diag-grid'); 
                     enableDragScroll('#reviewsSlider');
                 }
             }).catch(e => console.log("Silent fetch error", e));

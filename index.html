@@ -41,7 +41,7 @@
 
         /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo { display: flex; align-items: center; gap: 10px; } /* ✨ LOGO AUR TEXT KE BEECH GAP ✨ */
+        .logo { display: flex; align-items: center; gap: 10px; } 
         .logo img { height: 45px; object-fit: contain; display: block;}
         
         .nav-actions { display: flex; align-items: center; gap: 15px; }
@@ -67,7 +67,7 @@
         #login-section h3 { color: #333; margin-bottom: 20px; font-size: 22px; font-weight: 800;}
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
         .input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
@@ -165,6 +165,7 @@
         /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #f8fafc; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s;}
+        .hiw-step:hover { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px);}
         .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: white; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
         .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
         .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
@@ -214,7 +215,7 @@
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
-            .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
+            .hero-title { font-size: 28px; line-height: 1.3; margin-bottom: 10px;}
             .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 20px;}
             
             .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
@@ -367,7 +368,7 @@
         <div class="hero-quick-actions">
             <a href="tel:8950112467" class="btn-quick call-btn"><i class="fas fa-phone-alt"></i> <span>Book by Call</span></a>
             <a href="https://wa.me/918950112467" class="btn-quick wa-btn"><i class="fab fa-whatsapp"></i> <span>WhatsApp Booking</span></a>
-            <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Rx</span></a>
+            <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Prescription</span></a>
         </div>
     </section>
 
@@ -511,7 +512,8 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div class="logo" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                    <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" style="height: 40px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='image/bhavyacarelogo.png'; if(this.src.includes('png')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+                    <!-- Fixed Logo Box Issue: Removed the invert filter & added border-radius -->
+                    <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" style="height: 45px; border-radius: 8px;" onerror="this.onerror=null; this.src='image/bhavyacarelogo.png'; if(this.src.includes('png')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
                     <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
                 </div>
                 <p>Making premium healthcare accessible, affordable, and accurate for everyone. Book tests, consult doctors, and order medicines with ease.</p>

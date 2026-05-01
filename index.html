@@ -92,17 +92,19 @@
         .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); cursor: pointer;}
         .btn-vip:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);}
 
-        /* 🎁 PREMIUM TRENDING PACKAGES SLIDER (Booking Page Style) */
-        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 20px; padding: 0 15px; scroll-behavior: smooth; justify-content: center;}
+        /* 🎁 PREMIUM TRENDING PACKAGES SLIDER */
+        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 20px; padding: 10px 15px; justify-content: center; cursor: grab;}
+        .home-cat-nav:active { cursor: grabbing; }
         .home-cat-nav::-webkit-scrollbar { display: none; }
-        .home-cat-btn { background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .home-cat-btn { background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); user-select: none;}
         .home-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(37,99,235,0.2);}
 
-        .slider-wrapper { max-width: 1000px; margin: 0 auto 50px; overflow-x: auto; display: flex; gap: 15px; padding: 10px 15px; scroll-behavior: smooth; }
+        .slider-wrapper { max-width: 1000px; margin: 0 auto 50px; overflow-x: auto; display: flex; gap: 15px; padding: 10px 15px; cursor: grab; }
+        .slider-wrapper:active { cursor: grabbing; }
         .slider-wrapper::-webkit-scrollbar { display: none; }
         
-        /* 🌟 NEW CARD DESIGN (Booking Replica) 🌟 */
-        .pkg-card { min-width: 320px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s;}
+        /* 🌟 NEW CARD DESIGN */
+        .pkg-card { min-width: 320px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; user-select: none;}
         .pkg-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(37,99,235,0.08); border-color: #cbd5e1;}
         
         .pkg-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
@@ -113,7 +115,7 @@
         
         .pkg-desc { background: #f8fafc; border-radius: 8px; padding: 12px 15px; border: 1px solid #f1f5f9; }
         .pkg-desc ul { margin: 0; padding-left: 15px; font-size: 11px; color: #64748b; font-weight: 600; line-height: 1.6;}
-        .pkg-param-pill { background: #e0f2fe; color: #0284c7; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 8px;}
+        .pkg-param-pill { background: #e0f2fe; color: #0284c7; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 8px; cursor: pointer;}
         
         .pkg-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px;}
         .pkg-price-area { display: flex; flex-direction: column; gap: 2px;}
@@ -122,8 +124,13 @@
         .pkg-basic-badge { font-size: 9px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 6px; border-radius: 4px; }
         .pkg-vip-pill { background: #f1f5f9; color: #475569; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; border: 1px dashed #cbd5e1; width: max-content;}
         
+        /* ✨ QUANTITY CONTROL CSS ✨ */
         .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 25px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content;}
         .btn-add-cart:hover { background: var(--primary-light); }
+        .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; height: max-content;}
+        .qty-control button { background: var(--primary-light); color: var(--primary); border: none; padding: 8px 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
+        .qty-control button:hover { background: var(--primary); color: white;}
+        .qty-text { font-size: 14px; font-weight: 800; width: 30px; text-align: center; color: var(--text-main);}
 
         /* HOW IT WORKS */
         .hiw-section { background: white; padding: 50px 15px; border-top: 1px solid #e2e8f0;}
@@ -256,7 +263,7 @@
         </a>
     </div>
 
-    <!-- 👑 VIP BANNER (Triggers Image Popup) -->
+    <!-- 👑 VIP BANNER -->
     <div class="vip-banner">
         <div class="vip-content">
             <h2>One VIP Plan = Maximum Savings!</h2>
@@ -267,18 +274,16 @@
         </div>
     </div>
 
-    <!-- 🎁 PREMIUM TRENDING PACKAGES (Dynamic & Filterable) -->
+    <!-- 🎁 PREMIUM TRENDING PACKAGES (Dynamic) -->
     <div class="section-heading">
         <h2>Trending Health Packages</h2>
         <p>Our most popular preventive health checkups.</p>
     </div>
     
-    <!-- Dynamic Category Navigation for Packages -->
     <div id="homePackageCategories" class="home-cat-nav">
-        <!-- Buttons injected by JS -->
+        <!-- JS Buttons -->
     </div>
 
-    <!-- Dynamic Slider for Cards -->
     <div class="slider-wrapper" id="homePackageSlider">
         <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
     </div>
@@ -320,7 +325,7 @@
         <span id="homeCartBadge" style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; font-size:12px; font-weight:800; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white;">0</span>
     </div>
 
-    <!-- ✨ VIP IMAGE & LOGIN MODAL ✨ -->
+    <!-- ✨ VIP IMAGE MODAL ✨ -->
     <div id="vipImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
         <div style="background:white; padding:20px; border-radius:24px; width:90%; max-width:450px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
             <button onclick="closeVipImageModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
@@ -334,10 +339,30 @@
         </div>
     </div>
 
+    <!-- ✨ HOME INFO (I) MODAL ✨ -->
+    <div id="homeInfoModal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+        <div style="background:#fff; padding:20px; border-radius:16px; width:90%; max-width:400px; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUpToast 0.3s ease-out;">
+            <button onclick="closeHomeInfoModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; color:#64748b; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px;"><i class="fas fa-times"></i></button>
+            <h3 id="homeModalTitle" style="margin-top:0; font-size:16px; font-weight:800; border-bottom:1px solid #e2e8f0; padding-bottom:10px; color:#1e293b;">Details</h3>
+            <div id="homeModalDesc" style="font-size:13px; line-height:1.6; max-height:60vh; overflow-y:auto; padding-top:10px; color:#64748b;"></div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="homeToastContainer" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px;"></div>
 
     <script>
+        // ✨ TEXT & NUMBER FORMATTING FUNCTIONS (Same as Booking Page) ✨
+        function formatText(text) {
+            if (!text) return "";
+            let cleanText = String(text).replace(/_/g, ' '); 
+            let formatted = cleanText.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+            const acronyms = /\b(cbc|esr|usg|mri|ecg|echo|ct|lft|kft|hba1c|tsh|t3|t4|ana|psa|hiv|hcv|bun|aptt|sgpt|sgot|vdrl|rbc|wbc|bchg|aec|anc|amh|ada|hbsag|crp|abp|ncv|emg|ssep|dlco|eeg|pft)\b/gi;
+            return formatted.replace(acronyms, match => match.toUpperCase());
+        }
+
+        function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
+
         // 1. Header aur App.js load karne ka logic
         fetch('header.html')
             .then(response => response.text())
@@ -349,70 +374,94 @@
             })
             .catch(error => console.error('Error loading header:', error));
 
-        // ✨ PHARMACY BUTTON LOGIC ✨
         function handlePharmacyClick(event) {
             event.preventDefault(); 
             const userId = localStorage.getItem("bhavya_user_id");
-            if (userId) {
-                window.location.href = "pharmacy/medicineorders.html";
-            } else {
-                if (typeof openPatientLogin === "function") {
-                    openPatientLogin();
-                } else {
-                    showHomeToast("Please login first to order medicines.", "error");
-                }
+            if (userId) { window.location.href = "pharmacy/medicineorders.html"; } 
+            else {
+                if (typeof openPatientLogin === "function") openPatientLogin();
+                else showHomeToast("Please login first to order medicines.", "error");
             }
         }
 
-        // ✨ VIP IMAGE MODAL LOGIC ✨
-        function openVipImageModal() {
-            document.getElementById('vipImageModal').style.display = 'flex';
+        function openVipImageModal() { document.getElementById('vipImageModal').style.display = 'flex'; }
+        function closeVipImageModal() { document.getElementById('vipImageModal').style.display = 'none'; }
+        
+        function openHomeInfoModal(serviceId) {
+            const service = homeAllServices.find(s => s.service_id === serviceId);
+            if (!service) return;
+            
+            document.getElementById("homeModalTitle").innerText = formatText(service.service_name);
+            let descRaw = String(service.description || '');
+            let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
+            
+            if (descRaw.trim() !== "") {
+                let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
+                formattedDesc = "<ul>" + items.map(i => `<li style="margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:4px;">${formatText(i.trim())}</li>`).join('') + "</ul>";
+                if (service.number_of_test) {
+                    formattedDesc = `<div style="background:#e0f2fe; color:#0284c7; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; margin-bottom:15px; display:inline-block;"><i class="fas fa-microscope"></i> Includes ${service.number_of_test} Parameters</div>` + formattedDesc;
+                }
+            }
+            document.getElementById("homeModalDesc").innerHTML = formattedDesc; 
+            document.getElementById("homeInfoModal").style.display = "flex";
         }
-
-        function closeVipImageModal() {
-            document.getElementById('vipImageModal').style.display = 'none';
-        }
+        function closeHomeInfoModal() { document.getElementById("homeInfoModal").style.display = "none"; }
 
         function handleVipBuyClick() {
             const userId = localStorage.getItem("bhavya_user_id");
-            if (userId) {
-                window.location.href = "vip/vip_member.html";
-            } else {
+            if (userId) { window.location.href = "vip/vip_member.html"; } 
+            else {
                 closeVipImageModal();
                 showHomeToast("Login First to Buy VIP Plan!", "error");
-                if (typeof openPatientLogin === "function") {
-                    setTimeout(() => openPatientLogin(), 800);
-                } else {
-                    setTimeout(() => alert("Please Login First to proceed."), 800);
-                }
+                if (typeof openPatientLogin === "function") { setTimeout(() => openPatientLogin(), 800); } 
+                else { setTimeout(() => alert("Please Login First to proceed."), 800); }
             }
         }
 
-        function searchAndGo(category) {
-            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
-        }
-
+        function searchAndGo(category) { window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`; }
         function executeHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.trim();
-            if (query) {
-                window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`;
-            }
+            if (query) { window.location.href = `booking/booking.html?search=${encodeURIComponent(query)}`; }
         }
 
-        // ✨ MAGIC LIVE SEARCH, CART & DYNAMIC PACKAGES LOGIC ✨
+        // ✨ PC DRAG TO SCROLL LOGIC ✨
+        function enableDragScroll(selector) {
+            const slider = document.querySelector(selector);
+            if(!slider) return;
+            let isDown = false; let startX; let scrollLeft;
+            slider.addEventListener('mousedown', (e) => { isDown = true; slider.classList.add('active'); startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
+            slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
+            slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; 
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        }
+
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
         let homeAllServices = [];
         let homeCurrentSubCat = 'all';
+        let cart = [];
 
-        // Background me chupchap data load karna
         document.addEventListener("DOMContentLoaded", () => {
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "getBookingData", user_id: "" })
-            }).then(r => r.json()).then(res => {
+            // Load Cart First
+            try {
+                let stored = localStorage.getItem('bhavyaCart');
+                if (stored) { cart = JSON.parse(stored); }
+            } catch (e) { cart = []; }
+
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: "" }) })
+            .then(r => r.json()).then(res => {
                 if(res.status === "success") {
                     homeAllServices = res.data.services || [];
-                    renderHomePackages(); // Data aate hi packages render karo
+                    renderHomePackages(); 
+                    
+                    // Activate Drag Scroll after elements load
+                    enableDragScroll('.slider-wrapper');
+                    enableDragScroll('.home-cat-nav');
                 }
             }).catch(e => console.log("Silent fetch error", e));
             
@@ -427,7 +476,6 @@
             
             if(!slider || !nav) return;
 
-            // Sirf Packages & Profiles nikalna
             let packages = homeAllServices.filter(s => 
                 s.service_id !== "VIP-FREE-001" && 
                 (String(s.service_type).toLowerCase() === 'profile' || 
@@ -435,28 +483,21 @@
                  String(s.service_type).toLowerCase() === 'discount_profile')
             );
 
-            // Unique Categories banana
             let categories = ['all', ...new Set(packages.map(s => String(s.service_category || 'Other').trim()))];
 
-            // Category Buttons Render Karna
             let navHtml = "";
             categories.forEach(c => {
                 if(c === "") return;
                 let activeClass = c === homeCurrentSubCat ? "active" : "";
-                let displayName = c === 'all' ? "All" : c;
-                // Capitalize text
-                displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                let displayName = c === 'all' ? "All" : formatText(c);
                 navHtml += `<button class="home-cat-btn ${activeClass}" onclick="renderHomePackages('${c}')">${displayName}</button>`;
             });
             nav.innerHTML = navHtml;
 
-            // Filter packages based on button click
             let displayPkgs = packages;
             if (homeCurrentSubCat !== 'all') {
                 displayPkgs = packages.filter(s => String(s.service_category || 'Other').trim() === homeCurrentSubCat);
             }
-
-            // Homepage ko clean rakhne ke liye top 10 hi dikhayenge
             displayPkgs = displayPkgs.slice(0, 10);
 
             if (displayPkgs.length === 0) {
@@ -464,26 +505,40 @@
                 return;
             }
 
-            // Cards Render Karna (Exact Booking Page Style)
             let html = "";
             displayPkgs.forEach(pkg => {
-                let price = pkg.basic_price || pkg.service_price;
-                let cleanName = String(pkg.service_name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let price = formatPrice(pkg.basic_price || pkg.service_price);
+                let totalMrp = formatPrice(pkg.service_price);
+                let vipPrice = formatPrice(pkg.vip_price || price);
+                
+                let cleanName = formatText(pkg.service_name);
                 let cleanType = String(pkg.service_type || '').replace(/'/g, "\\'");
-                let cleanCat = String(pkg.service_category || 'Package');
+                let cleanCat = formatText(pkg.service_category || 'Package');
+                let s_id = String(pkg.service_id).replace(/'/g, "\\'");
 
-                // Bullet Points for description
+                // ✨ Qty Logic & Buttons ✨
+                const cartItem = cart.find(item => String(item.service_id) === String(pkg.service_id));
+                const inCart = !!cartItem;
+                const currentQty = cartItem ? cartItem.qty : 0;
+                
+                let actionBtnHtml = "";
+                if (inCart) {
+                    actionBtnHtml = `<div class="qty-control"><button onclick="updateHomeQty('${s_id}', -1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')"><i class="fas fa-minus"></i></button><span class="qty-text">${currentQty}</span><button onclick="updateHomeQty('${s_id}', 1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')"><i class="fas fa-plus"></i></button></div>`;
+                } else {
+                    actionBtnHtml = `<button class="btn-add-cart" onclick="updateHomeQty('${s_id}', 1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')">ADD +</button>`;
+                }
+
                 let descRaw = String(pkg.description || '');
                 let descPreviewHtml = "";
                 if (descRaw.trim() !== "") {
                     let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
                     if (items.length > 0) {
-                        let previewItems = items.slice(0, 2); 
+                        let previewItems = items.slice(0, 2).map(i => formatText(i.trim())); 
                         let moreText = pkg.number_of_test ? `+ ${pkg.number_of_test} Parameters` : (items.length > 2 ? "+ More Details" : "");
                         descPreviewHtml = `
                         <div class="pkg-desc">
                             <ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
-                            ${moreText ? `<div class="pkg-param-pill">${moreText}</div>` : ''}
+                            ${moreText ? `<div class="pkg-param-pill" onclick="openHomeInfoModal('${s_id}')">${moreText}</div>` : ''}
                         </div>`;
                     }
                 }
@@ -494,18 +549,15 @@
                         <span class="pkg-cat-badge">${cleanCat}</span>
                         ${pkg.number_of_test ? `<span class="pkg-test-count"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : ''}
                     </div>
-                    
-                    <h3 class="pkg-title">${pkg.service_name} <i class="fas fa-info-circle" style="color:var(--primary); font-size:14px; cursor:pointer;" onclick="searchAndGo('${cleanName}')" title="Click for details"></i></h3>
-                    
+                    <h3 class="pkg-title">${cleanName} <i class="fas fa-info-circle" style="color:var(--primary); font-size:14px; cursor:pointer;" onclick="openHomeInfoModal('${s_id}')" title="Click for details"></i></h3>
                     ${descPreviewHtml}
-                    
                     <div class="pkg-footer">
                         <div class="pkg-price-area">
-                            <span class="pkg-total-mrp">Total: <del>₹${pkg.service_price}</del></span>
+                            <span class="pkg-total-mrp">Total: <del>₹${totalMrp}</del></span>
                             <div class="pkg-basic-price">₹${price} <span class="pkg-basic-badge">BASIC</span></div>
-                            <div class="pkg-vip-pill"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${pkg.vip_price || price}</div>
+                            <div class="pkg-vip-pill"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>
                         </div>
-                        <button class="btn-add-cart" onclick="addToCartFromHome('${pkg.service_id}', ${price}, '${cleanName}', '${cleanType}')">ADD +</button>
+                        ${actionBtnHtml}
                     </div>
                 </div>`;
             });
@@ -513,15 +565,12 @@
             slider.innerHTML = html;
         }
 
-        // Typing par live search dikhana
+        // Live Search Update (With Add/Minus Logic)
         function liveHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.toLowerCase().trim();
             let resultsDiv = document.getElementById("homeSearchResults");
             
-            if(query.length < 2) {
-                resultsDiv.style.display = "none";
-                return;
-            }
+            if(query.length < 2) { resultsDiv.style.display = "none"; return; }
             
             let filtered = homeAllServices.filter(s => 
                 s.service_id !== "VIP-FREE-001" && 
@@ -530,23 +579,35 @@
             
             if(filtered.length === 0) {
                 resultsDiv.innerHTML = "<div style='padding:15px; text-align:center; color:#64748b; font-weight:600;'><i class='fas fa-search' style='font-size:24px; color:#cbd5e1; margin-bottom:10px;'></i><br>No tests found</div>";
-                resultsDiv.style.display = "block";
-                return;
+                resultsDiv.style.display = "block"; return;
             }
             
             let html = "";
             filtered.forEach(s => {
-                let price = s.basic_price || s.service_price; 
-                let cleanName = String(s.service_name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let price = formatPrice(s.basic_price || s.service_price); 
+                let totalMrp = formatPrice(s.service_price);
+                let cleanName = formatText(s.service_name);
                 let cleanType = String(s.service_type || '').replace(/'/g, "\\'");
+                let s_id = String(s.service_id).replace(/'/g, "\\'");
+
+                const cartItem = cart.find(item => String(item.service_id) === String(s.service_id));
+                const inCart = !!cartItem;
+                const currentQty = cartItem ? cartItem.qty : 0;
+                
+                let actionBtnHtml = "";
+                if (inCart) {
+                    actionBtnHtml = `<div class="qty-control" style="border-width:1px;"><button style="padding:4px 8px;" onclick="updateHomeQty('${s_id}', -1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')"><i class="fas fa-minus"></i></button><span class="qty-text" style="width:20px;">${currentQty}</span><button style="padding:4px 8px;" onclick="updateHomeQty('${s_id}', 1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')"><i class="fas fa-plus"></i></button></div>`;
+                } else {
+                    actionBtnHtml = `<button onclick="updateHomeQty('${s_id}', 1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')" style="background:var(--primary-light); color:var(--primary); border:none; padding:8px 16px; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; transition:0.2s;">ADD +</button>`;
+                }
                 
                 html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #f1f5f9; transition:0.2s;">
                     <div style="flex:1; padding-right:10px;">
-                        <div style="font-weight:800; font-size:14px; color:#0f172a; margin-bottom:4px;">${s.service_name}</div>
-                        <div style="font-size:13px; color:#10b981; font-weight:800;">₹${price} <del style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:5px;">₹${s.service_price}</del></div>
+                        <div style="font-weight:800; font-size:14px; color:#0f172a; margin-bottom:4px;">${cleanName}</div>
+                        <div style="font-size:13px; color:#10b981; font-weight:800;">₹${price} <del style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:5px;">₹${totalMrp}</del></div>
                     </div>
-                    <button onclick="addToCartFromHome('${s.service_id}', ${price}, '${cleanName}', '${cleanType}')" style="background:var(--primary-light); color:var(--primary); border:none; padding:8px 16px; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; box-shadow:0 2px 5px rgba(37,99,235,0.1); transition:0.2s;">ADD +</button>
+                    ${actionBtnHtml}
                 </div>`;
             });
             
@@ -556,27 +617,33 @@
             resultsDiv.style.display = "block";
         }
 
-        // Direct Add to Cart Logic
-        function addToCartFromHome(id, price, name, type) {
-            let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
-            let existing = cart.find(item => String(item.service_id) === String(id));
+        // ✨ CENTRAL ADD TO CART FUNCTION (UPDATED) ✨
+        function updateHomeQty(id, change, price, name, type) {
+            id = String(id);
+            let index = cart.findIndex(item => String(item.service_id) === id);
             
-            if(!existing) {
-                cart.push({ service_id: id, price: price, service_name: name, service_type: type, qty: 1 });
-                localStorage.setItem('bhavyaCart', JSON.stringify(cart));
-                updateHomeCartBadge();
+            if (index > -1) {
+                cart[index].qty += change;
+                if (cart[index].qty <= 0) {
+                    cart.splice(index, 1); 
+                    showHomeToast("Item removed from Cart.", "info");
+                }
+            } else if (change > 0) { 
+                cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
                 showHomeToast("Item Added to Cart! 🛒", "success");
-            } else {
-                showHomeToast("Item is already in Cart!", "info");
             }
             
-            document.getElementById("homeSearchResults").style.display = "none";
-            document.getElementById("globalSearchInput").value = "";
+            localStorage.setItem('bhavyaCart', JSON.stringify(cart));
+            updateHomeCartBadge();
+            
+            // Re-render sliders and search to show updated + / - buttons immediately
+            renderHomePackages(homeCurrentSubCat); 
+            
+            let query = document.getElementById("globalSearchInput").value.trim();
+            if(query.length >= 2) { liveHomeSearch(); }
         }
 
-        // Cart Badge & Floating Icon Update
         function updateHomeCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('bhavyaCart')) || [];
             let totalItems = cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
             let floatingBtn = document.getElementById("homeFloatingCart");
             let badge = document.getElementById("homeCartBadge");
@@ -589,7 +656,6 @@
             }
         }
 
-        // Toast Notification
         function showHomeToast(message, type) {
             let container = document.getElementById('homeToastContainer');
             let toast = document.createElement('div');
@@ -597,10 +663,9 @@
             toast.style.cssText = `background:${bg}; color:white; padding:12px 20px; border-radius:10px; font-weight:bold; font-size:13px; box-shadow:0 5px 15px rgba(0,0,0,0.2); animation:slideUpToast 0.4s ease forwards; display:flex; align-items:center; justify-content:space-between;`;
             toast.innerHTML = `<span>${message}</span> <button onclick="window.location.href='booking/booking.html?view=cart'" style="background:white; color:${bg}; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;">View Cart</button>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 4000);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
-        // Dropdown band karna agar bahar click ho
         document.addEventListener('click', function(event) {
             let searchBox = document.querySelector('.search-container');
             if (searchBox && !searchBox.contains(event.target)) {

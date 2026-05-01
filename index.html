@@ -43,7 +43,7 @@
         .hero-title span { color: var(--primary); }
         .hero-subtitle { font-size: 15px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.5;}
 
-        /* 🚀 OVERLAPPING ACTION AREA (Search + Pillars) */
+        /* 🚀 OVERLAPPING ACTION AREA */
         .action-wrapper { max-width: 1000px; margin: -50px auto 40px; position: relative; z-index: 10; padding: 0 15px;}
         
         /* 🔍 GLOBAL SEARCH BAR */
@@ -53,7 +53,7 @@
         .search-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
         .search-btn:hover { background: #1d4ed8; }
 
-        /* ⚡ 3 MAIN PILLARS (Lab, Doctor, Pharmacy) */
+        /* ⚡ 3 MAIN PILLARS */
         .main-services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;}
         .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); border-color: #cbd5e1;}
@@ -89,7 +89,7 @@
         .vip-content { flex: 1; padding: 35px 30px; z-index: 2; position: relative;}
         .vip-content h2 { font-size: 24px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
         .vip-content p { font-size: 13px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
-        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);}
+        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); cursor: pointer;}
         .btn-vip:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);}
 
         /* 🎁 PREMIUM TRENDING PACKAGES SLIDER */
@@ -99,7 +99,6 @@
         .pkg-card { min-width: 300px; background: white; border-radius: 20px; padding: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; position: relative; display: flex; flex-direction: column; overflow: hidden; transition: 0.3s;}
         .pkg-card:hover { transform: translateY(-5px); box-shadow: 0 12px 35px rgba(37,99,235,0.1); border-color: #cbd5e1;}
         
-        /* Ribbon/Badge */
         .pkg-badge { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(16,185,129,0.3);}
         
         .pkg-header { padding: 20px 20px 15px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #f1f5f9;}
@@ -109,7 +108,6 @@
         
         .pkg-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; flex-grow: 1;}
         
-        /* New Price Box Design */
         .price-box { background: #eff6ff; padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #dbeafe;}
         .price-basic { display: flex; flex-direction: column; }
         .price-basic del { font-size: 12px; color: #94a3b8; font-weight: 600; }
@@ -250,14 +248,14 @@
         </a>
     </div>
 
-    <!-- 👑 VIP BANNER -->
+    <!-- 👑 VIP BANNER (Triggers Image Popup) -->
     <div class="vip-banner">
         <div class="vip-content">
             <h2>One VIP Plan = Maximum Savings!</h2>
             <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
-            <a href="vip/vip_member.html" class="btn-vip">
-                <i class="fas fa-crown"></i> View VIP Plans
-            </a>
+            <button onclick="openVipImageModal()" class="btn-vip">
+                <i class="fas fa-crown"></i> Buy VIP Plan
+            </button>
         </div>
     </div>
 
@@ -368,6 +366,20 @@
         <span id="homeCartBadge" style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; font-size:12px; font-weight:800; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white;">0</span>
     </div>
 
+    <!-- ✨ VIP IMAGE & LOGIN MODAL ✨ -->
+    <div id="vipImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
+        <div style="background:white; padding:20px; border-radius:24px; width:90%; max-width:450px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
+            <button onclick="closeVipImageModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
+            <h3 style="margin:0 0 15px 0; color:#0f172a; font-size:20px; font-weight:800;">Basic vs <span style="color:var(--warning);">VIP Plan</span></h3>
+            
+            <img src="image/BASIC AND VIP PLAN.jpg" alt="Basic vs VIP Plan Comparison" style="width:100%; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0; display:block;">
+            
+            <button onclick="handleVipBuyClick()" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; width:100%; padding:16px; border-radius:14px; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 6px 20px rgba(245, 158, 11, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fas fa-crown"></i> Book VIP Plan Now
+            </button>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="homeToastContainer" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px;"></div>
 
@@ -383,7 +395,7 @@
             })
             .catch(error => console.error('Error loading header:', error));
 
-        // ✨ PHARMACY BUTTON LOGIC: Login check ✨
+        // ✨ PHARMACY BUTTON LOGIC ✨
         function handlePharmacyClick(event) {
             event.preventDefault(); 
             const userId = localStorage.getItem("bhavya_user_id");
@@ -393,7 +405,33 @@
                 if (typeof openPatientLogin === "function") {
                     openPatientLogin();
                 } else {
-                    alert("Please login first to order medicines.");
+                    showHomeToast("Please login first to order medicines.", "error");
+                }
+            }
+        }
+
+        // ✨ VIP IMAGE MODAL LOGIC ✨
+        function openVipImageModal() {
+            document.getElementById('vipImageModal').style.display = 'flex';
+        }
+
+        function closeVipImageModal() {
+            document.getElementById('vipImageModal').style.display = 'none';
+        }
+
+        function handleVipBuyClick() {
+            const userId = localStorage.getItem("bhavya_user_id");
+            if (userId) {
+                window.location.href = "vip/vip_member.html";
+            } else {
+                closeVipImageModal();
+                showHomeToast("Login First to Buy VIP Plan!", "error");
+                
+                // Fallback check: try to open the app's native login modal if available
+                if (typeof openPatientLogin === "function") {
+                    setTimeout(() => openPatientLogin(), 800);
+                } else {
+                    setTimeout(() => alert("Please Login First to proceed."), 800);
                 }
             }
         }

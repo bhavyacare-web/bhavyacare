@@ -32,150 +32,162 @@
             --primary: #2563eb; --primary-light: #eff6ff;
             --secondary: #10b981; --secondary-light: #d1fae5;
             --warning: #f59e0b; --danger: #ef4444;
-            --bg-color: #f4f7f6; --text-main: #0f172a; --text-muted: #64748b;
+            --text-main: #0f172a; --text-muted: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
-        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
+        body { color: var(--text-main); overflow-x: hidden; background: #ffffff; }
 
-        /* 🌟 HERO SECTION 🌟 */
-        .hero-section { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); padding: 50px 20px 80px; text-align: center; }
-        .hero-title { font-size: 38px; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px; line-height: 1.2;}
+        /* ✨ NEW: SECTION DIVISIONS WITH SIMPLE COLORS ✨ */
+        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 50px 20px 40px; text-align: center; }
+        .section-pillars { background: #ffffff; padding: 30px 20px; }
+        .section-trust { background: #f8fafc; padding: 25px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-categories { background: #ffffff; padding: 40px 20px; }
+        .section-packages { background: #f1f5f9; padding: 50px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 50px 20px; }
+
+        /* 🌟 HERO & SEARCH SECTION 🌟 */
+        .hero-title { font-size: 38px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.3;}
         .hero-title span { color: var(--primary); }
-        .hero-subtitle { font-size: 15px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.5;}
-
-        /* 🚀 OVERLAPPING ACTION AREA */
-        .action-wrapper { max-width: 1000px; margin: -50px auto 40px; position: relative; z-index: 10; padding: 0 15px;}
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 30px; font-weight: 500; line-height: 1.6;}
         
-        /* 🔍 GLOBAL SEARCH BAR */
-        .search-container { background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); margin-bottom: 20px; display: flex; align-items: center; border: 1px solid #e2e8f0; position: relative;}
+        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
         .search-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
         .search-btn:hover { background: #1d4ed8; }
 
         /* ⚡ 3 MAIN PILLARS */
-        .main-services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;}
-        .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); border-color: #cbd5e1;}
-        .service-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);}
+        .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;}
+        .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.1); border-color: #93c5fd;}
+        .service-icon { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto;}
         
         .sc-lab .service-icon { background: #eff6ff; color: #2563eb; }
         .sc-doc .service-icon { background: #f0fdf4; color: #10b981; }
         .sc-med .service-icon { background: #faf5ff; color: #c026d3; }
         
-        .service-card h3 { color: #0f172a; font-size: 16px; font-weight: 800; margin: 0;}
-        .service-card p { color: #64748b; font-size: 12px; margin: 0; font-weight: 600; line-height: 1.4;}
+        .service-card h3 { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0;}
+        .service-card p { color: #64748b; font-size: 13px; margin: 0; font-weight: 600; line-height: 1.4;}
 
         /* 🛡️ TRUST BADGES */
-        .trust-section { padding: 15px 20px; margin-bottom: 20px;}
         .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;}
-        .trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #475569; background: #e2e8f0; padding: 8px 15px; border-radius: 20px;}
-        .trust-item i { color: var(--secondary); font-size: 16px;}
+        .trust-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #334155;}
+        .trust-item i { color: var(--secondary); font-size: 20px;}
 
         /* 🗂️ QUICK CATEGORIES */
-        .section-heading { text-align: center; margin: 40px 0 20px; padding: 0 15px;}
-        .section-heading h2 { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0;}
-        .section-heading p { color: #64748b; font-size: 13px; margin-top: 5px; font-weight: 600;}
+        .section-heading { text-align: center; margin-bottom: 30px;}
+        .section-heading h2 { font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;}
+        .section-heading p { color: #64748b; font-size: 14px; margin-top: 8px; font-weight: 600;}
 
-        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; padding: 0 15px;}
-        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; width: 80px;}
-        .cat-circle { width: 65px; height: 65px; border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--primary); transition: 0.3s; border: 2px solid transparent;}
-        .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);}
-        .cat-item span { font-size: 12px; font-weight: 700; color: #334155; text-align: center;}
+        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;}
+        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; width: 85px;}
+        .cat-circle { width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
+        .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
+        .cat-item span { font-size: 13px; font-weight: 700; color: #334155; text-align: center;}
 
         /* 👑 VIP BANNER */
-        .vip-banner { max-width: 1000px; margin: 40px auto; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden; margin-left: 15px; margin-right: 15px;}
+        .vip-banner { max-width: 1000px; margin: 20px auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
         .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
-        .vip-content { flex: 1; padding: 35px 30px; z-index: 2; position: relative;}
+        .vip-content { flex: 1; padding: 35px 40px; z-index: 2; position: relative;}
         .vip-content h2 { font-size: 24px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
-        .vip-content p { font-size: 13px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
-        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); cursor: pointer;}
+        .vip-content p { font-size: 14px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
+        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-size: 15px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); cursor: pointer;}
         .btn-vip:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);}
 
         /* 🎁 PREMIUM TRENDING PACKAGES SLIDER */
-        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 20px; padding: 10px 15px; justify-content: center; cursor: grab;}
+        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab;}
         .home-cat-nav:active { cursor: grabbing; }
         .home-cat-nav::-webkit-scrollbar { display: none; }
-        .home-cat-btn { background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); user-select: none;}
-        .home-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(37,99,235,0.2);}
+        .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); user-select: none;}
+        .home-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 6px 15px rgba(37,99,235,0.25);}
 
-        .slider-wrapper { max-width: 1000px; margin: 0 auto 50px; overflow-x: auto; display: flex; gap: 15px; padding: 10px 15px; cursor: grab; }
+        .slider-wrapper { max-width: 1020px; margin: 0 auto; overflow-x: auto; display: flex; gap: 20px; padding: 15px 10px 30px; cursor: grab; }
         .slider-wrapper:active { cursor: grabbing; }
         .slider-wrapper::-webkit-scrollbar { display: none; }
         
-        /* 🌟 NEW CARD DESIGN */
-        .pkg-card { min-width: 320px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; user-select: none;}
-        .pkg-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(37,99,235,0.08); border-color: #cbd5e1;}
+        /* 🌟 CARDS POPPING DESIGN 🌟 */
+        .pkg-card { min-width: 330px; background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; user-select: none;}
+        .pkg-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(37,99,235,0.12); border-color: #93c5fd;}
         
         .pkg-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .pkg-cat-badge { background: #e0f2fe; color: #0284c7; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .pkg-test-count { background: #fef3c7; color: #d97706; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; }
+        .pkg-cat-badge { background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .pkg-test-count { background: #fef3c7; color: #d97706; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 8px; }
         
-        .pkg-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;}
+        .pkg-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; line-height: 1.3;}
         
-        .pkg-desc { background: #f8fafc; border-radius: 8px; padding: 12px 15px; border: 1px solid #f1f5f9; }
-        .pkg-desc ul { margin: 0; padding-left: 15px; font-size: 11px; color: #64748b; font-weight: 600; line-height: 1.6;}
-        .pkg-param-pill { background: #e0f2fe; color: #0284c7; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 8px; cursor: pointer;}
+        .pkg-desc { background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; }
+        .pkg-desc ul { margin: 0; padding-left: 16px; font-size: 12px; color: #475569; font-weight: 600; line-height: 1.6;}
+        .pkg-param-pill { background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 12px; display: inline-block; margin-top: 10px; cursor: pointer; border: 1px solid #bae6fd;}
         
         .pkg-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px;}
         .pkg-price-area { display: flex; flex-direction: column; gap: 2px;}
-        .pkg-total-mrp { font-size: 11px; color: #94a3b8; font-weight: 600;}
-        .pkg-basic-price { font-size: 22px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px; line-height: 1.1;}
-        .pkg-basic-badge { font-size: 9px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 6px; border-radius: 4px; }
-        .pkg-vip-pill { background: #f1f5f9; color: #475569; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; border: 1px dashed #cbd5e1; width: max-content;}
+        .pkg-total-mrp { font-size: 12px; color: #94a3b8; font-weight: 600;}
+        .pkg-basic-price { font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; line-height: 1.1;}
+        .pkg-basic-badge { font-size: 10px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 6px; }
+        .pkg-vip-pill { background: #ffffff; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; border: 1px dashed #cbd5e1; width: max-content;}
         
         /* ✨ QUANTITY CONTROL CSS ✨ */
-        .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 25px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content;}
+        .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
         .btn-add-cart:hover { background: var(--primary-light); }
-        .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; height: max-content;}
-        .qty-control button { background: var(--primary-light); color: var(--primary); border: none; padding: 8px 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
+        .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 10px; overflow: hidden; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
+        .qty-control button { background: var(--primary-light); color: var(--primary); border: none; padding: 10px 14px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.2s;}
         .qty-control button:hover { background: var(--primary); color: white;}
-        .qty-text { font-size: 14px; font-weight: 800; width: 30px; text-align: center; color: var(--text-main);}
+        .qty-text { font-size: 15px; font-weight: 800; width: 35px; text-align: center; color: var(--text-main);}
 
         /* HOW IT WORKS */
-        .hiw-section { background: white; padding: 50px 15px; border-top: 1px solid #e2e8f0;}
-        .hiw-grid { max-width: 900px; margin: 30px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #f1f5f9;}
-        .hiw-icon { width: 60px; height: 60px; border-radius: 16px; background: white; color: var(--primary); font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05);}
-        .hiw-step h4 { font-size: 15px; font-weight: 800; margin: 0; color: #1e293b;}
-        .hiw-step p { font-size: 12px; color: #64748b; margin: 0; line-height: 1.5; font-weight: 500;}
+        .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s;}
+        .hiw-step:hover { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px);}
+        .hiw-icon { width: 70px; height: 70px; border-radius: 20px; background: white; color: var(--primary); font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
+        .hiw-step h4 { font-size: 18px; font-weight: 800; margin: 0; color: #1e293b;}
+        .hiw-step p { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
         
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         /* 📱 MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
-            .hero-section { padding: 40px 15px 70px; }
-            .hero-title { font-size: 28px; }
-            .hero-subtitle { font-size: 13px; }
+            .section-hero { padding: 40px 15px 30px; }
+            .section-pillars { padding: 20px 15px 30px; }
+            .section-trust { padding: 20px 10px; }
+            .section-categories { padding: 30px 15px; }
+            .section-packages { padding: 40px 15px; }
+            .section-hiw { padding: 40px 15px; }
+
+            /* Fixed Text Spacing for Mobile */
+            .hero-title { font-size: 26px; line-height: 1.4; margin-bottom: 10px; padding: 0 5px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; padding: 0 5px; margin-top: 8px;}
             
-            .action-wrapper { margin-top: -35px; }
-            .search-container { padding: 6px; border-radius: 16px;}
-            .search-container input { padding: 12px 10px 12px 45px; font-size: 14px; }
+            .search-container { padding: 8px; border-radius: 16px; margin-top: 20px;}
+            .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
             .search-container i.fa-search { font-size: 16px; left: 16px;}
             .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
             
-            .main-services-grid { gap: 10px; grid-template-columns: 1fr; }
-            .service-card { padding: 15px; flex-direction: row; text-align: left; justify-content: flex-start; border-radius: 16px;}
-            .service-icon { margin: 0; width: 45px; height: 45px; font-size: 20px; flex-shrink: 0; border-radius: 12px;}
+            .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
+            .service-card { padding: 18px; flex-direction: row; text-align: left; justify-content: flex-start; border-radius: 16px;}
+            .service-icon { margin: 0; width: 50px; height: 50px; font-size: 22px; flex-shrink: 0; border-radius: 14px;}
+            .service-card h3 { font-size: 16px; }
             
-            .trust-grid { gap: 10px; }
-            .trust-item { font-size: 11px; width: 48%; justify-content: center; padding: 6px 10px;}
+            .trust-grid { gap: 12px; }
+            .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 10px; background: white; border: 1px solid #e2e8f0;}
             
-            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin-top: 20px;}
+            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0;}
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
             
-            .categories-grid { gap: 10px;}
-            .cat-item { width: 70px; }
-            .cat-circle { width: 55px; height: 55px; font-size: 22px;}
-            .cat-item span { font-size: 11px;}
+            .categories-grid { gap: 12px;}
+            .cat-item { width: 75px; }
+            .cat-circle { width: 60px; height: 60px; font-size: 24px;}
+            .cat-item span { font-size: 12px;}
             
             .hiw-grid { grid-template-columns: 1fr; gap: 15px;}
-            .hiw-step { flex-direction: row; text-align: left; padding: 15px;}
-            .hiw-icon { flex-shrink: 0; width: 50px; height: 50px; font-size: 20px;}
+            .hiw-step { flex-direction: row; text-align: left; padding: 20px 15px;}
+            .hiw-icon { flex-shrink: 0; width: 55px; height: 55px; font-size: 22px;}
             
-            .home-cat-nav { justify-content: flex-start; }
-            .pkg-card { min-width: 280px; padding: 15px; }
+            .home-cat-nav { justify-content: flex-start; padding-bottom: 15px;}
+            .pkg-card { min-width: 290px; padding: 18px; }
+            .pkg-title { font-size: 16px; }
+            .pkg-basic-price { font-size: 20px; }
+            .btn-add-cart { padding: 8px 18px; font-size: 13px; }
         }
     </style>
 </head>
@@ -183,16 +195,11 @@
 
     <div id="header-container"></div>
 
-    <!-- 🌟 HERO SECTION -->
-    <div class="hero-section">
+    <!-- 🌟 SECTION 1: HERO & SEARCH 🌟 -->
+    <section class="section-hero">
         <h1 class="hero-title">Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
         <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate reports, expert doctor consultations, and medicines delivered at home.</p>
-    </div>
-
-    <!-- 🚀 OVERLAPPING ACTION AREA -->
-    <div class="action-wrapper">
         
-        <!-- 🔍 ATTACHED SEARCH BAR WITH LIVE DROPDOWN -->
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
@@ -200,11 +207,12 @@
             
             <!-- ✨ LIVE SEARCH RESULTS DROPDOWN ✨ -->
             <div id="homeSearchResults" style="display:none; position:absolute; top:110%; left:0; width:100%; background:white; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:1000; max-height:350px; overflow-y:auto; text-align:left;">
-                <!-- Search results will populate here -->
             </div>
         </div>
+    </section>
 
-        <!-- ⚡ 3 MAIN PILLARS -->
+    <!-- ⚡ SECTION 2: 3 MAIN PILLARS ⚡ -->
+    <section class="section-pillars">
         <div class="main-services-grid">
             <a href="booking/booking.html" class="service-card sc-lab">
                 <div class="service-icon"><i class="fas fa-microscope"></i></div>
@@ -228,68 +236,72 @@
                 </div>
             </a>
         </div>
-    </div>
+    </section>
 
-    <!-- 🛡️ TRUST BADGES -->
-    <div class="trust-section">
+    <!-- 🛡️ SECTION 3: TRUST BADGES 🛡️ -->
+    <section class="section-trust">
         <div class="trust-grid">
             <div class="trust-item"><i class="fas fa-award"></i> NABL Labs</div>
             <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Delivery</div>
             <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Staff</div>
             <div class="trust-item"><i class="fas fa-shield-alt"></i> Safe Data</div>
         </div>
-    </div>
+    </section>
 
-    <!-- 🗂️ QUICK CATEGORIES -->
-    <div class="section-heading">
-        <h2>What are you looking for?</h2>
-        <p>Choose a category to find specific tests quickly.</p>
-    </div>
-    <div class="categories-grid">
-        <a href="#" onclick="searchAndGo('Fever')" class="cat-item">
-            <div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span>
-        </a>
-        <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item">
-            <div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span>
-        </a>
-        <a href="#" onclick="searchAndGo('Heart')" class="cat-item">
-            <div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span>
-        </a>
-        <a href="#" onclick="searchAndGo('Full Body')" class="cat-item">
-            <div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span>
-        </a>
-        <a href="bookdoctor/bookdoctor.html" class="cat-item">
-            <div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Doctors</span>
-        </a>
-    </div>
-
-    <!-- 👑 VIP BANNER -->
-    <div class="vip-banner">
-        <div class="vip-content">
-            <h2>One VIP Plan = Maximum Savings!</h2>
-            <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
-            <button onclick="openVipImageModal()" class="btn-vip">
-                <i class="fas fa-crown"></i> Buy VIP Plan
-            </button>
+    <!-- 🗂️ SECTION 4: QUICK CATEGORIES 🗂️ -->
+    <section class="section-categories">
+        <div class="section-heading">
+            <h2>What are you looking for?</h2>
+            <p>Choose a category to find specific tests quickly.</p>
         </div>
-    </div>
+        <div class="categories-grid">
+            <a href="#" onclick="searchAndGo('Fever')" class="cat-item">
+                <div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span>
+            </a>
+            <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item">
+                <div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span>
+            </a>
+            <a href="#" onclick="searchAndGo('Heart')" class="cat-item">
+                <div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span>
+            </a>
+            <a href="#" onclick="searchAndGo('Full Body')" class="cat-item">
+                <div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span>
+            </a>
+            <a href="bookdoctor/bookdoctor.html" class="cat-item">
+                <div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Doctors</span>
+            </a>
+        </div>
+        
+        <!-- 👑 VIP BANNER -->
+        <div class="vip-banner">
+            <div class="vip-content">
+                <h2>One VIP Plan = Maximum Savings!</h2>
+                <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
+                <button onclick="openVipImageModal()" class="btn-vip">
+                    <i class="fas fa-crown"></i> Buy VIP Plan
+                </button>
+            </div>
+        </div>
+    </section>
 
-    <!-- 🎁 PREMIUM TRENDING PACKAGES (Dynamic) -->
-    <div class="section-heading">
-        <h2>Trending Health Packages</h2>
-        <p>Our most popular preventive health checkups.</p>
-    </div>
-    
-    <div id="homePackageCategories" class="home-cat-nav">
-        <!-- JS Buttons -->
-    </div>
+    <!-- 🎁 SECTION 5: TRENDING PACKAGES (Cards Pop Here!) 🎁 -->
+    <section class="section-packages">
+        <div class="section-heading" style="margin-top: 0;">
+            <h2>Trending Health Packages</h2>
+            <p>Our most popular preventive health checkups.</p>
+        </div>
+        
+        <div id="homePackageCategories" class="home-cat-nav">
+            <!-- JS Buttons -->
+        </div>
 
-    <div class="slider-wrapper" id="homePackageSlider">
-        <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
-    </div>
+        <div class="slider-wrapper" id="homePackageSlider">
+            <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+    </section>
 
-    <!-- HOW IT WORKS -->
-    <div class="hiw-section">
+    <!-- 🛠️ SECTION 6: HOW IT WORKS 🛠️ -->
+    <section class="section-hiw">
         <div class="section-heading" style="margin-top:0;">
             <h2>How BhavyaCare Works</h2>
             <p>3 simple steps to a healthier you.</p>
@@ -317,7 +329,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- ✨ FLOATING CART BUTTON ✨ -->
     <div id="homeFloatingCart" onclick="window.location.href='booking/booking.html?view=cart'" style="display:none; position:fixed; bottom:30px; right:20px; background:var(--primary); color:white; width:60px; height:60px; border-radius:50%; align-items:center; justify-content:center; font-size:24px; box-shadow:0 10px 25px rgba(37,99,235,0.4); cursor:pointer; z-index:1000; transition:0.3s;">
@@ -352,7 +364,7 @@
     <div id="homeToastContainer" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px;"></div>
 
     <script>
-        // ✨ TEXT & NUMBER FORMATTING FUNCTIONS (Same as Booking Page) ✨
+        // ✨ TEXT & NUMBER FORMATTING FUNCTIONS ✨
         function formatText(text) {
             if (!text) return "";
             let cleanText = String(text).replace(/_/g, ' '); 
@@ -361,9 +373,10 @@
             return formatted.replace(acronyms, match => match.toUpperCase());
         }
 
+        // Clean numbers like 6.99999 to 6.9 or 7.0
         function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
 
-        // 1. Header aur App.js load karne ka logic
+        // 1. Header aur App.js load
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
@@ -447,7 +460,6 @@
         let cart = [];
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Load Cart First
             try {
                 let stored = localStorage.getItem('bhavyaCart');
                 if (stored) { cart = JSON.parse(stored); }
@@ -459,7 +471,7 @@
                     homeAllServices = res.data.services || [];
                     renderHomePackages(); 
                     
-                    // Activate Drag Scroll after elements load
+                    // Activate Drag Scroll
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                 }
@@ -565,7 +577,7 @@
             slider.innerHTML = html;
         }
 
-        // Live Search Update (With Add/Minus Logic)
+        // Live Search Update 
         function liveHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.toLowerCase().trim();
             let resultsDiv = document.getElementById("homeSearchResults");
@@ -617,7 +629,7 @@
             resultsDiv.style.display = "block";
         }
 
-        // ✨ CENTRAL ADD TO CART FUNCTION (UPDATED) ✨
+        // ✨ CENTRAL ADD TO CART FUNCTION ✨
         function updateHomeQty(id, change, price, name, type) {
             id = String(id);
             let index = cart.findIndex(item => String(item.service_id) === id);
@@ -636,9 +648,7 @@
             localStorage.setItem('bhavyaCart', JSON.stringify(cart));
             updateHomeCartBadge();
             
-            // Re-render sliders and search to show updated + / - buttons immediately
             renderHomePackages(homeCurrentSubCat); 
-            
             let query = document.getElementById("globalSearchInput").value.trim();
             if(query.length >= 2) { liveHomeSearch(); }
         }

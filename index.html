@@ -18,7 +18,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BhavyaCare - Your Complete Health Partner</title>
+    <title>BhavyaCare - Your Premium Healthcare Aggregator</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -37,10 +37,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
         body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
 
+        /* ✨ TOP CONTACT BAR ✨ */
+        .top-bar { background: #0f172a; color: #cbd5e1; padding: 8px 40px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; font-weight: 600;}
+        .top-bar-links { display: flex; gap: 20px; align-items: center;}
+        .top-bar a { color: #cbd5e1; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.2s;}
+        .top-bar a:hover { color: white; }
+        .top-bar .highlight { color: #facc15; }
+        .top-bar .whatsapp { color: #25D366; }
+
         /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
-        
-        /* ✨ LOGO STYLE ✨ */
         .logo img { height: 45px; object-fit: contain; display: block;}
         
         .nav-actions { display: flex; align-items: center; gap: 15px; }
@@ -51,12 +57,15 @@
         #user-menu-container { display: none; }
         .user-profile-btn { background: #f4f7f6; color: var(--primary); border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .user-profile-btn:hover { background: #e6f0fa; }
+        
+        /* Dropdown Modifications for New Pages */
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
         .dropbtn:hover { color: var(--primary); }
-        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
-        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 600; }
-        .dropdown-content a:hover { background-color: #f8fafc; color: var(--primary); }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 240px; box-shadow: 0px 10px 25px rgba(0,0,0,0.15); z-index: 1001; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin-top: 10px;}
+        .dropdown-content a { color: #334155; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: var(--primary); padding-left: 20px; transition: 0.2s;}
+        .dropdown-content hr { border: 0; border-top: 4px solid #f1f5f9; margin: 0; }
         .show-menu { display: block; }
 
         /* Login Popup Section CSS */
@@ -66,7 +75,6 @@
         .input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .action-btn:hover { background-color: #059669; }
-        .support-text { font-size: 12px; color: #888; margin-top: 15px; }
 
         /* 🌟 SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 50px 20px 40px; text-align: center; }
@@ -85,19 +93,16 @@
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
         .search-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
-        .search-btn:hover { background: #1d4ed8; }
 
         /* ⚡ 3 MAIN PILLARS */
         .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;}
+        .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center;}
         .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.1); border-color: #93c5fd;}
-        .service-icon { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto;}
-        
+        .service-icon { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 12px;}
         .sc-lab .service-icon { background: #eff6ff; color: #2563eb; }
         .sc-doc .service-icon { background: #f0fdf4; color: #10b981; }
         .sc-med .service-icon { background: #faf5ff; color: #c026d3; }
-        
-        .service-card h3 { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0;}
+        .service-card h3 { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0 0 5px;}
         .service-card p { color: #64748b; font-size: 13px; margin: 0; font-weight: 600; line-height: 1.4;}
 
         /* 🛡️ TRUST BADGES */
@@ -122,33 +127,26 @@
         .vip-content { flex: 1; padding: 35px 40px; z-index: 2; position: relative;}
         .vip-content h2 { font-size: 24px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
         .vip-content p { font-size: 14px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
-        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-size: 15px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); cursor: pointer;}
-        .btn-vip:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);}
-
+        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-size: 15px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer;}
+        
         /* 🎁 PREMIUM TRENDING PACKAGES SLIDER */
         .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab;}
-        .home-cat-nav:active { cursor: grabbing; }
         .home-cat-nav::-webkit-scrollbar { display: none; }
         .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); user-select: none;}
         .home-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 6px 15px rgba(37,99,235,0.25);}
 
         .slider-wrapper { max-width: 1020px; margin: 0 auto; overflow-x: auto; display: flex; gap: 20px; padding: 15px 10px 30px; cursor: grab; }
-        .slider-wrapper:active { cursor: grabbing; }
         .slider-wrapper::-webkit-scrollbar { display: none; }
         
         .pkg-card { min-width: 330px; background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; user-select: none;}
         .pkg-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(37,99,235,0.12); border-color: #93c5fd;}
-        
         .pkg-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .pkg-cat-badge { background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
         .pkg-test-count { background: #fef3c7; color: #d97706; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 8px; }
-        
         .pkg-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; line-height: 1.3;}
-        
         .pkg-desc { background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; }
         .pkg-desc ul { margin: 0; padding-left: 16px; font-size: 12px; color: #475569; font-weight: 600; line-height: 1.6;}
         .pkg-param-pill { background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 12px; display: inline-block; margin-top: 10px; cursor: pointer; border: 1px solid #bae6fd;}
-        
         .pkg-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px;}
         .pkg-price-area { display: flex; flex-direction: column; gap: 2px;}
         .pkg-total-mrp { font-size: 12px; color: #94a3b8; font-weight: 600;}
@@ -156,80 +154,87 @@
         .pkg-basic-badge { font-size: 10px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 6px; }
         .pkg-vip-pill { background: #ffffff; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; border: 1px dashed #cbd5e1; width: max-content;}
         
-        .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
+        .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content;}
         .btn-add-cart:hover { background: var(--primary-light); }
-        .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 10px; overflow: hidden; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
+        .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 10px; overflow: hidden; height: max-content;}
         .qty-control button { background: var(--primary-light); color: var(--primary); border: none; padding: 10px 14px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.2s;}
         .qty-control button:hover { background: var(--primary); color: white;}
         .qty-text { font-size: 15px; font-weight: 800; width: 35px; text-align: center; color: var(--text-main);}
 
-        /* HOW IT WORKS */
+        /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s;}
-        .hiw-step:hover { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px);}
         .hiw-icon { width: 70px; height: 70px; border-radius: 20px; background: white; color: var(--primary); font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
         .hiw-step h4 { font-size: 18px; font-weight: 800; margin: 0; color: #1e293b;}
         .hiw-step p { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
-        
+
+        /* ✨ AGGREGATOR SECTION (WHO WE ARE) ✨ */
+        .section-about { background: #f8fafc; padding: 60px 20px; text-align: center; border-top: 1px solid #e2e8f0; }
+        .about-box { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
+        .about-box h2 { font-size: 24px; color: #1e293b; margin-bottom: 15px; font-weight: 800;}
+        .about-box p { font-size: 15px; color: #475569; line-height: 1.7; margin-bottom: 25px; font-weight: 500;}
+        .badge-wrap { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;}
+        .badge-wrap span { background: #eff6ff; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 6px;}
+
+        /* ✨ FOOTER CSS ✨ */
+        .footer { background: #0f172a; color: #94a3b8; padding: 60px 40px 20px; font-size: 14px;}
+        .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; border-bottom: 1px solid #334155; padding-bottom: 40px; margin-bottom: 20px;}
+        .footer-col h3 { color: white; font-size: 18px; margin-bottom: 20px; font-weight: 700;}
+        .footer-col p { margin: 0 0 15px; line-height: 1.6;}
+        .footer-col a { color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; transition: 0.2s; font-weight: 500;}
+        .footer-col a:hover { color: var(--primary-light); transform: translateX(5px);}
+        .footer-bottom { text-align: center; font-size: 13px; color: #64748b;}
+
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         /* 📱 MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
+            .top-bar { flex-direction: column; gap: 10px; padding: 10px 15px; text-align: center; }
+            .top-bar-links { flex-wrap: wrap; justify-content: center; }
             .navbar { padding: 15px 20px; }
             .logo img { height: 35px; } 
-            #login-section { right: 5%; width: 90%; top: 60px;}
-
+            
             .section-hero { padding: 40px 15px 30px; }
-            .section-pillars { padding: 20px 15px 30px; }
-            .section-trust { padding: 20px 10px; }
+            .section-pillars, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
             .section-categories { padding: 30px 0; } 
-            .section-packages { padding: 40px 15px; }
-            .section-hiw { padding: 40px 15px; }
-
-            .hero-title { font-size: 26px; line-height: 1.4; margin-bottom: 10px; padding: 0 5px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; padding: 0 5px; margin-top: 8px;}
             
-            .search-container { padding: 8px; border-radius: 16px; margin-top: 20px; margin-left: 15px; margin-right: 15px;}
-            .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
-            .search-container i.fa-search { font-size: 16px; left: 16px;}
-            .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
-            
+            .search-container { padding: 8px; border-radius: 16px; margin: 20px 15px 0;}
             .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
-            .service-card { padding: 18px; flex-direction: row; text-align: left; justify-content: flex-start; border-radius: 16px;}
-            .service-icon { margin: 0; width: 50px; height: 50px; font-size: 22px; flex-shrink: 0; border-radius: 14px;}
-            .service-card h3 { font-size: 16px; }
-            
-            .trust-grid { gap: 12px; }
-            .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 10px; background: white; border: 1px solid #e2e8f0;}
+            .service-card { padding: 18px; flex-direction: row; text-align: left; justify-content: flex-start;}
+            .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 22px;}
             
             .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0 15px;}
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
             
-            .categories-grid { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 15px; gap: 15px; scroll-behavior: smooth;}
+            .categories-grid { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 15px; gap: 15px;}
             .categories-grid::-webkit-scrollbar { display: none; }
-            .cat-item { flex: 0 0 auto; width: 65px; gap: 6px;}
-            .cat-circle { width: 55px; height: 55px; font-size: 22px;}
-            .cat-item span { font-size: 11px;}
             
             .hiw-grid { grid-template-columns: 1fr; gap: 15px;}
             .hiw-step { flex-direction: row; text-align: left; padding: 20px 15px;}
-            .hiw-icon { flex-shrink: 0; width: 55px; height: 55px; font-size: 22px;}
+            .hiw-icon { margin-right: 15px; flex-shrink: 0; width: 55px; height: 55px; font-size: 22px;}
             
-            .home-cat-nav { justify-content: flex-start; padding-bottom: 15px;}
-            .pkg-card { min-width: 290px; padding: 18px; }
-            .pkg-title { font-size: 16px; }
-            .pkg-basic-price { font-size: 20px; }
-            .btn-add-cart { padding: 8px 18px; font-size: 13px; }
+            .about-box { padding: 25px 15px; }
+            .footer { padding: 40px 20px 20px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 30px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- ✨ TOP CONTACT BAR ✨ -->
+    <div class="top-bar">
+        <div><i class="fas fa-map-marker-alt" style="color: var(--secondary); margin-right: 5px;"></i> Shakti Nagar, Bahadurgarh, Haryana</div>
+        <div class="top-bar-links">
+            <a href="tel:8950112467"><i class="fas fa-phone-alt"></i> Book by Call: 8950112467</a>
+            <a href="https://wa.me/918950112467" class="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Booking</a>
+            <a href="prescription.html" class="highlight"><i class="fas fa-file-prescription"></i> Upload Rx</a>
+        </div>
+    </div>
+
     <!-- 🌟 MERGED HEADER 🌟 -->
     <header class="navbar">
         <div class="logo">
-            <!-- Ensure image name & format match your folder exactly (.png or .jpeg) -->
             <img src="image/bhavyacarelogo.png" alt="BhavyaCare" onerror="this.onerror=null; this.src='image/bhavyacarelogo.jpeg'; if(this.src.includes('jpeg')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
             <h2 style="display:none; color: #0056b3; font-size: 26px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
         </div>
@@ -243,9 +248,20 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
+                    <!-- Dashboard & Admin -->
                     <a href="admin.html" id="menu-admin"><i class="fas fa-shield-alt" style="color: #17a2b8; width: 20px;"></i> Admin Panel</a>
                     <a href="#" id="menu-join" onclick="openPartnerLogin()"><i class="fas fa-handshake" style="color: var(--primary); width: 20px;"></i> Join Us (Partner)</a>
                     <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
+                    
+                    <hr>
+                    <!-- ✨ NEW ESSENTIAL PAGES ✨ -->
+                    <a href="prescription.html"><i class="fas fa-upload" style="color: #8b5cf6; width: 20px;"></i> Upload Prescription</a>
+                    <a href="terms.html"><i class="fas fa-file-contract" style="color: #64748b; width: 20px;"></i> Terms & Conditions</a>
+                    <a href="privacy.html"><i class="fas fa-user-shield" style="color: #64748b; width: 20px;"></i> Privacy Policy</a>
+                    <a href="refund.html"><i class="fas fa-undo" style="color: #64748b; width: 20px;"></i> Refund Policy</a>
+                    <a href="contact.html"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
+                    
+                    <hr>
                     <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Logout</a>
                 </div>
             </div>
@@ -254,11 +270,9 @@
 
     <!-- 🌟 MERGED LOGIN SECTION 🌟 -->
     <div id="login-section">
-        <!-- ✨ Added the "X" Close Button Here ✨ -->
         <button onclick="closeLoginPopup()" style="position:absolute; top:15px; right:15px; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-times"></i></button>
         
         <h3 id="form-title">Login / Sign Up</h3>
-        
         <div id="phone-section">
             <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
                 <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
@@ -270,22 +284,17 @@
                     <option value="executive">Executive</option>
                 </select>
             </div>
-            
             <p id="nameLabel" style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
             <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
-
             <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>
             <input type="tel" id="phoneNumber" class="input-box" placeholder="e.g. 8950112467" maxlength="10">
-            
             <div id="recaptcha-container" style="margin-top: 10px;"></div>
             <button id="send-otp-btn" class="action-btn" onclick="sendOTP()">Get OTP</button>
         </div>
-
         <div id="otp-section" style="display: none;">
             <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Enter OTP:</p>
             <input type="tel" id="otpCode" class="input-box" placeholder="6-digit OTP" maxlength="6">
             <button class="action-btn" style="background-color: #0056b3;" onclick="verifyOTP()">Verify Mobile</button>
-            <p style="margin-top: 15px; font-size: 13px; color: #0056b3; cursor: pointer; text-decoration: underline;" onclick="closeLoginPopup()">Cancel</p>
         </div>
         <p class="support-text">Need help? Email us at bhavyacare1@gmail.com</p>
     </div>
@@ -299,9 +308,7 @@
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
             <button class="search-btn" onclick="executeHomeSearch()">Search</button>
-            
-            <div id="homeSearchResults" style="display:none; position:absolute; top:110%; left:0; width:100%; background:white; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:1000; max-height:350px; overflow-y:auto; text-align:left;">
-            </div>
+            <div id="homeSearchResults" style="display:none; position:absolute; top:110%; left:0; width:100%; background:white; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:1000; max-height:350px; overflow-y:auto; text-align:left;"></div>
         </div>
     </section>
 
@@ -310,24 +317,15 @@
         <div class="main-services-grid">
             <a href="booking/booking.html" class="service-card sc-lab">
                 <div class="service-icon"><i class="fas fa-microscope"></i></div>
-                <div>
-                    <h3>Book Lab Test</h3>
-                    <p>NABL Certified Labs & Home Collection.</p>
-                </div>
+                <div><h3>Book Lab Test</h3><p>NABL Certified Labs & Home Collection.</p></div>
             </a>
             <a href="bookdoctor/bookdoctor.html" class="service-card sc-doc">
                 <div class="service-icon"><i class="fas fa-user-md"></i></div>
-                <div>
-                    <h3>Consult Doctor</h3>
-                    <p>Online Video Consult or Clinic Visit.</p>
-                </div>
+                <div><h3>Consult Doctor</h3><p>Online Video Consult or Clinic Visit.</p></div>
             </a>
             <a href="#" onclick="handlePharmacyClick(event)" class="service-card sc-med">
                 <div class="service-icon"><i class="fas fa-pills"></i></div>
-                <div>
-                    <h3>Order Medicines</h3>
-                    <p>Upload Rx & Get Superfast Delivery.</p>
-                </div>
+                <div><h3>Order Medicines</h3><p>Upload Rx & Get Superfast Delivery.</p></div>
             </a>
         </div>
     </section>
@@ -349,31 +347,18 @@
             <p>Choose a category to find specific tests quickly.</p>
         </div>
         <div class="categories-grid">
-            <a href="#" onclick="searchAndGo('Fever')" class="cat-item">
-                <div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span>
-            </a>
-            <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item">
-                <div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span>
-            </a>
-            <a href="#" onclick="searchAndGo('Heart')" class="cat-item">
-                <div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span>
-            </a>
-            <a href="#" onclick="searchAndGo('Full Body')" class="cat-item">
-                <div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span>
-            </a>
-            <a href="bookdoctor/bookdoctor.html" class="cat-item">
-                <div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Doctors</span>
-            </a>
+            <a href="#" onclick="searchAndGo('Fever')" class="cat-item"><div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span></a>
+            <a href="#" onclick="searchAndGo('Diabetes')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
+            <a href="#" onclick="searchAndGo('Heart')" class="cat-item"><div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span></a>
+            <a href="#" onclick="searchAndGo('Full Body')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
+            <a href="bookdoctor/bookdoctor.html" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-stethoscope"></i></div><span>Doctors</span></a>
         </div>
         
-        <!-- 👑 VIP BANNER -->
         <div class="vip-banner">
             <div class="vip-content">
                 <h2>One VIP Plan = Maximum Savings!</h2>
                 <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
-                <button onclick="openVipImageModal()" class="btn-vip">
-                    <i class="fas fa-crown"></i> Buy VIP Plan
-                </button>
+                <button onclick="openVipImageModal()" class="btn-vip"><i class="fas fa-crown"></i> Buy VIP Plan</button>
             </div>
         </div>
     </section>
@@ -384,9 +369,7 @@
             <h2>Trending Health Packages</h2>
             <p>Our most popular preventive health checkups.</p>
         </div>
-        
         <div id="homePackageCategories" class="home-cat-nav"></div>
-
         <div class="slider-wrapper" id="homePackageSlider">
             <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
         </div>
@@ -401,27 +384,75 @@
         <div class="hiw-grid">
             <div class="hiw-step">
                 <div class="hiw-icon"><i class="fas fa-mobile-alt"></i></div>
-                <div>
-                    <h4>1. Book Online</h4>
-                    <p>Select your required Lab Test, Doctor Consult, or upload Medicine Prescription.</p>
-                </div>
+                <div><h4>1. Book Online</h4><p>Select your required Lab Test, Doctor Consult, or upload Medicine Prescription.</p></div>
             </div>
             <div class="hiw-step">
                 <div class="hiw-icon"><i class="fas fa-home"></i></div>
-                <div>
-                    <h4>2. Home Service / Clinic</h4>
-                    <p>Our expert collects sample from home, or you visit the doctor's clinic securely.</p>
-                </div>
+                <div><h4>2. Home Service / Clinic</h4><p>Our expert collects sample from home, or you visit the doctor's clinic securely.</p></div>
             </div>
             <div class="hiw-step">
                 <div class="hiw-icon"><i class="fas fa-file-medical-alt"></i></div>
-                <div>
-                    <h4>3. Digital Records</h4>
-                    <p>Access your reports, prescriptions, and order history directly on your phone.</p>
-                </div>
+                <div><h4>3. Digital Records</h4><p>Access your reports, prescriptions, and order history directly on your phone.</p></div>
             </div>
         </div>
     </section>
+
+    <!-- ✨ SECTION 7: AGGREGATOR DISCLAIMER ✨ -->
+    <section class="section-about">
+        <div class="about-box">
+            <h2>Your Trusted Healthcare Aggregator</h2>
+            <p>At BhavyaCare, we believe in bringing the best of healthcare directly to your fingertips. We are a premier healthcare aggregator platform. We do not own the laboratories or pharmacies, but we partner exclusively with strictly verified, <strong>NABL/NABH accredited institutions</strong> and top-rated medical professionals to ensure you receive 100% accurate, reliable, and premium healthcare services at your doorstep.</p>
+            <div class="badge-wrap">
+                <span><i class="fas fa-check-circle"></i> Verified Partners</span>
+                <span><i class="fas fa-award"></i> NABL/NABH Labs</span>
+                <span><i class="fas fa-shield-alt"></i> Quality Assured</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ✨ MEGA FOOTER ✨ -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo" style="margin-bottom: 15px;">
+                    <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
+                </div>
+                <p>Making premium healthcare accessible, affordable, and accurate for everyone. Book tests, consult doctors, and order medicines with ease.</p>
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <a href="https://wa.me/918950112467" style="color: white; font-size: 20px;"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" style="color: white; font-size: 20px;"><i class="fab fa-facebook"></i></a>
+                    <a href="#" style="color: white; font-size: 20px;"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Our Services</h3>
+                <a href="booking/booking.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Book Lab Tests</a>
+                <a href="bookdoctor/bookdoctor.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Consult a Doctor</a>
+                <a href="#" onclick="handlePharmacyClick(event)"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
+                <a href="vip/vip_member.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> VIP Membership</a>
+                <a href="prescription.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Upload Prescription</a>
+            </div>
+
+            <div class="footer-col">
+                <h3>Legal & Policies</h3>
+                <a href="terms.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Terms & Conditions</a>
+                <a href="privacy.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Privacy Policy</a>
+                <a href="refund.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Refund & Cancellation</a>
+                <a href="about.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
+            </div>
+
+            <div class="footer-col">
+                <h3>Contact Us</h3>
+                <p><i class="fas fa-map-marker-alt" style="color: var(--secondary); margin-right: 8px;"></i> Shakti Nagar, Bahadurgarh, Haryana, India</p>
+                <p><i class="fas fa-phone-alt" style="color: var(--secondary); margin-right: 8px;"></i> +91 8950112467</p>
+                <p><i class="fas fa-envelope" style="color: var(--secondary); margin-right: 8px;"></i> bhavyacare1@gmail.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 BhavyaCare Healthcare Services. All Rights Reserved.</p>
+        </div>
+    </footer>
 
     <!-- ✨ FLOATING CART BUTTON ✨ -->
     <div id="homeFloatingCart" onclick="window.location.href='booking/booking.html?view=cart'" style="display:none; position:fixed; bottom:30px; right:20px; background:var(--primary); color:white; width:60px; height:60px; border-radius:50%; align-items:center; justify-content:center; font-size:24px; box-shadow:0 10px 25px rgba(37,99,235,0.4); cursor:pointer; z-index:1000; transition:0.3s;">
@@ -434,16 +465,14 @@
         <div style="background:white; padding:20px; border-radius:24px; width:90%; max-width:450px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
             <button onclick="closeVipImageModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
             <h3 style="margin:0 0 15px 0; color:#0f172a; font-size:20px; font-weight:800;">Basic vs <span style="color:var(--warning);">VIP Plan</span></h3>
-            
             <img src="image/BASIC AND VIP PLAN.jpg" alt="Basic vs VIP Plan Comparison" style="width:100%; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0; display:block;">
-            
             <button onclick="handleVipBuyClick()" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; width:100%; padding:16px; border-radius:14px; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 6px 20px rgba(245, 158, 11, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
                 <i class="fas fa-crown"></i> Book VIP Plan Now
             </button>
         </div>
     </div>
 
-    <!-- ✨ HOME INFO (I) MODAL ✨ -->
+    <!-- ✨ HOME INFO MODAL ✨ -->
     <div id="homeInfoModal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter: blur(4px);">
         <div style="background:#fff; padding:20px; border-radius:16px; width:90%; max-width:400px; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUpToast 0.3s ease-out;">
             <button onclick="closeHomeInfoModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; color:#64748b; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px;"><i class="fas fa-times"></i></button>
@@ -452,13 +481,11 @@
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="homeToastContainer" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px;"></div>
 
     <script src="app.js"></script>
 
     <script>
-        // ✨ NAYA NAAM: Is function ka naam homeFormatText kar diya taki app.js ke sath jhagda na kare! ✨
         function homeFormatText(text) {
             if (!text) return "";
             let cleanText = String(text).replace(/_/g, ' '); 
@@ -485,11 +512,9 @@
         function openHomeInfoModal(serviceId) {
             const service = homeAllServices.find(s => s.service_id === serviceId);
             if (!service) return;
-            
             document.getElementById("homeModalTitle").innerText = homeFormatText(service.service_name);
             let descRaw = String(service.description || '');
             let formattedDesc = "<p style='text-align:center;'>No details available.</p>";
-            
             if (descRaw.trim() !== "") {
                 let items = descRaw.split(/<br>|\n/).filter(i => i.trim() !== '');
                 formattedDesc = "<ul>" + items.map(i => `<li style="margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:4px;">${homeFormatText(i.trim())}</li>`).join('') + "</ul>";
@@ -535,11 +560,10 @@
             });
         }
 
-        // ✨ NAYA NAAM: Taki app.js se jhagda na kare! ✨
         const HOME_GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
         let homeAllServices = [];
         let homeCurrentSubCat = 'all';
-        let homePageCart = []; // ✨ NAYA NAAM: Taki app.js ki cart se jhagda na kare ✨
+        let homePageCart = [];
 
         document.addEventListener("DOMContentLoaded", () => {
             try {
@@ -575,7 +599,6 @@
             );
 
             let categories = ['all', ...new Set(packages.map(s => String(s.service_category || 'Other').trim()))];
-
             let navHtml = "";
             categories.forEach(c => {
                 if(c === "") return;
@@ -586,9 +609,7 @@
             nav.innerHTML = navHtml;
 
             let displayPkgs = packages;
-            if (homeCurrentSubCat !== 'all') {
-                displayPkgs = packages.filter(s => String(s.service_category || 'Other').trim() === homeCurrentSubCat);
-            }
+            if (homeCurrentSubCat !== 'all') { displayPkgs = packages.filter(s => String(s.service_category || 'Other').trim() === homeCurrentSubCat); }
             displayPkgs = displayPkgs.slice(0, 10);
 
             if (displayPkgs.length === 0) {
@@ -601,7 +622,6 @@
                 let price = homeFormatPrice(pkg.basic_price || pkg.service_price);
                 let totalMrp = homeFormatPrice(pkg.service_price);
                 let vipPrice = homeFormatPrice(pkg.vip_price || price);
-                
                 let cleanName = homeFormatText(pkg.service_name);
                 let cleanType = String(pkg.service_type || '').replace(/'/g, "\\'");
                 let cleanCat = homeFormatText(pkg.service_category || 'Package');
@@ -625,20 +645,13 @@
                     if (items.length > 0) {
                         let previewItems = items.slice(0, 2).map(i => homeFormatText(i.trim())); 
                         let moreText = pkg.number_of_test ? `+ ${pkg.number_of_test} Parameters` : (items.length > 2 ? "+ More Details" : "");
-                        descPreviewHtml = `
-                        <div class="pkg-desc">
-                            <ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>
-                            ${moreText ? `<div class="pkg-param-pill" onclick="openHomeInfoModal('${s_id}')">${moreText}</div>` : ''}
-                        </div>`;
+                        descPreviewHtml = `<div class="pkg-desc"><ul>${previewItems.map(i => `<li>${i}</li>`).join('')}</ul>${moreText ? `<div class="pkg-param-pill" onclick="openHomeInfoModal('${s_id}')">${moreText}</div>` : ''}</div>`;
                     }
                 }
 
                 html += `
                 <div class="pkg-card">
-                    <div class="pkg-header-row">
-                        <span class="pkg-cat-badge">${cleanCat}</span>
-                        ${pkg.number_of_test ? `<span class="pkg-test-count"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : ''}
-                    </div>
+                    <div class="pkg-header-row"><span class="pkg-cat-badge">${cleanCat}</span>${pkg.number_of_test ? `<span class="pkg-test-count"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : ''}</div>
                     <h3 class="pkg-title">${cleanName} <i class="fas fa-info-circle" style="color:var(--primary); font-size:14px; cursor:pointer;" onclick="openHomeInfoModal('${s_id}')" title="Click for details"></i></h3>
                     ${descPreviewHtml}
                     <div class="pkg-footer">
@@ -657,14 +670,9 @@
         function liveHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.toLowerCase().trim();
             let resultsDiv = document.getElementById("homeSearchResults");
-            
             if(query.length < 2) { resultsDiv.style.display = "none"; return; }
             
-            let filtered = homeAllServices.filter(s => 
-                s.service_id !== "VIP-FREE-001" && 
-                (String(s.service_name).toLowerCase().includes(query) || String(s.service_category).toLowerCase().includes(query))
-            ).slice(0, 6); 
-            
+            let filtered = homeAllServices.filter(s => s.service_id !== "VIP-FREE-001" && (String(s.service_name).toLowerCase().includes(query) || String(s.service_category).toLowerCase().includes(query))).slice(0, 6); 
             if(filtered.length === 0) {
                 resultsDiv.innerHTML = "<div style='padding:15px; text-align:center; color:#64748b; font-weight:600;'><i class='fas fa-search' style='font-size:24px; color:#cbd5e1; margin-bottom:10px;'></i><br>No tests found</div>";
                 resultsDiv.style.display = "block"; return;
@@ -689,41 +697,24 @@
                     actionBtnHtml = `<button onclick="updateHomeQty('${s_id}', 1, ${price}, '${cleanName.replace(/'/g, "\\'")}', '${cleanType}')" style="background:var(--primary-light); color:var(--primary); border:none; padding:8px 16px; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; transition:0.2s;">ADD +</button>`;
                 }
                 
-                html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #f1f5f9; transition:0.2s;">
-                    <div style="flex:1; padding-right:10px;">
-                        <div style="font-weight:800; font-size:14px; color:#0f172a; margin-bottom:4px;">${cleanName}</div>
-                        <div style="font-size:13px; color:#10b981; font-weight:800;">₹${price} <del style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:5px;">₹${totalMrp}</del></div>
-                    </div>
-                    ${actionBtnHtml}
-                </div>`;
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #f1f5f9; transition:0.2s;"><div style="flex:1; padding-right:10px;"><div style="font-weight:800; font-size:14px; color:#0f172a; margin-bottom:4px;">${cleanName}</div><div style="font-size:13px; color:#10b981; font-weight:800;">₹${price} <del style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:5px;">₹${totalMrp}</del></div></div>${actionBtnHtml}</div>`;
             });
-            
             html += `<div style="padding:12px; text-align:center; background:#f8fafc; border-bottom-left-radius:16px; border-bottom-right-radius:16px; cursor:pointer; color:var(--primary); font-size:13px; font-weight:800;" onclick="executeHomeSearch()">View all results <i class="fas fa-arrow-right"></i></div>`;
-            
-            resultsDiv.innerHTML = html;
-            resultsDiv.style.display = "block";
+            resultsDiv.innerHTML = html; resultsDiv.style.display = "block";
         }
 
         function updateHomeQty(id, change, price, name, type) {
             id = String(id);
             let index = homePageCart.findIndex(item => String(item.service_id) === id);
-            
             if (index > -1) {
                 homePageCart[index].qty += change;
-                if (homePageCart[index].qty <= 0) {
-                    homePageCart.splice(index, 1); 
-                    showHomeToast("Item removed from Cart.", "info");
-                }
+                if (homePageCart[index].qty <= 0) { homePageCart.splice(index, 1); showHomeToast("Item removed from Cart.", "info"); }
             } else if (change > 0) { 
                 homePageCart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
                 showHomeToast("Item Added to Cart! 🛒", "success");
             }
-            
             localStorage.setItem('bhavyaCart', JSON.stringify(homePageCart));
-            updateHomeCartBadge();
-            renderHomePackages(homeCurrentSubCat); 
-            
+            updateHomeCartBadge(); renderHomePackages(homeCurrentSubCat); 
             let query = document.getElementById("globalSearchInput").value.trim();
             if(query.length >= 2) { liveHomeSearch(); }
         }
@@ -732,13 +723,8 @@
             let totalItems = homePageCart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
             let floatingBtn = document.getElementById("homeFloatingCart");
             let badge = document.getElementById("homeCartBadge");
-            
-            if (totalItems > 0) {
-                floatingBtn.style.display = "flex";
-                badge.innerText = totalItems;
-            } else {
-                floatingBtn.style.display = "none";
-            }
+            if (totalItems > 0) { floatingBtn.style.display = "flex"; badge.innerText = totalItems; } 
+            else { floatingBtn.style.display = "none"; }
         }
 
         function showHomeToast(message, type) {
@@ -747,8 +733,7 @@
             let bg = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#f59e0b');
             toast.style.cssText = `background:${bg}; color:white; padding:12px 20px; border-radius:10px; font-weight:bold; font-size:13px; box-shadow:0 5px 15px rgba(0,0,0,0.2); animation:slideUpToast 0.4s ease forwards; display:flex; align-items:center; justify-content:space-between;`;
             toast.innerHTML = `<span>${message}</span> <button onclick="window.location.href='booking/booking.html?view=cart'" style="background:white; color:${bg}; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;">View Cart</button>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3000);
+            container.appendChild(toast); setTimeout(() => { toast.remove(); }, 3000);
         }
 
         document.addEventListener('click', function(event) {

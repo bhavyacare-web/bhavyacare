@@ -88,7 +88,7 @@
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
         .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
 
-        /* ✨ PROMINENT QUICK ACTIONS (Moved below search) ✨ */
+        /* ✨ PROMINENT QUICK ACTIONS ✨ */
         .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto; max-width: 800px; flex-wrap: wrap;}
         .btn-quick { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
         .btn-quick:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -117,7 +117,7 @@
         .section-heading h2 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0;}
         .section-heading p { color: #64748b; font-size: 15px; margin-top: 8px; font-weight: 600;}
 
-        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} /* Added margin-bottom for gap */
+        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} 
         .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
         .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
@@ -164,10 +164,10 @@
 
         /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s;}
-        .hiw-icon { width: 70px; height: 70px; border-radius: 20px; background: white; color: var(--primary); font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
-        .hiw-step h4 { font-size: 18px; font-weight: 800; margin: 0; color: #1e293b;}
-        .hiw-step p { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
+        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #f8fafc; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s;}
+        .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: white; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
+        .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
+        .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
 
         /* 💬 PATIENT REVIEWS SECTION 💬 */
         .section-reviews { background: #ffffff; padding: 60px 20px; border-top: 1px solid #e2e8f0; }
@@ -211,21 +211,18 @@
             .section-trust { padding: 25px 10px; }
             .section-categories { padding: 30px 15px; } 
             
-            /* Reduced Hero Title Size for Mobile */
-            .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 20px;}
+            .hero-title { font-size: 28px; line-height: 1.3; margin-bottom: 10px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 25px;}
             
             .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
             .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
             .search-container i.fa-search { font-size: 16px; left: 16px;}
             .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
 
-            /* Quick Actions Below Search Bar on Mobile */
             .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 100%;}
             .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
             .btn-quick i { font-size: 22px; }
             
-            /* Compact Main Pillars */
             .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
             .service-card { padding: 15px 18px; flex-direction: row; text-align: left; justify-content: flex-start;}
             .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 20px;}
@@ -243,9 +240,7 @@
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
                 flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
             }
-            /* Extra bottom margin removed to fix gap */
             .categories-grid { margin-bottom: 25px; }
-
             .cat-item { flex: 0 0 auto; width: 70px; gap: 6px;}
             .cat-circle { width: 60px; height: 60px; font-size: 24px;}
             .cat-item span { font-size: 11px;}
@@ -255,14 +250,12 @@
             .pkg-basic-price { font-size: 20px; }
             .btn-add-cart { padding: 8px 18px; font-size: 13px; }
 
-            /* Compact How It Works */
             .hiw-grid { grid-template-columns: 1fr; gap: 12px;}
             .hiw-step { flex-direction: row; text-align: left; padding: 15px;}
             .hiw-icon { margin-right: 15px; margin-bottom:0; flex-shrink: 0; width: 50px; height: 50px; font-size: 20px;}
             .hiw-step h4 { font-size: 16px; }
             .hiw-step p { font-size: 13px; }
 
-            /* Mobile Reviews Fix */
             .section-reviews { padding: 40px 15px; }
             .reviews-wrapper { 
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
@@ -274,7 +267,6 @@
             .about-box { padding: 25px 15px; border-radius: 16px; }
             .about-box h2 { font-size: 20px; }
             
-            /* Footer Mobile Fix */
             .footer { padding: 40px 20px 20px; text-align: left;}
             .footer-grid { grid-template-columns: 1fr; gap: 30px; }
             .footer-col h3 { font-size: 16px; margin-bottom: 12px; }
@@ -287,7 +279,8 @@
     <!-- 🌟 HEADER 🌟 -->
     <header class="navbar">
         <div class="logo">
-            <img src="image/bhavyacarelogo.png" alt="BhavyaCare" onerror="this.onerror=null; this.src='image/bhavyacarelogo.jpeg'; if(this.src.includes('jpeg')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+            <!-- ✨ DIRECT JPEG PATH ✨ -->
+            <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare">
             <h2 style="display:none; color: #0056b3; font-size: 26px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
         </div>
         
@@ -300,12 +293,13 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
-                    <!-- Dashboard only if logged in -->
                     <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
-                    
+                    <!-- Menu Re-populated with essential links -->
                     <a href="prescription.html"><i class="fas fa-upload" style="color: #8b5cf6; width: 20px;"></i> Upload Prescription</a>
-                    <a href="tel:8950112467"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
-                    
+                    <a href="terms.html"><i class="fas fa-file-contract" style="color: #64748b; width: 20px;"></i> Terms & Conditions</a>
+                    <a href="privacy.html"><i class="fas fa-user-shield" style="color: #64748b; width: 20px;"></i> Privacy Policy</a>
+                    <a href="refund.html"><i class="fas fa-undo" style="color: #64748b; width: 20px;"></i> Refund Policy</a>
+                    <a href="contact.html"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
                     <hr>
                     <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Logout</a>
                 </div>
@@ -411,11 +405,12 @@
             <p>Choose a category to find specific tests quickly.</p>
         </div>
         <div class="categories-grid">
-            <a href="#" onclick="searchAndGo('Fever')" class="cat-item"><div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span></a>
-            <a href="#" onclick="searchAndGo('Sugar')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
-            <a href="#" onclick="searchAndGo('Heart')" class="cat-item"><div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span></a>
-            <a href="#" onclick="searchAndGo('Profile')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
-            <a href="#" onclick="searchAndGo('Senior Citizen')" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-blind"></i></div><span>Senior Citizen</span></a>
+            <!-- ✨ SMART LINKS: Inhe click karne se page smooth scroll hoke packages par jayega ✨ -->
+            <a href="javascript:void(0)" onclick="scrollToPackages('Fever')" class="cat-item"><div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span></a>
+            <a href="javascript:void(0)" onclick="scrollToPackages('Sugar')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
+            <a href="javascript:void(0)" onclick="scrollToPackages('Heart')" class="cat-item"><div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span></a>
+            <a href="javascript:void(0)" onclick="scrollToPackages('Profile')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
+            <a href="javascript:void(0)" onclick="scrollToPackages('Senior Citizen')" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-blind"></i></div><span>Senior Citizen</span></a>
         </div>
         
         <div class="vip-banner">
@@ -429,7 +424,7 @@
 
     <!-- 🎁 SECTION 5: TRENDING PACKAGES 🎁 -->
     <section class="section-packages">
-        <div class="section-heading" style="margin-top: 0;">
+        <div class="section-heading" id="packagesHeading" style="margin-top: 0;">
             <h2>Trending Health Packages</h2>
             <p>Our most popular preventive health checkups.</p>
         </div>
@@ -516,7 +511,8 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div class="logo" style="margin-bottom: 15px;">
-                    <img src="image/bhavyacarelogo.png" alt="BhavyaCare" style="height: 40px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='image/bhavyacarelogo.jpeg'; if(this.src.includes('jpeg')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+                    <!-- Fixed Logo in Footer to directly call the .jpeg -->
+                    <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" style="height: 40px; filter: brightness(0) invert(1);">
                     <h2 style="display:none; color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
                 </div>
                 <p>Making premium healthcare accessible, affordable, and accurate for everyone. Book tests, consult doctors, and order medicines with ease.</p>
@@ -540,6 +536,7 @@
                 <h3>Company</h3>
                 <a href="about.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
                 <a href="#" onclick="openPartnerLogin()"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Join Us (Partner)</a>
+                <!-- ✨ ADMIN PANEL AND JOIN US MOVED TO FOOTER ✨ -->
                 <a href="#" onclick="openAdminPasswordModal(event)"><i class="fas fa-shield-alt" style="font-size:10px; color:#17a2b8;"></i> Admin Login</a>
                 <a href="contact.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Contact Support</a>
             </div>
@@ -588,7 +585,7 @@
     <script src="app.js"></script>
 
     <script>
-        // ✨ ADMIN PASSWORD VERIFICATION LOGIC ✨
+        // ✨ ADMIN PASSWORD VERIFICATION ✨
         function openAdminPasswordModal(e) {
             e.preventDefault(); 
             document.getElementById('adminPasswordModal').style.display = 'flex';
@@ -604,6 +601,26 @@
             const passInput = document.getElementById('adminPassInput').value;
             if (passInput === 'Bhavya@123') { window.location.href = 'admin.html'; } 
             else { showHomeToast("Incorrect Password! Access Denied.", "error"); }
+        }
+
+        // ✨ SMART SCROLL TO PACKAGES FUNCTION ✨
+        function scrollToPackages(targetCat) {
+            // Find the category case-insensitively
+            let categories = ['all', ...new Set(homeAllServices.map(s => String(s.service_category || 'Other').trim()))];
+            let matchedCat = categories.find(c => c.toLowerCase() === targetCat.toLowerCase());
+            
+            if (matchedCat) {
+                renderHomePackages(matchedCat);
+            } else {
+                renderHomePackages('all'); // Fallback to 'all' if not found
+            }
+            
+            // Smoothly scroll down to the packages heading, offsetting for the sticky header
+            const packageSection = document.getElementById('packagesHeading');
+            if (packageSection) {
+                const offsetPosition = packageSection.getBoundingClientRect().top + window.scrollY - 80;
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
         }
 
         function homeFormatText(text) {

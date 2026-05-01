@@ -32,12 +32,43 @@
             --primary: #2563eb; --primary-light: #eff6ff;
             --secondary: #10b981; --secondary-light: #d1fae5;
             --warning: #f59e0b; --danger: #ef4444;
-            --text-main: #0f172a; --text-muted: #64748b;
+            --bg-color: #f4f7f6; --text-main: #0f172a; --text-muted: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
-        body { color: var(--text-main); overflow-x: hidden; background: #ffffff; }
+        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
 
-        /* ✨ NEW: SECTION DIVISIONS WITH SIMPLE COLORS ✨ */
+        /* 🌟 HEADER CSS (Merged from header.html) 🌟 */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 15px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo h2 { color: #0056b3; font-size: 26px; font-weight: 800; margin: 0; }
+        .logo span { color: #28a745; }
+        .nav-actions { display: flex; align-items: center; gap: 15px; }
+        .nav-btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
+        .login-btn { background-color: #0056b3; }
+        .login-btn:hover { background-color: #004494; }
+        .admin-btn { background-color: #17a2b8; text-decoration: none; }
+        .admin-btn:hover { background-color: #138496; }
+
+        #user-menu-container { display: none; }
+        .user-profile-btn { background: #f4f7f6; color: #0056b3; border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .user-profile-btn:hover { background: #e6f0fa; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
+        .dropbtn:hover { color: #0056b3; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); z-index: 1001; border-radius: 8px; overflow: hidden; border: 1px solid #eee; margin-top: 10px;}
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; border-bottom: 1px solid #f4f4f4; font-weight: 500; }
+        .dropdown-content a:hover { background-color: #f9f9f9; color: #0056b3; }
+        .show-menu { display: block; }
+
+        /* Login Popup Section CSS */
+        #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: fixed; top: 70px; right: 40px; z-index: 999; }
+        #login-section h3 { color: #333; margin-bottom: 20px; }
+        .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
+        .input-box:focus { border-color: #0056b3; box-shadow: 0 0 5px rgba(0,86,179,0.2); }
+        .action-btn { width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .action-btn:hover { background-color: #218838; }
+        .support-text { font-size: 12px; color: #888; margin-top: 15px; }
+
+        /* 🌟 NEW DIVIDED SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 50px 20px 40px; text-align: center; }
         .section-pillars { background: #ffffff; padding: 30px 20px; }
         .section-trust { background: #f8fafc; padding: 25px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
@@ -105,7 +136,6 @@
         .slider-wrapper:active { cursor: grabbing; }
         .slider-wrapper::-webkit-scrollbar { display: none; }
         
-        /* 🌟 CARDS POPPING DESIGN 🌟 */
         .pkg-card { min-width: 330px; background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; user-select: none;}
         .pkg-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(37,99,235,0.12); border-color: #93c5fd;}
         
@@ -126,7 +156,6 @@
         .pkg-basic-badge { font-size: 10px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 6px; }
         .pkg-vip-pill { background: #ffffff; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; border: 1px dashed #cbd5e1; width: max-content;}
         
-        /* ✨ QUANTITY CONTROL CSS ✨ */
         .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
         .btn-add-cart:hover { background: var(--primary-light); }
         .qty-control { display: flex; align-items: center; background: white; border: 2px solid var(--primary); border-radius: 10px; overflow: hidden; height: max-content; box-shadow: 0 4px 10px rgba(37,99,235,0.1);}
@@ -146,6 +175,10 @@
         
         /* 📱 MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
+            .navbar { padding: 15px 20px; }
+            .logo h2 { font-size: 22px; }
+            #login-section { right: 5%; width: 90%; top: 60px;}
+
             .section-hero { padding: 40px 15px 30px; }
             .section-pillars { padding: 20px 15px 30px; }
             .section-trust { padding: 20px 10px; }
@@ -153,7 +186,6 @@
             .section-packages { padding: 40px 15px; }
             .section-hiw { padding: 40px 15px; }
 
-            /* Fixed Text Spacing for Mobile */
             .hero-title { font-size: 26px; line-height: 1.4; margin-bottom: 10px; padding: 0 5px;}
             .hero-subtitle { font-size: 14px; line-height: 1.5; padding: 0 5px; margin-top: 8px;}
             
@@ -193,7 +225,62 @@
 </head>
 <body>
 
-    <div id="header-container"></div>
+    <!-- 🌟 MERGED HEADER 🌟 -->
+    <header class="navbar">
+        <div class="logo"><h2>Bhavya<span>Care</span></h2></div>
+        
+        <div class="nav-actions">
+            <a href="admin.html" class="nav-btn admin-btn">🛡️ Admin</a>
+            <button id="nav-login-btn" class="nav-btn login-btn" onclick="openPatientLogin()">Login</button>
+            
+            <div class="dropdown">
+                <button id="main-menu-btn" class="dropbtn" onclick="toggleMenu()">⋮</button>
+                <div id="user-menu-container">
+                    <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
+                </div>
+                <div id="myDropdown" class="dropdown-content">
+                    <a href="#" id="menu-join" onclick="openPartnerLogin()">🤝 Join Us (Partner)</a>
+                    <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;">📊 My Dashboard</a>
+                    <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 🌟 MERGED LOGIN SECTION 🌟 -->
+    <div id="login-section">
+        <h3 id="form-title">Login / Sign Up</h3>
+        
+        <div id="phone-section">
+            <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
+                <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
+                <select id="partnerRole" class="input-box" onchange="updateNameLabel()">
+                    <option value="doctor" selected>Doctor</option>
+                    <option value="lab">Lab</option>
+                    <option value="pharmacy">Pharmacy</option>
+                    <option value="hospital">Hospital</option>
+                    <option value="executive">Executive</option>
+                </select>
+            </div>
+            
+            <p id="nameLabel" style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
+            <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
+
+            <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>
+            <input type="tel" id="phoneNumber" class="input-box" placeholder="e.g. 8950112467" maxlength="10">
+            
+            <div id="recaptcha-container" style="margin-top: 10px;"></div>
+            <button id="send-otp-btn" class="action-btn" onclick="sendOTP()">Get OTP</button>
+        </div>
+
+        <div id="otp-section" style="display: none;">
+            <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Enter OTP:</p>
+            <input type="tel" id="otpCode" class="input-box" placeholder="6-digit OTP" maxlength="6">
+            <button class="action-btn" style="background-color: #0056b3;" onclick="verifyOTP()">Verify Mobile</button>
+            <p style="margin-top: 15px; font-size: 13px; color: #0056b3; cursor: pointer; text-decoration: underline;" onclick="closeLoginPopup()">Cancel</p>
+        </div>
+        <p class="support-text">Need help? Email us at bhavyacare1@gmail.com</p>
+    </div>
 
     <!-- 🌟 SECTION 1: HERO & SEARCH 🌟 -->
     <section class="section-hero">
@@ -205,7 +292,6 @@
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
             <button class="search-btn" onclick="executeHomeSearch()">Search</button>
             
-            <!-- ✨ LIVE SEARCH RESULTS DROPDOWN ✨ -->
             <div id="homeSearchResults" style="display:none; position:absolute; top:110%; left:0; width:100%; background:white; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:1000; max-height:350px; overflow-y:auto; text-align:left;">
             </div>
         </div>
@@ -284,16 +370,14 @@
         </div>
     </section>
 
-    <!-- 🎁 SECTION 5: TRENDING PACKAGES (Cards Pop Here!) 🎁 -->
+    <!-- 🎁 SECTION 5: TRENDING PACKAGES 🎁 -->
     <section class="section-packages">
         <div class="section-heading" style="margin-top: 0;">
             <h2>Trending Health Packages</h2>
             <p>Our most popular preventive health checkups.</p>
         </div>
         
-        <div id="homePackageCategories" class="home-cat-nav">
-            <!-- JS Buttons -->
-        </div>
+        <div id="homePackageCategories" class="home-cat-nav"></div>
 
         <div class="slider-wrapper" id="homePackageSlider">
             <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
@@ -363,6 +447,8 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="homeToastContainer" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px;"></div>
 
+    <script src="app.js"></script>
+
     <script>
         // ✨ TEXT & NUMBER FORMATTING FUNCTIONS ✨
         function formatText(text) {
@@ -373,19 +459,7 @@
             return formatted.replace(acronyms, match => match.toUpperCase());
         }
 
-        // Clean numbers like 6.99999 to 6.9 or 7.0
         function formatPrice(price) { return (!price || isNaN(price)) ? 0 : parseFloat(Number(price).toFixed(2)); }
-
-        // 1. Header aur App.js load
-        fetch('header.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('header-container').innerHTML = data;
-                let script = document.createElement('script');
-                script.src = 'app.js';
-                document.body.appendChild(script);
-            })
-            .catch(error => console.error('Error loading header:', error));
 
         function handlePharmacyClick(event) {
             event.preventDefault(); 
@@ -470,8 +544,6 @@
                 if(res.status === "success") {
                     homeAllServices = res.data.services || [];
                     renderHomePackages(); 
-                    
-                    // Activate Drag Scroll
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
                 }
@@ -480,12 +552,10 @@
             updateHomeCartBadge(); 
         });
 
-        // 🌟 DYNAMIC PACKAGES RENDER FUNCTION 🌟
         function renderHomePackages(subCat = homeCurrentSubCat) {
             homeCurrentSubCat = subCat;
             const slider = document.getElementById("homePackageSlider");
             const nav = document.getElementById("homePackageCategories");
-            
             if(!slider || !nav) return;
 
             let packages = homeAllServices.filter(s => 
@@ -528,7 +598,6 @@
                 let cleanCat = formatText(pkg.service_category || 'Package');
                 let s_id = String(pkg.service_id).replace(/'/g, "\\'");
 
-                // ✨ Qty Logic & Buttons ✨
                 const cartItem = cart.find(item => String(item.service_id) === String(pkg.service_id));
                 const inCart = !!cartItem;
                 const currentQty = cartItem ? cartItem.qty : 0;
@@ -573,11 +642,9 @@
                     </div>
                 </div>`;
             });
-
             slider.innerHTML = html;
         }
 
-        // Live Search Update 
         function liveHomeSearch() {
             let query = document.getElementById("globalSearchInput").value.toLowerCase().trim();
             let resultsDiv = document.getElementById("homeSearchResults");
@@ -629,7 +696,6 @@
             resultsDiv.style.display = "block";
         }
 
-        // ✨ CENTRAL ADD TO CART FUNCTION ✨
         function updateHomeQty(id, change, price, name, type) {
             id = String(id);
             let index = cart.findIndex(item => String(item.service_id) === id);
@@ -647,8 +713,8 @@
             
             localStorage.setItem('bhavyaCart', JSON.stringify(cart));
             updateHomeCartBadge();
-            
             renderHomePackages(homeCurrentSubCat); 
+            
             let query = document.getElementById("globalSearchInput").value.trim();
             if(query.length >= 2) { liveHomeSearch(); }
         }

@@ -747,13 +747,20 @@ function initCartPage() {
     calculateFinalBill(); 
 
     const userId = localStorage.getItem("bhavya_user_id");
-    if (userId) { fetchProfile(userId); } 
+    if (userId) { 
+        fetchProfile(userId); 
+    } 
     else { 
         let loader = document.getElementById('loadingOverlay');
         if(loader) loader.style.display = 'none'; 
+        
+        // ✨ FIX YAHAN HUA HAI: Agar user naya hai, toh skeleton hatao aur khali form dikhao ✨
+        let skel = document.getElementById('checkoutFormSkeleton');
+        let form = document.getElementById('actualCheckoutForm');
+        if(skel) skel.style.display = 'none';
+        if(form) form.style.display = 'block';
     }
 }
-
 function fetchProfile(userId) {
     // ✨ Skeleton Loader Dikhana Shuru Karein ✨
     let skel = document.getElementById('checkoutFormSkeleton');

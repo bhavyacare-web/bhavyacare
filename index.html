@@ -32,23 +32,16 @@
             --primary: #2563eb; --primary-light: #eff6ff;
             --secondary: #10b981; --secondary-light: #d1fae5;
             --warning: #f59e0b; --danger: #ef4444;
-            --bg-color: #f4f7f6; --text-main: #0f172a; --text-muted: #64748b;
+            --bg-color: #f8fafc; --text-main: #0f172a; --text-muted: #64748b;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
-        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
-
-        /* ✨ TOP CONTACT BAR ✨ */
-        .top-bar { background: #0f172a; color: #cbd5e1; padding: 8px 40px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; font-weight: 600;}
-        .top-bar-links { display: flex; gap: 20px; align-items: center;}
-        .top-bar a { color: #cbd5e1; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.2s;}
-        .top-bar a:hover { color: white; }
-        .top-bar .highlight { color: #facc15; }
-        .top-bar .whatsapp { color: #25D366; }
+        
+        /* 🛠️ PREVENT HORIZONTAL SCROLL 🛠️ */
+        html, body { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; width: 100vw; max-width: 100%; -webkit-tap-highlight-color: transparent; }
+        *, *::before, *::after { box-sizing: inherit; }
 
         /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
         .logo img { height: 45px; object-fit: contain; display: block;}
-        
         .nav-actions { display: flex; align-items: center; gap: 15px; }
         .nav-btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
         .login-btn { background-color: var(--primary); }
@@ -58,7 +51,6 @@
         .user-profile-btn { background: #f4f7f6; color: var(--primary); border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .user-profile-btn:hover { background: #e6f0fa; }
         
-        /* Dropdown Modifications for New Pages */
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
         .dropbtn:hover { color: var(--primary); }
@@ -77,68 +69,75 @@
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
-        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 50px 20px 40px; text-align: center; }
-        .section-pillars { background: #ffffff; padding: 30px 20px; }
-        .section-trust { background: #f8fafc; padding: 25px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-categories { background: #ffffff; padding: 40px 20px; }
-        .section-packages { background: #f1f5f9; padding: 50px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #ffffff; padding: 50px 20px; }
+        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 60px 20px 50px; text-align: center; }
+        .section-pillars { background: #ffffff; padding: 40px 20px; }
+        .section-trust { background: #f8fafc; padding: 30px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-categories { background: #ffffff; padding: 50px 20px; }
+        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 60px 20px; }
 
         /* 🌟 HERO & SEARCH SECTION 🌟 */
-        .hero-title { font-size: 38px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.3;}
+        .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 15px; letter-spacing: -1px; line-height: 1.2;}
         .hero-title span { color: var(--primary); }
-        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 30px; font-weight: 500; line-height: 1.6;}
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 35px; font-weight: 500; line-height: 1.6;}
         
+        /* ✨ PROMINENT QUICK ACTIONS ✨ */
+        .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto 35px; max-width: 800px; flex-wrap: wrap;}
+        .btn-quick { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
+        .btn-quick:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .call-btn { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
+        .wa-btn { background: #10b981; color: white; border: 1px solid #059669; }
+        .rx-btn { background: #8b5cf6; color: white; border: 1px solid #7c3aed; }
+
         .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
-        .search-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
+        .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
 
         /* ⚡ 3 MAIN PILLARS */
-        .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .service-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center;}
+        .main-services-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .service-card { background: white; border-radius: 20px; padding: 30px 15px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.3s; display: flex; flex-direction: column; align-items: center;}
         .service-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(37,99,235,0.1); border-color: #93c5fd;}
-        .service-icon { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 12px;}
+        .service-icon { width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 15px;}
         .sc-lab .service-icon { background: #eff6ff; color: #2563eb; }
         .sc-doc .service-icon { background: #f0fdf4; color: #10b981; }
         .sc-med .service-icon { background: #faf5ff; color: #c026d3; }
-        .service-card h3 { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0 0 5px;}
-        .service-card p { color: #64748b; font-size: 13px; margin: 0; font-weight: 600; line-height: 1.4;}
+        .service-card h3 { color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 8px;}
+        .service-card p { color: #64748b; font-size: 14px; margin: 0; font-weight: 600; line-height: 1.4;}
 
         /* 🛡️ TRUST BADGES */
-        .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;}
-        .trust-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #334155;}
-        .trust-item i { color: var(--secondary); font-size: 20px;}
+        .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 30px;}
+        .trust-item { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #334155;}
+        .trust-item i { color: var(--secondary); font-size: 22px;}
 
         /* 🗂️ QUICK CATEGORIES */
-        .section-heading { text-align: center; margin-bottom: 30px;}
-        .section-heading h2 { font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;}
-        .section-heading p { color: #64748b; font-size: 14px; margin-top: 8px; font-weight: 600;}
+        .section-heading { text-align: center; margin-bottom: 35px;}
+        .section-heading h2 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0;}
+        .section-heading p { color: #64748b; font-size: 15px; margin-top: 8px; font-weight: 600;}
 
-        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;}
-        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; width: 85px;}
-        .cat-circle { width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
+        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap;}
+        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
+        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
-        .cat-item span { font-size: 13px; font-weight: 700; color: #334155; text-align: center;}
-
-        /* 👑 VIP BANNER */
-        .vip-banner { max-width: 1000px; margin: 20px auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
-        .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
-        .vip-content { flex: 1; padding: 35px 40px; z-index: 2; position: relative;}
-        .vip-content h2 { font-size: 24px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
-        .vip-content p { font-size: 14px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500;}
-        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-size: 15px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer;}
+        .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
         
-        /* 🎁 PREMIUM TRENDING PACKAGES SLIDER */
-        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab;}
+        .vip-banner { max-width: 1000px; margin: 40px auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
+        .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
+        .vip-content { flex: 1; padding: 40px; z-index: 2; position: relative;}
+        .vip-content h2 { font-size: 26px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
+        .vip-content p { font-size: 15px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.6; font-weight: 500;}
+        .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 15px 35px; border-radius: 12px; font-size: 16px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);}
+
+        /* 🎁 TRENDING PACKAGES */
+        .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab; -webkit-overflow-scrolling: touch;}
         .home-cat-nav::-webkit-scrollbar { display: none; }
-        .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); user-select: none;}
+        .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; user-select: none;}
         .home-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 6px 15px rgba(37,99,235,0.25);}
 
-        .slider-wrapper { max-width: 1020px; margin: 0 auto; overflow-x: auto; display: flex; gap: 20px; padding: 15px 10px 30px; cursor: grab; }
+        .slider-wrapper { max-width: 1020px; margin: 0 auto; overflow-x: auto; display: flex; gap: 20px; padding: 15px 10px 30px; cursor: grab; -webkit-overflow-scrolling: touch;}
         .slider-wrapper::-webkit-scrollbar { display: none; }
         
-        .pkg-card { min-width: 330px; background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; user-select: none;}
+        .pkg-card { min-width: 330px; background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; user-select: none;}
         .pkg-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(37,99,235,0.12); border-color: #93c5fd;}
         .pkg-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .pkg-cat-badge { background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -163,20 +162,21 @@
 
         /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s;}
-        .hiw-icon { width: 70px; height: 70px; border-radius: 20px; background: white; color: var(--primary); font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
-        .hiw-step h4 { font-size: 18px; font-weight: 800; margin: 0; color: #1e293b;}
-        .hiw-step p { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
+        .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #f8fafc; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s;}
+        .hiw-step:hover { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px);}
+        .hiw-icon { width: 80px; height: 80px; border-radius: 20px; background: white; color: var(--primary); font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,0.15);}
+        .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
+        .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
 
-        /* ✨ AGGREGATOR SECTION (WHO WE ARE) ✨ */
+        /* ✨ AGGREGATOR SECTION ✨ */
         .section-about { background: #f8fafc; padding: 60px 20px; text-align: center; border-top: 1px solid #e2e8f0; }
-        .about-box { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
-        .about-box h2 { font-size: 24px; color: #1e293b; margin-bottom: 15px; font-weight: 800;}
+        .about-box { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
+        .about-box h2 { font-size: 26px; color: #1e293b; margin-bottom: 15px; font-weight: 800;}
         .about-box p { font-size: 15px; color: #475569; line-height: 1.7; margin-bottom: 25px; font-weight: 500;}
         .badge-wrap { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;}
         .badge-wrap span { background: #eff6ff; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 6px;}
 
-        /* ✨ FOOTER CSS ✨ */
+        /* ✨ MEGA FOOTER ✨ */
         .footer { background: #0f172a; color: #94a3b8; padding: 60px 40px 20px; font-size: 14px;}
         .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; border-bottom: 1px solid #334155; padding-bottom: 40px; margin-bottom: 20px;}
         .footer-col h3 { color: white; font-size: 18px; margin-bottom: 20px; font-weight: 700;}
@@ -187,50 +187,77 @@
 
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        /* 📱 MOBILE OPTIMIZATION */
+        /* 📱 100% PERFECT MOBILE OPTIMIZATION 📱 */
         @media (max-width: 768px) {
-            .top-bar { flex-direction: column; gap: 10px; padding: 10px 15px; text-align: center; }
-            .top-bar-links { flex-wrap: wrap; justify-content: center; }
             .navbar { padding: 15px 20px; }
             .logo img { height: 35px; } 
             
+            /* Reduced paddings to save space and fit screen */
             .section-hero { padding: 40px 15px 30px; }
             .section-pillars, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
-            .section-categories { padding: 30px 0; } 
+            .section-trust { padding: 25px 10px; }
+            .section-categories { padding: 30px 15px; } 
             
-            .search-container { padding: 8px; border-radius: 16px; margin: 20px 15px 0;}
-            .main-services-grid { gap: 12px; grid-template-columns: 1fr; }
-            .service-card { padding: 18px; flex-direction: row; text-align: left; justify-content: flex-start;}
-            .service-icon { margin: 0 15px 0 0; width: 50px; height: 50px; font-size: 22px;}
+            .hero-title { font-size: 28px; line-height: 1.3; margin-bottom: 10px;}
+            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 25px;}
             
-            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0 15px;}
+            /* ✨ HERO QUICK ACTIONS (MOBILE 3 COLUMNS) ✨ */
+            .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; width: 100%;}
+            .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
+            .btn-quick i { font-size: 22px; }
+
+            .search-container { padding: 8px; border-radius: 16px; margin: 0 auto;}
+            .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
+            .search-container i.fa-search { font-size: 16px; left: 16px;}
+            .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
+            
+            .main-services-grid { gap: 15px; grid-template-columns: 1fr; }
+            .service-card { padding: 20px; flex-direction: row; text-align: left; justify-content: flex-start;}
+            .service-icon { margin: 0 15px 0 0; width: 55px; height: 55px; font-size: 24px;}
+            
+            .trust-grid { gap: 10px; }
+            .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 8px; background: white; border: 1px solid #e2e8f0;}
+            
+            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0;}
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
             
-            .categories-grid { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 15px; gap: 15px;}
-            .categories-grid::-webkit-scrollbar { display: none; }
+            /* 🚀 FIX: FULL BLEED HORIZONTAL SCROLLS SO THEY DON'T BREAK THE PAGE 🚀 */
+            .categories-grid, .home-cat-nav, .slider-wrapper { 
+                margin-left: -15px; 
+                margin-right: -15px; 
+                padding-left: 15px; 
+                padding-right: 15px; 
+                width: calc(100% + 30px);
+                flex-wrap: nowrap; 
+                overflow-x: auto; 
+                justify-content: flex-start;
+            }
+            .cat-item { flex: 0 0 auto; width: 70px; gap: 6px;}
+            .cat-circle { width: 60px; height: 60px; font-size: 24px;}
+            .cat-item span { font-size: 11px;}
             
+            .pkg-card { min-width: 280px; padding: 18px; }
+            .pkg-title { font-size: 16px; }
+            .pkg-basic-price { font-size: 20px; }
+            .btn-add-cart { padding: 8px 18px; font-size: 13px; }
+
             .hiw-grid { grid-template-columns: 1fr; gap: 15px;}
             .hiw-step { flex-direction: row; text-align: left; padding: 20px 15px;}
-            .hiw-icon { margin-right: 15px; flex-shrink: 0; width: 55px; height: 55px; font-size: 22px;}
+            .hiw-icon { margin-right: 15px; margin-bottom:0; flex-shrink: 0; width: 60px; height: 60px; font-size: 24px;}
             
-            .about-box { padding: 25px 15px; }
-            .footer { padding: 40px 20px 20px; }
+            .about-box { padding: 25px 15px; border-radius: 16px; }
+            .about-box h2 { font-size: 20px; }
+            
+            /* 🚀 FOOTER MOBILE FIX 🚀 */
+            .footer { padding: 40px 20px 20px; text-align: left;}
             .footer-grid { grid-template-columns: 1fr; gap: 30px; }
+            .footer-col h3 { font-size: 16px; margin-bottom: 12px; }
+            .footer-col a { justify-content: flex-start; margin-bottom: 10px;}
         }
     </style>
 </head>
 <body>
-
-    <!-- ✨ TOP CONTACT BAR ✨ -->
-    <div class="top-bar">
-        <div><i class="fas fa-map-marker-alt" style="color: var(--secondary); margin-right: 5px;"></i> Shakti Nagar, Bahadurgarh, Haryana</div>
-        <div class="top-bar-links">
-            <a href="tel:8950112467"><i class="fas fa-phone-alt"></i> Book by Call: 8950112467</a>
-            <a href="https://wa.me/918950112467" class="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Booking</a>
-            <a href="prescription.html" class="highlight"><i class="fas fa-file-prescription"></i> Upload Rx</a>
-        </div>
-    </div>
 
     <!-- 🌟 MERGED HEADER 🌟 -->
     <header class="navbar">
@@ -248,13 +275,11 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
-                    <!-- Dashboard & Admin -->
                     <a href="admin.html" id="menu-admin"><i class="fas fa-shield-alt" style="color: #17a2b8; width: 20px;"></i> Admin Panel</a>
                     <a href="#" id="menu-join" onclick="openPartnerLogin()"><i class="fas fa-handshake" style="color: var(--primary); width: 20px;"></i> Join Us (Partner)</a>
                     <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
                     
                     <hr>
-                    <!-- ✨ NEW ESSENTIAL PAGES ✨ -->
                     <a href="prescription.html"><i class="fas fa-upload" style="color: #8b5cf6; width: 20px;"></i> Upload Prescription</a>
                     <a href="terms.html"><i class="fas fa-file-contract" style="color: #64748b; width: 20px;"></i> Terms & Conditions</a>
                     <a href="privacy.html"><i class="fas fa-user-shield" style="color: #64748b; width: 20px;"></i> Privacy Policy</a>
@@ -271,7 +296,6 @@
     <!-- 🌟 MERGED LOGIN SECTION 🌟 -->
     <div id="login-section">
         <button onclick="closeLoginPopup()" style="position:absolute; top:15px; right:15px; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-times"></i></button>
-        
         <h3 id="form-title">Login / Sign Up</h3>
         <div id="phone-section">
             <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
@@ -304,6 +328,13 @@
         <h1 class="hero-title">Complete Health Partner<br><span>Consult, Test & Heal.</span></h1>
         <p class="hero-subtitle">India's most trusted digital healthcare platform. Get accurate reports, expert doctor consultations, and medicines delivered at home.</p>
         
+        <!-- ✨ QUICK ACTIONS IN HERO (NEW) ✨ -->
+        <div class="hero-quick-actions">
+            <a href="tel:8950112467" class="btn-quick call-btn"><i class="fas fa-phone-alt"></i> <span>Book by Call</span></a>
+            <a href="https://wa.me/918950112467" class="btn-quick wa-btn"><i class="fab fa-whatsapp"></i> <span>WhatsApp Booking</span></a>
+            <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Rx</span></a>
+        </div>
+
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
@@ -439,7 +470,7 @@
                 <a href="terms.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Terms & Conditions</a>
                 <a href="privacy.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Privacy Policy</a>
                 <a href="refund.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Refund & Cancellation</a>
-                <a href="about.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
+                <a href="contact.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
             </div>
 
             <div class="footer-col">

@@ -40,7 +40,7 @@
         /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
         
-        /* ✨ NAYA LOGO STYLE ✨ */
+        /* ✨ LOGO STYLE ✨ */
         .logo img { height: 45px; object-fit: contain; display: block;}
         
         .nav-actions { display: flex; align-items: center; gap: 15px; }
@@ -60,11 +60,11 @@
         .show-menu { display: block; }
 
         /* Login Popup Section CSS */
-        #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; text-align: center; display: none; position: fixed; top: 70px; right: 40px; z-index: 999; }
-        #login-section h3 { color: #333; margin-bottom: 20px; }
-        .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
-        .input-box:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(37, 99, 235, 0.2); }
-        .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius: 16px; text-align: center; display: none; position: fixed; top: 70px; right: 40px; z-index: 999; }
+        #login-section h3 { color: #333; margin-bottom: 20px; font-size: 22px; font-weight: 800;}
+        .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
+        .input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .action-btn:hover { background-color: #059669; }
         .support-text { font-size: 12px; color: #888; margin-top: 15px; }
 
@@ -176,13 +176,13 @@
         /* 📱 MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
-            .logo img { height: 35px; } /* Mobile par logo thoda chhota */
+            .logo img { height: 35px; } 
             #login-section { right: 5%; width: 90%; top: 60px;}
 
             .section-hero { padding: 40px 15px 30px; }
             .section-pillars { padding: 20px 15px 30px; }
             .section-trust { padding: 20px 10px; }
-            .section-categories { padding: 30px 0; } /* Padding 0 kiya scrolling ke liye */
+            .section-categories { padding: 30px 0; } 
             .section-packages { padding: 40px 15px; }
             .section-hiw { padding: 40px 15px; }
 
@@ -206,15 +206,7 @@
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
             
-            /* ✨ MOBILE CATEGORIES GRID TO HORIZONTAL SCROLL ✨ */
-            .categories-grid { 
-                flex-wrap: nowrap; 
-                overflow-x: auto; 
-                justify-content: flex-start; 
-                padding: 10px 15px; 
-                gap: 15px;
-                scroll-behavior: smooth;
-            }
+            .categories-grid { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 15px; gap: 15px; scroll-behavior: smooth;}
             .categories-grid::-webkit-scrollbar { display: none; }
             .cat-item { flex: 0 0 auto; width: 65px; gap: 6px;}
             .cat-circle { width: 55px; height: 55px; font-size: 22px;}
@@ -237,12 +229,12 @@
     <!-- 🌟 MERGED HEADER 🌟 -->
     <header class="navbar">
         <div class="logo">
-            <!-- Naya Logo Add Kiya Hai (Path check kar lena agar jarurat pade) -->
-            <img src="image/bhavyacarelogo.png" alt="BhavyaCare">
+            <!-- Ensure image name & format match your folder exactly (.png or .jpeg) -->
+            <img src="image/bhavyacarelogo.png" alt="BhavyaCare" onerror="this.onerror=null; this.src='image/bhavyacarelogo.jpeg'; if(this.src.includes('jpeg')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+            <h2 style="display:none; color: #0056b3; font-size: 26px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
         </div>
         
         <div class="nav-actions">
-            <!-- Admin button ab yahan nahi hai -->
             <button id="nav-login-btn" class="nav-btn login-btn" onclick="openPatientLogin()">Login</button>
             
             <div class="dropdown">
@@ -251,7 +243,6 @@
                     <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
                 </div>
                 <div id="myDropdown" class="dropdown-content">
-                    <!-- Admin Button Menu ke andar daal diya hai -->
                     <a href="admin.html" id="menu-admin"><i class="fas fa-shield-alt" style="color: #17a2b8; width: 20px;"></i> Admin Panel</a>
                     <a href="#" id="menu-join" onclick="openPartnerLogin()"><i class="fas fa-handshake" style="color: var(--primary); width: 20px;"></i> Join Us (Partner)</a>
                     <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
@@ -263,6 +254,9 @@
 
     <!-- 🌟 MERGED LOGIN SECTION 🌟 -->
     <div id="login-section">
+        <!-- ✨ Added the "X" Close Button Here ✨ -->
+        <button onclick="closeLoginPopup()" style="position:absolute; top:15px; right:15px; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-times"></i></button>
+        
         <h3 id="form-title">Login / Sign Up</h3>
         
         <div id="phone-section">
@@ -541,25 +535,26 @@
             });
         }
 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+        // ✨ NAYA NAAM: Taki app.js se jhagda na kare! ✨
+        const HOME_GAS_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
         let homeAllServices = [];
         let homeCurrentSubCat = 'all';
-        let cart = [];
+        let homePageCart = []; // ✨ NAYA NAAM: Taki app.js ki cart se jhagda na kare ✨
 
         document.addEventListener("DOMContentLoaded", () => {
             try {
                 let stored = localStorage.getItem('bhavyaCart');
-                if (stored) { cart = JSON.parse(stored); }
-            } catch (e) { cart = []; }
+                if (stored) { homePageCart = JSON.parse(stored); }
+            } catch (e) { homePageCart = []; }
 
-            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: "" }) })
+            fetch(HOME_GAS_URL, { method: 'POST', body: JSON.stringify({ action: "getBookingData", user_id: "" }) })
             .then(r => r.json()).then(res => {
                 if(res.status === "success") {
                     homeAllServices = res.data.services || [];
                     renderHomePackages(); 
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
-                    enableDragScroll('.categories-grid'); // Mobile icons horizontal scroll drag support
+                    enableDragScroll('.categories-grid'); 
                 }
             }).catch(e => console.log("Silent fetch error", e));
             
@@ -612,7 +607,7 @@
                 let cleanCat = homeFormatText(pkg.service_category || 'Package');
                 let s_id = String(pkg.service_id).replace(/'/g, "\\'");
 
-                const cartItem = cart.find(item => String(item.service_id) === String(pkg.service_id));
+                const cartItem = homePageCart.find(item => String(item.service_id) === String(pkg.service_id));
                 const inCart = !!cartItem;
                 const currentQty = cartItem ? cartItem.qty : 0;
                 
@@ -683,7 +678,7 @@
                 let cleanType = String(s.service_type || '').replace(/'/g, "\\'");
                 let s_id = String(s.service_id).replace(/'/g, "\\'");
 
-                const cartItem = cart.find(item => String(item.service_id) === String(s.service_id));
+                const cartItem = homePageCart.find(item => String(item.service_id) === String(s.service_id));
                 const inCart = !!cartItem;
                 const currentQty = cartItem ? cartItem.qty : 0;
                 
@@ -712,20 +707,20 @@
 
         function updateHomeQty(id, change, price, name, type) {
             id = String(id);
-            let index = cart.findIndex(item => String(item.service_id) === id);
+            let index = homePageCart.findIndex(item => String(item.service_id) === id);
             
             if (index > -1) {
-                cart[index].qty += change;
-                if (cart[index].qty <= 0) {
-                    cart.splice(index, 1); 
+                homePageCart[index].qty += change;
+                if (homePageCart[index].qty <= 0) {
+                    homePageCart.splice(index, 1); 
                     showHomeToast("Item removed from Cart.", "info");
                 }
             } else if (change > 0) { 
-                cart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
+                homePageCart.push({ service_id: id, service_name: name, price: price, qty: 1, service_type: type }); 
                 showHomeToast("Item Added to Cart! 🛒", "success");
             }
             
-            localStorage.setItem('bhavyaCart', JSON.stringify(cart));
+            localStorage.setItem('bhavyaCart', JSON.stringify(homePageCart));
             updateHomeCartBadge();
             renderHomePackages(homeCurrentSubCat); 
             
@@ -734,7 +729,7 @@
         }
 
         function updateHomeCartBadge() {
-            let totalItems = cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+            let totalItems = homePageCart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
             let floatingBtn = document.getElementById("homeFloatingCart");
             let badge = document.getElementById("homeCartBadge");
             

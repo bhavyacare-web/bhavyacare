@@ -350,26 +350,38 @@ function filterSupport() {
     renderSupportTable(filteredData);
 }
 
+// ==========================================
+// 3. SUPPORT QUERIES LOGIC
+// ==========================================
 function renderSupportTable(data) {
     const tableBody = document.getElementById("supportTableBody");
     tableBody.innerHTML = "";
     if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No records found.</td></tr>"; return; }
     
     data.forEach((q) => {
-        let statusColor = q.Status === "Open" ? "status-pending" : "status-active";
+        let statusColor = q.status === "Open" ? "status-pending" : "status-active";
         tableBody.innerHTML += `
             <tr>
-                <td><strong>${q.Ticket_ID}</strong><br><span style="font-size:11px; color:#888;">${q.Date}</span></td>
-                <td><strong>${q.Name}</strong><br><span style="font-size:11px; color:#555;">📞 ${q.Mobile}</span><br><span class="badge-btn status-primary" style="padding:2px 6px;font-size:10px; margin-top:5px;">${q.User_Type}</span></td>
-                <td style="font-weight:bold; color:#0056b3;">${q.Issue_Type}</td>
-                <td>${q.Order_ID || "-"}</td>
-                <td style="max-width:250px; word-wrap:break-word; font-size:13px; line-height:1.4;">${q.Message}</td>
-                <td><span class="badge-btn ${statusColor}">${q.Status}</span></td>
-                <td><button class="action-btn" style="background:#28a745; width:auto; font-size:12px; padding:6px 10px;" onclick="resolveSupport('${q.Ticket_ID}')">Mark Resolved</button></td>
+                <td><strong>${q.ticket_id}</strong><br><span style="font-size:11px; color:#888;">${q.date}</span></td>
+                <td><strong>${q.name}</strong><br><span style="font-size:11px; color:#555;">📞 ${q.mobile}</span><br><span class="badge-btn status-primary" style="padding:2px 6px;font-size:10px; margin-top:5px;">${q.user_type}</span></td>
+                <td style="font-weight:bold; color:#0056b3;">${q.issue_type}</td>
+                <td>${q.order_id || "-"}</td>
+                <td style="max-width:250px; word-wrap:break-word; font-size:13px; line-height:1.4;">${q.message}</td>
+                <td><span class="badge-btn ${statusColor}">${q.status || "Open"}</span></td>
+                <td><button class="action-btn" style="background:#28a745; width:auto; font-size:12px; padding:6px 10px;" onclick="resolveSupport('${q.ticket_id}')">Mark Resolved</button></td>
             </tr>`;
     });
 }
 
+function filterSupport() {
+    const query = document.getElementById("supportSearch").value.toLowerCase();
+    const filteredData = allSupportData.filter(q => 
+        (q.ticket_id && q.ticket_id.toLowerCase().includes(query)) || 
+        (q.name && q.name.toLowerCase().includes(query)) || 
+        (q.mobile && q.mobile.includes(query))
+    );
+    renderSupportTable(filteredData);
+}
 async function resolveSupport(ticketId) {
     if(!confirm(`Mark Ticket ${ticketId} as Resolved?`)) return;
     alert("Functionality to update sheet status for Ticket: " + ticketId + " can be integrated here.");
@@ -410,26 +422,39 @@ function filterRx() {
     renderRxTable(filteredData);
 }
 
+// ==========================================
+// 4. PRESCRIPTIONS LOGIC
+// ==========================================
 function renderRxTable(data) {
     const tableBody = document.getElementById("rxTableBody");
     tableBody.innerHTML = "";
     if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No records found.</td></tr>"; return; }
     
     data.forEach((r) => {
-        let statusColor = r.Status === "Pending" ? "status-pending" : "status-active";
-        let fileLink = r.Prescription_URL ? `<a href="${r.Prescription_URL}" target="_blank" style="color:#0056b3; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a>` : "N/A";
+        let statusColor = r.status === "Pending" ? "status-pending" : "status-active";
+        let fileLink = r.prescription_url ? `<a href="${r.prescription_url}" target="_blank" style="color:#0056b3; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a>` : "N/A";
         
         tableBody.innerHTML += `
             <tr>
-                <td><strong>${r.Prescription_ID}</strong><br><span style="font-size:11px; color:#888;">${r.Upload_Date}</span></td>
-                <td><strong>User ID:</strong> ${r.user_id}<br><strong>📞 Mobile:</strong> ${r.Mobile_Number}</td>
+                <td><strong>${r.prescription_id}</strong><br><span style="font-size:11px; color:#888;">${r.upload_date}</span></td>
+                <td><strong>User ID:</strong> ${r.user_id}<br><strong>📞 Mobile:</strong> ${r.mobile_number}</td>
                 <td>${fileLink}</td>
-                <td style="max-width:200px; word-wrap:break-word; font-size:13px; line-height:1.4;">${r.Patient_Notes || "-"}</td>
-                <td>${r.Linked_Order_ID || "-"}</td>
-                <td><span class="badge-btn ${statusColor}">${r.Status}</span></td>
-                <td><button class="action-btn" style="background:#0056b3; width:auto; font-size:12px; padding:6px 10px;" onclick="processRx('${r.Prescription_ID}')">Process Order</button></td>
+                <td style="max-width:200px; word-wrap:break-word; font-size:13px; line-height:1.4;">${r.patient_notes || "-"}</td>
+                <td>${r.linked_order_id || "-"}</td>
+                <td><span class="badge-btn ${statusColor}">${r.status || "Pending"}</span></td>
+                <td><button class="action-btn" style="background:#0056b3; width:auto; font-size:12px; padding:6px 10px;" onclick="processRx('${r.prescription_id}')">Process Order</button></td>
             </tr>`;
     });
+}
+
+function filterRx() {
+    const query = document.getElementById("rxSearch").value.toLowerCase();
+    const filteredData = allRxData.filter(r => 
+        (r.prescription_id && r.prescription_id.toLowerCase().includes(query)) || 
+        (r.user_id && r.user_id.toLowerCase().includes(query)) || 
+        (r.mobile_number && r.mobile_number.includes(query))
+    );
+    renderRxTable(filteredData);
 }
 
 async function processRx(rxId) {

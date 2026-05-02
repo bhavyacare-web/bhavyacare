@@ -136,15 +136,20 @@
 <div id="toast-container"></div>
 
 <script>
-    // Aapke Google App Script ka URL yahan dalein
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = localStorage.getItem("bhavya_user_id");
         
-        // Agar user login hai (BhavyaCare ID exist karti hai)
+        // Helper function to get exact 10 digits
+        const getClean10DigitMobile = (rawNum) => {
+            if(!rawNum) return "";
+            let clean = rawNum.toString().replace(/\D/g, ''); 
+            if(clean.length > 10) clean = clean.slice(-10); 
+            return clean;
+        };
+
         if (userId) {
-            // Set back button link to dashboard
             const backLink = document.getElementById("backLink");
             if(backLink) {
                 backLink.onclick = (e) => {
@@ -153,7 +158,6 @@
                 };
             }
 
-            // Sheet se fresh data fetch karne ki API call
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
@@ -165,29 +169,28 @@
                 if (resData.status === "success") {
                     const patient = resData.data;
                     
-                    // Auto-fill from Sheet & Lock the fields
                     const nameInput = document.getElementById("supName");
                     nameInput.value = patient.patient_name;
                     nameInput.readOnly = true;
-                    nameInput.style.backgroundColor = "#e2e8f0"; // Grey out slightly
+                    nameInput.style.backgroundColor = "#e2e8f0";
 
+                    // Fixed 10 digit logic
                     const mobileInput = document.getElementById("supMobile");
-                    mobileInput.value = patient.mobile_number.replace("+91", "").trim();
+                    mobileInput.value = getClean10DigitMobile(patient.mobile_number);
                     mobileInput.readOnly = true;
                     mobileInput.style.backgroundColor = "#e2e8f0";
 
                     const roleSelect = document.getElementById("supUserType");
                     roleSelect.value = "Patient";
-                    roleSelect.style.pointerEvents = "none"; // Lock dropdown
+                    roleSelect.style.pointerEvents = "none";
                     roleSelect.style.backgroundColor = "#e2e8f0";
                 }
             } catch(e) {
-                console.log("Could not auto-fill from sheet. Falling back to local storage.", e);
-                // Fallback to local storage if network fails
+                console.log("Could not auto-fill from sheet. Falling back to local storage.");
                 const savedName = localStorage.getItem("bhavya_name");
                 const savedMobile = localStorage.getItem("bhavya_mobile");
                 if(savedName) document.getElementById("supName").value = savedName;
-                if(savedMobile) document.getElementById("supMobile").value = savedMobile.replace("+91", "").trim();
+                if(savedMobile) document.getElementById("supMobile").value = getClean10DigitMobile(savedMobile);
             }
         }
         
@@ -242,7 +245,6 @@
                 showToast("Request submitted successfully! Our team will contact you soon.", "success");
                 document.getElementById("supOrderId").value = "";
                 document.getElementById("supMessage").value = "";
-                // Note: We are not resetting the whole form so the locked Name/Mobile don't get cleared.
             } else {
                 showToast("Error: " + resData.message, "error");
             }

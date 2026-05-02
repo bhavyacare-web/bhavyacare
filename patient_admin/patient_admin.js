@@ -332,12 +332,18 @@ async function fetchSupportData() {
         loader.style.display = "none";
 
         if (result.status === "success") {
-            allSupportData = result.data;
+            allSupportData = result.data || [];
             renderSupportTable(allSupportData);
         } else {
-            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No queries found.</td></tr>";
+            // YAHAN ERROR DIKHEGA AGAR BACKEND FAIL HUA
+            tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red; font-weight:bold;'>Backend Error: ${result.message}</td></tr>`;
+            console.error("Backend Error:", result);
         }
-    } catch (error) { loader.innerHTML = "❌ Network Error!"; }
+    } catch (error) { 
+        loader.style.display = "none";
+        tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red;'>❌ Network/Parsing Error! Please check URL or Deployment.</td></tr>`;
+        console.error("Fetch Error:", error); 
+    }
 }
 
 function filterSupport() {

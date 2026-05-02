@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Help & Support - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --success: #10b981; --warning: #f59e0b; --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-color); margin: 0; padding-bottom: 40px; color: var(--text-main); }
+        
+        .header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);}
+        .back-btn { background: #eff6ff; color: var(--primary); border: none; padding: 10px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px;}
+        
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        
+        .page-title { text-align: center; margin-bottom: 30px; }
+        .page-title h1 { margin: 0 0 10px 0; font-size: 28px; font-weight: 800; color: var(--text-main); }
+        .page-title p { margin: 0; color: var(--text-muted); font-size: 15px; }
+
+        .contact-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .c-card { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: 0.3s; text-decoration: none; color: inherit; display: block;}
+        .c-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1); }
+        .c-card i { font-size: 30px; margin-bottom: 12px; }
+        .c-card h4 { margin: 0 0 5px 0; font-size: 16px; font-weight: 700; }
+        .c-card p { margin: 0; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+        .form-card { background: var(--card-bg); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border); margin-bottom: 30px;}
+        .form-card h3 { margin: 0 0 20px 0; color: var(--primary); display: flex; align-items: center; gap: 8px;}
+        
+        .form-group { margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; transition: 0.3s; font-family: inherit;}
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; }
+
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; font-size: 16px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); margin-top: 10px;}
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+        /* Toast CSS */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;}
+        .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: var(--success); } .toast.error { background: #ef4444; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-card { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="index.html" class="back-btn" id="backLink"><i class="fas fa-arrow-left"></i> Back</a>
+    <h3 style="margin:0; font-size:18px; color:var(--text-main);">BhavyaCare</h3>
+</div>
+
+<div class="container">
+    <div class="page-title">
+        <h1>How can we help you?</h1>
+        <p>We are here to assist you with your bookings, reports, and technical issues.</p>
+    </div>
+
+    <!-- Quick Contact Cards -->
+    <div class="contact-cards">
+        <a href="https://wa.me/918950112467" target="_blank" class="c-card">
+            <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+            <h4>WhatsApp Support</h4>
+            <p>+91 8950112467</p>
+        </a>
+        <a href="tel:8950112467" class="c-card">
+            <i class="fas fa-phone-alt" style="color: var(--primary);"></i>
+            <h4>Call Us</h4>
+            <p>+91 8950112467</p>
+        </a>
+        <a href="mailto:support@bhavyacare.com" class="c-card">
+            <i class="fas fa-envelope" style="color: var(--warning);"></i>
+            <h4>Email Us</h4>
+            <p>support@bhavyacare.com</p>
+        </a>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="form-card">
+        <h3><i class="fas fa-paper-plane"></i> Send us a message</h3>
+        <form id="supportForm">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="supName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input type="tel" id="supMobile" placeholder="10-digit mobile number" maxlength="10" required>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>You are a... *</label>
+                    <select id="supUserType" required>
+                        <option value="Patient">Patient</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Lab/Diagnostic">Lab / Diagnostic Center</option>
+                        <option value="Pharmacy">Pharmacy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>What is the issue regarding? *</label>
+                    <select id="supIssueType" required>
+                        <option value="Booking/Appointment">Booking / Appointment</option>
+                        <option value="Refund/Payment">Refund / Payment Issue</option>
+                        <option value="Delay in Report/Medicine">Delay in Report / Medicine</option>
+                        <option value="Technical Error">App/Website Technical Error</option>
+                        <option value="Other General Query">Other General Query</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Order ID / Appointment ID (Optional)</label>
+                <input type="text" id="supOrderId" placeholder="E.g., ORD-12345">
+            </div>
+
+            <div class="form-group">
+                <label>Describe your issue in detail *</label>
+                <textarea id="supMessage" rows="4" placeholder="Please write your problem here so our team can help you faster..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Auto-fill if user is logged in
+        const savedName = localStorage.getItem("bhavya_name");
+        const savedMobile = localStorage.getItem("bhavya_mobile");
+        const savedRole = localStorage.getItem("bhavya_role");
+        
+        if (savedName) document.getElementById("supName").value = savedName;
+        if (savedMobile) document.getElementById("supMobile").value = savedMobile.replace("+91", "").trim();
+        
+        if (savedRole) {
+            let roleSelect = document.getElementById("supUserType");
+            if(savedRole === "patient") roleSelect.value = "Patient";
+            else if(savedRole === "doctor") roleSelect.value = "Doctor";
+            else if(savedRole === "lab") roleSelect.value = "Lab/Diagnostic";
+            else if(savedRole === "pharmacy") roleSelect.value = "Pharmacy";
+        }
+
+        // Set back button link
+        if (localStorage.getItem("bhavya_user_id")) {
+            document.getElementById("backLink").onclick = (e) => {
+                e.preventDefault();
+                window.history.back();
+            };
+        }
+        
+        document.getElementById("supportForm").addEventListener("submit", handleSupportSubmit);
+    });
+
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        let icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    async function handleSupportSubmit(e) {
+        e.preventDefault();
+        
+        const mobile = document.getElementById("supMobile").value.trim();
+        const btn = document.getElementById("btnSubmit");
+
+        if(mobile.length !== 10 || isNaN(mobile)) { 
+            showToast("Enter a valid 10-digit mobile number.", "error"); 
+            return; 
+        }
+
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
+        btn.disabled = true;
+
+        try {
+            const payload = {
+                action: "submitContactQuery",
+                user_id: localStorage.getItem("bhavya_user_id") || "GUEST",
+                name: document.getElementById("supName").value.trim(),
+                mobile: mobile,
+                user_type: document.getElementById("supUserType").value,
+                issue_type: document.getElementById("supIssueType").value,
+                order_id: document.getElementById("supOrderId").value.trim(),
+                message: document.getElementById("supMessage").value.trim()
+            };
+
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const resData = await response.json();
+
+            if(resData.status === "success") {
+                showToast("Request submitted successfully! Our team will contact you soon.", "success");
+                document.getElementById("supportForm").reset();
+            } else {
+                showToast("Error: " + resData.message, "error");
+            }
+        } catch(err) {
+            showToast("Network error. Please try again.", "error");
+        } finally {
+            btn.innerHTML = "Submit Request";
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

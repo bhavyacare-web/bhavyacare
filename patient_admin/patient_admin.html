@@ -74,8 +74,11 @@
     <div class="tabs">
         <button id="tab-patients" class="tab-btn active" onclick="switchAdminTab('patients')">Patients Master List</button>
         <button id="tab-vips" class="tab-btn" onclick="switchAdminTab('vips')">VIP Applications</button>
+        <button id="tab-support" class="tab-btn" onclick="switchAdminTab('support')">Support Queries</button>
+        <button id="tab-prescriptions" class="tab-btn" onclick="switchAdminTab('prescriptions')">Prescriptions</button>
     </div>
 
+    <!-- PATIENTS SECTION -->
     <div id="patients-section">
         <input type="text" id="patientSearch" class="search-bar" placeholder="🔍 Search Patient by Name, ID, or Mobile Number..." onkeyup="filterPatients()">
         
@@ -93,6 +96,7 @@
         </div>
     </div>
 
+    <!-- VIPS SECTION -->
     <div id="vips-section" class="table-container" style="display:none;">
         <table>
             <thead>
@@ -106,9 +110,52 @@
         </table>
     </div>
 
+    <!-- SUPPORT QUERIES SECTION -->
+    <div id="support-section" style="display:none;">
+        <input type="text" id="supportSearch" class="search-bar" placeholder="🔍 Search by Ticket ID, Name, or Mobile..." onkeyup="filterSupport()">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticket ID & Date</th>
+                        <th>User Info</th>
+                        <th>Issue Type</th>
+                        <th>Order ID</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="supportTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PRESCRIPTIONS SECTION -->
+    <div id="prescriptions-section" style="display:none;">
+        <input type="text" id="rxSearch" class="search-bar" placeholder="🔍 Search by RX ID, User ID, or Mobile..." onkeyup="filterRx()">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>RX ID & Date</th>
+                        <th>Patient Info</th>
+                        <th>Prescription File</th>
+                        <th>Notes</th>
+                        <th>Linked Order</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="rxTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="loader">Fetching data... Please wait.</div>
     <div class="overlay" id="modalOverlay"></div>
 
+    <!-- VIP MODAL -->
     <div class="modal" id="vipActionModal" style="max-width: 400px;">
         <span class="close-modal" onclick="closeModals()">&times;</span>
         <h3 style="margin-top:0; color:#0056b3;">VIP Approval Action</h3>
@@ -122,6 +169,7 @@
         <input type="hidden" id="modalRowIndex">
     </div>
 
+    <!-- PATIENT PROFILE MODAL -->
     <div class="modal" id="patientProfileModal">
         <span class="close-modal" onclick="closeModals()">&times;</span>
         

@@ -830,7 +830,7 @@ function renderConsultCards(consults) {
                 claimHtml = `
                 <div style="margin-top:10px; padding: 12px; background: var(--warning-light); border: 1px solid #fde68a; border-radius: 10px; display:flex; justify-content:space-between; align-items:center;">
                     <strong style="color:#b45309; font-size:12px;">Payment Not Received</strong> 
-                    <a href="../help.html" style="color:var(--primary); font-weight:bold; font-size:12px; text-decoration:none; padding: 6px 12px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fas fa-headset"></i> Help</a>
+                    <a href="../contact.html" style="color:var(--primary); font-weight:bold; font-size:12px; text-decoration:none; padding: 6px 12px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fas fa-headset"></i> Help</a>
                 </div>`;
             }
             else if (c.refund_status === "Action Required by Patient") {

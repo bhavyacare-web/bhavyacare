@@ -343,16 +343,13 @@ async function fetchSupportData() {
 function filterSupport() {
     const query = document.getElementById("supportSearch").value.toLowerCase();
     const filteredData = allSupportData.filter(q => 
-        (q.Ticket_ID && q.Ticket_ID.toLowerCase().includes(query)) || 
-        (q.Name && q.Name.toLowerCase().includes(query)) || 
-        (q.Mobile && q.Mobile.includes(query))
+        (q.ticket_id && q.ticket_id.toLowerCase().includes(query)) || 
+        (q.name && q.name.toLowerCase().includes(query)) || 
+        (q.mobile && q.mobile.includes(query))
     );
     renderSupportTable(filteredData);
 }
 
-// ==========================================
-// 3. SUPPORT QUERIES LOGIC
-// ==========================================
 function renderSupportTable(data) {
     const tableBody = document.getElementById("supportTableBody");
     tableBody.innerHTML = "";
@@ -373,15 +370,6 @@ function renderSupportTable(data) {
     });
 }
 
-function filterSupport() {
-    const query = document.getElementById("supportSearch").value.toLowerCase();
-    const filteredData = allSupportData.filter(q => 
-        (q.ticket_id && q.ticket_id.toLowerCase().includes(query)) || 
-        (q.name && q.name.toLowerCase().includes(query)) || 
-        (q.mobile && q.mobile.includes(query))
-    );
-    renderSupportTable(filteredData);
-}
 async function resolveSupport(ticketId) {
     if(!confirm(`Mark Ticket ${ticketId} as Resolved?`)) return;
     alert("Functionality to update sheet status for Ticket: " + ticketId + " can be integrated here.");
@@ -415,16 +403,13 @@ async function fetchRxData() {
 function filterRx() {
     const query = document.getElementById("rxSearch").value.toLowerCase();
     const filteredData = allRxData.filter(r => 
-        (r.Prescription_ID && r.Prescription_ID.toLowerCase().includes(query)) || 
+        (r.prescription_id && r.prescription_id.toLowerCase().includes(query)) || 
         (r.user_id && r.user_id.toLowerCase().includes(query)) || 
-        (r.Mobile_Number && r.Mobile_Number.includes(query))
+        (r.mobile_number && r.mobile_number.includes(query))
     );
     renderRxTable(filteredData);
 }
 
-// ==========================================
-// 4. PRESCRIPTIONS LOGIC
-// ==========================================
 function renderRxTable(data) {
     const tableBody = document.getElementById("rxTableBody");
     tableBody.innerHTML = "";
@@ -445,16 +430,6 @@ function renderRxTable(data) {
                 <td><button class="action-btn" style="background:#0056b3; width:auto; font-size:12px; padding:6px 10px;" onclick="processRx('${r.prescription_id}')">Process Order</button></td>
             </tr>`;
     });
-}
-
-function filterRx() {
-    const query = document.getElementById("rxSearch").value.toLowerCase();
-    const filteredData = allRxData.filter(r => 
-        (r.prescription_id && r.prescription_id.toLowerCase().includes(query)) || 
-        (r.user_id && r.user_id.toLowerCase().includes(query)) || 
-        (r.mobile_number && r.mobile_number.includes(query))
-    );
-    renderRxTable(filteredData);
 }
 
 async function processRx(rxId) {

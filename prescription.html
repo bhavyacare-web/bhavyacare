@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Upload Prescription - BhavyaCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --success: #10b981; --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --border: #e2e8f0; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-color); margin: 0; padding-bottom: 40px; color: var(--text-main); }
+        
+        .header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);}
+        .back-btn { background: #eff6ff; color: var(--primary); border: none; padding: 10px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 14px;}
+        
+        .container { max-width: 600px; margin: 30px auto; padding: 0 20px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border); }
+        
+        h2 { margin: 0 0 10px 0; font-size: 24px; font-weight: 800; color: var(--primary); text-align: center; }
+        p.subtitle { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 25px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 700; display: block; margin-bottom: 8px; font-size: 13px; color: #475569; }
+        input[type="tel"], textarea { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: var(--primary); background: white; }
+
+        .file-upload-box { border: 2px dashed #94a3b8; border-radius: 12px; padding: 30px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.3s; position: relative; }
+        .file-upload-box:hover { border-color: var(--primary); background: #eff6ff; }
+        .file-upload-box i { font-size: 40px; color: var(--primary); margin-bottom: 15px; }
+        .file-upload-box p { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
+        .file-upload-box input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        #fileName { display: block; margin-top: 10px; font-size: 12px; color: var(--success); font-weight: 800; }
+
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; font-size: 16px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); margin-top: 10px;}
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+        /* Toast CSS */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;}
+        .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideUpToast 0.4s ease, fadeOutToast 0.4s ease 2.6s forwards; }
+        .toast.success { background: var(--success); } .toast.error { background: #ef4444; }
+        @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="index.html" class="back-btn" id="backLink"><i class="fas fa-arrow-left"></i> Back</a>
+    <h3 style="margin:0; font-size:18px; color:var(--text-main);">BhavyaCare</h3>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2><i class="fas fa-file-prescription"></i> Upload Prescription</h2>
+        <p class="subtitle">Have a doctor's prescription? Upload it here and we will arrange your medicines or lab tests.</p>
+
+        <form id="prescriptionForm">
+            <div class="form-group">
+                <label>Mobile Number * <span style="font-weight:normal; font-size:11px;">(We will contact you on this number)</span></label>
+                <input type="tel" id="mobileNumber" placeholder="10-digit mobile number" maxlength="10" required>
+            </div>
+
+            <div class="form-group">
+                <label>Upload File (Image or PDF) *</label>
+                <div class="file-upload-box">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Tap to select or take a photo</p>
+                    <input type="file" id="rxFile" accept="image/*,.pdf" required onchange="showFileName()">
+                    <span id="fileName"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Any special instructions? (Optional)</label>
+                <textarea id="patientNotes" rows="3" placeholder="E.g., I only need medicines for 5 days..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">Securely Upload</button>
+        </form>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    // Aapke Google App Script ka URL yahan dalein
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Agar user login hai, toh mobile aur back link theek karein
+        const savedMobile = localStorage.getItem("bhavya_mobile");
+        if (savedMobile) {
+            let cleanMobile = savedMobile.replace("+91", "").trim();
+            document.getElementById("mobileNumber").value = cleanMobile;
+            document.getElementById("backLink").href = "patient_dashboard/patient_dashboard.html";
+        }
+        document.getElementById("prescriptionForm").addEventListener("submit", handleUpload);
+    });
+
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        let icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    function showFileName() {
+        const fileInput = document.getElementById("rxFile");
+        if (fileInput.files.length > 0) {
+            document.getElementById("fileName").innerText = "Selected: " + fileInput.files[0].name;
+        }
+    }
+
+    // Base64 Converter (Images compress automatically)
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            if (!file.type.startsWith('image/')) {
+                if(file.size > 5 * 1024 * 1024) return reject("PDF size cannot exceed 5MB.");
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
+                reader.onerror = error => reject(error);
+                return;
+            }
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let ctx = canvas.getContext('2d');
+                    let width = img.width, height = img.height;
+                    const MAX_DIM = 1200; 
+                    if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
+                    else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL(file.type, 0.7).split(',')[1]); 
+                };
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function handleUpload(e) {
+        e.preventDefault();
+        
+        const mobile = document.getElementById("mobileNumber").value.trim();
+        const fileInput = document.getElementById("rxFile");
+        const notes = document.getElementById("patientNotes").value.trim();
+        const btn = document.getElementById("btnSubmit");
+
+        if(mobile.length !== 10) { showToast("Enter a valid 10 digit mobile number.", "error"); return; }
+        if(!fileInput.files || fileInput.files.length === 0) { showToast("Please attach a file.", "error"); return; }
+
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`;
+        btn.disabled = true;
+
+        try {
+            const file = fileInput.files[0];
+            const base64Data = await getBase64(file);
+            
+            // Login check: User ID send karo ya GUEST
+            const userId = localStorage.getItem("bhavya_user_id") || "GUEST";
+
+            const payload = {
+                action: "uploadPatientPrescription",
+                user_id: userId,
+                mobile: mobile,
+                notes: notes,
+                file_base64: base64Data,
+                mime_type: file.type,
+                file_name: file.name
+            };
+
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const resData = await response.json();
+
+            if(resData.status === "success") {
+                showToast("Prescription uploaded! We will contact you soon.", "success");
+                document.getElementById("prescriptionForm").reset();
+                document.getElementById("fileName").innerText = "";
+            } else {
+                showToast("Error: " + resData.message, "error");
+            }
+        } catch(err) {
+            showToast("Network error. Please try again.", "error");
+        } finally {
+            btn.innerHTML = "Securely Upload";
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

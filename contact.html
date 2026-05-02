@@ -136,31 +136,59 @@
 <div id="toast-container"></div>
 
 <script>
+    // Aapke Google App Script ka URL yahan dalein
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
-    document.addEventListener("DOMContentLoaded", () => {
-        // Auto-fill if user is logged in
-        const savedName = localStorage.getItem("bhavya_name");
-        const savedMobile = localStorage.getItem("bhavya_mobile");
-        const savedRole = localStorage.getItem("bhavya_role");
+    document.addEventListener("DOMContentLoaded", async () => {
+        const userId = localStorage.getItem("bhavya_user_id");
         
-        if (savedName) document.getElementById("supName").value = savedName;
-        if (savedMobile) document.getElementById("supMobile").value = savedMobile.replace("+91", "").trim();
-        
-        if (savedRole) {
-            let roleSelect = document.getElementById("supUserType");
-            if(savedRole === "patient") roleSelect.value = "Patient";
-            else if(savedRole === "doctor") roleSelect.value = "Doctor";
-            else if(savedRole === "lab") roleSelect.value = "Lab/Diagnostic";
-            else if(savedRole === "pharmacy") roleSelect.value = "Pharmacy";
-        }
+        // Agar user login hai (BhavyaCare ID exist karti hai)
+        if (userId) {
+            // Set back button link to dashboard
+            const backLink = document.getElementById("backLink");
+            if(backLink) {
+                backLink.onclick = (e) => {
+                    e.preventDefault();
+                    window.history.back();
+                };
+            }
 
-        // Set back button link
-        if (localStorage.getItem("bhavya_user_id")) {
-            document.getElementById("backLink").onclick = (e) => {
-                e.preventDefault();
-                window.history.back();
-            };
+            // Sheet se fresh data fetch karne ki API call
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "getPatientProfile", user_id: userId }) 
+                });
+                const resData = await response.json();
+
+                if (resData.status === "success") {
+                    const patient = resData.data;
+                    
+                    // Auto-fill from Sheet & Lock the fields
+                    const nameInput = document.getElementById("supName");
+                    nameInput.value = patient.patient_name;
+                    nameInput.readOnly = true;
+                    nameInput.style.backgroundColor = "#e2e8f0"; // Grey out slightly
+
+                    const mobileInput = document.getElementById("supMobile");
+                    mobileInput.value = patient.mobile_number.replace("+91", "").trim();
+                    mobileInput.readOnly = true;
+                    mobileInput.style.backgroundColor = "#e2e8f0";
+
+                    const roleSelect = document.getElementById("supUserType");
+                    roleSelect.value = "Patient";
+                    roleSelect.style.pointerEvents = "none"; // Lock dropdown
+                    roleSelect.style.backgroundColor = "#e2e8f0";
+                }
+            } catch(e) {
+                console.log("Could not auto-fill from sheet. Falling back to local storage.", e);
+                // Fallback to local storage if network fails
+                const savedName = localStorage.getItem("bhavya_name");
+                const savedMobile = localStorage.getItem("bhavya_mobile");
+                if(savedName) document.getElementById("supName").value = savedName;
+                if(savedMobile) document.getElementById("supMobile").value = savedMobile.replace("+91", "").trim();
+            }
         }
         
         document.getElementById("supportForm").addEventListener("submit", handleSupportSubmit);
@@ -212,7 +240,9 @@
 
             if(resData.status === "success") {
                 showToast("Request submitted successfully! Our team will contact you soon.", "success");
-                document.getElementById("supportForm").reset();
+                document.getElementById("supOrderId").value = "";
+                document.getElementById("supMessage").value = "";
+                // Note: We are not resetting the whole form so the locked Name/Mobile don't get cleared.
             } else {
                 showToast("Error: " + resData.message, "error");
             }

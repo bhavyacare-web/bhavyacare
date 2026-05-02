@@ -90,13 +90,19 @@
 <div id="toast-container"></div>
 
 <script>
-    // Aapke Google App Script ka URL yahan dalein
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec";
 
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = localStorage.getItem("bhavya_user_id");
         
-        // Agar user login hai, toh patients sheet se data fetch karenge
+        // Helper function to get exact 10 digits
+        const getClean10DigitMobile = (rawNum) => {
+            if(!rawNum) return "";
+            let clean = rawNum.toString().replace(/\D/g, ''); // Remove spaces, +, -, etc.
+            if(clean.length > 10) clean = clean.slice(-10); // Hamesha last 10 digits lega
+            return clean;
+        };
+
         if (userId) {
             const backLink = document.getElementById("backLink");
             if(backLink) {
@@ -120,15 +126,14 @@
                     nameInput.readOnly = true;
                     nameInput.style.backgroundColor = "#e2e8f0";
 
-                    // Auto-fill and lock Mobile
+                    // Auto-fill and lock Mobile (Fixed 10 digit logic)
                     const mobileInput = document.getElementById("mobileNumber");
-                    mobileInput.value = patient.mobile_number.replace("+91", "").trim();
+                    mobileInput.value = getClean10DigitMobile(patient.mobile_number);
                     mobileInput.readOnly = true;
                     mobileInput.style.backgroundColor = "#e2e8f0";
                 }
             } catch(e) {
-                console.log("Could not auto-fill from sheet. Falling back to local storage.", e);
-                // Fallback to local storage agar internet issue ho
+                console.log("Could not auto-fill from sheet. Falling back to local storage.");
                 const savedName = localStorage.getItem("bhavya_name");
                 const savedMobile = localStorage.getItem("bhavya_mobile");
                 if(savedName) {
@@ -137,7 +142,7 @@
                 }
                 if(savedMobile) {
                     let m = document.getElementById("mobileNumber");
-                    m.value = savedMobile.replace("+91", "").trim(); m.readOnly = true; m.style.backgroundColor = "#e2e8f0";
+                    m.value = getClean10DigitMobile(savedMobile); m.readOnly = true; m.style.backgroundColor = "#e2e8f0";
                 }
             }
         }
@@ -212,7 +217,6 @@
             const base64Data = await getBase64(file);
             const userId = localStorage.getItem("bhavya_user_id") || "GUEST";
 
-            // Yahan name backend par bheja ja raha hai
             const payload = {
                 action: "uploadPatientPrescription",
                 user_id: userId,
@@ -234,7 +238,6 @@
 
             if(resData.status === "success") {
                 showToast("Prescription uploaded! We will contact you soon.", "success");
-                // Reset form but restore locked values if logged in
                 document.getElementById("prescriptionForm").reset();
                 document.getElementById("fileName").innerText = "";
                 

@@ -55,8 +55,13 @@ async function fetchPatientsData() {
         if (result.status === "success") {
             allPatientsData = result.data;
             renderPatientsTable(allPatientsData);
+        } else {
+            tableBody.innerHTML = `<tr><td colspan='9' style='text-align:center; color:red;'>Backend Error: ${result.message}</td></tr>`;
         }
-    } catch (error) { loader.innerHTML = "❌ Network Error!"; }
+    } catch (error) { 
+        loader.style.display = "none";
+        tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red;'>❌ Network Error!</td></tr>";
+    }
 }
 
 function filterPatients() {
@@ -281,8 +286,13 @@ async function fetchVipData() {
                         <td>${actionBtn}</td>
                     </tr>`;
             });
+        } else {
+             tableBody.innerHTML = `<tr><td colspan='10' style='text-align:center; color:red;'>Backend Error: ${result.message}</td></tr>`;
         }
-    } catch (error) { loader.innerHTML = "❌ Error fetching VIP data."; }
+    } catch (error) { 
+        loader.style.display = "none";
+        tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center; color:red;'>❌ Network Error!</td></tr>";
+    }
 }
 
 function openVipModal(rowIndex, userId) {
@@ -335,7 +345,6 @@ async function fetchSupportData() {
             allSupportData = result.data || [];
             renderSupportTable(allSupportData);
         } else {
-            // YAHAN ERROR DIKHEGA AGAR BACKEND FAIL HUA
             tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red; font-weight:bold;'>Backend Error: ${result.message}</td></tr>`;
             console.error("Backend Error:", result);
         }
@@ -344,16 +353,6 @@ async function fetchSupportData() {
         tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red;'>❌ Network/Parsing Error! Please check URL or Deployment.</td></tr>`;
         console.error("Fetch Error:", error); 
     }
-}
-
-function filterSupport() {
-    const query = document.getElementById("supportSearch").value.toLowerCase();
-    const filteredData = allSupportData.filter(q => 
-        (q.ticket_id && q.ticket_id.toLowerCase().includes(query)) || 
-        (q.name && q.name.toLowerCase().includes(query)) || 
-        (q.mobile && q.mobile.includes(query))
-    );
-    renderSupportTable(filteredData);
 }
 
 function renderSupportTable(data) {
@@ -376,9 +375,19 @@ function renderSupportTable(data) {
     });
 }
 
+function filterSupport() {
+    const query = document.getElementById("supportSearch").value.toLowerCase();
+    const filteredData = allSupportData.filter(q => 
+        (q.ticket_id && q.ticket_id.toLowerCase().includes(query)) || 
+        (q.name && q.name.toLowerCase().includes(query)) || 
+        (q.mobile && q.mobile.includes(query))
+    );
+    renderSupportTable(filteredData);
+}
+
 async function resolveSupport(ticketId) {
     if(!confirm(`Mark Ticket ${ticketId} as Resolved?`)) return;
-    alert("Functionality to update sheet status for Ticket: " + ticketId + " can be integrated here.");
+    alert("Backend functionality to update sheet status for Ticket: " + ticketId + " can be integrated here.");
 }
 
 // ==========================================
@@ -398,22 +407,17 @@ async function fetchRxData() {
         loader.style.display = "none";
 
         if (result.status === "success") {
-            allRxData = result.data;
+            allRxData = result.data || [];
             renderRxTable(allRxData);
         } else {
-            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No prescriptions found.</td></tr>";
+            tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red; font-weight:bold;'>Backend Error: ${result.message}</td></tr>`;
+            console.error("Backend Error:", result);
         }
-    } catch (error) { loader.innerHTML = "❌ Network Error!"; }
-}
-
-function filterRx() {
-    const query = document.getElementById("rxSearch").value.toLowerCase();
-    const filteredData = allRxData.filter(r => 
-        (r.prescription_id && r.prescription_id.toLowerCase().includes(query)) || 
-        (r.user_id && r.user_id.toLowerCase().includes(query)) || 
-        (r.mobile_number && r.mobile_number.includes(query))
-    );
-    renderRxTable(filteredData);
+    } catch (error) { 
+        loader.style.display = "none";
+        tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:red;'>❌ Network/Parsing Error! Please check URL or Deployment.</td></tr>`;
+        console.error("Fetch Error:", error); 
+    }
 }
 
 function renderRxTable(data) {
@@ -423,7 +427,10 @@ function renderRxTable(data) {
     
     data.forEach((r) => {
         let statusColor = r.status === "Pending" ? "status-pending" : "status-active";
-        let fileLink = r.prescription_url ? `<a href="${r.prescription_url}" target="_blank" style="color:#0056b3; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a>` : "N/A";
+        
+        // Handling the typo issue robustly 
+        let fileUrl = r.prescription_url || r.prescription_ur || ""; 
+        let fileLink = fileUrl ? `<a href="${fileUrl}" target="_blank" style="color:#0056b3; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a>` : "N/A";
         
         tableBody.innerHTML += `
             <tr>
@@ -436,6 +443,16 @@ function renderRxTable(data) {
                 <td><button class="action-btn" style="background:#0056b3; width:auto; font-size:12px; padding:6px 10px;" onclick="processRx('${r.prescription_id}')">Process Order</button></td>
             </tr>`;
     });
+}
+
+function filterRx() {
+    const query = document.getElementById("rxSearch").value.toLowerCase();
+    const filteredData = allRxData.filter(r => 
+        (r.prescription_id && r.prescription_id.toLowerCase().includes(query)) || 
+        (r.user_id && r.user_id.toLowerCase().includes(query)) || 
+        (r.mobile_number && r.mobile_number.includes(query))
+    );
+    renderRxTable(filteredData);
 }
 
 async function processRx(rxId) {

@@ -2,6 +2,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_leCWfb7HNh
 
 let currentTab = 'patients';
 let allPatientsData = []; 
+let allSupportData = [];
+let allRxData = [];
 
 document.addEventListener("DOMContentLoaded", fetchPatientsData);
 
@@ -10,9 +12,13 @@ function switchAdminTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`)?.classList.add('active');
     
+    // Hide all sections
     document.getElementById('patients-section').style.display = 'none';
     document.getElementById('vips-section').style.display = 'none';
+    document.getElementById('support-section').style.display = 'none';
+    document.getElementById('prescriptions-section').style.display = 'none';
 
+    // Show active section
     document.getElementById(`${tabName}-section`).style.display = 'block';
     fetchCurrentTabData();
 }
@@ -20,6 +26,8 @@ function switchAdminTab(tabName) {
 function fetchCurrentTabData() {
     if (currentTab === 'patients') fetchPatientsData();
     else if (currentTab === 'vips') fetchVipData();
+    else if (currentTab === 'support') fetchSupportData();
+    else if (currentTab === 'prescriptions') fetchRxData();
 }
 
 function closeModals() {
@@ -71,7 +79,7 @@ function renderPatientsTable(data) {
         const sVal = p.status ? p.status.trim().toLowerCase() : 'inactive';
         const sClass = sVal === 'active' ? 'status-active' : 'status-inactive';
         
-        // 🌟 WITHDRAW/WALLET SAFE FORMATTING 🌟
+        // WITHDRAW/WALLET SAFE FORMATTING
         const wVal = p.withdraw ? p.withdraw.trim().toLowerCase() : 'inactive';
         const wClass = wVal === 'active' ? 'status-active' : 'status-inactive';
         const withdrawText = wVal.toUpperCase();
@@ -106,7 +114,6 @@ async function toggleStatus(userId, field, currentStatus) {
         });
         const result = await response.json();
         if (result.status === "success") {
-            // 🌟 NAYA: Turant Refresh Action 🌟
             window.location.reload(); 
         } else {
             alert("Error: " + result.message);
@@ -213,7 +220,6 @@ async function adjustPatientWallet() {
         btn.innerText = "Add Funds"; btn.disabled = false;
         if (result.status === "success") { 
             alert("Funds added successfully!"); 
-            // 🌟 NAYA: Turant Refresh Action 🌟
             window.location.reload();
         }
         else alert("Error: " + result.message);
@@ -303,9 +309,129 @@ async function submitVipAction(statusValue) {
         const result = await response.json();
         if (result.status === "success") { 
             alert(result.message); 
-            // 🌟 NAYA: Turant Refresh Action 🌟
             window.location.reload(); 
         } 
         else { alert("Error: " + result.message); document.getElementById("loader").style.display = "none"; }
     } catch (error) { alert("Action failed."); document.getElementById("loader").style.display = "none"; }
+}
+
+// ==========================================
+// 3. SUPPORT QUERIES LOGIC
+// ==========================================
+async function fetchSupportData() {
+    const tableBody = document.getElementById("supportTableBody");
+    const loader = document.getElementById("loader");
+    tableBody.innerHTML = ""; loader.style.display = "block"; 
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getSupportQueries" }) 
+        });
+        const result = await response.json();
+        loader.style.display = "none";
+
+        if (result.status === "success") {
+            allSupportData = result.data;
+            renderSupportTable(allSupportData);
+        } else {
+            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No queries found.</td></tr>";
+        }
+    } catch (error) { loader.innerHTML = "❌ Network Error!"; }
+}
+
+function filterSupport() {
+    const query = document.getElementById("supportSearch").value.toLowerCase();
+    const filteredData = allSupportData.filter(q => 
+        (q.Ticket_ID && q.Ticket_ID.toLowerCase().includes(query)) || 
+        (q.Name && q.Name.toLowerCase().includes(query)) || 
+        (q.Mobile && q.Mobile.includes(query))
+    );
+    renderSupportTable(filteredData);
+}
+
+function renderSupportTable(data) {
+    const tableBody = document.getElementById("supportTableBody");
+    tableBody.innerHTML = "";
+    if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No records found.</td></tr>"; return; }
+    
+    data.forEach((q) => {
+        let statusColor = q.Status === "Open" ? "status-pending" : "status-active";
+        tableBody.innerHTML += `
+            <tr>
+                <td><strong>${q.Ticket_ID}</strong><br><span style="font-size:11px; color:#888;">${q.Date}</span></td>
+                <td><strong>${q.Name}</strong><br><span style="font-size:11px; color:#555;">📞 ${q.Mobile}</span><br><span class="badge-btn status-primary" style="padding:2px 6px;font-size:10px; margin-top:5px;">${q.User_Type}</span></td>
+                <td style="font-weight:bold; color:#0056b3;">${q.Issue_Type}</td>
+                <td>${q.Order_ID || "-"}</td>
+                <td style="max-width:250px; word-wrap:break-word; font-size:13px; line-height:1.4;">${q.Message}</td>
+                <td><span class="badge-btn ${statusColor}">${q.Status}</span></td>
+                <td><button class="action-btn" style="background:#28a745; width:auto; font-size:12px; padding:6px 10px;" onclick="resolveSupport('${q.Ticket_ID}')">Mark Resolved</button></td>
+            </tr>`;
+    });
+}
+
+async function resolveSupport(ticketId) {
+    if(!confirm(`Mark Ticket ${ticketId} as Resolved?`)) return;
+    alert("Functionality to update sheet status for Ticket: " + ticketId + " can be integrated here.");
+}
+
+// ==========================================
+// 4. PRESCRIPTIONS LOGIC
+// ==========================================
+async function fetchRxData() {
+    const tableBody = document.getElementById("rxTableBody");
+    const loader = document.getElementById("loader");
+    tableBody.innerHTML = ""; loader.style.display = "block"; 
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getPrescriptions" }) 
+        });
+        const result = await response.json();
+        loader.style.display = "none";
+
+        if (result.status === "success") {
+            allRxData = result.data;
+            renderRxTable(allRxData);
+        } else {
+            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No prescriptions found.</td></tr>";
+        }
+    } catch (error) { loader.innerHTML = "❌ Network Error!"; }
+}
+
+function filterRx() {
+    const query = document.getElementById("rxSearch").value.toLowerCase();
+    const filteredData = allRxData.filter(r => 
+        (r.Prescription_ID && r.Prescription_ID.toLowerCase().includes(query)) || 
+        (r.user_id && r.user_id.toLowerCase().includes(query)) || 
+        (r.Mobile_Number && r.Mobile_Number.includes(query))
+    );
+    renderRxTable(filteredData);
+}
+
+function renderRxTable(data) {
+    const tableBody = document.getElementById("rxTableBody");
+    tableBody.innerHTML = "";
+    if (data.length === 0) { tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No records found.</td></tr>"; return; }
+    
+    data.forEach((r) => {
+        let statusColor = r.Status === "Pending" ? "status-pending" : "status-active";
+        let fileLink = r.Prescription_URL ? `<a href="${r.Prescription_URL}" target="_blank" style="color:#0056b3; font-weight:bold; text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a>` : "N/A";
+        
+        tableBody.innerHTML += `
+            <tr>
+                <td><strong>${r.Prescription_ID}</strong><br><span style="font-size:11px; color:#888;">${r.Upload_Date}</span></td>
+                <td><strong>User ID:</strong> ${r.user_id}<br><strong>📞 Mobile:</strong> ${r.Mobile_Number}</td>
+                <td>${fileLink}</td>
+                <td style="max-width:200px; word-wrap:break-word; font-size:13px; line-height:1.4;">${r.Patient_Notes || "-"}</td>
+                <td>${r.Linked_Order_ID || "-"}</td>
+                <td><span class="badge-btn ${statusColor}">${r.Status}</span></td>
+                <td><button class="action-btn" style="background:#0056b3; width:auto; font-size:12px; padding:6px 10px;" onclick="processRx('${r.Prescription_ID}')">Process Order</button></td>
+            </tr>`;
+    });
+}
+
+async function processRx(rxId) {
+     alert("Admin will create an order for Rx ID: " + rxId + " (Booking API integration pending).");
 }

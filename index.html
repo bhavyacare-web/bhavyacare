@@ -35,8 +35,8 @@
             --bg-color: #f8fafc; --text-main: #0f172a; --text-muted: #64748b;
         }
         
-        /* 🛠️ PREVENT HORIZONTAL SCROLL 🛠️ */
-        html, body { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; width: 100vw; max-width: 100%; -webkit-tap-highlight-color: transparent; }
+        /* 🛠️ FIX FOR STICKY SCROLL: 'hidden' changed to 'clip' so Sticky works! 🛠️ */
+        html, body { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: clip; width: 100vw; max-width: 100%; -webkit-tap-highlight-color: transparent; }
         *, *::before, *::after { box-sizing: inherit; }
 
         /* 🌟 HEADER CSS 🌟 */
@@ -72,15 +72,15 @@
 
         /* 🌟 SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 30px; text-align: center; border-bottom: 1px solid #e2e8f0; }
-        .section-diagnostics { background: #ffffff; padding: 40px 20px; border-bottom: 1px solid #e2e8f0; } 
+        .section-diagnostics { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; } 
         .section-trust { background: #f8fafc; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
-        .section-packages { background: #f1f5f9; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0;}
+        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 60px 20px; border-bottom: 1px solid #e2e8f0;}
 
-        /* 🌟 HERO & SEARCH SECTION 🌟 */
-        /* ✨ Hero Heading ek line me aur thodi chhoti ✨ */
-        .hero-title { font-size: 32px; font-weight: 800; color: #1e293b; margin-bottom: 20px; letter-spacing: -0.5px; line-height: 1.3;}
+        /* 🌟 TEXT STYLES 🌟 */
+        .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px; line-height: 1.2;}
         .hero-title span { color: var(--primary); }
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.6;}
         
         .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 8px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
@@ -103,6 +103,7 @@
         .cd-info { display: flex; flex-direction: column; gap: 4px; }
         .cd-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;}
         
+        /* ✨ TAGS CSS ✨ */
         .cd-tag { font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 5px; }
         .cd-tag i { font-size: 12px; }
         .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content; margin-top: 4px;}
@@ -123,7 +124,7 @@
         .vip-content p { font-size: 15px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.6; font-weight: 500;}
         .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 15px 35px; border-radius: 12px; font-size: 16px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);}
 
-        /* 🎁 TRENDING PACKAGES */
+        /* 🎁 TRENDING PACKAGES & SCROLL */
         .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab; -webkit-overflow-scrolling: touch;}
         .home-cat-nav::-webkit-scrollbar { display: none; }
         .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; user-select: none;}
@@ -146,7 +147,10 @@
         .pkg-total-mrp { font-size: 12px; color: #94a3b8; font-weight: 600;}
         .pkg-basic-price { font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; line-height: 1.1;}
         .pkg-basic-badge { font-size: 10px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 6px; }
-        .pkg-vip-pill { background: #ffffff; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; border: 1px dashed #cbd5e1; width: max-content;}
+        
+        /* ✨ VIP RATE PILL WITH HOVER/CLICK STYLING ✨ */
+        .pkg-vip-pill { background: #ffffff; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; border: 1px solid #cbd5e1; width: max-content; cursor: pointer; transition: 0.3s; text-decoration: none;}
+        .pkg-vip-pill:hover { background: #fef3c7; border-color: #f59e0b; color: #d97706;}
         
         .btn-add-cart { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; height: max-content;}
         .btn-add-cart:hover { background: var(--primary-light); }
@@ -204,7 +208,6 @@
             .section-hero { padding: 25px 15px 25px; }
             .section-diagnostics { padding: 30px 15px; }
             
-            /* ✨ Mobile Heading (Smaller & 1 Line) ✨ */
             .hero-title { font-size: 18px; line-height: 1.3; margin-bottom: 15px;}
             
             .search-container { padding: 6px; border-radius: 16px; margin: 0 auto 20px;}
@@ -226,13 +229,15 @@
             .cd-tag i { font-size: 10px; }
             .cd-discount { font-size: 10px; padding: 3px 8px; margin-top: 2px;}
             
-            /* ✨ STICKY PACKAGES SECTION ✨ */
+            /* ✨ STICKY PACKAGES SECTION FIX ✨ */
             .section-packages { 
+                position: -webkit-sticky; /* For iOS Safari */
                 position: sticky; 
                 top: 55px; /* Stick under header */
                 z-index: 90; 
                 padding: 20px 10px; 
-                box-shadow: 0 6px 15px rgba(0,0,0,0.06); 
+                background: #f1f5f9;
+                box-shadow: 0 6px 15px rgba(0,0,0,0.08); 
             }
             .section-packages .section-heading h2 { font-size: 18px; margin-bottom: 5px; }
             .section-packages .section-heading p { display: none; } /* hide subtitle for space */
@@ -266,9 +271,9 @@
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
                 display: flex; overflow-x: auto; justify-content: flex-start; gap: 15px; flex-wrap: nowrap;
             }
+            .reviews-wrapper::-webkit-scrollbar { display: none; }
             .review-card { min-width: 280px; flex: 0 0 auto; padding: 20px;}
             
-            .section-about { padding: 40px 15px; }
             .about-box { padding: 25px 15px; border-radius: 16px; }
             .about-box h2 { font-size: 20px; }
             
@@ -372,8 +377,9 @@
 
     <!-- ✨ COMPACT ALL-IN-ONE SERVICES GRID WITH TAGS ✨ -->
     <section class="section-diagnostics">
-        <div class="section-heading" style="margin-bottom: 30px;">
-            <h1 class="hero-title">Complete Health Partner - <span>Consult, Test & Heal.</span></h1>
+        <div class="section-heading" style="margin-bottom: 35px;">
+            <h2 class="hero-title" style="margin-bottom: 10px;">Complete Health Partner<br><span>Consult, Test & Heal.</span></h2>
+            <p class="hero-subtitle" style="margin-bottom: 0;">India's most trusted digital healthcare platform. Book lab tests, advanced scans, consult doctors, and order medicines with assured discounts.</p>
         </div>
         
         <div class="compact-diag-grid">
@@ -583,7 +589,7 @@
         <span id="homeCartBadge" style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; font-size:12px; font-weight:800; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white;">0</span>
     </div>
 
-    <!-- ✨ VIP IMAGE MODAL ✨ -->
+    <!-- ✨ VIP IMAGE MODAL WITH SKIP & REMOVE ✨ -->
     <div id="vipImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3000; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
         <div style="background:white; padding:20px; border-radius:24px; width:90%; max-width:450px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
             <button onclick="closeVipImageModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
@@ -614,12 +620,11 @@
     <script>
         // ✨ AUTO OPEN VIP MODAL LOGIC ✨
         document.addEventListener("DOMContentLoaded", () => {
-            // Checks if it has been shown in this session so it doesn't pop up every single time they go to home page
             if (!sessionStorage.getItem('vipPopupShown')) {
                 setTimeout(() => {
                     openVipImageModal();
                     sessionStorage.setItem('vipPopupShown', 'true');
-                }, 800); // Pops up after 0.8 seconds
+                }, 800); 
             }
         });
 
@@ -639,6 +644,11 @@
             const passInput = document.getElementById('adminPassInput').value;
             if (passInput === 'Bhavya@123') { window.location.href = 'admin.html'; } 
             else { showHomeToast("Incorrect Password! Access Denied.", "error"); }
+        }
+
+        // ✨ VIP CLICK IN PILL ✨
+        function handleVipRateClick() {
+            window.location.href = 'vip/vip_member.html';
         }
 
         function homeFormatText(text) {
@@ -681,10 +691,6 @@
                 if (typeof openPatientLogin === "function") { setTimeout(() => openPatientLogin(), 800); } 
                 else { setTimeout(() => alert("Please Login First to proceed."), 800); }
             }
-        }
-
-        function searchAndGo(category) {
-            window.location.href = `booking/booking.html?search=${encodeURIComponent(category)}`;
         }
 
         function handlePharmacyClick(event) {
@@ -736,7 +742,6 @@
                     renderHomePackages(); 
                     enableDragScroll('.slider-wrapper');
                     enableDragScroll('.home-cat-nav');
-                    enableDragScroll('.categories-grid'); 
                     enableDragScroll('.compact-diag-grid'); 
                     enableDragScroll('#reviewsSlider');
                 }
@@ -818,7 +823,8 @@
                         <div class="pkg-price-area">
                             <span class="pkg-total-mrp">Total: <del>₹${totalMrp}</del></span>
                             <div class="pkg-basic-price">₹${price} <span class="pkg-basic-badge">BASIC</span></div>
-                            <div class="pkg-vip-pill"><i class="fas fa-lock" style="font-size:10px;"></i> VIP Rate: ₹${vipPrice}</div>
+                            <!-- ✨ CLICKABLE VIP PILL ✨ -->
+                            <div class="pkg-vip-pill" onclick="handleVipRateClick()"><i class="fas fa-crown"></i> VIP Rate: ₹${vipPrice}</div>
                         </div>
                         ${actionBtnHtml}
                     </div>

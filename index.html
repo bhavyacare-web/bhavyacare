@@ -71,17 +71,32 @@
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
-        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 30px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 40px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .section-diagnostics { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; } 
         .section-trust { background: #f8fafc; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
-        .section-packages { background: #ffffff; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #f8fafc; padding: 60px 20px; border-bottom: 1px solid #e2e8f0;}
+        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 60px 20px; border-bottom: 1px solid #e2e8f0;}
 
         /* 🌟 TEXT STYLES 🌟 */
         .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px; line-height: 1.2;}
         .hero-title span { color: var(--primary); }
         .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.6;}
         
+        /* ✨ FAKE LIVE TICKER CSS ✨ */
+        @keyframes pulse-red { 
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 
+        }
+        .live-ticker { display: inline-flex; align-items: center; gap: 8px; background: white; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #ef4444; border: 1px solid #fca5a5; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.1); }
+        .pulse-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse-red 1.5s infinite; }
+
+        /* ✨ TRUST STATS BAR ✨ */
+        .trust-stats-bar { display: flex; justify-content: center; gap: 40px; margin-top: 30px; padding-top: 25px; border-top: 1px dashed #cbd5e1; flex-wrap: wrap;}
+        .stat-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .stat-num { font-size: 24px; font-weight: 800; color: #0f172a; }
+        .stat-text { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;}
+
         .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 8px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
@@ -122,7 +137,7 @@
 
         .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} 
         .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
-        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
+        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
         .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
         .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
         
@@ -176,11 +191,11 @@
         .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
 
         /* 💬 PATIENT REVIEWS SECTION 💬 */
-        .section-reviews { background: #ffffff; padding: 60px 20px; border-bottom: 1px solid #e2e8f0; }
+        .section-reviews { background: #f8fafc; padding: 60px 20px; border-bottom: 1px solid #e2e8f0; }
         .reviews-wrapper { max-width: 1050px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; cursor: grab; }
         .reviews-wrapper:active { cursor: grabbing; }
-        .review-card { background: #f8fafc; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: 0.3s; user-select: none; }
-        .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(37,99,235,0.08); background: white; border-color: #cbd5e1; }
+        .review-card { background: #ffffff; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: 0.3s; user-select: none; }
+        .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(37,99,235,0.08); border-color: #cbd5e1; }
         .review-stars { color: #f59e0b; font-size: 14px; margin-bottom: 12px; }
         .review-text { font-size: 14px; color: #475569; line-height: 1.6; font-style: italic; margin-bottom: 20px; }
         .review-user { display: flex; align-items: center; gap: 12px; }
@@ -189,12 +204,12 @@
         .review-info p { margin: 0; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
         /* ✨ AGGREGATOR SECTION ✨ */
-        .section-about { background: #f8fafc; padding: 60px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;}
-        .about-box { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 24px; box-shadow: inset 0 0 0 1px #e2e8f0;}
+        .section-about { background: #ffffff; padding: 60px 20px; text-align: center; }
+        .about-box { max-width: 800px; margin: 0 auto; background: #f8fafc; padding: 40px; border-radius: 24px; box-shadow: inset 0 0 0 1px #e2e8f0;}
         .about-box h2 { font-size: 26px; color: #1e293b; margin-bottom: 15px; font-weight: 800;}
         .about-box p { font-size: 15px; color: #475569; line-height: 1.7; margin-bottom: 25px; font-weight: 500;}
         .badge-wrap { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;}
-        .badge-wrap span { background: #eff6ff; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .badge-wrap span { background: #ffffff; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
 
         /* ✨ MEGA FOOTER ✨ */
         .footer { background: #0f172a; color: #94a3b8; padding: 60px 40px 20px; font-size: 14px;}
@@ -216,9 +231,13 @@
             .section-hero { padding: 25px 15px 25px; }
             .section-diagnostics { padding: 30px 15px; }
             
-            .hero-title { font-size: 18px; line-height: 1.3; margin-bottom: 15px;}
-            
-            .search-container { padding: 6px; border-radius: 16px; margin: 0 auto 20px;}
+            /* ✨ Live Ticker & Trust Stats Mobile Fix ✨ */
+            .live-ticker { font-size: 11px; padding: 5px 12px; margin-bottom: 15px;}
+            .trust-stats-bar { gap: 15px; margin-top: 20px; padding-top: 20px; justify-content: space-between; }
+            .stat-num { font-size: 18px; }
+            .stat-text { font-size: 9px; }
+
+            .search-container { padding: 6px; border-radius: 16px; margin: 0 auto 15px;}
             .search-container input { padding: 10px 10px 10px 35px; font-size: 13px; }
             .search-container i.fa-search { font-size: 15px; left: 14px;}
             .search-btn { padding: 10px 18px; font-size: 12px; border-radius: 12px;}
@@ -290,9 +309,9 @@
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
                 display: flex; overflow-x: auto; justify-content: flex-start; gap: 15px; flex-wrap: nowrap;
             }
+            .reviews-wrapper::-webkit-scrollbar { display: none; }
             .review-card { min-width: 280px; flex: 0 0 auto; padding: 20px;}
             
-            .section-about { padding: 40px 15px; }
             .about-box { padding: 25px 15px; border-radius: 16px; }
             .about-box h2 { font-size: 20px; }
             
@@ -380,6 +399,13 @@
 
     <!-- 🌟 SECTION 1: SEARCH BAR FIRST & QUICK ACTIONS 🌟 -->
     <section class="section-hero">
+        
+        <!-- ✨ LIVE TICKER ✨ -->
+        <div class="live-ticker">
+            <div class="pulse-dot"></div>
+            🔥 124+ patients are booking tests right now
+        </div>
+
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="globalSearchInput" placeholder="Search Lab Tests, Scans, or Profiles..." onkeyup="liveHomeSearch()" onfocus="liveHomeSearch()">
@@ -391,6 +417,22 @@
             <a href="tel:8950112467" class="btn-quick call-btn"><i class="fas fa-phone-alt"></i> <span>Book by Call</span></a>
             <a href="https://wa.me/918950112467" class="btn-quick wa-btn"><i class="fab fa-whatsapp"></i> <span>WhatsApp Booking</span></a>
             <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Prescription</span></a>
+        </div>
+
+        <!-- ✨ TRUST STATS BAR ✨ -->
+        <div class="trust-stats-bar">
+            <div class="stat-item">
+                <span class="stat-num">20,000+</span>
+                <span class="stat-text">Happy Patients</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">500+</span>
+                <span class="stat-text">NABL Labs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">100%</span>
+                <span class="stat-text">Accurate</span>
+            </div>
         </div>
     </section>
 

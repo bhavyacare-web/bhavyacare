@@ -71,23 +71,21 @@
         .action-btn:hover { background-color: #059669; }
 
         /* 🌟 SECTIONS CSS 🌟 */
-        /* ✨ Hero Section Padkam kar di gayi hai search bar ko upar laane ke liye ✨ */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 30px; text-align: center; border-bottom: 1px solid #e2e8f0; }
-        .section-diagnostics { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; } 
+        .section-diagnostics { background: #ffffff; padding: 40px 20px; border-bottom: 1px solid #e2e8f0; } 
         .section-trust { background: #f8fafc; padding: 30px 20px; border-bottom: 1px solid #e2e8f0; }
-        .section-categories { background: #ffffff; padding: 50px 20px; }
-        .section-packages { background: #f1f5f9; padding: 60px 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-        .section-hiw { background: #ffffff; padding: 60px 20px; border-bottom: 1px solid #e2e8f0;}
+        .section-packages { background: #f1f5f9; padding: 50px 20px; border-bottom: 1px solid #e2e8f0; }
+        .section-hiw { background: #ffffff; padding: 50px 20px; border-bottom: 1px solid #e2e8f0;}
 
-        /* 🌟 TEXT STYLES (Moved to Diagnostics Section) 🌟 */
-        .hero-title { font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px; line-height: 1.2;}
+        /* 🌟 HERO & SEARCH SECTION 🌟 */
+        /* ✨ Hero Heading ek line me aur thodi chhoti ✨ */
+        .hero-title { font-size: 32px; font-weight: 800; color: #1e293b; margin-bottom: 20px; letter-spacing: -0.5px; line-height: 1.3;}
         .hero-title span { color: var(--primary); }
-        .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.6;}
         
-        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 10px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
+        .search-container { max-width: 800px; margin: 0 auto; background: white; padding: 8px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15); display: flex; align-items: center; border: 1px solid #cbd5e1; position: relative; margin-bottom: 25px;}
         .search-container i.fa-search { color: #94a3b8; font-size: 20px; margin-left: 15px;}
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
-        .search-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
+        .search-btn { background: var(--primary); color: white; border: none; padding: 14px 28px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
 
         /* ✨ PROMINENT QUICK ACTIONS ✨ */
         .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto; max-width: 800px; flex-wrap: wrap;}
@@ -105,10 +103,8 @@
         .cd-info { display: flex; flex-direction: column; gap: 4px; }
         .cd-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;}
         
-        /* ✨ TAGS CSS ✨ */
         .cd-tag { font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 5px; }
         .cd-tag i { font-size: 12px; }
-        
         .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content; margin-top: 4px;}
         
         .btn-more-services { display: inline-flex; align-items: center; gap: 8px; background: var(--text-main); color: white; padding: 14px 35px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; transition: 0.3s; margin-top: 15px; box-shadow: 0 4px 15px rgba(15,23,42,0.2);}
@@ -119,18 +115,8 @@
         .trust-item { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #334155;}
         .trust-item i { color: var(--secondary); font-size: 22px;}
 
-        /* 🗂️ QUICK CATEGORIES */
-        .section-heading { text-align: center; margin-bottom: 35px;}
-        .section-heading h2 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0;}
-        .section-heading p { color: #64748b; font-size: 15px; margin-top: 8px; font-weight: 600;}
-
-        .categories-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 50px;} 
-        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; width: 90px;}
-        .cat-circle { width: 75px; height: 75px; border-radius: 50%; background: #f8fafc; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); transition: 0.3s; border: 1px solid #e2e8f0;}
-        .cat-item:hover .cat-circle { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15); background: white;}
-        .cat-item span { font-size: 14px; font-weight: 700; color: #334155; text-align: center;}
-        
-        .vip-banner { max-width: 1000px; margin: 0 auto; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
+        /* VIP BANNER */
+        .vip-banner { max-width: 1000px; margin: 0 auto 40px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
         .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
         .vip-content { flex: 1; padding: 40px; z-index: 2; position: relative;}
         .vip-content h2 { font-size: 26px; font-weight: 800; color: #facc15; margin: 0 0 10px 0;}
@@ -211,55 +197,64 @@
         
         /* 📱 100% PERFECT MOBILE OPTIMIZATION 📱 */
         @media (max-width: 768px) {
-            .navbar { padding: 12px 20px; }
-            .logo img { height: 35px; } 
-            .logo h2 { font-size: 20px !important; }
+            .navbar { padding: 12px 15px; }
+            .logo img { height: 32px; } 
+            .logo h2 { font-size: 18px !important; }
 
-            /* ✨ SEARCH BAR PUSHED TO TOP ON MOBILE ✨ */
-            .section-hero { padding: 20px 15px 25px; }
-            .section-diagnostics, .section-packages, .section-hiw, .section-about { padding: 40px 15px; }
-            .section-trust { padding: 25px 10px; }
-            .section-categories { padding: 30px 15px; } 
+            .section-hero { padding: 25px 15px 25px; }
+            .section-diagnostics { padding: 30px 15px; }
             
-            .hero-title { font-size: 26px; line-height: 1.3; margin-bottom: 10px;}
-            .hero-subtitle { font-size: 14px; line-height: 1.5; margin-top: 8px; margin-bottom: 0px;}
+            /* ✨ Mobile Heading (Smaller & 1 Line) ✨ */
+            .hero-title { font-size: 18px; line-height: 1.3; margin-bottom: 15px;}
             
-            .search-container { padding: 8px; border-radius: 16px; margin: 0 auto 20px;}
-            .search-container input { padding: 12px 10px 12px 40px; font-size: 14px; }
-            .search-container i.fa-search { font-size: 16px; left: 16px;}
-            .search-btn { padding: 12px 20px; font-size: 13px; border-radius: 12px;}
+            .search-container { padding: 6px; border-radius: 16px; margin: 0 auto 20px;}
+            .search-container input { padding: 10px 10px 10px 35px; font-size: 13px; }
+            .search-container i.fa-search { font-size: 15px; left: 14px;}
+            .search-btn { padding: 10px 18px; font-size: 12px; border-radius: 12px;}
 
             .hero-quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 0; width: 100%;}
-            .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 11px; gap: 6px; border-radius: 12px;}
-            .btn-quick i { font-size: 22px; }
+            .btn-quick { flex-direction: column; text-align: center; padding: 12px 5px; font-size: 10px; gap: 6px; border-radius: 12px;}
+            .btn-quick i { font-size: 20px; }
 
-            /* Mobile Compact Diagnostics Grid */
-            .compact-diag-grid { grid-template-columns: 1fr; gap: 12px; padding: 0;}
-            .compact-diag-card { padding: 12px 15px; border-radius: 12px;}
-            .cd-icon { width: 45px; height: 45px; font-size: 20px;}
-            .cd-title { font-size: 14px;}
+            /* ✨ 2 COLUMN COMPACT DIAGNOSTICS GRID ✨ */
+            .compact-diag-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0;}
+            .compact-diag-card { padding: 15px 10px; border-radius: 12px; flex-direction: column; text-align: center; gap: 8px;}
+            .cd-icon { width: 45px; height: 45px; font-size: 22px; margin: 0;}
+            .cd-info { align-items: center; }
+            .cd-title { font-size: 13px; line-height: 1.2;}
+            .cd-tag { font-size: 9px; justify-content: center; text-align: center;}
+            .cd-tag i { font-size: 10px; }
+            .cd-discount { font-size: 10px; padding: 3px 8px; margin-top: 2px;}
             
+            /* ✨ STICKY PACKAGES SECTION ✨ */
+            .section-packages { 
+                position: sticky; 
+                top: 55px; /* Stick under header */
+                z-index: 90; 
+                padding: 20px 10px; 
+                box-shadow: 0 6px 15px rgba(0,0,0,0.06); 
+            }
+            .section-packages .section-heading h2 { font-size: 18px; margin-bottom: 5px; }
+            .section-packages .section-heading p { display: none; } /* hide subtitle for space */
+            
+            .slider-wrapper { 
+                margin-left: -10px; margin-right: -10px; padding-left: 10px; padding-right: 10px; width: calc(100% + 20px);
+                scroll-snap-type: x mandatory; 
+            }
+            .pkg-card { min-width: 220px; padding: 15px; scroll-snap-align: center;}
+            .pkg-title { font-size: 14px; }
+            .pkg-basic-price { font-size: 16px; }
+            .btn-add-cart { padding: 8px 15px; font-size: 12px; }
+
+            .section-trust { padding: 25px 10px; }
             .trust-grid { gap: 10px; }
-            .trust-item { font-size: 12px; width: 45%; justify-content: center; padding: 8px; background: white; border: 1px solid #e2e8f0;}
+            .trust-item { font-size: 11px; width: 45%; justify-content: center; padding: 8px; background: white; border: 1px solid #e2e8f0;}
             
-            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0;}
+            .vip-banner { flex-direction: column; text-align: center; border-radius: 20px; margin: 0 15px 30px;}
             .vip-content { padding: 30px 20px;}
             .btn-vip { width: 100%; justify-content: center;}
-            
-            .categories-grid, .home-cat-nav, .slider-wrapper { 
-                margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
-                flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
-            }
-            .categories-grid { margin-bottom: 25px; }
-            .cat-item { flex: 0 0 auto; width: 70px; gap: 6px;}
-            .cat-circle { width: 60px; height: 60px; font-size: 24px;}
-            .cat-item span { font-size: 11px;}
-            
-            .pkg-card { min-width: 280px; padding: 18px; }
-            .pkg-title { font-size: 16px; }
-            .pkg-basic-price { font-size: 20px; }
-            .btn-add-cart { padding: 8px 18px; font-size: 13px; }
 
+            .section-hiw { padding: 40px 15px; }
             .hiw-grid { grid-template-columns: 1fr; gap: 12px;}
             .hiw-step { flex-direction: row; text-align: left; padding: 15px;}
             .hiw-icon { margin-right: 15px; margin-bottom:0; flex-shrink: 0; width: 50px; height: 50px; font-size: 20px;}
@@ -271,9 +266,9 @@
                 margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; width: calc(100% + 30px);
                 display: flex; overflow-x: auto; justify-content: flex-start; gap: 15px; flex-wrap: nowrap;
             }
-            .reviews-wrapper::-webkit-scrollbar { display: none; }
-            .review-card { min-width: 290px; flex: 0 0 auto; }
+            .review-card { min-width: 280px; flex: 0 0 auto; padding: 20px;}
             
+            .section-about { padding: 40px 15px; }
             .about-box { padding: 25px 15px; border-radius: 16px; }
             .about-box h2 { font-size: 20px; }
             
@@ -377,10 +372,8 @@
 
     <!-- ✨ COMPACT ALL-IN-ONE SERVICES GRID WITH TAGS ✨ -->
     <section class="section-diagnostics">
-        <div class="section-heading" style="margin-bottom: 35px;">
-            <!-- ✨ Moved Heading Here ✨ -->
-            <h2 class="hero-title" style="margin-bottom: 10px;">Complete Health Partner<br><span>Consult, Test & Heal.</span></h2>
-            <p class="hero-subtitle" style="margin-bottom: 0;">India's most trusted digital healthcare platform. Book lab tests, advanced scans, consult doctors, and order medicines with assured discounts.</p>
+        <div class="section-heading" style="margin-bottom: 30px;">
+            <h1 class="hero-title">Complete Health Partner - <span>Consult, Test & Heal.</span></h1>
         </div>
         
         <div class="compact-diag-grid">
@@ -436,40 +429,16 @@
         <a href="booking/booking.html" class="btn-more-services">Explore All Services <i class="fas fa-arrow-right"></i></a>
     </section>
 
-    <!-- 🛡️ SECTION 3: TRUST BADGES 🛡️ -->
-    <section class="section-trust">
-        <div class="trust-grid">
-            <div class="trust-item"><i class="fas fa-award"></i> NABL Labs</div>
-            <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Delivery</div>
-            <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Staff</div>
-            <div class="trust-item"><i class="fas fa-shield-alt"></i> Safe Data</div>
+    <!-- VIP BANNER -->
+    <div class="vip-banner">
+        <div class="vip-content">
+            <h2>One VIP Plan = Maximum Savings!</h2>
+            <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
+            <button onclick="openVipImageModal()" class="btn-vip"><i class="fas fa-crown"></i> Buy VIP Plan</button>
         </div>
-    </section>
+    </div>
 
-    <!-- 🗂️ SECTION 4: QUICK CATEGORIES 🗂️ -->
-    <section class="section-categories">
-        <div class="section-heading">
-            <h2>What are you looking for?</h2>
-            <p>Choose a category to find specific tests quickly.</p>
-        </div>
-        <div class="categories-grid">
-            <a href="javascript:void(0)" onclick="scrollToPackages('Fever')" class="cat-item"><div class="cat-circle"><i class="fas fa-thermometer-half"></i></div><span>Fever</span></a>
-            <a href="javascript:void(0)" onclick="scrollToPackages('Sugar')" class="cat-item"><div class="cat-circle"><i class="fas fa-tint"></i></div><span>Diabetes</span></a>
-            <a href="javascript:void(0)" onclick="scrollToPackages('Heart')" class="cat-item"><div class="cat-circle"><i class="fas fa-heartbeat"></i></div><span>Heart</span></a>
-            <a href="javascript:void(0)" onclick="scrollToPackages('Profile')" class="cat-item"><div class="cat-circle"><i class="fas fa-child"></i></div><span>Full Body</span></a>
-            <a href="javascript:void(0)" onclick="scrollToPackages('Senior Citizen')" class="cat-item"><div class="cat-circle" style="color:#059669;"><i class="fas fa-blind"></i></div><span>Senior Citizen</span></a>
-        </div>
-        
-        <div class="vip-banner">
-            <div class="vip-content">
-                <h2>One VIP Plan = Maximum Savings!</h2>
-                <p>Get up to <b>50% OFF</b> on Lab Tests, <b>20% OFF</b> on Medicines, and exclusive discounts on Doctor Consultations for your entire family.</p>
-                <button onclick="openVipImageModal()" class="btn-vip"><i class="fas fa-crown"></i> Buy VIP Plan</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- 🎁 SECTION 5: TRENDING PACKAGES 🎁 -->
+    <!-- 🎁 SECTION 5: TRENDING PACKAGES (STICKY ON MOBILE) 🎁 -->
     <section class="section-packages">
         <div class="section-heading" id="packagesHeading" style="margin-top: 0;">
             <h2>Trending Health Packages</h2>
@@ -478,6 +447,16 @@
         <div id="homePackageCategories" class="home-cat-nav"></div>
         <div class="slider-wrapper" id="homePackageSlider">
             <div style="text-align:center; width:100%; padding:20px; color:#64748b;">Loading packages... <i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+    </section>
+
+    <!-- 🛡️ SECTION 3: TRUST BADGES 🛡️ -->
+    <section class="section-trust">
+        <div class="trust-grid">
+            <div class="trust-item"><i class="fas fa-award"></i> NABL Labs</div>
+            <div class="trust-item"><i class="fas fa-motorcycle"></i> Fast Delivery</div>
+            <div class="trust-item"><i class="fas fa-user-nurse"></i> Expert Staff</div>
+            <div class="trust-item"><i class="fas fa-shield-alt"></i> Safe Data</div>
         </div>
     </section>
 
@@ -605,14 +584,17 @@
     </div>
 
     <!-- ✨ VIP IMAGE MODAL ✨ -->
-    <div id="vipImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
+    <div id="vipImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:3000; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
         <div style="background:white; padding:20px; border-radius:24px; width:90%; max-width:450px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
             <button onclick="closeVipImageModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
             <h3 style="margin:0 0 15px 0; color:#0f172a; font-size:20px; font-weight:800;">Basic vs <span style="color:var(--warning);">VIP Plan</span></h3>
             <img src="image/BASIC AND VIP PLAN.jpg" alt="Basic vs VIP Plan Comparison" style="width:100%; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0; display:block;">
-            <button onclick="handleVipBuyClick()" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; width:100%; padding:16px; border-radius:14px; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 6px 20px rgba(245, 158, 11, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
-                <i class="fas fa-crown"></i> Book VIP Plan Now
-            </button>
+            <div style="display:flex; gap:10px; width:100%;">
+                <button onclick="closeVipImageModal()" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:16px; border-radius:14px; font-weight:800; font-size:15px; cursor:pointer; transition:0.2s;">Skip</button>
+                <button onclick="handleVipBuyClick()" style="flex:2; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; padding:16px; border-radius:14px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 6px 20px rgba(245, 158, 11, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-crown"></i> Buy VIP Plan
+                </button>
+            </div>
         </div>
     </div>
 
@@ -630,6 +612,17 @@
     <script src="app.js"></script>
 
     <script>
+        // ✨ AUTO OPEN VIP MODAL LOGIC ✨
+        document.addEventListener("DOMContentLoaded", () => {
+            // Checks if it has been shown in this session so it doesn't pop up every single time they go to home page
+            if (!sessionStorage.getItem('vipPopupShown')) {
+                setTimeout(() => {
+                    openVipImageModal();
+                    sessionStorage.setItem('vipPopupShown', 'true');
+                }, 800); // Pops up after 0.8 seconds
+            }
+        });
+
         // ✨ ADMIN PASSWORD VERIFICATION LOGIC ✨
         function openAdminPasswordModal(e) {
             e.preventDefault(); 
@@ -646,24 +639,6 @@
             const passInput = document.getElementById('adminPassInput').value;
             if (passInput === 'Bhavya@123') { window.location.href = 'admin.html'; } 
             else { showHomeToast("Incorrect Password! Access Denied.", "error"); }
-        }
-
-        // ✨ SMART SCROLL TO PACKAGES FUNCTION ✨
-        function scrollToPackages(targetCat) {
-            let categories = ['all', ...new Set(homeAllServices.map(s => String(s.service_category || 'Other').trim()))];
-            let matchedCat = categories.find(c => c.toLowerCase() === targetCat.toLowerCase());
-            
-            if (matchedCat) {
-                renderHomePackages(matchedCat);
-            } else {
-                renderHomePackages('all'); 
-            }
-            
-            const packageSection = document.getElementById('packagesHeading');
-            if (packageSection) {
-                const offsetPosition = packageSection.getBoundingClientRect().top + window.scrollY - 80;
-                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-            }
         }
 
         function homeFormatText(text) {

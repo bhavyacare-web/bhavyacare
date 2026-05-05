@@ -1,172 +1,195 @@
-<!-- Language Selection & Form Setup -->
-<div id="withdrawModal" class="modal" style="display:none; padding: 20px; background: #fff; max-width: 500px; margin: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="formTitle">वॉलेट निकासी अनुरोध</h2>
-        <span class="close-btn" onclick="closeWithdrawModal()" style="cursor: pointer; font-size: 20px;">&times;</span>
-    </div>
-
-    <!-- Language Selector -->
-    <div style="margin-bottom: 15px;">
-        <label for="langSelect" style="font-weight: bold;">भाषा चुनें / Select Language:</label>
-        <select id="langSelect" onchange="changeLanguage()" style="padding: 5px; margin-left: 10px;">
-            <option value="hi">हिंदी</option>
-            <option value="en">English</option>
-        </select>
-    </div>
-    
-    <form id="withdrawForm">
-        <!-- Hidden User ID -->
-        <input type="hidden" id="userId" value="8950112467"> 
-
-        <label id="lblFullName" style="display:block; margin-top:10px;">पूरा नाम *</label>
-        <input type="text" id="fullName" required style="width: 100%; padding: 8px;">
-
-        <label id="lblUserImage" style="display:block; margin-top:10px;">अपनी फोटो अपलोड करें *</label>
-        <input type="file" id="userImage" accept="image/*" required style="width: 100%; padding: 8px;">
-
-        <label id="lblProfession" style="display:block; margin-top:10px;">पेशा (आप क्या काम करते हैं?) *</label>
-        <input type="text" id="profession" required style="width: 100%; padding: 8px;">
-
-        <label id="lblProfDoc" style="display:block; margin-top:10px;">पेशे का दस्तावेज़/विज़िटिंग कार्ड अपलोड करें *</label>
-        <input type="file" id="profDoc" accept="image/*,.pdf" required style="width: 100%; padding: 8px;">
-
-        <label id="lblNetwork" style="display:block; margin-top:10px;">नेटवर्क क्षमता (आप कितने लोग जोड़ सकते हैं?) *</label>
-        <input type="number" id="networkCapacity" required style="width: 100%; padding: 8px;">
-
-        <label id="lblUpiId" style="display:block; margin-top:10px;">यूपीआई आईडी *</label>
-        <input type="text" id="upiId" required style="width: 100%; padding: 8px;">
-
-        <label id="lblQrCode" style="display:block; margin-top:10px;">यूपीआई क्यूआर (QR) कोड अपलोड करें *</label>
-        <input type="file" id="qrCode" accept="image/*" required style="width: 100%; padding: 8px;">
-
-        <button type="submit" id="submitBtn" style="margin-top: 20px; width: 100%; padding: 10px; background: #28a745; color: #fff; border: none; cursor: pointer; font-size: 16px;">अनुरोध सबमिट करें</button>
-    </form>
-</div>
-
-<!-- JavaScript Section -->
-<script>
-    function openWithdrawModal() {
-        document.getElementById('withdrawModal').style.display = 'block';
-    }
-
-    function closeWithdrawModal() {
-        document.getElementById('withdrawModal').style.display = 'none';
-    }
-
-    const translations = {
-        hi: {
-            formTitle: "वॉलेट निकासी अनुरोध",
-            lblFullName: "पूरा नाम *",
-            lblUserImage: "अपनी फोटो अपलोड करें *",
-            lblProfession: "पेशा (आप क्या काम करते हैं?) *",
-            lblProfDoc: "पेशे का दस्तावेज़/विज़िटिंग कार्ड अपलोड करें *",
-            lblNetwork: "नेटवर्क क्षमता (आप कितने लोग जोड़ सकते हैं?) *",
-            lblUpiId: "यूपीआई आईडी *",
-            lblQrCode: "यूपीआई क्यूआर (QR) कोड अपलोड करें *",
-            submitBtn: "अनुरोध सबमिट करें",
-            loading: "सबमिट हो रहा है...",
-            success: "आपका अनुरोध सफलतापूर्वक भेज दिया गया है!",
-            error: "कुछ गलत हो गया, कृपया पुनः प्रयास करें।"
-        },
-        en: {
-            formTitle: "Wallet Withdrawal Request",
-            lblFullName: "Full Name *",
-            lblUserImage: "Upload Your Photo *",
-            lblProfession: "Profession (What work do you do?) *",
-            lblProfDoc: "Upload Profession Document/Visiting Card *",
-            lblNetwork: "Network Capacity (How many people can you join?) *",
-            lblUpiId: "UPI ID *",
-            lblQrCode: "Upload UPI QR Code *",
-            submitBtn: "Submit Request",
-            loading: "Submitting...",
-            success: "Your request has been submitted successfully!",
-            error: "Something went wrong, please try again."
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhavya Care - Wallet Withdraw</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
         }
-    };
+    </style>
+</head>
+<body>
 
-    let currentLang = "hi"; 
+    <!-- यह वह बटन है जिस पर क्लिक करने से फॉर्म (Popup) खुलेगा -->
+    <button onclick="openWithdrawModal()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+        Withdrawal Option On / निकासी विकल्प खोलें
+    </button>
 
-    function changeLanguage() {
-        currentLang = document.getElementById("langSelect").value;
-        const t = translations[currentLang];
+    <!-- Language Selection & Form Setup (Modal) -->
+    <div id="withdrawModal" class="modal" style="display:none; padding: 20px; background: #fff; max-width: 500px; margin: 20px auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
         
-        document.getElementById("formTitle").innerText = t.formTitle;
-        document.getElementById("lblFullName").innerText = t.lblFullName;
-        document.getElementById("lblUserImage").innerText = t.lblUserImage;
-        document.getElementById("lblProfession").innerText = t.lblProfession;
-        document.getElementById("lblProfDoc").innerText = t.lblProfDoc;
-        document.getElementById("lblNetwork").innerText = t.lblNetwork;
-        document.getElementById("lblUpiId").innerText = t.lblUpiId;
-        document.getElementById("lblQrCode").innerText = t.lblQrCode;
-        document.getElementById("submitBtn").innerText = t.submitBtn;
-    }
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="formTitle">वॉलेट निकासी अनुरोध</h2>
+            <span class="close-btn" onclick="closeWithdrawModal()" style="cursor: pointer; font-size: 24px; color: red;">&times;</span>
+        </div>
 
-    function getBase64(file) {
-        return new Promise((resolve, reject) => {
-            if (!file) { resolve(""); return; }
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-        });
-    }
+        <!-- Language Selector -->
+        <div style="margin-bottom: 15px; margin-top: 10px;">
+            <label for="langSelect" style="font-weight: bold;">भाषा चुनें / Select Language:</label>
+            <select id="langSelect" onchange="changeLanguage()" style="padding: 5px; margin-left: 10px;">
+                <option value="hi">हिंदी</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+        
+        <form id="withdrawForm">
+            <!-- Hidden User ID -->
+            <input type="hidden" id="userId" value="8950112467"> 
 
-    document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        btn.innerText = translations[currentLang].loading;
-        btn.disabled = true;
+            <label id="lblFullName" style="display:block; margin-top:10px;">पूरा नाम *</label>
+            <input type="text" id="fullName" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
 
-        try {
-            const userImageFile = document.getElementById('userImage').files[0];
-            const profDocFile = document.getElementById('profDoc').files[0];
-            const qrCodeFile = document.getElementById('qrCode').files[0];
-            
-            const formData = {
-                action: "submitWithdrawRequest", // IMPORTANT: यह code.gs को बताएगा कि क्या करना है
-                userId: document.getElementById('userId').value,
-                fullName: document.getElementById('fullName').value,
-                profession: document.getElementById('profession').value,
-                networkCapacity: document.getElementById('networkCapacity').value,
-                upiId: document.getElementById('upiId').value,
-                
-                userImageBase64: await getBase64(userImageFile),
-                userImageName: userImageFile ? userImageFile.name : "",
-                userImageType: userImageFile ? userImageFile.type : "",
-                
-                profDocBase64: await getBase64(profDocFile),
-                profDocName: profDocFile ? profDocFile.name : "",
-                profDocType: profDocFile ? profDocFile.type : "",
+            <label id="lblUserImage" style="display:block; margin-top:10px;">अपनी फोटो अपलोड करें *</label>
+            <input type="file" id="userImage" accept="image/*" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
 
-                qrCodeBase64: await getBase64(qrCodeFile),
-                qrCodeName: qrCodeFile ? qrCodeFile.name : "",
-                qrCodeType: qrCodeFile ? qrCodeFile.type : ""
-            };
+            <label id="lblProfession" style="display:block; margin-top:10px;">पेशा (आप क्या काम करते हैं?) *</label>
+            <input type="text" id="profession" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
 
-            // अपना Google Web App URL यहाँ डालें
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec';
+            <label id="lblProfDoc" style="display:block; margin-top:10px;">पेशे का दस्तावेज़/विज़िटिंग कार्ड अपलोड करें *</label>
+            <input type="file" id="profDoc" accept="image/*,.pdf" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
 
-            const response = await fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            
-            if(data.status === 'success') {
-                alert(translations[currentLang].success);
-                document.getElementById('withdrawForm').reset();
-                closeWithdrawModal();
-            } else {
-                throw new Error("Server error");
-            }
-        } catch (error) {
-            console.error(error);
-            alert(translations[currentLang].error);
-        } finally {
-            btn.innerText = translations[currentLang].submitBtn;
-            btn.disabled = false;
+            <label id="lblNetwork" style="display:block; margin-top:10px;">नेटवर्क क्षमता (आप कितने लोग जोड़ सकते हैं?) *</label>
+            <input type="number" id="networkCapacity" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+
+            <label id="lblUpiId" style="display:block; margin-top:10px;">यूपीआई आईडी *</label>
+            <input type="text" id="upiId" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+
+            <label id="lblQrCode" style="display:block; margin-top:10px;">यूपीआई क्यूआर (QR) कोड अपलोड करें *</label>
+            <input type="file" id="qrCode" accept="image/*" required style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+
+            <button type="submit" id="submitBtn" style="margin-top: 20px; width: 100%; padding: 10px; background: #28a745; color: #fff; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">अनुरोध सबमिट करें</button>
+        </form>
+    </div>
+
+    <!-- JavaScript Section -->
+    <script>
+        function openWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'block';
         }
-    });
-</script>
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+
+        const translations = {
+            hi: {
+                formTitle: "वॉलेट निकासी अनुरोध",
+                lblFullName: "पूरा नाम *",
+                lblUserImage: "अपनी फोटो अपलोड करें *",
+                lblProfession: "पेशा (आप क्या काम करते हैं?) *",
+                lblProfDoc: "पेशे का दस्तावेज़/विज़िटिंग कार्ड अपलोड करें *",
+                lblNetwork: "नेटवर्क क्षमता (आप कितने लोग जोड़ सकते हैं?) *",
+                lblUpiId: "यूपीआई आईडी *",
+                lblQrCode: "यूपीआई क्यूआर (QR) कोड अपलोड करें *",
+                submitBtn: "अनुरोध सबमिट करें",
+                loading: "सबमिट हो रहा है...",
+                success: "आपका अनुरोध सफलतापूर्वक भेज दिया गया है!",
+                error: "कुछ गलत हो गया, कृपया पुनः प्रयास करें।"
+            },
+            en: {
+                formTitle: "Wallet Withdrawal Request",
+                lblFullName: "Full Name *",
+                lblUserImage: "Upload Your Photo *",
+                lblProfession: "Profession (What work do you do?) *",
+                lblProfDoc: "Upload Profession Document/Visiting Card *",
+                lblNetwork: "Network Capacity (How many people can you join?) *",
+                lblUpiId: "UPI ID *",
+                lblQrCode: "Upload UPI QR Code *",
+                submitBtn: "Submit Request",
+                loading: "Submitting...",
+                success: "Your request has been submitted successfully!",
+                error: "Something went wrong, please try again."
+            }
+        };
+
+        let currentLang = "hi"; 
+
+        function changeLanguage() {
+            currentLang = document.getElementById("langSelect").value;
+            const t = translations[currentLang];
+            
+            document.getElementById("formTitle").innerText = t.formTitle;
+            document.getElementById("lblFullName").innerText = t.lblFullName;
+            document.getElementById("lblUserImage").innerText = t.lblUserImage;
+            document.getElementById("lblProfession").innerText = t.lblProfession;
+            document.getElementById("lblProfDoc").innerText = t.lblProfDoc;
+            document.getElementById("lblNetwork").innerText = t.lblNetwork;
+            document.getElementById("lblUpiId").innerText = t.lblUpiId;
+            document.getElementById("lblQrCode").innerText = t.lblQrCode;
+            document.getElementById("submitBtn").innerText = t.submitBtn;
+        }
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) { resolve(""); return; }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = translations[currentLang].loading;
+            btn.disabled = true;
+
+            try {
+                const userImageFile = document.getElementById('userImage').files[0];
+                const profDocFile = document.getElementById('profDoc').files[0];
+                const qrCodeFile = document.getElementById('qrCode').files[0];
+                
+                const formData = {
+                    action: "submitWithdrawRequest", 
+                    userId: document.getElementById('userId').value,
+                    fullName: document.getElementById('fullName').value,
+                    profession: document.getElementById('profession').value,
+                    networkCapacity: document.getElementById('networkCapacity').value,
+                    upiId: document.getElementById('upiId').value,
+                    
+                    userImageBase64: await getBase64(userImageFile),
+                    userImageName: userImageFile ? userImageFile.name : "",
+                    userImageType: userImageFile ? userImageFile.type : "",
+                    
+                    profDocBase64: await getBase64(profDocFile),
+                    profDocName: profDocFile ? profDocFile.name : "",
+                    profDocType: profDocFile ? profDocFile.type : "",
+
+                    qrCodeBase64: await getBase64(qrCodeFile),
+                    qrCodeName: qrCodeFile ? qrCodeFile.name : "",
+                    qrCodeType: qrCodeFile ? qrCodeFile.type : ""
+                };
+
+                // अपना Google Web App URL यहाँ डालें
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec';
+
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if(data.status === 'success') {
+                    alert(translations[currentLang].success);
+                    document.getElementById('withdrawForm').reset();
+                    closeWithdrawModal();
+                } else {
+                    throw new Error("Server error");
+                }
+            } catch (error) {
+                console.error(error);
+                alert(translations[currentLang].error);
+            } finally {
+                btn.innerText = translations[currentLang].submitBtn;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

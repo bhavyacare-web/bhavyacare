@@ -3,194 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Withdrawal Approvals | Bhavya Care</title>
+    <title>Admin - Wallet & Withdrawals | Bhavya Care</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0; padding: 20px;
-        }
-        .header {
-            background: #fff; padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        
+        .header { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         h2 { margin: 0; color: #333; }
-        table {
-            width: 100%; border-collapse: collapse; background: #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;
-        }
+        
+        /* Tab Styles */
+        .tabs { display: flex; margin-bottom: 15px; }
+        .tab-btn { background: #e9ecef; border: none; padding: 10px 20px; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 5px 5px 0 0; margin-right: 5px; color: #555; transition: background 0.3s; }
+        .tab-btn.active { background: #007bff; color: white; }
+        
+        /* Filter Styles */
+        .controls { display: flex; gap: 15px; align-items: center; }
+        .filter-select { padding: 8px 12px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; font-weight: bold; outline: none; }
+        .refresh-btn { padding: 9px 15px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        .refresh-btn:hover { background: #218838; }
+
+        /* Table Styles */
+        .table-container { background: #fff; border-radius: 0 8px 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); padding: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px;}
-        th { background-color: #007bff; color: white; }
+        th { background-color: #f8f9fa; color: #333; border-bottom: 2px solid #ddd; }
         tr:hover { background-color: #f1f1f1; }
         
-        .btn-view {
-            background-color: #17a2b8; color: white; padding: 6px 12px;
-            text-decoration: none; border-radius: 4px; font-size: 12px; margin-right: 5px;
-            display: inline-block; margin-bottom: 5px;
-        }
-        .btn-view:hover { background-color: #138496; }
-
-        .btn-approve {
-            background-color: #28a745; color: white; padding: 8px 15px;
-            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
-        }
-        .btn-approve:hover { background-color: #218838; }
-        .btn-approve:disabled { background-color: #ccc; cursor: not-allowed; }
+        /* Buttons */
+        .btn-view { background-color: #17a2b8; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-size: 12px; margin-right: 3px; display: inline-block; margin-bottom: 3px; }
+        .btn-approve { background-color: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-pay { background-color: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:disabled { background-color: #ccc !important; cursor: not-allowed; }
         
-        .refresh-btn {
-            padding: 10px 20px; cursor: pointer; background: #007bff; color: white; 
-            border: none; border-radius: 5px; font-weight: bold; font-size: 14px;
-        }
-        .refresh-btn:hover { background: #0056b3; }
-
-        .loader {
-            text-align: center; padding: 50px; font-size: 18px; color: #555;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3; border-top: 4px solid #007bff;
-            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px auto;
-        }
+        /* Loader & Messages */
+        .loader { text-align: center; padding: 50px; font-size: 18px; color: #555; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .no-data { text-align: center; padding: 50px; font-size: 18px; color: #888; display: none; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>Withdrawal Requests Dashboard</h2>
-        <button class="refresh-btn" onclick="fetchPendingRequests()">Refresh Data</button>
+        <h2>Admin - Withdrawals Dashboard</h2>
+        <div class="controls">
+            <select id="statusFilter" class="filter-select" onchange="renderTable()">
+                <option value="All">Show All</option>
+                <option value="Pending" selected>Show Pending</option>
+                <option value="Approved">Show Approved / Paid</option>
+            </select>
+            <button class="refresh-btn" onclick="fetchData()">Refresh</button>
+        </div>
     </div>
 
-    <div id="loader" class="loader">
-        <div class="spinner"></div>
-        Loading requests...
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-profiles" onclick="switchTab('profiles')">1. Profile Approvals (KYC)</button>
+        <button class="tab-btn" id="tab-payouts" onclick="switchTab('payouts')">2. Money Payouts (Transfer)</button>
     </div>
 
-    <div id="noDataMessage" class="no-data">
-        🎉 No requests found right now!
-    </div>
+    <div class="table-container">
+        <div id="loader" class="loader"><div class="spinner"></div>Loading data...</div>
+        <div id="noDataMessage" class="no-data">🎉 No requests found matching this filter!</div>
 
-    <table id="requestsTable" style="display: none;">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>User ID</th>
-                <th>Full Name</th>
-                <th>Profession</th>
-                <th>Network</th>
-                <th>UPI ID</th>
-                <th>Documents</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
+        <table id="requestsTable" style="display: none;">
+            <thead id="tableHead">
+                <!-- Headers injected dynamically -->
+            </thead>
+            <tbody id="tableBody">
+                <!-- Data injected dynamically -->
             </tbody>
-    </table>
+        </table>
+    </div>
 
     <script>
-        // TODO: अपना Google Apps Script का Web App URL यहाँ डालें ⬇️
+        // TODO: अपना Google Apps Script URL डालें
         const scriptURL = 'https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec';
 
-        // पेज लोड होते ही डेटा मंगाना शुरू करें
-        window.onload = fetchPendingRequests;
+        let currentTab = 'profiles';
+        let currentData = [];
 
-        async function fetchPendingRequests() {
+        window.onload = fetchData;
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.getElementById('tab-profiles').classList.remove('active');
+            document.getElementById('tab-payouts').classList.remove('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            fetchData();
+        }
+
+        async function fetchData() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('requestsTable').style.display = 'none';
             document.getElementById('noDataMessage').style.display = 'none';
-            document.getElementById('tableBody').innerHTML = "";
+            
+            let actionName = currentTab === 'profiles' ? "getAllWithdrawalRequests" : "getAllPayoutRequests";
 
             try {
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "getAllWithdrawalRequests" }) 
-                });
+                const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: actionName }) });
                 const result = await response.json();
 
                 document.getElementById('loader').style.display = 'none';
-
-                if (result.status === 'success' && result.data.length > 0) {
-                    document.getElementById('requestsTable').style.display = 'table';
-                    populateTable(result.data);
-                } else {
-                    document.getElementById('noDataMessage').style.display = 'block';
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Failed to fetch data. Check your internet connection or script URL.");
-                document.getElementById('loader').style.display = 'none';
-            }
-        }
-
-        function populateTable(data) {
-            const tbody = document.getElementById('tableBody');
-            data.forEach(req => {
-                // Date Formatting
-                let dateObj = new Date(req.timestamp);
-                let formattedDate = dateObj.toLocaleDateString() + "<br><small style='color:gray;'>" + dateObj.toLocaleTimeString() + "</small>";
-
-                let tr = document.createElement('tr');
-                tr.id = `row-${req.row}`;
-                
-                // Status के हिसाब से बैज (Badge) और बटन का रंग बदलना
-                let statusBadge = req.status === "Approved" 
-                                  ? `<span style="color: #28a745; font-weight: bold;">Approved ✅</span>` 
-                                  : `<span style="color: #fd7e14; font-weight: bold;">Pending ⏳</span>`;
-                
-                // अगर अप्रूव हो चुका है, तो बटन को 'Done' और Disabled कर दें
-                let actionBtn = req.status === "Approved"
-                                  ? `<button class="btn-approve" style="background: #ccc; cursor: not-allowed;" disabled>Done</button>`
-                                  : `<button class="btn-approve" id="btn-${req.row}" onclick="approveRequest(${req.row}, '${req.userId}', '${req.fullName}')">Approve</button>`;
-
-                tr.innerHTML = `
-                    <td>${formattedDate}</td>
-                    <td><b>${req.userId}</b></td>
-                    <td>${req.fullName}</td>
-                    <td>${req.profession}</td>
-                    <td><b>${req.networkCapacity}</b></td>
-                    <td>${req.upiId}</td>
-                    <td>
-                        <a href="${req.userImage}" target="_blank" class="btn-view">Photo</a>
-                        <a href="${req.profDoc}" target="_blank" class="btn-view">Doc</a>
-                        <a href="${req.qrCode}" target="_blank" class="btn-view">QR</a>
-                    </td>
-                    <td>${statusBadge}</td>
-                    <td>${actionBtn}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function approveRequest(rowNum, userId, fullName) {
-            if(!confirm(`Are you sure you want to approve the withdrawal request for ${fullName} (${userId})?`)) return;
-
-            const btn = document.getElementById(`btn-${rowNum}`);
-            btn.innerText = "Approving...";
-            btn.disabled = true;
-
-            try {
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "approveWithdrawal", row: rowNum, userId: userId, fullName: fullName })
-                });
-                const result = await response.json();
 
                 if (result.status === 'success') {
-                    alert(`${fullName} has been Approved Successfully!`);
-                    // पेज को रीफ्रेश कर दें ताकि लिस्ट में 'Approved' स्टेटस अपडेट हो जाए
-                    fetchPendingRequests(); 
+                    currentData = result.data;
+                    renderTable();
                 } else {
-                    throw new Error(result.message);
+                    alert("Error: " + result.message);
                 }
             } catch (error) {
                 console.error(error);
-                alert("Approval Failed: " + error.message);
-                btn.innerText = "Approve";
-                btn.disabled = false;
+                alert("Failed to fetch data.");
+                document.getElementById('loader').style.display = 'none';
             }
+        }
+
+        function renderTable() {
+            let filterVal = document.getElementById('statusFilter').value;
+            let tbody = document.getElementById('tableBody');
+            let thead = document.getElementById('tableHead');
+            
+            tbody.innerHTML = "";
+            thead.innerHTML = "";
+
+            // Filter Data based on Dropdown
+            let filteredData = currentData.filter(item => {
+                if (filterVal === "All") return true;
+                let status = item.status.toLowerCase();
+                if (filterVal === "Pending") return status === "pending";
+                if (filterVal === "Approved") return status === "approved" || status === "paid";
+                return true;
+            });
+
+            if (filteredData.length === 0) {
+                document.getElementById('requestsTable').style.display = 'none';
+                document.getElementById('noDataMessage').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('requestsTable').style.display = 'table';
+            document.getElementById('noDataMessage').style.display = 'none';
+
+            if (currentTab === 'profiles') {
+                // Headers for Profiles
+                thead.innerHTML = `<tr><th>Date</th><th>User ID</th><th>Name</th><th>Network</th><th>Docs & UPI</th><th>Status</th><th>Action</th></tr>`;
+                
+                filteredData.forEach(req => {
+                    let d = new Date(req.timestamp).toLocaleDateString();
+                    let badge = req.status === "Approved" ? `<span style="color:green; font-weight:bold;">Approved ✅</span>` : `<span style="color:orange; font-weight:bold;">Pending ⏳</span>`;
+                    let btn = req.status === "Approved" ? `<button class="btn-approve" disabled>Done</button>` : `<button class="btn-approve" id="btn-${req.row}" onclick="approveProfile(${req.row}, '${req.userId}', '${req.fullName}')">Approve</button>`;
+
+                    tbody.innerHTML += `<tr>
+                        <td>${d}</td><td><b>${req.userId}</b></td><td>${req.fullName}<br><small>${req.profession}</small></td>
+                        <td>${req.networkCapacity}</td>
+                        <td>
+                            <a href="${req.userImage}" target="_blank" class="btn-view">Photo</a>
+                            <a href="${req.profDoc}" target="_blank" class="btn-view">Doc</a><br>
+                            <small>UPI: ${req.upiId}</small>
+                        </td>
+                        <td>${badge}</td><td>${btn}</td>
+                    </tr>`;
+                });
+
+            } else {
+                // Headers for Payouts
+                thead.innerHTML = `<tr><th>Date</th><th>User ID</th><th>Name</th><th>Amount</th><th>Pay To (UPI)</th><th>Remarks/Txn ID</th><th>Status</th><th>Action</th></tr>`;
+                
+                filteredData.forEach(req => {
+                    let d = new Date(req.timestamp).toLocaleDateString();
+                    let badge = req.status === "Paid" ? `<span style="color:green; font-weight:bold;">Paid ✅</span>` : `<span style="color:orange; font-weight:bold;">Pending ⏳</span>`;
+                    let btn = req.status === "Paid" ? `<button class="btn-pay" disabled>Done</button>` : `<button class="btn-pay" id="btn-${req.row}" onclick="markAsPaid(${req.row}, '${req.patientName}', '${req.amount}')">Mark Paid</button>`;
+
+                    tbody.innerHTML += `<tr>
+                        <td>${d}</td><td><b>${req.userId}</b></td><td>${req.patientName}</td>
+                        <td><b style="font-size:16px; color:#d9534f;">₹${req.amount}</b></td>
+                        <td><b style="color:#007bff;">${req.upiId}</b></td>
+                        <td>${req.remarks || '-'}</td>
+                        <td>${badge}</td><td>${btn}</td>
+                    </tr>`;
+                });
+            }
+        }
+
+        // --- Action Functions ---
+
+        async function approveProfile(rowNum, userId, fullName) {
+            if(!confirm(`Approve KYC profile for ${fullName}?`)) return;
+            let btn = document.getElementById(`btn-${rowNum}`); btn.innerText = "Processing..."; btn.disabled = true;
+            try {
+                const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "approveWithdrawal", row: rowNum, userId: userId, fullName: fullName }) });
+                const result = await response.json();
+                if (result.status === 'success') { alert("Profile Approved!"); fetchData(); } 
+                else throw new Error(result.message);
+            } catch (e) { alert("Error: " + e.message); btn.innerText = "Approve"; btn.disabled = false; }
+        }
+
+        async function markAsPaid(rowNum, patientName, amount) {
+            let txnId = prompt(`Mark payment of ₹${amount} to ${patientName} as Paid.\n\nEnter UPI Transaction ID or Remarks (This will be sent via Email):`);
+            if(txnId === null) return; // User clicked Cancel
+            if(txnId.trim() === "") { alert("Transaction ID/Remarks cannot be empty."); return; }
+
+            let btn = document.getElementById(`btn-${rowNum}`); btn.innerText = "Processing..."; btn.disabled = true;
+            try {
+                const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "completePayout", row: rowNum, remarks: txnId }) });
+                const result = await response.json();
+                if (result.status === 'success') { alert("Payment Marked as Paid & Email Sent!"); fetchData(); } 
+                else throw new Error(result.message);
+            } catch (e) { alert("Error: " + e.message); btn.innerText = "Mark Paid"; btn.disabled = false; }
         }
     </script>
 </body>

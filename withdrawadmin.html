@@ -20,20 +20,30 @@
             width: 100%; border-collapse: collapse; background: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;
         }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px;}
         th { background-color: #007bff; color: white; }
         tr:hover { background-color: #f1f1f1; }
         
         .btn-view {
             background-color: #17a2b8; color: white; padding: 6px 12px;
             text-decoration: none; border-radius: 4px; font-size: 12px; margin-right: 5px;
+            display: inline-block; margin-bottom: 5px;
         }
+        .btn-view:hover { background-color: #138496; }
+
         .btn-approve {
             background-color: #28a745; color: white; padding: 8px 15px;
             border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
+        .btn-approve:hover { background-color: #218838; }
         .btn-approve:disabled { background-color: #ccc; cursor: not-allowed; }
         
+        .refresh-btn {
+            padding: 10px 20px; cursor: pointer; background: #007bff; color: white; 
+            border: none; border-radius: 5px; font-weight: bold; font-size: 14px;
+        }
+        .refresh-btn:hover { background: #0056b3; }
+
         .loader {
             text-align: center; padding: 50px; font-size: 18px; color: #555;
         }
@@ -49,8 +59,8 @@
 <body>
 
     <div class="header">
-        <h2>Pending Withdrawal Requests</h2>
-        <button onclick="fetchPendingRequests()" style="padding:10px; cursor:pointer;">Refresh Data</button>
+        <h2>Withdrawal Requests Dashboard</h2>
+        <button class="refresh-btn" onclick="fetchPendingRequests()">Refresh Data</button>
     </div>
 
     <div id="loader" class="loader">
@@ -59,7 +69,7 @@
     </div>
 
     <div id="noDataMessage" class="no-data">
-        🎉 No pending requests right now!
+        🎉 No requests found right now!
     </div>
 
     <table id="requestsTable" style="display: none;">
@@ -72,18 +82,19 @@
                 <th>Network</th>
                 <th>UPI ID</th>
                 <th>Documents</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody id="tableBody">
-            <!-- Data will be injected here -->
-        </tbody>
+            </tbody>
     </table>
 
     <script>
-        // अपना Google Web App URL यहाँ डालें
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec';
+        // TODO: अपना Google Apps Script का Web App URL यहाँ डालें ⬇️
+        const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
 
+        // पेज लोड होते ही डेटा मंगाना शुरू करें
         window.onload = fetchPendingRequests;
 
         async function fetchPendingRequests() {
@@ -95,7 +106,7 @@
             try {
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: "getPendingWithdrawals" })
+                    body: JSON.stringify({ action: "getAllWithdrawalRequests" }) 
                 });
                 const result = await response.json();
 
@@ -109,7 +120,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert("Failed to fetch data.");
+                alert("Failed to fetch data. Check your internet connection or script URL.");
                 document.getElementById('loader').style.display = 'none';
             }
         }
@@ -117,37 +128,44 @@
         function populateTable(data) {
             const tbody = document.getElementById('tableBody');
             data.forEach(req => {
-                // Formatting Date
+                // Date Formatting
                 let dateObj = new Date(req.timestamp);
-                let formattedDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString();
+                let formattedDate = dateObj.toLocaleDateString() + "<br><small style='color:gray;'>" + dateObj.toLocaleTimeString() + "</small>";
 
                 let tr = document.createElement('tr');
                 tr.id = `row-${req.row}`;
                 
+                // Status के हिसाब से बैज (Badge) और बटन का रंग बदलना
+                let statusBadge = req.status === "Approved" 
+                                  ? `<span style="color: #28a745; font-weight: bold;">Approved ✅</span>` 
+                                  : `<span style="color: #fd7e14; font-weight: bold;">Pending ⏳</span>`;
+                
+                // अगर अप्रूव हो चुका है, तो बटन को 'Done' और Disabled कर दें
+                let actionBtn = req.status === "Approved"
+                                  ? `<button class="btn-approve" style="background: #ccc; cursor: not-allowed;" disabled>Done</button>`
+                                  : `<button class="btn-approve" id="btn-${req.row}" onclick="approveRequest(${req.row}, '${req.userId}', '${req.fullName}')">Approve</button>`;
+
                 tr.innerHTML = `
                     <td>${formattedDate}</td>
                     <td><b>${req.userId}</b></td>
                     <td>${req.fullName}</td>
                     <td>${req.profession}</td>
-                    <td>${req.networkCapacity}</td>
+                    <td><b>${req.networkCapacity}</b></td>
                     <td>${req.upiId}</td>
                     <td>
                         <a href="${req.userImage}" target="_blank" class="btn-view">Photo</a>
                         <a href="${req.profDoc}" target="_blank" class="btn-view">Doc</a>
                         <a href="${req.qrCode}" target="_blank" class="btn-view">QR</a>
                     </td>
-                    <td>
-                        <button class="btn-approve" id="btn-${req.row}" onclick="approveRequest(${req.row}, '${req.userId}', '${req.fullName}')">
-                            Approve
-                        </button>
-                    </td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         async function approveRequest(rowNum, userId, fullName) {
-            if(!confirm(`Are you sure you want to approve ${fullName}?`)) return;
+            if(!confirm(`Are you sure you want to approve the withdrawal request for ${fullName} (${userId})?`)) return;
 
             const btn = document.getElementById(`btn-${rowNum}`);
             btn.innerText = "Approving...";
@@ -156,25 +174,14 @@
             try {
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    body: JSON.stringify({ 
-                        action: "approveWithdrawal", 
-                        row: rowNum, 
-                        userId: userId, 
-                        fullName: fullName 
-                    })
+                    body: JSON.stringify({ action: "approveWithdrawal", row: rowNum, userId: userId, fullName: fullName })
                 });
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    alert(`${fullName} Approved Successfully!`);
-                    // Row को टेबल से गायब कर दें
-                    document.getElementById(`row-${rowNum}`).remove();
-                    
-                    // अगर टेबल खाली हो गई हो तो No Data मैसेज दिखाएं
-                    if(document.getElementById('tableBody').children.length === 0) {
-                        document.getElementById('requestsTable').style.display = 'none';
-                        document.getElementById('noDataMessage').style.display = 'block';
-                    }
+                    alert(`${fullName} has been Approved Successfully!`);
+                    // पेज को रीफ्रेश कर दें ताकि लिस्ट में 'Approved' स्टेटस अपडेट हो जाए
+                    fetchPendingRequests(); 
                 } else {
                     throw new Error(result.message);
                 }

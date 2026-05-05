@@ -128,23 +128,18 @@
         // अपना Google Web App URL यहाँ डालें
         const scriptURL = 'https://script.google.com/macros/s/AKfycbz_leCWfb7HNhh4BLGLMqhM8dF9jCKpvmqIZkijnzEJl__E3dZftwl3z-hZ7mmzYtrHSA/exec';
 
-        // --- 1. Login Verification ---
-        // यहाँ हम localStorage से यूज़र का नंबर/ID निकाल रहे हैं। 
-        // (अगर आप 'patient_mobile' या कोई और key इस्तेमाल करते हैं, तो उसे यहाँ बदल लें)
-        // यहाँ से टेस्टिंग वाला नंबर हटा दिया गया है
-        let currentUserId = localStorage.getItem("loggedInUserId") || localStorage.getItem("userPhone"); 
+        // आपके सिस्टम के सही Keys (bhavya_user_id या bhavya_mobile) का उपयोग 
+        let currentUserId = localStorage.getItem("bhavya_user_id") || localStorage.getItem("bhavya_mobile");
 
         window.onload = async function() {
-            // अगर यूज़र लॉगिन नहीं है (currentUserId खाली है)
+            // अगर यूज़र लॉगिन नहीं है
             if (!currentUserId || currentUserId === "") {
                 alert("Please login first to access this page.");
                 
-                // पेशेंट को सीधा index.html पर भेजें
-                // (अगर withdraw.html मुख्य फोल्डर में ही है तो सिर्फ "index.html" लिखें, 
-                // अगर यह किसी फोल्डर के अंदर है तो "../index.html" का उपयोग करें)
-                window.location.href = "index.html"; 
-                
-                return; // आगे का कोड रन नहीं होगा
+                // ध्यान दें: अगर आपका withdraw.html किसी फोल्डर में है, तो "../index.html" रखें, 
+                // अगर बाहर है तो सिर्फ "index.html" रखें।
+                window.location.href = "../index.html"; 
+                return; 
             }
             
             // अगर लॉगिन है, तो फॉर्म की प्रक्रिया शुरू करें

@@ -146,8 +146,7 @@
             document.getElementById('userId').value = currentUserId;
             checkExistingRequest(currentUserId);
         };
-        // --- 2. Check Existing Request Status ---
-        async function checkExistingRequest(uid) {
+       async function checkExistingRequest(uid) {
             try {
                 let response = await fetch(scriptURL, {
                     method: 'POST',
@@ -158,8 +157,16 @@
                 document.getElementById('loaderSection').style.display = 'none';
 
                 if(data.status === 'exists') {
-                    // अगर फॉर्म पहले भरा जा चुका है
+                    // अगर फॉर्म Pending है
                     document.getElementById('statusSection').style.display = 'block';
+                    document.querySelector('.status-msg').innerText = "Withdrawal Request in Process";
+                    document.querySelector('.status-msg').nextElementSibling.innerText = "Your previous request is currently being reviewed by the admin.";
+                } else if(data.status === 'approved') {
+                    // अगर फॉर्म Approve हो चुका है (नया कोड)
+                    document.getElementById('statusSection').style.display = 'block';
+                    document.querySelector('.status-msg').innerText = "Wallet Withdrawal Active!";
+                    document.querySelector('.status-msg').style.color = "#007bff"; // Blue color for active
+                    document.querySelector('.status-msg').nextElementSibling.innerText = "Your withdrawal capability has already been approved. You can use the feature from your dashboard.";
                 } else {
                     // अगर फॉर्म नहीं भरा है
                     document.getElementById('formSection').style.display = 'block';

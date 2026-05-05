@@ -179,9 +179,11 @@
                     alert(translations[currentLang].success);
                     document.getElementById('withdrawForm').reset();
                     closeWithdrawModal();
-                } else {
-                    throw new Error("Server error");
-                }
+                // नया कोड:
+} else {
+    console.error("असली सर्वर एरर:", data.message);
+    throw new Error("सर्वर एरर: " + data.message);
+}
             } catch (error) {
                 console.error(error);
                 alert(translations[currentLang].error);

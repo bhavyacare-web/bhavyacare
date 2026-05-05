@@ -131,18 +131,26 @@
         // --- 1. Login Verification ---
         // यहाँ हम localStorage से यूज़र का नंबर/ID निकाल रहे हैं। 
         // (अगर आप 'patient_mobile' या कोई और key इस्तेमाल करते हैं, तो उसे यहाँ बदल लें)
-        let currentUserId = localStorage.getItem("loggedInUserId") || localStorage.getItem("userPhone") || "8950112467"; // Testing ke liye default add kiya h
+        // यहाँ से टेस्टिंग वाला नंबर हटा दिया गया है
+        let currentUserId = localStorage.getItem("loggedInUserId") || localStorage.getItem("userPhone"); 
 
         window.onload = async function() {
+            // अगर यूज़र लॉगिन नहीं है (currentUserId खाली है)
             if (!currentUserId || currentUserId === "") {
-                alert("Please login first to access the withdrawal option.");
-                window.location.href = "../index.html"; // अपने लॉगिन पेज का लिंक डालें
-                return;
+                alert("Please login first to access this page.");
+                
+                // पेशेंट को सीधा index.html पर भेजें
+                // (अगर withdraw.html मुख्य फोल्डर में ही है तो सिर्फ "index.html" लिखें, 
+                // अगर यह किसी फोल्डर के अंदर है तो "../index.html" का उपयोग करें)
+                window.location.href = "index.html"; 
+                
+                return; // आगे का कोड रन नहीं होगा
             }
+            
+            // अगर लॉगिन है, तो फॉर्म की प्रक्रिया शुरू करें
             document.getElementById('userId').value = currentUserId;
             checkExistingRequest(currentUserId);
         };
-
         // --- 2. Check Existing Request Status ---
         async function checkExistingRequest(uid) {
             try {

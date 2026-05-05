@@ -160,7 +160,7 @@
             }
         }
 
-        // --- NEW: Load Wallet Dashboard ---
+       // --- NEW: Load Wallet Dashboard ---
         async function loadWalletDashboard(uid) {
             document.getElementById('loaderSection').style.display = 'block';
             document.getElementById('formSection').style.display = 'none';
@@ -182,10 +182,32 @@
                 document.getElementById('displayBalance').innerText = '₹' + walletBalance;
                 document.getElementById('limitMsg').innerText = `Minimum withdrawal limit: ₹${minLimit}`;
 
+                // 1. Load Payout Request Status (नया कोड)
+                let pBody = document.getElementById('payoutBody');
+                pBody.innerHTML = '';
+                if(!data.payouts || data.payouts.length === 0) {
+                    pBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">No requests yet</td></tr>';
+                } else {
+                    data.payouts.forEach(req => {
+                        let d = new Date(req.date).toLocaleDateString();
+                        // रंग बदलना: Paid (Green), Rejected (Red), Pending (Orange)
+                        let statusColor = req.status.toLowerCase() === 'paid' ? 'color: #28a745;' : (req.status.toLowerCase() === 'rejected' ? 'color: #dc3545;' : 'color: #fd7e14;');
+                        // अगर एडमिन ने कोई रिमार्क दिया है
+                        let remarksHtml = req.remarks ? `<br><small style="color:gray;">${req.remarks}</small>` : '';
+                        
+                        pBody.innerHTML += `<tr>
+                            <td>${d}</td>
+                            <td><b>₹${req.amount}</b></td>
+                            <td><span style="font-weight:bold; ${statusColor}">${req.status}</span>${remarksHtml}</td>
+                        </tr>`;
+                    });
+                }
+
+                // 2. Load Normal Transactions
                 let tbody = document.getElementById('txnBody');
                 tbody.innerHTML = '';
-                if(data.transactions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No transactions yet</td></tr>';
+                if(!data.transactions || data.transactions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">No transactions yet</td></tr>';
                 } else {
                     data.transactions.forEach(txn => {
                         let d = new Date(txn.date).toLocaleDateString();
@@ -201,6 +223,7 @@
                 }
             } catch(e) {
                 alert("Error loading wallet data.");
+                document.getElementById('loaderSection').style.display = 'none';
             }
         }
 

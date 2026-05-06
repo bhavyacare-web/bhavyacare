@@ -23,7 +23,7 @@
         .status-msg { color: #28a745; font-size: 20px; font-weight: bold; margin-bottom: 20px;}
         .dash-btn { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block;}
 
-        /* NEW: Wallet Dashboard Styles */
+        /* Wallet Dashboard Styles */
         .wallet-card { background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
         .wallet-card h1 { margin: 10px 0 0 0; font-size: 36px; }
         .wallet-card p { margin: 0; opacity: 0.8; font-size: 14px;}
@@ -39,21 +39,24 @@
 
     <div class="container">
         
+        <!-- 1. Loading Screen -->
         <div id="loaderSection">
             <div class="spinner"></div>
             <h3 style="color: #666;">Checking your details...</h3>
         </div>
 
+        <!-- 2. Already In Process Screen -->
         <div id="statusSection" style="display: none;">
             <div class="status-msg">Withdrawal Request in Process</div>
             <p style="color: #666; margin-bottom: 20px;">Your request is currently being reviewed by the admin.</p>
-            <a href="patient_dashboard/patient_dashboard.html" class="dash-btn">Go to Dashboard</a>
+            <a href="index.html" class="dash-btn">Go to Home</a>
         </div>
 
+        <!-- 3. Wallet Dashboard (Shown if Approved) -->
         <div id="walletDashboardSection" style="display: none;">
             <div class="header">
                 <h2>My Wallet</h2>
-                <a href="patient_dashboard/patient_dashboard.html" style="color:#007bff; text-decoration:none; font-weight:bold;">Back</a>
+                <a href="index.html" style="color:#007bff; text-decoration:none; font-weight:bold;">Home</a>
             </div>
             
             <div class="wallet-card">
@@ -68,7 +71,7 @@
                 <button class="submit-btn" id="requestMoneyBtn" onclick="requestMoney()" style="margin-top: 10px; padding: 10px;">Withdraw Now</button>
             </div>
 
-            <!-- NEW: Withdrawal Status Table -->
+            <!-- Withdrawal Status Table -->
             <h3 style="font-size: 16px; margin-bottom: 5px; margin-top: 15px;">Withdrawal Status</h3>
             <div style="max-height: 150px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #eee; border-radius: 5px;">
                 <table class="txn-table">
@@ -78,16 +81,19 @@
                     </tbody>
                 </table>
             </div>
+
             <h3 style="font-size: 16px; margin-bottom: 5px;">Recent Transactions</h3>
             <div style="max-height: 200px; overflow-y: auto;">
                 <table class="txn-table">
                     <thead><tr><th>Date</th><th>Detail</th><th>Amount</th></tr></thead>
                     <tbody id="txnBody">
-                        </tbody>
+                        <!-- Transcations will load here -->
+                    </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- 4. Main Profile Form Screen (Shown if Not Applied) -->
         <div id="formSection" style="display: none;">
             <div class="header">
                 <h2 id="formTitle">Wallet Withdrawal Setup</h2>
@@ -99,20 +105,29 @@
             
             <form id="withdrawForm">
                 <input type="hidden" id="userId" value=""> 
+                
                 <label id="lblFullName">Full Name *</label>
                 <input type="text" id="fullName" required>
+                
                 <label id="lblUserImage">Upload Your Photo *</label>
                 <input type="file" id="userImage" accept="image/*" required>
+                
                 <label id="lblProfession">Profession (What work do you do?) *</label>
                 <input type="text" id="profession" required>
+                
                 <label id="lblProfDoc">Upload Profession Document/Visiting Card *</label>
                 <input type="file" id="profDoc" accept="image/*,.pdf" required>
+                
                 <label id="lblNetwork">Network Capacity (How many people can you join?) *</label>
                 <input type="number" id="networkCapacity" required>
-                <label id="lblUpiId">UPI ID *</label>
-                <input type="text" id="upiId" required>
-                <label id="lblQrCode">Upload UPI QR Code *</label>
-                <input type="file" id="qrCode" accept="image/*" required>
+                
+                <!-- NOTE: Required has been removed from UPI ID and QR Code -->
+                <label id="lblUpiId">UPI ID (Optional if QR is uploaded)</label>
+                <input type="text" id="upiId">
+                
+                <label id="lblQrCode">Upload UPI QR Code (Optional if UPI ID is given)</label>
+                <input type="file" id="qrCode" accept="image/*">
+                
                 <button type="submit" id="submitBtn" class="submit-btn">Submit Details</button>
             </form>
         </div>
@@ -150,7 +165,6 @@
                 if(data.status === 'pending') {
                     document.getElementById('statusSection').style.display = 'block';
                 } else if(data.status === 'active') {
-                    // अगर Active है, तो नया वॉलेट डैशबोर्ड खोलो
                     loadWalletDashboard(uid);
                 } else {
                     document.getElementById('formSection').style.display = 'block';
@@ -160,7 +174,6 @@
             }
         }
 
-       // --- NEW: Load Wallet Dashboard ---
         async function loadWalletDashboard(uid) {
             document.getElementById('loaderSection').style.display = 'block';
             document.getElementById('formSection').style.display = 'none';
@@ -182,7 +195,7 @@
                 document.getElementById('displayBalance').innerText = '₹' + walletBalance;
                 document.getElementById('limitMsg').innerText = `Minimum withdrawal limit: ₹${minLimit}`;
 
-                // 1. Load Payout Request Status (नया कोड)
+                // Payout Status
                 let pBody = document.getElementById('payoutBody');
                 pBody.innerHTML = '';
                 if(!data.payouts || data.payouts.length === 0) {
@@ -190,9 +203,7 @@
                 } else {
                     data.payouts.forEach(req => {
                         let d = new Date(req.date).toLocaleDateString();
-                        // रंग बदलना: Paid (Green), Rejected (Red), Pending (Orange)
                         let statusColor = req.status.toLowerCase() === 'paid' ? 'color: #28a745;' : (req.status.toLowerCase() === 'rejected' ? 'color: #dc3545;' : 'color: #fd7e14;');
-                        // अगर एडमिन ने कोई रिमार्क दिया है
                         let remarksHtml = req.remarks ? `<br><small style="color:gray;">${req.remarks}</small>` : '';
                         
                         pBody.innerHTML += `<tr>
@@ -203,7 +214,7 @@
                     });
                 }
 
-                // 2. Load Normal Transactions
+                // Normal Transactions
                 let tbody = document.getElementById('txnBody');
                 tbody.innerHTML = '';
                 if(!data.transactions || data.transactions.length === 0) {
@@ -227,7 +238,6 @@
             }
         }
 
-        // --- NEW: Submit Payout (Money) Request ---
         async function requestMoney() {
             let amt = document.getElementById('withdrawAmount').value;
             if(!amt || amt < minLimit) {
@@ -253,7 +263,7 @@
                 if(data.status === 'success') {
                     alert("Withdrawal Request Submitted Successfully!");
                     document.getElementById('withdrawAmount').value = '';
-                    loadWalletDashboard(currentUserId); // Refresh UI
+                    loadWalletDashboard(currentUserId); 
                 } else {
                     throw new Error(data.message);
                 }
@@ -265,10 +275,15 @@
             }
         }
 
-        // --- Old Form Submit Code (For First Time Setup) ---
-        const translations = { /*... (Same as before) ...*/
-            hi: { formTitle: "वॉलेट सेटअप", lblFullName: "पूरा नाम *", lblUserImage: "अपनी फोटो *", lblProfession: "पेशा *", lblProfDoc: "विज़िटिंग कार्ड *", lblNetwork: "नेटवर्क क्षमता *", lblUpiId: "यूपीआई आईडी *", lblQrCode: "QR कोड *", submitBtn: "सबमिट करें" },
-            en: { formTitle: "Wallet Setup", lblFullName: "Full Name *", lblUserImage: "Photo *", lblProfession: "Profession *", lblProfDoc: "Document/Card *", lblNetwork: "Network Capacity *", lblUpiId: "UPI ID *", lblQrCode: "QR Code *", submitBtn: "Submit Details" }
+        const translations = { 
+            hi: { 
+                formTitle: "वॉलेट सेटअप", lblFullName: "पूरा नाम *", lblUserImage: "अपनी फोटो *", lblProfession: "पेशा *", lblProfDoc: "विज़िटिंग कार्ड *", lblNetwork: "नेटवर्क क्षमता *", 
+                lblUpiId: "यूपीआई आईडी (QR नहीं है तो भरें)", lblQrCode: "QR कोड (UPI ID नहीं है तो अपलोड करें)", submitBtn: "सबमिट करें" 
+            },
+            en: { 
+                formTitle: "Wallet Setup", lblFullName: "Full Name *", lblUserImage: "Photo *", lblProfession: "Profession *", lblProfDoc: "Document/Card *", lblNetwork: "Network Capacity *", 
+                lblUpiId: "UPI ID (Optional if QR is uploaded)", lblQrCode: "Upload UPI QR Code (Optional if UPI ID is given)", submitBtn: "Submit Details" 
+            }
         };
 
         function changeLanguage() {
@@ -285,16 +300,48 @@
 
         document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // CUSTOM VALIDATION FOR UPI / QR CODE
+            let upiVal = document.getElementById('upiId').value.trim();
+            let qrFile = document.getElementById('qrCode').files[0];
+
+            if (!upiVal && !qrFile) {
+                let currentLang = document.getElementById("langSelect").value;
+                if (currentLang === 'hi') {
+                    alert("कृपया यूपीआई आईडी या क्यूआर कोड में से कम से कम कोई एक ज़रूर दें!");
+                } else {
+                    alert("Please provide either a UPI ID or upload a QR Code!");
+                }
+                return; // फॉर्म सबमिट होने से रोकें
+            }
+
             const btn = document.getElementById('submitBtn');
             btn.innerText = "Submitting Please Wait..."; btn.disabled = true;
 
             try {
+                // सुरक्षित तरीके से फाइल चेक करना 
+                let userImageFile = document.getElementById('userImage').files[0];
+                let profDocFile = document.getElementById('profDoc').files[0];
+
                 const formData = {
                     action: "submitWithdrawRequest", 
-                    userId: document.getElementById('userId').value, fullName: document.getElementById('fullName').value, profession: document.getElementById('profession').value, networkCapacity: document.getElementById('networkCapacity').value, upiId: document.getElementById('upiId').value,
-                    userImageBase64: await getBase64(document.getElementById('userImage').files[0]), userImageName: document.getElementById('userImage').files[0].name, userImageType: document.getElementById('userImage').files[0].type,
-                    profDocBase64: await getBase64(document.getElementById('profDoc').files[0]), profDocName: document.getElementById('profDoc').files[0].name, profDocType: document.getElementById('profDoc').files[0].type,
-                    qrCodeBase64: await getBase64(document.getElementById('qrCode').files[0]), qrCodeName: document.getElementById('qrCode').files[0].name, qrCodeType: document.getElementById('qrCode').files[0].type
+                    userId: document.getElementById('userId').value, 
+                    fullName: document.getElementById('fullName').value, 
+                    profession: document.getElementById('profession').value, 
+                    networkCapacity: document.getElementById('networkCapacity').value, 
+                    upiId: upiVal,
+                    
+                    userImageBase64: await getBase64(userImageFile), 
+                    userImageName: userImageFile ? userImageFile.name : "", 
+                    userImageType: userImageFile ? userImageFile.type : "",
+                    
+                    profDocBase64: await getBase64(profDocFile), 
+                    profDocName: profDocFile ? profDocFile.name : "", 
+                    profDocType: profDocFile ? profDocFile.type : "",
+                    
+                    qrCodeBase64: await getBase64(qrFile), 
+                    qrCodeName: qrFile ? qrFile.name : "", 
+                    qrCodeType: qrFile ? qrFile.type : ""
                 };
 
                 const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(formData) });
@@ -302,10 +349,14 @@
                 
                 if(data.status === 'success') {
                     alert("Profile submitted for Admin Approval!");
-                    window.location.href = "patient_dashboard/patient_dashboard.html";
+                    window.location.href = "index.html";
                 } else throw new Error(data.message);
-            } catch (error) { alert("Server Error! Please try again later."); } 
-            finally { btn.innerText = "Submit Details"; btn.disabled = false; }
+            } catch (error) { 
+                alert("Server Error! Please try again later."); 
+            } finally { 
+                btn.innerText = translations[document.getElementById("langSelect").value].submitBtn; 
+                btn.disabled = false; 
+            }
         });
     </script>
 </body>

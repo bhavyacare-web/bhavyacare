@@ -321,10 +321,9 @@
             <div class="data-box" style="padding: 15px 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                 <div class="section-title" style="margin-bottom: 15px; color: var(--text-main);">
                     <span><i class="fas fa-tags" style="color: var(--warning); margin-right: 5px;"></i> Recommended Packages</span>
-                   <span style="font-size: 12px; color: var(--primary); cursor: pointer; font-weight: 700;" onclick="goToDiscountProfiles()">View All <i class="fas fa-chevron-right"></i></span>
+                    <span style="font-size: 12px; color: var(--primary); cursor: pointer; font-weight: 700;" onclick="goToDiscountProfiles()">View All <i class="fas fa-chevron-right"></i></span>
                 </div>
                 <div class="horizontal-slider" id="dashboardDiscountSlider">
-                    <!-- ✨ Skeleton Loaders (Jab tak data aa raha hai) ✨ -->
                     <div class="pkg-card" style="min-width: 270px; border-color: transparent; box-shadow: none; background: #fff;">
                         <div class="dash-skel" style="height: 20px; width: 30%; margin-bottom: 12px;"></div>
                         <div class="dash-skel" style="height: 18px; width: 70%; margin-bottom: 15px;"></div>
@@ -345,7 +344,7 @@
                         </div>
                     </div>
                 </div>
-            </div> <!-- ✨ YE WALA MISSING THA (Data Box Closing) ✨ -->
+            </div> 
             
             <div class="compact-cards-row">
                 <div class="compact-card card-wallet" onclick="switchTab('wallet')" style="cursor: pointer;">
@@ -499,6 +498,7 @@
         </div>
     </div>
 
+    <!-- ✨ DASHBOARD SPECIFIC MODALS ✨ -->
     <div id="vip-details-modal" class="modal-overlay">
         <button class="close-btn-modal" onclick="document.getElementById('vip-details-modal').style.display='none'">✖</button>
         <div style="text-align: center; margin-bottom: 15px;">
@@ -679,8 +679,6 @@
         </div>
     </div>
 
-    <div id="toast-container"></div>
-
     <!-- ✨ DASHBOARD PACKAGE INFO MODAL ✨ -->
     <div id="dashboardInfoModal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
         <div style="background:#fff; padding:20px; border-radius:16px; width:90%; max-width:400px; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
@@ -690,6 +688,11 @@
         </div>
     </div>
 
+    <!-- ✨ MODALS FROM COMPONENTS.JS ✨ -->
+    <div id="modals-placeholder"></div>
+
+    <!-- Path me '../' isliye lagaya hai kyunki patient_dashboard folder root ke andar hai -->
+    <script src="../components.js"></script>
     <script src="patient_dashboard.js"></script>
 </body>
 </html>

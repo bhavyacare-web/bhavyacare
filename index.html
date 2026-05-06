@@ -39,17 +39,20 @@
         html, body { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: clip; width: 100vw; max-width: 100%; -webkit-tap-highlight-color: transparent; }
         *, *::before, *::after { box-sizing: inherit; }
 
-        /* 🌟 GLOBAL CSS FOR COMPONENTS 🌟 */
+        /* 🌟 HEADER CSS 🌟 */
         .navbar { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 40px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #f1f5f9;}
         .logo { display: flex; align-items: center; gap: 10px; } 
         .logo img { height: 45px; object-fit: contain; display: block;}
+        
         .nav-actions { display: flex; align-items: center; gap: 15px; }
         .nav-btn { border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; display: inline-block; text-align: center;}
         .login-btn { background-color: var(--primary); }
         .login-btn:hover { background-color: #1d4ed8; }
+
         #user-menu-container { display: none; }
         .user-profile-btn { background: #f4f7f6; color: var(--primary); border: 1px solid #cce5ff; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .user-profile-btn:hover { background: #e6f0fa; }
+        
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background-color: transparent; color: #333; font-size: 24px; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
         .dropbtn:hover { color: var(--primary); }
@@ -58,19 +61,14 @@
         .dropdown-content a:hover { background-color: #f8fafc; color: var(--primary); padding-left: 20px; transition: 0.2s;}
         .dropdown-content hr { border: 0; border-top: 4px solid #f1f5f9; margin: 0; }
         .show-menu { display: block; }
+
+        /* Login Popup Section CSS */
         #login-section { width: 90%; max-width: 400px; margin: 40px auto; padding: 30px; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius: 16px; text-align: center; display: none; position: fixed; top: 70px; right: 40px; z-index: 999; }
         #login-section h3 { color: #333; margin-bottom: 20px; font-size: 22px; font-weight: 800;}
         .input-box { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
         .input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         .action-btn { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .action-btn:hover { background-color: #059669; }
-        .footer { background: #0f172a; color: #94a3b8; padding: 60px 40px 20px; font-size: 14px;}
-        .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; border-bottom: 1px solid #334155; padding-bottom: 40px; margin-bottom: 20px;}
-        .footer-col h3 { color: white; font-size: 18px; margin-bottom: 20px; font-weight: 700;}
-        .footer-col p { margin: 0 0 15px; line-height: 1.6;}
-        .footer-col a { color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; transition: 0.2s; font-weight: 500;}
-        .footer-col a:hover { color: var(--primary-light); transform: translateX(5px);}
-        .footer-bottom { text-align: center; font-size: 13px; color: #64748b;}
 
         /* 🌟 SECTIONS CSS 🌟 */
         .section-hero { background: linear-gradient(180deg, #e0f2fe 0%, #eff6ff 100%); padding: 30px 20px 40px; text-align: center; border-bottom: 1px solid #e2e8f0; }
@@ -85,7 +83,11 @@
         .hero-subtitle { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 500; line-height: 1.6;}
         
         /* ✨ FAKE LIVE TICKER CSS ✨ */
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes pulse-red { 
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 
+        }
         .live-ticker { display: inline-flex; align-items: center; gap: 8px; background: white; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #ef4444; border: 1px solid #fca5a5; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.1); }
         .pulse-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse-red 1.5s infinite; }
 
@@ -100,6 +102,7 @@
         .search-container input { flex: 1; border: none; padding: 15px; font-size: 16px; outline: none; font-weight: 500; color: var(--text-main); background: transparent;}
         .search-btn { background: var(--primary); color: white; border: none; padding: 14px 28px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;}
 
+        /* ✨ PROMINENT QUICK ACTIONS ✨ */
         .hero-quick-actions { display: flex; justify-content: center; gap: 15px; margin: 0 auto; max-width: 800px; flex-wrap: wrap;}
         .btn-quick { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
         .btn-quick:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -107,21 +110,27 @@
         .wa-btn { background: #10b981; color: white; border: 1px solid #059669; }
         .rx-btn { background: #8b5cf6; color: white; border: 1px solid #7c3aed; }
 
+        /* ✨ COMPACT SERVICES & DISCOUNTS GRID ✨ */
         .compact-diag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1050px; margin: 0 auto 25px; text-align: left;}
         .compact-diag-card { display: flex; align-items: center; gap: 15px; background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .compact-diag-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(37,99,235,0.1); border-color: #93c5fd;}
         .cd-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0;}
         .cd-info { display: flex; flex-direction: column; gap: 4px; }
         .cd-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;}
+        
         .cd-tag { font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 5px; }
+        .cd-tag i { font-size: 12px; }
         .cd-discount { font-size: 11px; font-weight: 800; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 8px; width: max-content; margin-top: 4px;}
+        
         .btn-more-services { display: inline-flex; align-items: center; gap: 8px; background: var(--text-main); color: white; padding: 14px 35px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; transition: 0.3s; margin-top: 15px; box-shadow: 0 4px 15px rgba(15,23,42,0.2);}
         .btn-more-services:hover { background: var(--primary); box-shadow: 0 8px 25px rgba(37,99,235,0.3);}
 
+        /* 🛡️ TRUST BADGES */
         .trust-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 30px;}
         .trust-item { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #334155;}
         .trust-item i { color: var(--secondary); font-size: 22px;}
 
+        /* VIP BANNER */
         .vip-banner { max-width: 1000px; margin: 0 auto 40px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15); position: relative; overflow: hidden;}
         .vip-banner::before { content: '👑'; position: absolute; right: -20px; top: -30px; font-size: 150px; opacity: 0.05; transform: rotate(15deg);}
         .vip-content { flex: 1; padding: 40px; z-index: 2; position: relative;}
@@ -129,6 +138,7 @@
         .vip-content p { font-size: 15px; color: #cbd5e1; margin: 0 0 20px 0; line-height: 1.6; font-weight: 500;}
         .btn-vip { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 15px 35px; border-radius: 12px; font-size: 16px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);}
 
+        /* 🎁 TRENDING PACKAGES & SCROLL */
         .home-cat-nav { display: flex; gap: 10px; overflow-x: auto; max-width: 1000px; margin: 0 auto 25px; padding: 10px 0; justify-content: center; cursor: grab; -webkit-overflow-scrolling: touch; white-space: nowrap;}
         .home-cat-nav::-webkit-scrollbar { display: none; }
         .home-cat-btn { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; user-select: none; flex: 0 0 auto;}
@@ -161,6 +171,7 @@
         .qty-control button:hover { background: var(--primary); color: white;}
         .qty-text { font-size: 15px; font-weight: 800; width: 35px; text-align: center; color: var(--text-main);}
 
+        /* 🛠️ HOW IT WORKS */
         .hiw-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .hiw-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 40px 20px; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
         .hiw-step:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); transform: translateY(-5px);}
@@ -168,6 +179,7 @@
         .hiw-step h4 { font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;}
         .hiw-step p { font-size: 15px; color: #64748b; margin: 0; line-height: 1.6; font-weight: 500;}
 
+        /* 💬 PATIENT REVIEWS SECTION 💬 */
         .section-reviews { background: #f8fafc; padding: 60px 20px; border-bottom: 1px solid #e2e8f0; }
         .reviews-wrapper { max-width: 1050px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; cursor: grab; }
         .reviews-wrapper:active { cursor: grabbing; }
@@ -180,12 +192,22 @@
         .review-info h4 { margin: 0 0 3px 0; font-size: 15px; color: #1e293b; font-weight: 800; }
         .review-info p { margin: 0; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
-        .section-about { background: #ffffff; padding: 60px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;}
+        /* ✨ AGGREGATOR SECTION ✨ */
+        .section-about { background: #ffffff; padding: 60px 20px; text-align: center; }
         .about-box { max-width: 800px; margin: 0 auto; background: #f8fafc; padding: 40px; border-radius: 24px; box-shadow: inset 0 0 0 1px #e2e8f0;}
         .about-box h2 { font-size: 26px; color: #1e293b; margin-bottom: 15px; font-weight: 800;}
         .about-box p { font-size: 15px; color: #475569; line-height: 1.7; margin-bottom: 25px; font-weight: 500;}
         .badge-wrap { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;}
         .badge-wrap span { background: #ffffff; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+
+        /* ✨ MEGA FOOTER ✨ */
+        .footer { background: #0f172a; color: #94a3b8; padding: 60px 40px 20px; font-size: 14px;}
+        .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; border-bottom: 1px solid #334155; padding-bottom: 40px; margin-bottom: 20px;}
+        .footer-col h3 { color: white; font-size: 18px; margin-bottom: 20px; font-weight: 700;}
+        .footer-col p { margin: 0 0 15px; line-height: 1.6;}
+        .footer-col a { color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; transition: 0.2s; font-weight: 500;}
+        .footer-col a:hover { color: var(--primary-light); transform: translateX(5px);}
+        .footer-bottom { text-align: center; font-size: 13px; color: #64748b;}
 
         @keyframes slideUpToast { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
@@ -198,6 +220,7 @@
             .section-hero { padding: 25px 15px 25px; }
             .section-diagnostics { padding: 30px 15px; }
             
+            /* ✨ Live Ticker & Trust Stats Mobile Fix ✨ */
             .live-ticker { font-size: 11px; padding: 5px 12px; margin-bottom: 15px;}
             .trust-stats-bar { gap: 15px; margin-top: 20px; padding-top: 20px; justify-content: space-between; }
             .stat-num { font-size: 18px; }
@@ -224,6 +247,7 @@
             .cd-tag i { font-size: 10px; }
             .cd-discount { font-size: 10px; padding: 3px 8px; margin-top: 2px;}
             
+            /* ✨ COMPACT & PREMIUM STICKY PACKAGES ✨ */
             .section-packages { 
                 position: -webkit-sticky; 
                 position: sticky; 
@@ -238,13 +262,15 @@
             .section-packages .section-heading h2 { font-size: 20px; margin-bottom: 2px; }
             .section-packages .section-heading p { display: none; } 
             
-            .home-cat-nav { margin: 0 auto 10px; padding: 5px 0; gap: 8px;}
-            .home-cat-btn { padding: 6px 16px; font-size: 12px; border-radius: 20px; background: #f1f5f9; border: 1px solid #e2e8f0;}
+            /* Categories Scroll Fix */
+            .home-cat-nav { margin: 0 auto 10px; padding: 5px 0; gap: 8px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;}
+            .home-cat-btn { padding: 6px 16px; font-size: 12px; border-radius: 20px; background: #f1f5f9; border: 1px solid #e2e8f0; flex: 0 0 auto;}
             .home-cat-btn.active { background: var(--primary); color: white; border: none; box-shadow: 0 4px 10px rgba(37,99,235,0.3);}
             
+            /* Package Scroll Fix */
             .slider-wrapper { 
                 margin-left: -10px; margin-right: -10px; padding-left: 10px; padding-right: 10px; width: calc(100% + 20px);
-                scroll-snap-type: x mandatory; padding-bottom: 15px; gap: 15px;
+                scroll-snap-type: x mandatory; padding-bottom: 15px; gap: 15px; overflow-x: auto; flex-wrap: nowrap;
             }
             .pkg-card { min-width: 260px; max-width: 280px; padding: 15px; border-radius: 16px; scroll-snap-align: start; background: #ffffff; flex: 0 0 auto;}
             .pkg-title { font-size: 15px; margin-bottom: 8px;}
@@ -292,14 +318,83 @@
 </head>
 <body>
 
-    <!-- ✨ 1. HEADER PLACEHOLDER ✨ -->
-    <div id="header-placeholder"></div>
+    <!-- 🌟 HEADER 🌟 -->
+    <header class="navbar">
+        <div class="logo">
+            <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" onerror="this.onerror=null; this.src='image/bhavyacarelogo.png'; if(this.src.includes('png')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+            <h2 style="color: #0056b3; font-size: 26px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
+        </div>
+        
+        <div class="nav-actions">
+            <button id="nav-login-btn" class="nav-btn login-btn" onclick="openPatientLogin()">Login</button>
+            
+            <div class="dropdown">
+                <button id="main-menu-btn" class="dropbtn" onclick="toggleMenu()">⋮</button>
+                <div id="user-menu-container">
+                    <button class="user-profile-btn" onclick="toggleMenu()">My Account</button>
+                </div>
+                <div id="myDropdown" class="dropdown-content">
+                    <a href="#" id="menu-dashboard" onclick="goToDashboard()" style="display: none;"><i class="fas fa-chart-line" style="color: var(--secondary); width: 20px;"></i> My Dashboard</a>
+                    <a href="prescription.html"><i class="fas fa-upload" style="color: #8b5cf6; width: 20px;"></i> Upload Prescription</a>
+                    <a href="terms.html"><i class="fas fa-file-contract" style="color: #64748b; width: 20px;"></i> Terms & Conditions</a>
+                    <a href="privacy.html"><i class="fas fa-user-shield" style="color: #64748b; width: 20px;"></i> Privacy Policy</a>
+                    <a href="refund.html"><i class="fas fa-undo" style="color: #64748b; width: 20px;"></i> Refund Policy</a>
+                    <a href="contact.html"><i class="fas fa-headset" style="color: #64748b; width: 20px;"></i> Help & Support</a>
+                    <hr>
+                    <a href="#" id="menu-logout" onclick="logoutUser()" style="display: none; color: #e74c3c;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <!-- ✨ 2. MODALS PLACEHOLDER ✨ -->
-    <div id="modals-placeholder"></div>
+    <!-- 🌟 LOGIN SECTION 🌟 -->
+    <div id="login-section">
+        <button onclick="closeLoginPopup()" style="position:absolute; top:15px; right:15px; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-times"></i></button>
+        <h3 id="form-title">Login / Sign Up</h3>
+        <div id="phone-section">
+            <div id="partner-role-container" style="display: none; margin-bottom: 15px;">
+                <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Select Partner Type:</p>
+                <select id="partnerRole" class="input-box" onchange="updateNameLabel()">
+                    <option value="doctor" selected>Doctor</option>
+                    <option value="lab">Lab</option>
+                    <option value="pharmacy">Pharmacy</option>
+                    <option value="hospital">Hospital</option>
+                    <option value="executive">Executive</option>
+                </select>
+            </div>
+            <p id="nameLabel" style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Full Name:</p>
+            <input type="text" id="userName" class="input-box" placeholder="Enter your full name">
+            <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Mobile Number:</p>
+            <input type="tel" id="phoneNumber" class="input-box" placeholder="e.g. 8950112467" maxlength="10">
+            <div id="recaptcha-container" style="margin-top: 10px;"></div>
+            <button id="send-otp-btn" class="action-btn" onclick="sendOTP()">Get OTP</button>
+        </div>
+        <div id="otp-section" style="display: none;">
+            <p style="text-align: left; font-size: 14px; color: #666; margin-bottom: 2px;">Enter OTP:</p>
+            <input type="tel" id="otpCode" class="input-box" placeholder="6-digit OTP" maxlength="6">
+            <button class="action-btn" style="background-color: #0056b3;" onclick="verifyOTP()">Verify Mobile</button>
+        </div>
+        <p class="support-text">Need help? Email us at bhavyacare1@gmail.com</p>
+    </div>
+
+    <!-- ✨ ADMIN PASSWORD MODAL ✨ -->
+    <div id="adminPasswordModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:3000; justify-content:center; align-items:center; backdrop-filter: blur(5px);">
+        <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:350px; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUpToast 0.3s ease-out;">
+            <button onclick="closeAdminPasswordModal()" style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; color:#64748b; transition:0.2s;"><i class="fas fa-times"></i></button>
+            <div style="background:#e0f2fe; color:#0284c7; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 15px;">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 style="margin:0 0 15px 0; color:#0f172a; font-size:22px; font-weight:800;">Admin Area</h3>
+            <p style="color:#64748b; font-size:13px; margin:0 0 20px;">Enter security password to access the panel.</p>
+            <input type="password" id="adminPassInput" placeholder="Password" style="width:100%; padding:14px; border:2px solid #e2e8f0; border-radius:12px; font-size:16px; outline:none; text-align:center; margin-bottom:15px; font-weight:bold;">
+            <button onclick="verifyAdminPassword()" style="background:var(--primary); color:white; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; font-size:16px; cursor:pointer; transition:0.2s; box-shadow:0 4px 15px rgba(37,99,235,0.3);">Access Panel</button>
+        </div>
+    </div>
 
     <!-- 🌟 SECTION 1: SEARCH BAR FIRST & QUICK ACTIONS 🌟 -->
     <section class="section-hero">
+        
+        <!-- ✨ LIVE TICKER ✨ -->
         <div class="live-ticker">
             <div class="pulse-dot"></div>
             🔥 <span id="dynamic-booking-count">124</span>+ patients are booking tests right now
@@ -318,6 +413,7 @@
             <a href="prescription.html" class="btn-quick rx-btn"><i class="fas fa-file-prescription"></i> <span>Upload Prescription</span></a>
         </div>
 
+        <!-- ✨ TRUST STATS BAR ✨ -->
         <div class="trust-stats-bar">
             <div class="stat-item">
                 <span class="stat-num" id="happy-patients-count">20,000+</span>
@@ -497,11 +593,51 @@
         </div>
     </section>
 
-    <!-- ✨ 3. FOOTER PLACEHOLDER ✨ -->
-    <div id="footer-placeholder"></div>
+    <!-- ✨ MEGA FOOTER ✨ -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <img src="image/bhavyacarelogo.jpeg" alt="BhavyaCare" style="height: 45px; border-radius: 8px;" onerror="this.onerror=null; this.src='image/bhavyacarelogo.png'; if(this.src.includes('png')) { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block'; }">
+                    <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">Bhavya<span style="color: #28a745;">Care</span></h2>
+                </div>
+                <p>Making premium healthcare accessible, affordable, and accurate for everyone. Book tests, consult doctors, and order medicines with ease.</p>
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <a href="https://wa.me/918950112467" style="color: white; font-size: 20px;"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" style="color: white; font-size: 20px;"><i class="fab fa-facebook"></i></a>
+                    <a href="#" style="color: white; font-size: 20px;"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Our Services</h3>
+                <a href="booking/booking.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Book Lab Tests</a>
+                <a href="bookdoctor/bookdoctor.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Consult a Doctor</a>
+                <a href="pharmacy/medicineorders.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Order Medicines</a>
+                <a href="vip/vip_member.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> VIP Membership</a>
+                <a href="prescription.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Upload Prescription</a>
+            </div>
 
-    <!-- ✨ COMPONENT SCRIPT LOAD (Runs and inserts HTML) ✨ -->
-    <script src="components.js"></script>
+            <div class="footer-col">
+                <h3>Company</h3>
+                <a href="about.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> About Us</a>
+                <a href="#" onclick="openPartnerLogin()"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Join Us (Partner)</a>
+                <a href="#" onclick="openAdminPasswordModal(event)"><i class="fas fa-shield-alt" style="font-size:10px; color:#17a2b8;"></i> Admin Login</a>
+                <a href="contact.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Contact Support</a>
+                <a href="withdraw.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Partnership</a>
+            </div>
+
+            <div class="footer-col">
+                <h3>Legal & Policies</h3>
+                <a href="terms.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Terms & Conditions</a>
+                <a href="privacy.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Privacy Policy</a>
+                <a href="refund.html"><i class="fas fa-chevron-right" style="font-size:10px;"></i> Refund & Cancellation</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 BhavyaCare Healthcare Services. All Rights Reserved.</p>
+        </div>
+    </footer>
 
     <!-- ✨ FLOATING CART BUTTON ✨ -->
     <div id="homeFloatingCart" onclick="window.location.href='booking/booking.html?view=cart'" style="display:none; position:fixed; bottom:30px; right:20px; background:var(--primary); color:white; width:60px; height:60px; border-radius:50%; align-items:center; justify-content:center; font-size:24px; box-shadow:0 10px 25px rgba(37,99,235,0.4); cursor:pointer; z-index:1000; transition:0.3s;">
@@ -538,13 +674,17 @@
     <script src="app.js"></script>
 
     <script>
+        // ✨ AUTO OPEN VIP MODAL & DYNAMIC TICKER LOGIC ✨
         document.addEventListener("DOMContentLoaded", () => {
+            
+            // ✨ 1. DYNAMIC FOMO TICKER (Random between 85 and 145) ✨
             const countElement = document.getElementById('dynamic-booking-count');
             if (countElement) {
                 const randomCount = Math.floor(Math.random() * (145 - 85 + 1)) + 85;
                 countElement.innerText = randomCount;
             }
 
+            // ✨ 2. VIP POPUP LOGIC ✨
             if (!sessionStorage.getItem('vipPopupShown')) {
                 setTimeout(() => {
                     openVipImageModal();
@@ -552,13 +692,17 @@
                 }, 800); 
             }
 
+            // ✨ 3. DYNAMIC TIME-BASED HAPPY PATIENTS ✨
             updateHappyPatients();
         });
 
         function updateHappyPatients() {
+            // Base date set to May 1, 2026 (20,000 patients base line)
             const baseDate = new Date("2026-05-01T00:00:00").getTime(); 
             const now = new Date().getTime();
             const diffInMinutes = Math.max(0, (now - baseDate) / (1000 * 60));
+            
+            // Har 15 minute mein 1 naya patient badhega automatically!
             const extraPatients = Math.floor(diffInMinutes / 15);
             const totalPatients = 20000 + extraPatients;
             
@@ -568,7 +712,7 @@
             }
         }
 
-        // Functions referencing modals now injected by components.js
+        // ✨ ADMIN PASSWORD VERIFICATION LOGIC ✨
         function openAdminPasswordModal(e) {
             e.preventDefault(); 
             document.getElementById('adminPasswordModal').style.display = 'flex';
@@ -586,11 +730,13 @@
             else { showHomeToast("Incorrect Password! Access Denied.", "error"); }
         }
 
+        // ✨ VIP CLICK LOGIC WITH LOGIN CHECK ✨
         function handleVipRateClick(event) {
-            if(event) event.stopPropagation(); 
+            if(event) event.stopPropagation(); // Prevents double clicking if clicked inside a card
             const userId = localStorage.getItem("bhavya_user_id");
-            if (userId) { window.location.href = 'vip/vip_member.html'; } 
-            else {
+            if (userId) { 
+                window.location.href = 'vip/vip_member.html'; 
+            } else {
                 showHomeToast("Please Login to view VIP details!", "error");
                 if (typeof openPatientLogin === "function") { setTimeout(() => openPatientLogin(), 800); } 
                 else { setTimeout(() => alert("Please Login First to proceed."), 800); }
@@ -706,6 +852,7 @@
             const nav = document.getElementById("homePackageCategories");
             if(!slider || !nav) return;
 
+            // ✨ SLICE (0, 10) REMOVED - AB SAARE PACKAGES SHOW HONGE ✨
             let packages = homeAllServices.filter(s => 
                 s.service_id !== "VIP-FREE-001" && 
                 (String(s.service_type).trim().toLowerCase() === 'profile' || 

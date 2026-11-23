@@ -1023,6 +1023,20 @@
             return "";
         }
 
+       function getPkgField(obj, keywords) {
+            if (!obj) return "";
+            for (const key of Object.keys(obj)) {
+                const normKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (keywords.some(kw => normKey.includes(kw))) {
+                    const val = String(obj[key] || '').trim();
+                    if (val !== "" && val.toLowerCase() !== "undefined" && val.toLowerCase() !== "null") {
+                        return val;
+                    }
+                }
+            }
+            return "";
+        }
+
         function renderHomePackages(subCat = homeCurrentSubCat) {
             homeCurrentSubCat = subCat;
             const slider = document.getElementById("homePackageSlider");
@@ -1115,9 +1129,9 @@
                 html += `
                 <div class="pkg-card">
                     <div class="pkg-header-row"><span class="pkg-cat-badge">${cleanCat}</span>${pkg.number_of_test ? `<span class="pkg-test-count"><i class="fas fa-microscope"></i> ${pkg.number_of_test} Tests</span>` : ''}</div>
-                    <h3 class="pkg-title">${cleanName} <i class="fas fa-info-circle" style="color:var(--primary); font-size:15px; cursor:pointer;" onclick="openHomeInfoModal('${s_id}')" title="Click for details"></i></h3>
-                    ${descPreviewHtml}
+                    <h3 class="pkg-title">${cleanName} <i class="fas fa-info-circle" style="color:var(--primary); font-size:14px; cursor:pointer;" onclick="openHomeInfoModal('${s_id}')" title="Click for details"></i></h3>
                     ${metaHtml}
+                    ${descPreviewHtml}
                     <div class="pkg-footer">
                         <div class="pkg-price-area">
                             <span class="pkg-total-mrp">Total: <del>₹${totalMrp}</del></span>
